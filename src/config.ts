@@ -5,14 +5,15 @@ dotenv.config();
 
 function getDefaults() {
   switch (process.env.NODE_ENV) {
-    case 'PROD':
-    case 'DEV':
+    case 'production':
+    case 'development':
     default: 
       return {
         port: 3000,
         appName: 'flo-api-v2-local',
         enforceSSL: false,
-        dynamoTablePrefix: 'dev_'
+        dynamoTablePrefix: 'dev_',
+        foo: 'bar'
       };
   }
 }
