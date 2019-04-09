@@ -1,0 +1,7 @@
+version: '3'
+
+services:
+  hello-world:
+    build: .
+    volumes:
+      - .:/usr/src/app
