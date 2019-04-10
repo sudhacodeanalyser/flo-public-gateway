@@ -12,8 +12,7 @@ function getDefaults() {
         port: 3000,
         appName: 'flo-api-v2-local',
         enforceSSL: false,
-        dynamoTablePrefix: 'dev_',
-        foo: 'bar'
+        dynamoTablePrefix: 'dev_'
       };
   }
 }

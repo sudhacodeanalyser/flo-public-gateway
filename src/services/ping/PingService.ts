@@ -9,7 +9,7 @@ class PingService {
   ) {}
 
   public ping() {
-     return { date: new Date().toISOString(), app: this.config.appName };
+     return { date: new Date().toISOString(), app: this.config.appName, foo: 'baz' };
   }
 }
 

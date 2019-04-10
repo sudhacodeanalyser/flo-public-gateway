@@ -1,11 +1,11 @@
 import { inject, injectable } from 'inversify';
 import AWS from 'aws-sdk';
-import DynamoDBDAO from '../../utils/DynamoDBDAO';
-import IAccountRecord from './IAccountRecord';
-import Config from '../../config';
+import DynamoDBTable from '../utils/DynamoDBTable';
+import IAccountDynamoDBRecord from './IAccountDynamoDBRecord';
+import Config from '../config';
 
 @injectable() 
-class AccountDAO extends DynamoDBDAO<IAccountRecord, string> {
+class AccountDynamoDBTable extends DynamoDBTable<IAccountDynamoDBRecord, string> {
   constructor(
     @inject('DynamoDBClient') dynamoDBClient: AWS.DynamoDB.DocumentClient,
     @inject('Config') private readonly config: typeof Config
@@ -14,4 +14,4 @@ class AccountDAO extends DynamoDBDAO<IAccountRecord, string> {
   }
 }
 
-export default AccountDAO;
+export default AccountDynamoDBTable;
