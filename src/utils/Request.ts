@@ -1,6 +1,6 @@
 import express from 'express';
 import Logger from 'bunyan';
 
-export default interface IRequest extends express.Request {
+export default interface Request extends express.Request {
   log?: Logger;
 }

@@ -9,7 +9,7 @@ import { Container } from 'inversify';
 import { interfaces, InversifyExpressServer, TYPE } from 'inversify-express-utils';
 import LoggerFactory from './utils/LoggerFactory';
 import Logger from 'bunyan';
-import IRequest from './utils/IRequest';
+import Request from './utils/Request';
 
 function ServerConfigurationFactory(container: Container) {
   return (app: express.Application) => {
@@ -41,7 +41,7 @@ function ServerConfigurationFactory(container: Container) {
     }));
 
     app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
-      res.setHeader('x-request-id', uuid.v4());    
+      res.setHeader('x-request-id', uuid.v4());
       next();
     });
 
@@ -50,7 +50,7 @@ function ServerConfigurationFactory(container: Container) {
 
     container.bind<Logger>('Logger').toConstantValue(logger);
 
-    app.use((req: IRequest, res: express.Response, next: express.NextFunction) => {
+    app.use((req: Request, res: express.Response, next: express.NextFunction) => {
       const reqId = res.get('x-request-id');
       const reqLogger = logger.child({
         type: 'request',
@@ -76,11 +76,11 @@ function ServerConfigurationFactory(container: Container) {
 
       next();
     });
-  }; 
+  };
 }
 
 function configureServerErrorHandling(app: express.Application) {
-  app.use((err: Error, req: IRequest, res: express.Response, next: express.NextFunction) => {
+  app.use((err: Error, req: Request, res: express.Response, next: express.NextFunction) => {
     const logger: Logger | undefined = req.log;
 
     if (logger) {
