@@ -1,9 +1,9 @@
 import 'reflect-metadata';
-import Config from './config';
+import Config from './config/config';
 import ContainerFactory from './ContainerFactory';
 import ServerFactory from './ServerFactory';
 import Logger from 'bunyan';
-import './controllers';
+import './core/controllers';
 
 const container = ContainerFactory();
 const server = ServerFactory(container);

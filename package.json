@@ -1,22 +1,20 @@
 {
   "name": "flo-api-v2",
   "version": "1.0.0",
-  "description": "A starting point for Node.js express apps with TypeScript",
+  "description": "Flo Public API",
   "repository": {
     "type": "git",
-    "url": "https://github.com/FloTechnologies/flo-nodejs-service-template"
+    "url": "https://github.com/FloTechnologies/flo-api-v2"
   },
   "scripts": {
     "build": "npm run build-ts && npm run tslint",
     "build-ts": "tsc",
-    "debug": "npm run build && npm run watch-debug",
-    "watch": "concurrently -k -p \"[{name}]\" -n \"TypeScript,Node\" -c \"cyan.bold,green.bold\" \"npm run watch-ts\" \"npm run watch-node\"",
-    "watch-node": "nodemon dist/app.js",
-    "serve": "npm run build-ts && node dist/app.js",
-    "serve-debug": "npm run build-ts && node --inspect=0.0.0.0 dist/app.js",
+    "debug": "npm run build && node --inspect=0.0.0.0 dist/app.js",
+    "serve": "npm run build && node dist/app.js",
     "start": "npm run serve",
     "test": "jest --colors --coverage --verbose",
     "tslint": "tslint -c tslint.json -p tsconfig.json",
+    "watch": "tsc-watch --onSuccess 'node ./dist/app.js' --onFailure 'echo Compilation Failed'",
     "watch-debug": "tsc-watch --onSuccess 'node --inspect=0.0.0.0 ./dist/app.js' --onFailure 'echo Compilation Failed'",
     "watch-test": "npm run test -- --watchAll",
     "watch-ts": "tsc -w"
@@ -48,9 +46,7 @@
     "@types/lodash": "^4.14.123",
     "@types/node": "^11.13.0",
     "@types/uuid": "^3.4.4",
-    "concurrently": "^4.1.0",
     "jest": "^24.7.1",
-    "nodemon": "^1.18.10",
     "prettier": "^1.16.4",
     "ts-jest": "^24.0.1",
     "tsc-watch": "^2.1.2",

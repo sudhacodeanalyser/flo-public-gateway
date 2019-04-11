@@ -1,11 +1,11 @@
 import { inject, injectable } from 'inversify';
 import AWS from 'aws-sdk';
-import DynamoDBTable from '../utils/DynamoDBTable';
-import ILocationDynamoDBRecord from './ILocationDynamoDBRecord';
-import Config from '../config';
+import DynamoDBTable from '../../dynamo/DynamoDBTable';
+import LocationRecord from './LocationRecord';
+import Config from '../../config/config';
 
 @injectable()
-class LocationDynamoDBTable extends DynamoDBTable<ILocationDynamoDBRecord, string, string> {
+class LocationDynamoDBTable extends DynamoDBTable<LocationRecord, string, string> {
   constructor(
     @inject('DynamoDBTable') dynamoDBClient: AWS.DynamoDB.DocumentClient,
     @inject('Config') private readonly config: typeof Config

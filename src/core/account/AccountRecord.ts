@@ -1,4 +1,4 @@
-export default interface IAccountDynamoDBRecord {
+export default interface AccountRecord {
   id: string,
   owner_user_id: string,
   account_name?: string,

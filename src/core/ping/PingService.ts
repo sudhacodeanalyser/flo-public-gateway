@@ -1,6 +1,6 @@
 import { injectable, inject } from 'inversify';
 import Logger from 'bunyan';
-import Config from '../../config';
+import Config from '../../config/config';
 
 @injectable()
 class PingService {
