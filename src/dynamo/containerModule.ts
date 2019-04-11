@@ -4,8 +4,8 @@ import DatabaseClient from '../database/DatabaseClient';
 import DynamoDbClient from './DynamoDbClient';
 
 export default new ContainerModule((bind: interfaces.Bind) => {
-  const dynamoDBClient = new AWS.DynamoDB.DocumentClient({ region: 'us-west-2' });
+  const dynamoDBDocClient = new AWS.DynamoDB.DocumentClient({ region: 'us-west-2' });
 
-  bind<AWS.DynamoDB.DocumentClient>('DynamoDBClient').toConstantValue(dynamoDBClient);
+  bind<AWS.DynamoDB.DocumentClient>('DynamoDBDocumentClient').toConstantValue(dynamoDBDocClient);
   bind<DatabaseClient>('DatabaseClient').to(DynamoDbClient);
 });

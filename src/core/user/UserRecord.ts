@@ -1,4 +1,4 @@
-export default interface UserDynamoDBRecord {
+export default interface UserRecord {
   id: string,
   email: string,
   password: string,

@@ -1,10 +1,10 @@
 import { ContainerModule, interfaces } from 'inversify';
 import AccountService from './AccountService';
-import AccountDynamoDBTable from './AccountDynamoDBTable';
+import AccountTable from './AccountTable';
 
 export default new ContainerModule((bind: interfaces.Bind) => {
 
-  bind<AccountDynamoDBTable>('AccountDynamoDBTable').to(AccountDynamoDBTable);
+  bind<AccountTable>('AccountTable').to(AccountTable);
   bind<AccountService>('AccountService').to(AccountService);
 
 });
