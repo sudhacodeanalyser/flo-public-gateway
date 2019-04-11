@@ -1,7 +1,7 @@
 import * as express from 'express';
 import { interfaces, controller, httpGet, httpPost, httpDelete, request, queryParam, response, requestParam } from 'inversify-express-utils';
 import { injectable, inject } from 'inversify';
-import AccountService from '../services/account/AccountService';
+import AccountService from './AccountService';
 
 @controller('/accounts', 'LoggerMiddleware')
 export class AccountController implements interfaces.Controller {

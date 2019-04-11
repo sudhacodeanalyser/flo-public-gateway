@@ -1,8 +1,8 @@
 import { inject, injectable } from 'inversify';
 import AWS from 'aws-sdk';
-import DynamoDBTable from '../utils/DynamoDBTable';
+import DynamoDBTable from '../../dynamo/DynamoDBTable';
 import UserDynamoDBRecord from './UserDynamoDBRecord';
-import Config from '../config';
+import Config from '../../config/config';
 
 @injectable()
 class UserDynamoDBTable extends DynamoDBTable<UserDynamoDBRecord, string> {

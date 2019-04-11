@@ -2,7 +2,7 @@ import { inject, injectable, named } from 'inversify';
 import { BaseMiddleware } from 'inversify-express-utils';
 import express from 'express';
 import Logger from 'bunyan';
-import Request from '../utils/Request';
+import Request from '../core/api/Request';
 
 @injectable()
 class LoggerMiddleware extends BaseMiddleware {

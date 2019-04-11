@@ -1,6 +1,6 @@
 import { interfaces, controller, httpGet, httpPost, httpDelete, request, queryParam, response, requestParam } from 'inversify-express-utils';
 import { injectable, inject } from 'inversify';
-import PingService from '../services/ping/PingService';
+import PingService from './PingService';
 
 @controller('/', 'LoggerMiddleware')
 export class PingController implements interfaces.Controller {

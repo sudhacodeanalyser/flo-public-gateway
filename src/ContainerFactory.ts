@@ -1,19 +1,21 @@
 import { Container, ContainerModule } from 'inversify';
-import config from './config';
+import config from './config/config';
 
 // Shared container modules
-import sharedContainerModules from './container-modules';
+import loggerFactoryContainerModule from './logging/containerModule';
+import dynamoDBContainerModule from './dynamo/containerModule';
 
-// Service container modules
-import serviceContainerModules from './services/';
+// Core container modules
+import coreContainerModules from './core/containerModule';
 
 export default function ContainerFactory(container = new Container()) {
-  
+
   container.bind<typeof config>('Config').toConstantValue(config);
 
   container.load(
-    ...sharedContainerModules,
-    ...serviceContainerModules
+    loggerFactoryContainerModule,
+    dynamoDBContainerModule,
+    ...coreContainerModules
   );
 
   return container;

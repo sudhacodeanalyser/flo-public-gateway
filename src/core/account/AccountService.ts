@@ -1,8 +1,8 @@
 import { injectable, inject } from 'inversify';
-import AccountDynamoDBTable from '../../data-access/AccountDynamoDBTable'
+import AccountDynamoDBTable from './AccountDynamoDBTable'
 import Logger from 'bunyan';
 
-@injectable() 
+@injectable()
 class AccountService {
   constructor(
     @inject('Logger') private readonly logger: Logger,
