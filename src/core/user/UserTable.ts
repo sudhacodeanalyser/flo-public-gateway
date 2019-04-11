@@ -5,11 +5,8 @@ import UserRecord from './UserRecord';
 
 @injectable()
 class UserTable extends DatabaseTable<UserRecord> {
-  constructor(
-    @inject('DatabaseClient') dbClient: DatabaseClient,
-    @inject('TablePrefix') tablePrefix: string
-  ) {
-    super(dbClient, tablePrefix + 'User');
+  constructor(@inject('DatabaseClient') dbClient: DatabaseClient) {
+    super(dbClient, 'User');
   }
 }
 

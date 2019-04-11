@@ -5,11 +5,8 @@ import AccountRecord from './AccountRecord';
 
 @injectable()
 class AccountTable extends DatabaseTable<AccountRecord> {
-  constructor(
-    @inject('DatabaseClient') dbClient: DatabaseClient,
-    @inject('TablePrefix') tablePrefix: string
-  ) {
-    super(dbClient, tablePrefix + 'Account');
+  constructor(@inject('DatabaseClient') dbClient: DatabaseClient) {
+    super(dbClient, 'Account');
   }
 }
 

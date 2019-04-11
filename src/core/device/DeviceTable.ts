@@ -5,11 +5,8 @@ import DeviceRecord from './DeviceRecord';
 
 @injectable()
 class DeviceTable extends DatabaseTable<DeviceRecord> {
-  constructor(
-    @inject('DatabaseClient') dbClient: DatabaseClient,
-    @inject('TablePrefix') tablePrefix: string
-  ) {
-    super(dbClient, tablePrefix + 'ICD');
+  constructor(@inject('DatabaseClient') dbClient: DatabaseClient) {
+    super(dbClient, 'ICD');
   }
 }
 

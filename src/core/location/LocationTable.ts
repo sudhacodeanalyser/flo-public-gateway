@@ -5,11 +5,8 @@ import LocationRecord from './LocationRecord';
 
 @injectable()
 class LocationTable extends DatabaseTable<LocationRecord> {
-  constructor(
-    @inject('DatabaseClient') dbClient: DatabaseClient,
-    @inject('TablePrefix') tablePrefix: string
-  ) {
-    super(dbClient, tablePrefix + 'Location');
+  constructor(@inject('DatabaseClient') dbClient: DatabaseClient) {
+    super(dbClient, 'Location');
   }
 }
 
