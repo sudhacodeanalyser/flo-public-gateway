@@ -14,6 +14,10 @@ interface ExpressionAttributeValueTuple {
   exprValue: string
 }
 
+// Constant for update expression construction
+const EMPTY_LIST_EXPRESION_ATTRIBUTE_VALUE = `:__empty_list`;
+
+
 @injectable()
 class DynamoDbClient implements DatabaseClient {
   constructor(
@@ -174,7 +178,6 @@ class DynamoDbClient implements DatabaseClient {
   }
 
   private processAppendOps(patch: Patch) {
-    const emptyListExprValue = `:__empty_list`;
     const appendOps: AppendOp[] | undefined = patch.appendOps;
     const appendExprTuples = appendOps === undefined ? [] :
       appendOps.map(appendOp => ({
@@ -184,13 +187,13 @@ class DynamoDbClient implements DatabaseClient {
         exprValue: `:${ appendOp.key }`
       }));
     const appendStrs = appendExprTuples
-      .map(({ exprName, exprValue }) => `${ exprName } = list_append(if_not_exists(${ exprName }, ${ emptyListExprValue }), ${ exprValue }))`);   
+      .map(({ exprName, exprValue }) => `${ exprName } = list_append(if_not_exists(${ exprName }, ${ EMPTY_LIST_EXPRESION_ATTRIBUTE_VALUE }), ${ exprValue }))`);   
 
     return {
       ExpressionAttributeNames: this.collectExpressionAttributeNames(appendExprTuples),
       ExpressionAttributeValues: {
         ...this.collectExpressionAttributeValues(appendExprTuples),
-        [emptyListExprValue]: []
+        [EMPTY_LIST_EXPRESION_ATTRIBUTE_VALUE]: []
       },
       opStrs: appendStrs
     };
