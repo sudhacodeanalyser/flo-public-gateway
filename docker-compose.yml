@@ -1,0 +1,7 @@
+version: '3'
+
+services:
+  flo-api-v2:
+    build: .
+    volumes:
+      - .:/usr/src/app

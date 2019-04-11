@@ -1,0 +1,10 @@
+version: '3'
+
+services:
+  flo-api-v2:
+    environment:
+      NODE_ENV: development
+    ports:
+      - 3000:3000
+      - 9229:9229
+    command: sh -c "cp -r /usr/src/cache/node_modules/. /usr/src/app/node_modules/ && npm run ${NPM_SCRIPT}"
