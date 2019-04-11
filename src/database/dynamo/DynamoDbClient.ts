@@ -1,11 +1,11 @@
 import AWS from 'aws-sdk';
-import DatabaseClient, { Patch, KeyMap } from '../database/DatabaseClient';
+import DatabaseClient, { Patch, KeyMap } from '../DatabaseClient';
 import { inject, injectable } from 'inversify';
 
 @injectable()
 class DynamoDbClient implements DatabaseClient {
   constructor(
-   @inject('DynamoDBDocumentClient') public dynamoDb: AWS.DynamoDB.DocumentClient
+   @inject('DynamoDbDocumentClient') public dynamoDb: AWS.DynamoDB.DocumentClient
   ) {}
 
   public async put<T>(tableName: string, item: T): Promise<T> {
