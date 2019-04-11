@@ -1,9 +1,11 @@
+import { injectable, unmanaged } from 'inversify';
 import DatabaseClient, { Patch, KeyMap } from './DatabaseClient';
 
-export default class DatabaseTable<T> {
+@injectable()
+class DatabaseTable<T> {
   constructor(
-    protected dbClient: DatabaseClient,
-    public tableName: string
+    @unmanaged() protected dbClient: DatabaseClient,
+    @unmanaged() public tableName: string
   ) {}
 
   public get(key: KeyMap): Promise<T> {
@@ -22,3 +24,5 @@ export default class DatabaseTable<T> {
     return this.dbClient.remove(this.tableName, key);
   }
 }
+
+export default DatabaseTable;

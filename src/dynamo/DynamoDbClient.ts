@@ -5,7 +5,7 @@ import { inject, injectable } from 'inversify';
 @injectable()
 class DynamoDbClient implements DatabaseClient {
   constructor(
-   @inject('DynamoDBClient') public dynamoDb: AWS.DynamoDB.DocumentClient
+   @inject('DynamoDBDocumentClient') public dynamoDb: AWS.DynamoDB.DocumentClient
   ) {}
 
   public async put<T>(tableName: string, item: T): Promise<T> {

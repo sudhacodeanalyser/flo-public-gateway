@@ -1,3 +1,3 @@
 // All controllers must be imported here
-import './PingController';
-import './AccountController';
+import './ping/PingController';
+import './account/AccountController';
