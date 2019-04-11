@@ -1,11 +1,12 @@
 import AWS from 'aws-sdk';
-import DatabaseClient, { Patch, KeyMap } from '../database/DatabaseClient';
+import DatabaseClient, { Patch, KeyMap } from '../DatabaseClient';
 import { inject, injectable } from 'inversify';
 
 @injectable()
 class DynamoDbClient implements DatabaseClient {
   constructor(
-   @inject('DynamoDBDocumentClient') public dynamoDb: AWS.DynamoDB.DocumentClient
+   @inject('DynamoDbDocumentClient') public dynamoDb: AWS.DynamoDB.DocumentClient,
+   @inject('TablePrefix') public tablePrefix: string
   ) {}
 
   public async put<T>(tableName: string, item: T): Promise<T> {
@@ -16,7 +17,7 @@ class DynamoDbClient implements DatabaseClient {
 
   public _put<T>(tableName: string, item: T) {
     return this.dynamoDb.put({
-      TableName: tableName,
+      TableName: this.tablePrefix + tableName,
       Item: item,
       ReturnValues: 'ALL_NEW'
     })
@@ -25,7 +26,7 @@ class DynamoDbClient implements DatabaseClient {
 
   public _get<T>(tableName: string, key: KeyMap) {
     return this.dynamoDb.get({
-      TableName: tableName,
+      TableName: this.tablePrefix + tableName,
       Key: key
     })
     .promise();
@@ -45,7 +46,7 @@ class DynamoDbClient implements DatabaseClient {
     } = this.createUpdate(patch);
 
     return this.dynamoDb.update({
-      TableName: tableName,
+      TableName: this.tablePrefix + tableName,
       Key: key,
       UpdateExpression,
       ExpressionAttributeNames,
@@ -63,7 +64,7 @@ class DynamoDbClient implements DatabaseClient {
 
   public _remove(tableName: string, key: KeyMap) {
     return this.dynamoDb.get({
-      TableName: tableName,
+      TableName: this.tablePrefix + tableName,
       Key: key
     })
     .promise();

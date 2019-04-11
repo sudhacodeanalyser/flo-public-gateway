@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import Config from './config/config';
-import ContainerFactory from './ContainerFactory';
-import ServerFactory from './ServerFactory';
+import ContainerFactory from './container/ContainerFactory';
+import ServerFactory from './server/ServerFactory';
 import Logger from 'bunyan';
 import './core/controllers';
 

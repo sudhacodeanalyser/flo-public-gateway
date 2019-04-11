@@ -7,9 +7,9 @@ import cors from 'cors';
 import uuid from 'uuid';
 import { Container } from 'inversify';
 import { interfaces, InversifyExpressServer, TYPE } from 'inversify-express-utils';
-import LoggerFactory from './logging/LoggerFactory';
+import LoggerFactory from '../logging/LoggerFactory';
 import Logger from 'bunyan';
-import Request from './core/api/Request';
+import Request from '../core/api/Request';
 
 function ServerConfigurationFactory(container: Container) {
   return (app: express.Application) => {
