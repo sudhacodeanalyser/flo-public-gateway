@@ -1,6 +1,18 @@
+import _ from 'lodash';
 import AWS from 'aws-sdk';
-import DatabaseClient, { Patch, KeyMap } from '../DatabaseClient';
+import DatabaseClient, { Patch, KeyMap, AppendOp, SetOp, RemoveOp } from '../DatabaseClient';
 import { inject, injectable } from 'inversify';
+
+// These are interfaces are internal to this module
+interface ExpressionAttributeNameTuple {
+  name: string,
+  exprName: string
+}
+
+interface ExpressionAttributeValueTuple {
+  value: any,
+  exprValue: string
+}
 
 @injectable()
 class DynamoDbClient implements DatabaseClient {
@@ -75,15 +87,112 @@ class DynamoDbClient implements DatabaseClient {
   }
 
   private createUpdate(patch: Patch) {
-    // TODO
+    const setUpdate = this.processSetOps(patch);
+    const appendUpdate = this.processAppendOps(patch);
+    const removeUpdate = this.processRemoveOps(patch);
+    const setExpr = setUpdate.opStrs.length || appendUpdate.opStrs.length ?
+      `SET ${ [...setUpdate.opStrs, ...appendUpdate.opStrs].join(', ') }` :
+      '';
+    const removeExpr = removeUpdate.opStrs.length ?
+      `REMOVE ${ removeUpdate.opStrs.join(', ') }` :
+      '';
+    const UpdateExpression = [setExpr, removeExpr].filter(expr => !_.isEmpty(expr)).join(', ');
+    const ExpressionAttributeNames = 
+      [
+        setUpdate,
+        appendUpdate,
+        removeUpdate
+      ].reduce((acc, { ExpressionAttributeNames: exprNames }) => ({
+        ...acc,
+        ...exprNames
+      }), {});
+    const ExpressionAttributeValues = 
+      [
+        setUpdate,
+        appendUpdate,
+        removeUpdate
+      ].reduce((acc, { ExpressionAttributeValues: exprValues }) => ({
+        ...acc,
+        ...exprValues
+      }), {});
+
     return {
-      UpdateExpression: '#foo = :foo',
-      ExpressionAttributeNames: {
-        '#foo': 'foo'
-      },
+      UpdateExpression,
+      ExpressionAttributeNames,
+      ExpressionAttributeValues
+    };
+  }
+
+  private collectExpressionAttributeNames(exprTuples: ExpressionAttributeNameTuple[]) {
+    return exprTuples.reduce((acc, { exprName, name }) => ({
+      ...acc,
+      [exprName]: name
+    }), {});
+  }
+
+  private collectExpressionAttributeValues(exprTuples: ExpressionAttributeValueTuple[]) {
+    return exprTuples.reduce((acc, { exprValue, value }) => ({
+      ...acc,
+      [exprValue]: value
+    }), {});
+  }
+
+  private processSetOps(patch: Patch) {
+    const setOps: SetOp[] | undefined = patch.setOps;
+    const setExprTuples = setOps === undefined ? [] :
+      setOps.map(setOp => ({
+        name: setOp.key,
+        exprName: `#${ setOp.key }`,
+        value: setOp.value,
+        exprValue: `:${ setOp.key }`
+      }));
+    const setStrs = setExprTuples
+      .map(({ exprName, exprValue }) => `${ exprName } = ${ exprValue }`);
+
+    return {
+      ExpressionAttributeNames: this.collectExpressionAttributeNames(setExprTuples),
+      ExpressionAttributeValues: this.collectExpressionAttributeValues(setExprTuples),
+      opStrs: setStrs
+    };
+  }
+
+  private processRemoveOps(patch: Patch) {
+    const removeOps: RemoveOp[] | undefined = patch.removeOps;
+    const removeExprTuples = removeOps === undefined ? [] :
+      removeOps.map(removeOp => ({
+        name: removeOp.key,
+        exprName: `#${ removeOp.key }`
+      }));
+    const removeStrs = removeExprTuples
+      .map(({ exprName }) => exprName)
+
+    return {
+      ExpressionAttributeNames: this.collectExpressionAttributeNames(removeExprTuples),
+      ExpressionAttributeValues: {},
+      opStrs: removeStrs
+    };
+  }
+
+  private processAppendOps(patch: Patch) {
+    const emptyListExprValue = `:__empty_list`;
+    const appendOps: AppendOp[] | undefined = patch.appendOps;
+    const appendExprTuples = appendOps === undefined ? [] :
+      appendOps.map(appendOp => ({
+        name: appendOp.key,
+        exprName: `#${ appendOp.key }`,
+        value: appendOp.value,
+        exprValue: `:${ appendOp.key }`
+      }));
+    const appendStrs = appendExprTuples
+      .map(({ exprName, exprValue }) => `${ exprName } = list_append(if_not_exists(${ exprName }, ${ emptyListExprValue }), ${ exprValue }))`);   
+
+    return {
+      ExpressionAttributeNames: this.collectExpressionAttributeNames(appendExprTuples),
       ExpressionAttributeValues: {
-        ':foo': 'bar'
-      }
+        ...this.collectExpressionAttributeValues(appendExprTuples),
+        [emptyListExprValue]: []
+      },
+      opStrs: appendStrs
     };
   }
 }
