@@ -11,5 +11,7 @@ export default interface UserDetailRecord {
   prefixname?: string,
   suffixname?: string,
   unit_system?: UnitSystem // Measurement unit prefence (e.g. metric vs freedom units)
-  phone_mobile?: string
+  phone_mobile?: string,
+  created_at?: string,
+  updated_at?: string
 }

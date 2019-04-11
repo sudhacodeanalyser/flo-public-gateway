@@ -79,5 +79,7 @@ export default interface LocationRecord extends LegacyLocationProfile {
   stories?: Integer,
   is_profile_complete?: boolean,
   is_using_away_schedule?: boolean,
-  profile: LocationProfile
+  profile: LocationProfile,
+  created_at?: string,
+  updated_at?: string
 }
