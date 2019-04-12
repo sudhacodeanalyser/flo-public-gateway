@@ -1,7 +1,7 @@
 version: '3'
 
 services:
-  flo-api-v2:
+  flo-public-gateway:
     build: .
     volumes:
       - .:/usr/src/app
