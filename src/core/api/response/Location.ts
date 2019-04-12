@@ -1,17 +1,17 @@
-import { Expandable, Timestamped, UserModel, AccountModel, DeviceModel } from '../api/models';
+import { Expandable, Timestamped, User, Account, Device } from '../api';
 
-export interface DeviceUserModel extends UserModel {
+export interface DeviceUser extends User {
   roles: string[]
 }
 
 // This will need to be enforced as a runtime validation
 type Integer = number;
 
-export interface LocationModel extends Timestamped {
+export interface Location extends Timestamped {
   id: string,
-  account: Expandable<AccountModel>,
-  users: Array<Expandable<DeviceUserModel>>,
-  devices: Array<Expandable<DeviceModel>>,
+  account: Expandable<Account>,
+  users: Array<Expandable<DeviceUser>>,
+  devices: Array<Expandable<Device>>,
   address: string,
   address2?: string,
   city: string,
@@ -20,7 +20,7 @@ export interface LocationModel extends Timestamped {
   postalcode: string,
   timezone: string,
   gallons_per_day_goal: Integer,
-  occupants?: Integer, 
+  occupants?: Integer,
   stories?: Integer,
   is_profile_complete?: boolean,
   is_using_away_schedule?: boolean

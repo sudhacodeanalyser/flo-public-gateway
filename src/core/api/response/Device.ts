@@ -1,4 +1,4 @@
-import { Expandable, Timestamped, LocationModel } from '../api/models';
+import { Expandable, Timestamped, Location } from '../api';
 
 export enum DeviceType {
   FLO_DEVICE = 'flo_device',
@@ -10,10 +10,10 @@ export enum DeviceModelType {
   FLO_DEVICE_ONE_AND_QUARTER_INCH = 'flo_device_1_1/4_inch'
 }
 
-export interface DeviceModel extends Timestamped {
+export interface Device extends Timestamped {
   id: string,
   macAddress: string,
-  location: Expandable<LocationModel>,
+  location: Expandable<Location>,
   device_type: DeviceType,
   device_model: DeviceModelType,
   installation_point?: string,
