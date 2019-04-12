@@ -48,10 +48,10 @@ class DynamoDbClient implements DatabaseClient {
     .promise();
   }
 
-  public async get<T>(tableName: string, key: KeyMap) {
+  public async get<T>(tableName: string, key: KeyMap): Promise<T | null> {
     const { Item } = await this._get<T>(tableName, key);
 
-    return Item as T;
+    return _.isEmpty(Item) ? null : Item as T;
   }
 
   public _update<T>(tableName: string, key: KeyMap, patch: Patch) {
