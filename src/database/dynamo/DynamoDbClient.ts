@@ -26,7 +26,7 @@ class DynamoDbClient implements DatabaseClient {
   ) {}
 
   public async put<T>(tableName: string, item: T): Promise<T> {
-    const { Attributes } = await this._put(tableName, item);
+    const { Attributes } = await this._put<T>(tableName, item);
 
     return Attributes as T;
   }
@@ -49,7 +49,7 @@ class DynamoDbClient implements DatabaseClient {
   }
 
   public async get<T>(tableName: string, key: KeyMap) {
-    const { Item } = await this._get(tableName, key);
+    const { Item } = await this._get<T>(tableName, key);
 
     return Item as T;
   }
@@ -73,7 +73,7 @@ class DynamoDbClient implements DatabaseClient {
   }
 
   public async update<T>(tableName: string, key: KeyMap, patch: Patch): Promise<T> {
-    const { Attributes } = await this._update(tableName, key, patch);
+    const { Attributes } = await this._update<T>(tableName, key, patch);
 
     return Attributes as T;
   }
@@ -90,6 +90,20 @@ class DynamoDbClient implements DatabaseClient {
     await this._remove(tableName, key);
   }
 
+  public async _query(tableName: string, queryOptions: Partial<AWS.DynamoDB.DocumentClient.QueryInput>) {
+    return this.dynamoDb.query({
+      TableName: tableName,
+      ...queryOptions
+    })
+    .promise();
+  }
+
+  public async query<T>(tableName: string, queryOptions: Partial<AWS.DynamoDB.DocumentClient.QueryInput>): Promise<T[]> {
+    const { Items } = await this._query(tableName, queryOptions);
+
+    return Items as T[];
+  }
+
   private createUpdate(patch: Patch) {
     const setUpdate = this.processSetOps(patch);
     const appendUpdate = this.processAppendOps(patch);
@@ -101,7 +115,7 @@ class DynamoDbClient implements DatabaseClient {
       `REMOVE ${ removeUpdate.opStrs.join(', ') }` :
       '';
     const UpdateExpression = [setExpr, removeExpr].filter(expr => !_.isEmpty(expr)).join(', ');
-    const ExpressionAttributeNames = 
+    const ExpressionAttributeNames =
       [
         setUpdate,
         appendUpdate,
@@ -110,7 +124,7 @@ class DynamoDbClient implements DatabaseClient {
         ...acc,
         ...exprNames
       }), {});
-    const ExpressionAttributeValues = 
+    const ExpressionAttributeValues =
       [
         setUpdate,
         appendUpdate,
@@ -187,7 +201,7 @@ class DynamoDbClient implements DatabaseClient {
         exprValue: `:${ appendOp.key }`
       }));
     const appendStrs = appendExprTuples
-      .map(({ exprName, exprValue }) => `${ exprName } = list_append(if_not_exists(${ exprName }, ${ EMPTY_LIST_EXPRESION_ATTRIBUTE_VALUE }), ${ exprValue }))`);   
+      .map(({ exprName, exprValue }) => `${ exprName } = list_append(if_not_exists(${ exprName }, ${ EMPTY_LIST_EXPRESION_ATTRIBUTE_VALUE }), ${ exprValue }))`);
 
     return {
       ExpressionAttributeNames: this.collectExpressionAttributeNames(appendExprTuples),
