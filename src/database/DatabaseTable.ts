@@ -8,7 +8,7 @@ class DatabaseTable<T> {
     @unmanaged() public tableName: string
   ) {}
 
-  public get(key: KeyMap): Promise<T> {
+  public get(key: KeyMap): Promise<T | null> {
     return this.dbClient.get<T>(this.tableName, key);
   }
 
