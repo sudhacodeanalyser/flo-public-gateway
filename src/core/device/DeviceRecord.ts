@@ -4,7 +4,7 @@ export enum DeviceType {
   PUCK
 }
 
-export enum DeviceModel {
+export enum DeviceModelType {
   FLO_DEVICE_THREE_QUARTER_INCH = 1,
   FLO_DEVICE_ONE_AND_QUARTER_INCH
 }
@@ -14,7 +14,7 @@ export default interface DeviceRecord {
   location_id: string,
   device_id: string,
   device_type?: DeviceType,
-  device_model?: DeviceModel,
+  device_model?: DeviceModelType,
   installation_point?: string,
   nickname?: string,
   created_at?: string,
