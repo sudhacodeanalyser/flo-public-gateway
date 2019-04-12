@@ -16,10 +16,10 @@ class DeviceDao {
       return null;
     }
 
-    return this.mapToResponse(deviceRecord); 
+    return this.mapRecordToModel(deviceRecord); 
   }
 
-  private mapToResponse(deviceRecord: DeviceRecord): Device {
+  private mapRecordToModel(deviceRecord: DeviceRecord): Device {
 
     return {
       id: deviceRecord.id,
