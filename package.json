@@ -1,10 +1,10 @@
 {
-  "name": "flo-api-v2",
+  "name": "flo-public-gateway",
   "version": "1.0.0",
-  "description": "Flo Public API",
+  "description": "Flo Public Gateway",
   "repository": {
     "type": "git",
-    "url": "https://github.com/FloTechnologies/flo-api-v2"
+    "url": "https://gitlab.com/flotechnologies/flo-public-gateway"
   },
   "scripts": {
     "build": "npm run build-ts && npm run tslint",

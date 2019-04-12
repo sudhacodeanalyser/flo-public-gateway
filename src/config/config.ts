@@ -7,10 +7,10 @@ function getDefaults() {
   switch (process.env.NODE_ENV) {
     case 'production':
     case 'development':
-    default: 
+    default:
       return {
         port: 3000,
-        appName: 'flo-api-v2-local',
+        appName: 'flo-public-gateway-local',
         enforceSSL: false,
         dynamoTablePrefix: 'dev_'
       };
