@@ -4,6 +4,7 @@ import { PathReporter } from 'io-ts/lib/PathReporter';
 import Request from '../core/api/Request';
 import * as express from 'express';
 import { injectable } from 'inversify';
+import ReqValidationError from './ReqValidationError';
 
 @injectable()
 class ReqValidationMiddlewareFactory {
@@ -19,10 +20,7 @@ class ReqValidationMiddlewareFactory {
         // TODO: This should not directly send a response, but instead
         // call next(err) to pass through the centralized error handling
         // middleware
-        res.status(400).json({
-          success: false,
-          errors: report,
-        });
+        next(new ReqValidationError(report.join(', ')));
       }
     };
   }

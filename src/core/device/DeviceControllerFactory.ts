@@ -15,6 +15,7 @@ export function DeviceControllerFactory(container: Container) {
     ) {}
 
     @httpGet('/:id',
+      // TODO refine validations
       reqValidator.create(t.type({
         params: t.type({
           id: t.string
