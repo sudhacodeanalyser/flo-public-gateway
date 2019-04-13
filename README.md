@@ -1,27 +1,46 @@
-# FLO Node.js Service Template
+# flo-public-gateway
 
-This is a template project intended to serve as base for new applications.
+This is a magnificent public gateway. The new king 👑 of requests.
 
 ## Pre-requisites
 * Docker
 * Docker Compose
+* GNU Make
 
+## Quickstart
+```
+$> make up
+$> curl http://localhost:3000
+```
 ## How to run the server?
 
 ### Development Mode
+```
+$> make install
+```
+This will:
+1. Create a dev container that contains nodejs, npm and other tools (feel free to update Dockerfile.build with newer node version, tools etc)
+2. Run npm process in a container and download dependencies into node_modules in your local directory (same way as your local npm would)
 
-```$> make dev-watch```
+```
+$> make serve
+```
+This will:
+1. Create a container with npm process and pass `serve` to it as a parameter
 
+
+```
+$> make watch
+```
 This will:
 1. Create a Docker container.
-2. Download all dependencies inside the container.
-3. Launch a local server inside the container with the corresponding ports mapped to the host (including the debugging port: 9229).
-4. Watch the filesystem for changes in the source code. Upon a change, the server will automatically reload.
+2. Launch a local server inside the container with the corresponding ports mapped to the host (including the debugging port: 9229).
+3. Watch the filesystem for changes in the source code. Upon a change, the server will automatically reload.
 
 ### Production
-
-```$> make prod```
-
+```
+$> make serve NODE_ENV=production
+```
 This will:
 1. Create a Docker container.
 2. Download all dependencies inside the container.
@@ -32,12 +51,15 @@ This will:
 Tests are run using `Jest` and its configuration can be found in `jest.config.js`.
 
 ### Single run
-
-  ```$> make test```
+```
+$> make test
+```
+This will start a new container with npm as an entry point, based on Dockerfile.build
 
 ### Watch mode
-
-  ```$> make watch-tests```
+```
+$> make watch-test
+```
 
 Both commands will run inside a Docker container (if there is a container already running, it will just run the tests inside in order to avoid launching a new one).
 

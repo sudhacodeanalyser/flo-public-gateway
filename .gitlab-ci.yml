@@ -1,0 +1,20 @@
+image: docker/compose:1.24.0
+
+services:
+  - docker:dind
+
+stages:
+  - build
+  - deploy
+
+before_script:
+  - apk add --no-cache make bash sh
+
+Compile:
+  stage: build
+  script:
+    - docker login -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}" ${CI_REGISTRY}
+    - docker pull ${CI_REGISTRY_IMAGE}:latest || true
+    - make build DOCKER_TAG=${CI_PIPELINE_ID}
+    - docker push "${CI_REGISTRY_IMAGE}:${CI_PIPELINE_ID}"
+    - docker push "${CI_REGISTRY_IMAGE}:latest"
