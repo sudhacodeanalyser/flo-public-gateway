@@ -8,7 +8,7 @@ stages:
   - deploy
 
 before_script:
-  - apt-get update && apt-get install -y make python-pip
+  - apk add --no-cache make python-pip
   - pip install docker-compose
 
 Compile:
