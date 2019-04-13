@@ -1,4 +1,4 @@
-image: docker:latest
+image: docker/compose:latest
 
 services:
   - docker:dind
@@ -8,8 +8,7 @@ stages:
   - deploy
 
 before_script:
-  - apk add --no-cache make python py-pip python-dev libffi-dev openssl-dev gcc libc-dev
-  - pip install docker-compose
+  - apk add --no-cache make
 
 Compile:
   stage: build
