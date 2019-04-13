@@ -1,0 +1,30 @@
+version: '3'
+
+services:
+  npm:
+    build:
+      context: .
+      dockerfile: Dockerfile.build
+    entrypoint: npm
+    volumes:
+      - .:/app
+      - ".npm:/root/.npm"
+      - ./tests:/app/tests
+      - "./test-results:/app/test-results"
+
+  run:
+    entrypoint: npm
+    environment:
+      NODE_ENV: "${NODE_ENV:-development}"
+
+    ports:
+      - 3000:3000
+      - 9229:9229
+    build:
+      context: .
+      dockerfile: Dockerfile.build
+    volumes:
+      - .:/app
+      - ".npm:/root/.npm"
+      - ./tests:/app/tests
+      - "./test-results:/app/test-results"

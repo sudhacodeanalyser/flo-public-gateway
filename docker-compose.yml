@@ -1,7 +1,13 @@
 version: '3'
 
 services:
-  flo-public-gateway:
-    build: .
-    volumes:
-      - .:/usr/src/app
+  app:
+    image: "${DOCKER_REGISTRY:-registry.gitlab.com/flotechnologies}/${APP_NAME:-app}:${DOCKER_TAG:-latest}"
+    environment:
+      NODE_ENV: "${NODE_ENV:-development}"
+    ports:
+      - 3000:3000
+      - 9229:9229
+    build:
+      context: .
+      dockerfile: Dockerfile.run

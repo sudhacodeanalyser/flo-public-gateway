@@ -1,0 +1,10 @@
+# This image is used as a build environment to run nodejs tools, like npm
+FROM node:10-alpine
+
+ARG NODE_ENV=development
+
+RUN rm -rf /var/cache/apk/* && \
+    rm -rf /tmp/* && \
+    apk add --no-cache --virtual .gyp gcc g++ make python
+
+WORKDIR /app
