@@ -3,6 +3,7 @@ import config from '../config/config';
 
 // Shared container modules
 import loggerFactoryContainerModule from '../logging/containerModule';
+import validationContainerModule from '../validation/containerModule';
 import dynamoDbContainerModule from '../database/dynamo/containerModule';
 
 // Core container modules
@@ -14,6 +15,7 @@ export default function ContainerFactory(container = new Container()) {
 
   container.load(
     loggerFactoryContainerModule,
+    validationContainerModule,
     dynamoDbContainerModule,
     ...coreContainerModules
   );
