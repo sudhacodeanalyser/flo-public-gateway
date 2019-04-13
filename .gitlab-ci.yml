@@ -7,6 +7,9 @@ stages:
   - build
   - deploy
 
+before_script:
+  - sudo apt-get update && apt-get install -y make python-pip
+  - pip install docker-compose
 
 Compile:
   stage: build
