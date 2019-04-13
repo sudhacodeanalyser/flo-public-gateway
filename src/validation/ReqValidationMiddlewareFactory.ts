@@ -13,8 +13,9 @@ class ReqValidationMiddlewareFactory {
       const result = reqType.decode(req);
       const report = PathReporter.report(result);
 
-      const onSuccess = () => next();
-      const onFailure = () => {
+      if (result.isRight()) {
+        next();
+      } else {
         // TODO: This should not directly send a response, but instead
         // call next(err) to pass through the centralized error handling
         // middleware
@@ -22,9 +23,7 @@ class ReqValidationMiddlewareFactory {
           success: false,
           errors: report,
         });
-      };
-
-      result.fold(onSuccess, onFailure);
+      }
     };
   }
 
