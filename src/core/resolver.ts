@@ -6,7 +6,6 @@ export type PropertyResolverMap<T> = {
   [P in keyof T]?: PropertyResolverFn<T, T[P]>
 };
 
-/* tslint:disable */
 @injectable()
 class Resolver<T extends {}> {
   protected propertyResolverMap: PropertyResolverMap<T>
