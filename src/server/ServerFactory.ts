@@ -10,6 +10,7 @@ import { interfaces, InversifyExpressServer, TYPE } from 'inversify-express-util
 import LoggerFactory from '../logging/LoggerFactory';
 import Logger from 'bunyan';
 import Request from '../core/api/Request';
+import ExtendableError from '../core/api/ExtendableError';
 
 function ServerConfigurationFactory(container: Container) {
   return (app: express.Application) => {
@@ -83,11 +84,16 @@ function configureServerErrorHandling(app: express.Application) {
   app.use((err: Error, req: Request, res: express.Response, next: express.NextFunction) => {
     const logger: Logger | undefined = req.log;
 
-    if (logger) {
+    if (logger !== undefined) {
       logger.error({ err });
     }
 
-    res.status(500).json({ error: true });
+    if (err instanceof ExtendableError) {
+      res.status(err.statusCode).json({ error: true, message: err.message, ...err.data });
+    } else {
+      // Don't expose internal error messages
+      res.status(500).json({ error: true, message: 'Something went wrong.' });
+    }
   });
 }
 
