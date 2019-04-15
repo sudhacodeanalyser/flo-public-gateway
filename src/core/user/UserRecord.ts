@@ -1,4 +1,4 @@
-export default interface UserRecord {
+export interface UserRecordData {
   id: string,
   email: string,
   password: string,

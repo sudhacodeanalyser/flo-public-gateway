@@ -23,6 +23,10 @@ class DatabaseTable<T> {
   public remove(key: KeyMap): Promise<void> {
     return this.dbClient.remove(this.tableName, key);
   }
+
+  public query<Q>(queryOptions: Q): Promise<T[]> {
+    return this.dbClient.query<Q, T>(this.tableName, queryOptions);
+  }
 }
 
 export default DatabaseTable;

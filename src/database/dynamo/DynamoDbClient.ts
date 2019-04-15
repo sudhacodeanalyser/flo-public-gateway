@@ -17,6 +17,7 @@ interface ExpressionAttributeValueTuple {
 // Constant for update expression construction
 const EMPTY_LIST_EXPRESION_ATTRIBUTE_VALUE = `:__empty_list`;
 
+export type DynamoDbQuery = Partial<AWS.DynamoDB.DocumentClient.QueryInput>;
 
 @injectable()
 class DynamoDbClient implements DatabaseClient {
@@ -90,15 +91,16 @@ class DynamoDbClient implements DatabaseClient {
     await this._remove(tableName, key);
   }
 
-  public async _query(tableName: string, queryOptions: Partial<AWS.DynamoDB.DocumentClient.QueryInput>) {
+  public async _query(tableName: string, queryOptions: DynamoDbQuery) {
+
     return this.dynamoDb.query({
-      TableName: tableName,
+      TableName: this.tablePrefix + tableName,
       ...queryOptions
     })
     .promise();
   }
 
-  public async query<T>(tableName: string, queryOptions: Partial<AWS.DynamoDB.DocumentClient.QueryInput>): Promise<T[]> {
+  public async query<T>(tableName: string, queryOptions: DynamoDbQuery): Promise<T[]> {
     const { Items } = await this._query(tableName, queryOptions);
 
     return Items as T[];

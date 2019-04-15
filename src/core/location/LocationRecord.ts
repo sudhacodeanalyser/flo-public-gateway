@@ -1,3 +1,6 @@
+import _ from 'lodash';
+import { Location } from '../api/api';
+
 export enum NoYesUnsure {
   NO = 0,
   YES,
@@ -64,7 +67,7 @@ export interface LocationProfile {
 // This will need to be enforced as a runtime validation
 type Integer = number;
 
-export default interface LocationRecord extends LegacyLocationProfile {
+export interface LocationRecordData extends LegacyLocationProfile {
   account_id: string,
   location_id: string
   address: string,
@@ -82,4 +85,40 @@ export default interface LocationRecord extends LegacyLocationProfile {
   profile: LocationProfile,
   created_at?: string,
   updated_at?: string
+}
+
+export class LocationRecord {
+  constructor(
+    public data: LocationRecordData
+  ) {}
+
+  public toModel(): Location {
+    const commonProps = _.pick(this.data, [
+      'address',
+      'address2',
+      'city',
+      'state',
+      'country',
+      'postalcode',
+      'timezone',
+      'gallons_per_day_goal',
+      'occupants',
+      'stories',
+      'is_profile_complete',
+      'is_using_away_schedule',
+      'created_at',
+      'updated_at'
+    ]);
+
+    // TODO Implement location profile 
+    return {
+      id: this.data.location_id,
+      account: {
+        id: this.data.account_id
+      },
+      users: [],
+      devices: [],
+      ...commonProps
+    };
+  }
 }

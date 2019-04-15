@@ -1,7 +1,6 @@
 import { injectable, inject } from 'inversify';
-import DeviceDao from './DeviceDao';
 import Logger from 'bunyan';
-import { Device } from '../api/api';
+import { Device, DeviceDao } from '../api/api';
 
 @injectable()
 class DeviceService {
@@ -10,8 +9,8 @@ class DeviceService {
     @inject('DeviceDao') private deviceDao: DeviceDao
   ) {}
 
-  public async getDeviceById(id: string) {
-    const device: Device | null = await this.deviceDao.get(id);
+  public async getDeviceById(id: string, expand?: string[]) {
+    const device: Device | null = await this.deviceDao.get(id, expand);
 
     return device === null ? {} : device;
   }
