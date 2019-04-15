@@ -1,5 +1,4 @@
 import * as t from 'io-ts';
-// tslint:disable no-submodule-imports
 import { PathReporter } from 'io-ts/lib/PathReporter';
 import Request from '../core/api/Request';
 import * as express from 'express';
