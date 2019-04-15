@@ -1,25 +1,27 @@
 import { inject, injectable, interfaces } from 'inversify';
 import { DeviceRecordData, DeviceRecord } from './DeviceRecord';
-import { ObjectExpander, Device, Location, DependencyFactoryFactory } from '../api/api';
-import { LocationResolver } from '../resolver';
+import { Device, Location, DependencyFactoryFactory } from '../api/api';
+import { Resolver, PropertyResolverMap, LocationResolver } from '../resolver';
 import DeviceTable from '../device/DeviceTable';
 
 @injectable()
-class DeviceResolver extends ObjectExpander<DeviceRecord, Device> {
+class DeviceResolver extends Resolver<Device> {
+  protected propertyResolverMap: PropertyResolverMap<Device> = {
+    location: async (device: Device, shouldExpand = false) => {
+      if (!shouldExpand) {
+        return null;
+      }
+
+      return this.locationResolverFactory().get(device.location.id);
+    }
+  };
   private locationResolverFactory: () => LocationResolver;
 
   constructor(
    @inject('DeviceTable') private deviceTable: DeviceTable,
    @inject('DependencyFactoryFactory') depFactoryFactory: DependencyFactoryFactory
   ) {
-
-    super({
-      location: async (deviceRecord: DeviceRecord): Promise<Partial<Device>> => {
-        const location: Location | null = await this.locationResolverFactory().get(deviceRecord.data.location_id);
-  
-        return location === null ? {} : { location };
-      }
-    });
+    super();
 
     this.locationResolverFactory = depFactoryFactory<LocationResolver>('LocationResolver');
   }
@@ -43,11 +45,11 @@ class DeviceResolver extends ObjectExpander<DeviceRecord, Device> {
   }
 
   private async toModel(deviceRecordData: DeviceRecordData, expandProps: string[]): Promise<Device> {
-    const deviceRecord = new DeviceRecord(deviceRecordData);
-    const expandedProps = await this.expandProps(deviceRecord, expandProps);
+    const device = new DeviceRecord(deviceRecordData).toModel();
+    const expandedProps = await this.resolveProps(device, expandProps);
 
     return {
-      ...deviceRecord.toModel(),
+      ...device,
       ...expandedProps
     }; 
   }

@@ -1,11 +1,16 @@
 import { inject, injectable, interfaces } from 'inversify';
 import { LocationRecordData, LocationRecord } from './LocationRecord';
 import { Location, LocationUser, DependencyFactoryFactory } from '../api/api';
-import { DeviceResolver, LocationUserResolver } from '../resolver';
+import { Resolver,PropertyResolverMap, DeviceResolver, LocationUserResolver } from '../resolver';
 import LocationTable from '../location/LocationTable';
 
 @injectable()
-class LocationResolver {
+class LocationResolver extends Resolver<Location> {
+  protected propertyResolverMap: PropertyResolverMap<Location> = {
+    devices: (model: Location, shouldExpand = false) => this.deviceResolverFactory().getAllByLocationId(model.id),
+    users: (model: Location, shouldExpand = false) => this.locationUserResolverFactory().getAllByLocationId(model.id)
+  }
+
   private deviceResolverFactory: () => DeviceResolver;
   private locationUserResolverFactory: () => LocationUserResolver;
 
@@ -13,6 +18,8 @@ class LocationResolver {
     @inject('LocationTable') private locationTable: LocationTable,
     @inject('DependencyFactoryFactory') depFactoryFactory: DependencyFactoryFactory
   ) {
+    super();
+
     this.deviceResolverFactory = depFactoryFactory<DeviceResolver>('DeviceResolver');
     this.locationUserResolverFactory = depFactoryFactory<LocationUserResolver>('LocationUserResolver');
   }
@@ -24,15 +31,12 @@ class LocationResolver {
       return null;
     }
 
-    const locationRecord = new LocationRecord(locationRecordData);
-    const locationId = locationRecord.data.location_id;
-    const locationUsers = await this.locationUserResolverFactory().getAllByLocationId(locationId, expandProps);
-    const devices = await this.deviceResolverFactory().getAllByLocationId(locationId);
+    const location = new LocationRecord(locationRecordData).toModel();
+    const resolvedProps = await this.resolveProps(location);
 
     return {
-      ...locationRecord.toModel(),
-      users: locationUsers,
-      devices
+      ...location,
+      ...resolvedProps
     };
   }
 }

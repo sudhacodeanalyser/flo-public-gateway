@@ -9,5 +9,4 @@ export * from './model/Location';
 export * from './model/Device';
 
 // Utils
-export * from './ObjectExpander';
 export type DependencyFactoryFactory = <T>(dep: string) => () => T;

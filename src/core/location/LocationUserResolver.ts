@@ -1,19 +1,13 @@
 import { inject, injectable, interfaces } from 'inversify';
-import { ObjectExpander, Expandable, LocationUser, UserLocation } from '../api/api';
+import { Expandable, LocationUser, UserLocation } from '../api/api';
 import { UserLocationRoleRecordData, UserLocationRoleRecord } from '../user/UserLocationRoleRecord';
 import UserLocationRoleTable from '../user/UserLocationRoleTable';
 
-class LocationUserResolver extends ObjectExpander<UserLocationRoleRecord, LocationUser> {
+@injectable()
+class LocationUserResolver {
   constructor(
     @inject('UserLocationRoleTable') private userLocationRoleTable: UserLocationRoleTable
-  ) {
-    super({
-      user: async (userLocationRoleRecord: UserLocationRoleRecord): Promise<Partial<LocationUser>> => {
-        // TODO
-        return {};
-      }
-    });
-  }
+  ) {}
 
   public async getAllByLocationId(locationId: string, expandProps: string[] = []): Promise<Array<Expandable<LocationUser>>> {
     const userLocationRoleRecordData = await this.userLocationRoleTable.getAllByLocationId(locationId);
@@ -28,12 +22,8 @@ class LocationUserResolver extends ObjectExpander<UserLocationRoleRecord, Locati
 
   private async toModel(userLocationRoleRecordDatum: UserLocationRoleRecordData, expandProps: string[]): Promise<Expandable<LocationUser>> {
     const userLocationRoleRecord = new UserLocationRoleRecord(userLocationRoleRecordDatum);
-    const expandedProps = await this.expandProps(userLocationRoleRecord, expandProps);
 
-    return {
-      ...userLocationRoleRecord.toLocationUser(),
-      ...expandedProps
-    };
+    return userLocationRoleRecord.toLocationUser();
   }
 
 }
