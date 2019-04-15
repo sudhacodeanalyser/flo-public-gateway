@@ -1,0 +1,36 @@
+paths:
+  /accounts:
+    get:
+      summary: Retrieves an Account by ID.
+      tags:
+        - accounts
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          description: The Account ID
+      responses:
+        200:
+          description: An Account with the specified ID.
+          content:
+            application/json:
+              schema:
+                $ref: '#/definitions/Account'
+        404:
+          description: An Account with the specified ID was not found.
+
+definitions:
+  Account:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uuid
+      owner_user_id:
+        type: string
+        format: uuid

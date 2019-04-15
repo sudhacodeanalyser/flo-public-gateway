@@ -12,6 +12,9 @@ import Logger from 'bunyan';
 import Request from '../core/api/Request';
 import ExtendableError from '../core/api/ExtendableError';
 
+import swaggerUi from 'swagger-ui-express';
+import swaggerConfig, { swaggerOpts } from '../docs/swagger';
+
 function ServerConfigurationFactory(container: Container) {
   return (app: express.Application) => {
     const config = container.get('Config');
@@ -77,6 +80,8 @@ function ServerConfigurationFactory(container: Container) {
 
       next();
     });
+
+    app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerConfig, swaggerOpts));
   };
 }
 

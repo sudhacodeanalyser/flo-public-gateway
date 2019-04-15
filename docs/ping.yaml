@@ -1,0 +1,25 @@
+paths:
+  /:
+    get:
+      summary: Ping endpoint.
+      tags:
+        - ping
+      produces:
+        - application/json
+      responses:
+        200:
+          description: An object with basic information.
+          content:
+            application/json:
+              schema:
+                $ref: '#/definitions/Ping'
+
+definitions:
+  Ping:
+    type: object
+    properties:
+      date:
+        type: string
+        format: date-time
+      app:
+        type: string
