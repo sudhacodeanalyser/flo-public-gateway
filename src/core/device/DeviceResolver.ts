@@ -1,26 +1,27 @@
 import { inject, injectable, interfaces } from 'inversify';
-import { DeviceRecordData, DeviceRecord } from '../device/DeviceRecord';
-import { createFromFactory, ObjectExpander, Device, Location, LocationDao, DaoDependencyFactoryFactory } from './api';
+import { DeviceRecordData, DeviceRecord } from './DeviceRecord';
+import { ObjectExpander, Device, Location, DependencyFactoryFactory } from '../api/api';
+import { LocationResolver } from '../resolver';
 import DeviceTable from '../device/DeviceTable';
 
 @injectable()
-class DeviceDao extends ObjectExpander<DeviceRecord, Device> {
-  private locationDaoFactory: () => LocationDao;
+class DeviceResolver extends ObjectExpander<DeviceRecord, Device> {
+  private locationResolverFactory: () => LocationResolver;
 
   constructor(
    @inject('DeviceTable') private deviceTable: DeviceTable,
-   @inject('DaoDependencyFactoryFactory') daoDepFactoryFactory: DaoDependencyFactoryFactory
+   @inject('DependencyFactoryFactory') depFactoryFactory: DependencyFactoryFactory
   ) {
 
     super({
       location: async (deviceRecord: DeviceRecord): Promise<Partial<Device>> => {
-        const location: Location | null = await this.locationDaoFactory().get(deviceRecord.data.location_id);
+        const location: Location | null = await this.locationResolverFactory().get(deviceRecord.data.location_id);
   
         return location === null ? {} : { location };
       }
     });
 
-    this.locationDaoFactory = daoDepFactoryFactory<LocationDao>('LocationDao');
+    this.locationResolverFactory = depFactoryFactory<LocationResolver>('LocationResolver');
   }
 
   public async get(id: string, expandProps: string[] = []): Promise<Device | null> {
@@ -53,4 +54,4 @@ class DeviceDao extends ObjectExpander<DeviceRecord, Device> {
 
 }
 
-export { DeviceDao };
+export { DeviceResolver };

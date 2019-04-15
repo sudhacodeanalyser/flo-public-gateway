@@ -1,9 +1,9 @@
 import { inject, injectable, interfaces } from 'inversify';
-import { ObjectExpander, Expandable, LocationUser, UserLocation } from './api';
+import { ObjectExpander, Expandable, LocationUser, UserLocation } from '../api/api';
 import { UserLocationRoleRecordData, UserLocationRoleRecord } from '../user/UserLocationRoleRecord';
 import UserLocationRoleTable from '../user/UserLocationRoleTable';
 
-class LocationUserDao extends ObjectExpander<UserLocationRoleRecord, LocationUser> {
+class LocationUserResolver extends ObjectExpander<UserLocationRoleRecord, LocationUser> {
   constructor(
     @inject('UserLocationRoleTable') private userLocationRoleTable: UserLocationRoleTable
   ) {
@@ -38,4 +38,4 @@ class LocationUserDao extends ObjectExpander<UserLocationRoleRecord, LocationUse
 
 }
 
-export { LocationUserDao };
+export { LocationUserResolver };
