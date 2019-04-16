@@ -1,6 +1,6 @@
 import { Expandable, Timestamped, User, Account, Device } from '../api';
 
-export interface DeviceUser extends User {
+export interface LocationUser extends User {
   roles: string[]
 }
 
@@ -10,7 +10,7 @@ type Integer = number;
 export interface Location extends Timestamped {
   id: string,
   account: Expandable<Account>,
-  users: Array<Expandable<DeviceUser>>,
+  users: Array<Expandable<LocationUser>>,
   devices: Array<Expandable<Device>>,
   address: string,
   address2?: string,

@@ -1,19 +1,27 @@
 import { injectable, inject } from 'inversify';
-import DeviceDao from './DeviceDao';
 import Logger from 'bunyan';
-import { Device } from '../api/api';
+import { Device, DeviceUpdate } from '../api/api';
+import { DeviceResolver } from '../resolver';
 
 @injectable()
 class DeviceService {
   constructor(
     @inject('Logger') private readonly logger: Logger,
-    @inject('DeviceDao') private deviceDao: DeviceDao
+    @inject('DeviceResolver') private deviceResolver: DeviceResolver
   ) {}
 
-  public async getDeviceById(id: string) {
-    const device: Device | null = await this.deviceDao.get(id);
+  public async getDeviceById(id: string, expand?: string[]) {
+    const device: Device | null = await this.deviceResolver.get(id, expand);
 
     return device === null ? {} : device;
+  }
+
+  public partiallyUpdateDevice(id: string, deviceUpdate: DeviceUpdate) {
+    return this.deviceResolver.updatePartial(id, deviceUpdate);
+  }
+
+  public removeDevice(id: string) {
+    return this.deviceResolver.remove(id);
   }
 }
 

@@ -1,6 +1,8 @@
 import _ from 'lodash';
 import AWS from 'aws-sdk';
-import DatabaseClient, { Patch, KeyMap, AppendOp, SetOp, RemoveOp } from '../DatabaseClient';
+import DatabaseClient, { KeyMap } from '../DatabaseClient';
+import ResourceDoesNotExistError from '../../core/api/ResourceDoesNotExistError';
+import { Patch, AppendOp, SetOp, RemoveOp } from '../Patch';
 import { inject, injectable } from 'inversify';
 
 // These are interfaces are internal to this module
@@ -17,6 +19,7 @@ interface ExpressionAttributeValueTuple {
 // Constant for update expression construction
 const EMPTY_LIST_EXPRESION_ATTRIBUTE_VALUE = `:__empty_list`;
 
+export type DynamoDbQuery = Partial<AWS.DynamoDB.DocumentClient.QueryInput>;
 
 @injectable()
 class DynamoDbClient implements DatabaseClient {
@@ -57,29 +60,50 @@ class DynamoDbClient implements DatabaseClient {
   public _update<T>(tableName: string, key: KeyMap, patch: Patch) {
     const {
       UpdateExpression,
-      ExpressionAttributeNames,
+      ExpressionAttributeNames: updateExprNames,
       ExpressionAttributeValues
     } = this.createUpdate(patch);
+    const {
+      ConditionExpression,
+      ExpressionAttributeNames: conditionExprNames
+    } = this.createCondition(key);
 
     return this.dynamoDb.update({
       TableName: this.tablePrefix + tableName,
       Key: key,
       UpdateExpression,
-      ExpressionAttributeNames,
+      ConditionExpression,
+      ExpressionAttributeNames: {
+        ...updateExprNames,
+        ...conditionExprNames
+      },
       ExpressionAttributeValues,
-      ReturnValues: 'ALL_NEw'
+      ReturnValues: 'ALL_NEW'
     })
     .promise();
   }
 
   public async update<T>(tableName: string, key: KeyMap, patch: Patch): Promise<T> {
-    const { Attributes } = await this._update<T>(tableName, key, patch);
+    try {
+      if (_.isEmpty(patch) || (_.isEmpty(patch.setOps) && _.isEmpty(patch.appendOps) && _.isEmpty(patch.removeOps))) {
+        throw new Error('Cannot apply an empty patch');
+      }
 
-    return Attributes as T;
+      const { Attributes } = await this._update<T>(tableName, key, patch);
+
+      return Attributes as T;
+    } catch (err) {
+      // There's no type defined for this, so we check the name string
+      if (err.name === 'ConditionalCheckFailedException') {
+        throw new ResourceDoesNotExistError();
+      } else {
+        throw err;
+      }
+    }
   }
 
   public _remove(tableName: string, key: KeyMap) {
-    return this.dynamoDb.get({
+    return this.dynamoDb.delete({
       TableName: this.tablePrefix + tableName,
       Key: key
     })
@@ -90,18 +114,35 @@ class DynamoDbClient implements DatabaseClient {
     await this._remove(tableName, key);
   }
 
-  public async _query(tableName: string, queryOptions: Partial<AWS.DynamoDB.DocumentClient.QueryInput>) {
+  public async _query(tableName: string, queryOptions: DynamoDbQuery) {
+
     return this.dynamoDb.query({
-      TableName: tableName,
+      TableName: this.tablePrefix + tableName,
       ...queryOptions
     })
     .promise();
   }
 
-  public async query<T>(tableName: string, queryOptions: Partial<AWS.DynamoDB.DocumentClient.QueryInput>): Promise<T[]> {
+  public async query<T>(tableName: string, queryOptions: DynamoDbQuery): Promise<T[]> {
     const { Items } = await this._query(tableName, queryOptions);
 
     return Items as T[];
+  }
+
+  private createCondition(key: KeyMap) {
+    const condTuples = _.map(key, (value, name) => ({
+      name,
+      exprName: `#${ name }`
+    }));
+    const ConditionExpression = condTuples
+      .map(({ exprName }) => `attribute_exists(${ exprName })`)
+      .join(' AND ');
+    const ExpressionAttributeNames = this.collectExpressionAttributeNames(condTuples);
+
+    return {
+      ConditionExpression,
+      ExpressionAttributeNames
+    };
   }
 
   private createUpdate(patch: Patch) {
@@ -207,7 +248,10 @@ class DynamoDbClient implements DatabaseClient {
       ExpressionAttributeNames: this.collectExpressionAttributeNames(appendExprTuples),
       ExpressionAttributeValues: {
         ...this.collectExpressionAttributeValues(appendExprTuples),
-        [EMPTY_LIST_EXPRESION_ATTRIBUTE_VALUE]: []
+        ...( appendExprTuples.length ?
+            { [EMPTY_LIST_EXPRESION_ATTRIBUTE_VALUE]: [] } :
+            {}
+        )
       },
       opStrs: appendStrs
     };

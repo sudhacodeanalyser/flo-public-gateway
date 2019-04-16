@@ -1,10 +1,10 @@
 import { inject, injectable } from 'inversify';
 import DatabaseClient from '../../database/DatabaseClient';
 import DatabaseTable from '../../database/DatabaseTable';
-import UserRecord from './UserRecord';
+import { UserRecordData } from './UserRecord';
 
 @injectable()
-class UserTable extends DatabaseTable<UserRecord> {
+class UserTable extends DatabaseTable<UserRecordData> {
   constructor(@inject('DatabaseClient') dbClient: DatabaseClient) {
     super(dbClient, 'User');
   }

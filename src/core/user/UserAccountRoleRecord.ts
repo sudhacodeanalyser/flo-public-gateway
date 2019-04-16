@@ -1,4 +1,4 @@
-export default interface UserAccountRoleRecord {
+export interface UserAccountRoleRecord {
   user_id: string,
   account_id: string,
   role: string[],

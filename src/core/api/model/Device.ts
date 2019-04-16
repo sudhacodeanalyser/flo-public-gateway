@@ -19,3 +19,5 @@ export interface Device extends Timestamped {
   installation_point?: string,
   nickname?: string
 }
+
+export type DeviceUpdate = Pick<Partial<Device>, 'installation_point' | 'nickname'>;
