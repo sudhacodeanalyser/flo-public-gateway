@@ -45,13 +45,16 @@ class DeviceResolver extends Resolver<Device> {
     );
   }
 
-
   public async updatePartial(id: string, partialDevice: Partial<Device>): Promise<Device> {
     const deviceRecordData = DeviceRecord.fromPartialModel(partialDevice);
     const patch = fromPartialRecord<DeviceRecordData>(deviceRecordData);
     const updatedDeviceRecordData = await this.deviceTable.update({ id }, patch);
 
     return new DeviceRecord(updatedDeviceRecordData).toModel();
+  }
+
+  public remove(id: string): Promise<void> {
+    return this.deviceTable.remove({ id });
   }
 
   private async toModel(deviceRecordData: DeviceRecordData, expandProps: string[]): Promise<Device> {

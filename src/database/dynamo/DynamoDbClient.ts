@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import AWS from 'aws-sdk';
 import DatabaseClient, { KeyMap } from '../DatabaseClient';
+import NotFoundError from '../../core/api/NotFoundError';
 import { Patch, AppendOp, SetOp, RemoveOp } from '../Patch';
 import { inject, injectable } from 'inversify';
 
@@ -83,18 +84,26 @@ class DynamoDbClient implements DatabaseClient {
   }
 
   public async update<T>(tableName: string, key: KeyMap, patch: Patch): Promise<T> {
+    try {
+      if (_.isEmpty(patch) || (_.isEmpty(patch.setOps) && _.isEmpty(patch.appendOps) && _.isEmpty(patch.removeOps))) {
+        throw new Error('Cannot apply an empty patch');
+      }
 
-    if (_.isEmpty(patch) || (_.isEmpty(patch.setOps) && _.isEmpty(patch.appendOps) && _.isEmpty(patch.removeOps))) {
-      throw new Error('Cannot apply an empty patch');
+      const { Attributes } = await this._update<T>(tableName, key, patch);
+
+      return Attributes as T;
+    } catch (err) {
+      // There's no type defined for this, so we check the name string
+      if (err.name === 'ConditionalCheckFailedException') {
+        throw new NotFoundError();
+      } else {
+        throw err;
+      }
     }
-
-    const { Attributes } = await this._update<T>(tableName, key, patch);
-
-    return Attributes as T;
   }
 
   public _remove(tableName: string, key: KeyMap) {
-    return this.dynamoDb.get({
+    return this.dynamoDb.delete({
       TableName: this.tablePrefix + tableName,
       Key: key
     })

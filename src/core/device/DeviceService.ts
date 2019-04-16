@@ -19,6 +19,10 @@ class DeviceService {
   public partiallyUpdateDevice(id: string, deviceUpdate: DeviceUpdate) {
     return this.deviceResolver.updatePartial(id, deviceUpdate);
   }
+
+  public removeDevice(id: string) {
+    return this.deviceResolver.remove(id);
+  }
 }
 
 export default DeviceService;

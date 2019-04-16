@@ -49,6 +49,18 @@ export function DeviceControllerFactory(container: Container) {
 
       return this.deviceService.partiallyUpdateDevice(id, deviceUpdate);
     }
+
+    @httpDelete('/:id',
+      reqValidator.create(t.type({
+        params: t.type({
+          id: t.string
+        })
+      }))
+    )
+    private removeDevice(@requestParam('id') id: string) {
+
+      return this.deviceService.removeDevice(id);
+    }
   }
 
   return DeviceController;
