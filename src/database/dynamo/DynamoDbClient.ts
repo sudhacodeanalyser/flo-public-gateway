@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import AWS from 'aws-sdk';
 import DatabaseClient, { KeyMap } from '../DatabaseClient';
-import NotFoundError from '../../core/api/NotFoundError';
+import ResourceDoesNotExistError from '../../core/api/ResourceDoesNotExistError';
 import { Patch, AppendOp, SetOp, RemoveOp } from '../Patch';
 import { inject, injectable } from 'inversify';
 
@@ -95,7 +95,7 @@ class DynamoDbClient implements DatabaseClient {
     } catch (err) {
       // There's no type defined for this, so we check the name string
       if (err.name === 'ConditionalCheckFailedException') {
-        throw new NotFoundError();
+        throw new ResourceDoesNotExistError();
       } else {
         throw err;
       }
