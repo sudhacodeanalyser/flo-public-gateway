@@ -24,6 +24,22 @@ export interface DeviceRecordData {
 }
 
 export class DeviceRecord {
+
+  public static fromPartialModel(model: Partial<Device>): Partial<DeviceRecordData> {
+    return {
+      id: model.id,
+      device_id: model.macAddress,
+      nickname: model.nickname,
+      installation_point: model.installation_point,
+      location_id: model.location && model.location.id,
+      created_at: model.created_at,
+      updated_at: model.updated_at,
+      // TODO enum string ->
+      device_type: model.device_type && DeviceTypeData.FLO_DEVICE,
+      device_model: model.device_model && DeviceModelTypeData.FLO_DEVICE_THREE_QUARTER_INCH
+    };
+  }
+
   constructor(
     public data: DeviceRecordData
   ) {}

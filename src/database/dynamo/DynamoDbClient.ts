@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import AWS from 'aws-sdk';
-import DatabaseClient, { Patch, KeyMap, AppendOp, SetOp, RemoveOp } from '../DatabaseClient';
+import DatabaseClient, { KeyMap } from '../DatabaseClient';
+import { Patch, AppendOp, SetOp, RemoveOp } from '../Patch';
 import { inject, injectable } from 'inversify';
 
 // These are interfaces are internal to this module
@@ -58,22 +59,35 @@ class DynamoDbClient implements DatabaseClient {
   public _update<T>(tableName: string, key: KeyMap, patch: Patch) {
     const {
       UpdateExpression,
-      ExpressionAttributeNames,
+      ExpressionAttributeNames: updateExprNames,
       ExpressionAttributeValues
     } = this.createUpdate(patch);
+    const {
+      ConditionExpression,
+      ExpressionAttributeNames: conditionExprNames
+    } = this.createCondition(key);
 
     return this.dynamoDb.update({
       TableName: this.tablePrefix + tableName,
       Key: key,
       UpdateExpression,
-      ExpressionAttributeNames,
+      ConditionExpression,
+      ExpressionAttributeNames: {
+        ...updateExprNames,
+        ...conditionExprNames
+      },
       ExpressionAttributeValues,
-      ReturnValues: 'ALL_NEw'
+      ReturnValues: 'ALL_NEW'
     })
     .promise();
   }
 
   public async update<T>(tableName: string, key: KeyMap, patch: Patch): Promise<T> {
+
+    if (_.isEmpty(patch) || (_.isEmpty(patch.setOps) && _.isEmpty(patch.appendOps) && _.isEmpty(patch.removeOps))) {
+      throw new Error('Cannot apply an empty patch');
+    }
+
     const { Attributes } = await this._update<T>(tableName, key, patch);
 
     return Attributes as T;
@@ -104,6 +118,22 @@ class DynamoDbClient implements DatabaseClient {
     const { Items } = await this._query(tableName, queryOptions);
 
     return Items as T[];
+  }
+
+  private createCondition(key: KeyMap) {
+    const condTuples = _.map(key, (value, name) => ({
+      name,
+      exprName: `#${ name }`
+    }));
+    const ConditionExpression = condTuples
+      .map(({ exprName }) => `attribute_exists(${ exprName })`)
+      .join(' AND ');
+    const ExpressionAttributeNames = this.collectExpressionAttributeNames(condTuples);
+
+    return {
+      ConditionExpression,
+      ExpressionAttributeNames
+    };
   }
 
   private createUpdate(patch: Patch) {
@@ -209,7 +239,10 @@ class DynamoDbClient implements DatabaseClient {
       ExpressionAttributeNames: this.collectExpressionAttributeNames(appendExprTuples),
       ExpressionAttributeValues: {
         ...this.collectExpressionAttributeValues(appendExprTuples),
-        [EMPTY_LIST_EXPRESION_ATTRIBUTE_VALUE]: []
+        ...( appendExprTuples.length ?
+            { [EMPTY_LIST_EXPRESION_ATTRIBUTE_VALUE]: [] } :
+            {}
+        )
       },
       opStrs: appendStrs
     };

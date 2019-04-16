@@ -1,5 +1,6 @@
 import { injectable, unmanaged } from 'inversify';
-import DatabaseClient, { Patch, KeyMap } from './DatabaseClient';
+import DatabaseClient, { KeyMap } from './DatabaseClient';
+import { Patch } from './Patch';
 
 @injectable()
 class DatabaseTable<T> {

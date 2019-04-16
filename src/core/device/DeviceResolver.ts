@@ -2,6 +2,7 @@ import { inject, injectable, interfaces } from 'inversify';
 import { DeviceRecordData, DeviceRecord } from './DeviceRecord';
 import { Device, Location, DependencyFactoryFactory } from '../api/api';
 import { Resolver, PropertyResolverMap, LocationResolver } from '../resolver';
+import { fromPartialRecord } from '../../database/Patch';
 import DeviceTable from '../device/DeviceTable';
 
 @injectable()
@@ -44,6 +45,15 @@ class DeviceResolver extends Resolver<Device> {
     );
   }
 
+
+  public async updatePartial(id: string, partialDevice: Partial<Device>): Promise<Device> {
+    const deviceRecordData = DeviceRecord.fromPartialModel(partialDevice);
+    const patch = fromPartialRecord<DeviceRecordData>(deviceRecordData);
+    const updatedDeviceRecordData = await this.deviceTable.update({ id }, patch);
+
+    return new DeviceRecord(updatedDeviceRecordData).toModel();
+  }
+
   private async toModel(deviceRecordData: DeviceRecordData, expandProps: string[]): Promise<Device> {
     const device = new DeviceRecord(deviceRecordData).toModel();
     const expandedProps = await this.resolveProps(device, expandProps);
@@ -53,7 +63,6 @@ class DeviceResolver extends Resolver<Device> {
       ...expandedProps
     }; 
   }
-
 }
 
 export { DeviceResolver };
