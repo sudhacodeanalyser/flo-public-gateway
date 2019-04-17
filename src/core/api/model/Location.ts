@@ -1,6 +1,8 @@
 import { Expandable, Timestamped, User, Account, Device } from '../api';
+import * as t from 'io-ts';
 
-export interface LocationUser extends User {
+export interface LocationUser extends Partial<User> {
+  id: string,
   roles: string[]
 }
 
@@ -23,6 +25,21 @@ export interface Location extends Timestamped {
   occupants?: Integer,
   stories?: Integer,
   is_profile_complete?: boolean,
-  is_using_away_schedule?: boolean
   // TODO implement profile
 }
+
+// Add additional properties here as they are defined
+export const LocationUpdateValidator = t.exact(t.partial({
+  address: t.string,
+  address2: t.string,
+  city: t.string,
+  state: t.string,
+  postalcode: t.string,
+  timezone: t.string,
+  gallons_per_day_goal: t.number,
+  occupants: t.number,
+  stories: t.number
+}));
+
+
+export type LocationUpdate = t.TypeOf<typeof LocationUpdateValidator>;

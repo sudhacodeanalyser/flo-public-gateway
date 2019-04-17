@@ -20,7 +20,7 @@ export class UserLocationRoleRecord {
     };
   }
 
-  public toLocationUser(): Expandable<LocationUser> {
+  public toLocationUser(): LocationUser {
     return {
       id: this.data.user_id,
       roles: this.data.roles
