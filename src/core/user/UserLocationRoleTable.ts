@@ -10,7 +10,7 @@ class UserLocationRoleTable extends DatabaseTable<UserLocationRoleRecordData> {
     super(dbClient, 'UserLocationRole');
   }
 
-  public getAllByUserId(userId: string): Promise<UserLocationRoleRecordData[]> {
+  public async getAllByUserId(userId: string): Promise<UserLocationRoleRecordData[]> {
     return this.query<DynamoDbQuery>({
       KeyConditionExpression: '#user_id = :user_id',
       ExpressionAttributeNames: {
@@ -22,7 +22,7 @@ class UserLocationRoleTable extends DatabaseTable<UserLocationRoleRecordData> {
     });
   }
 
-  public getAllByLocationId(locationId: string): Promise<UserLocationRoleRecordData[]> {
+  public async getAllByLocationId(locationId: string): Promise<UserLocationRoleRecordData[]> {
     return this.query<DynamoDbQuery>({
       IndexName: 'LocationIdIndex',
       KeyConditionExpression: '#location_id = :location_id',
