@@ -28,7 +28,7 @@ export function DeviceControllerFactory(container: Container): interfaces.Contro
         })
       }))
     )
-    private getDevice(@requestParam('id') id: string, @queryParam('expand') expand?: string): Promise<Device | {}> {
+    private async getDevice(@requestParam('id') id: string, @queryParam('expand') expand?: string): Promise<Device | {}> {
       const expandProps = parseExpand(expand);
 
       return this.deviceService.getDeviceById(id, expandProps);
@@ -46,7 +46,7 @@ export function DeviceControllerFactory(container: Container): interfaces.Contro
         ])
       }))
     )
-    private partialUpdateDevice(@requestParam('id') id: string, @requestBody() deviceUpdate: DeviceUpdate): Promise<Device> {
+    private async partialUpdateDevice(@requestParam('id') id: string, @requestBody() deviceUpdate: DeviceUpdate): Promise<Device> {
 
       return this.deviceService.partiallyUpdateDevice(id, deviceUpdate);
     }
@@ -58,7 +58,7 @@ export function DeviceControllerFactory(container: Container): interfaces.Contro
         })
       }))
     )
-    private removeDevice(@requestParam('id') id: string): Promise<void> {
+    private async removeDevice(@requestParam('id') id: string): Promise<void> {
 
       return this.deviceService.removeDevice(id);
     }

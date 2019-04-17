@@ -13,7 +13,7 @@ class Resolver<T extends {}> {
 
   protected async resolveProps<K extends keyof T>(model: T, expandProps?: string[]) : Promise<Partial<T>> {
     const resolvedProps = await Promise.all(
-      _.map(model, (value: any, key: K) => {
+      _.map(model, async (value: any, key: K) => {
         return this.resolveProp(model, key, expandProps === undefined ? false : _.includes(expandProps, key as string));
       })
     );

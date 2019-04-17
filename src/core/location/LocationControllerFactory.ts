@@ -20,7 +20,7 @@ export function LocationControllerFactory(container: Container): interfaces.Cont
     @httpPost(
       '/'
     )
-    private createLocation(@requestBody() location: Location): Promise<Location> {
+    private async createLocation(@requestBody() location: Location): Promise<Location> {
       return this.locationService.createLocation(location);
     }
 
@@ -35,7 +35,7 @@ export function LocationControllerFactory(container: Container): interfaces.Cont
         })
       }))
     )
-    private getLocation(@requestParam('id') id: string, @queryParam('expand') expand?: string): Promise<Location | {}> {
+    private async getLocation(@requestParam('id') id: string, @queryParam('expand') expand?: string): Promise<Location | {}> {
       const expandProps = parseExpand(expand);
 
       return this.locationService.getLocation(id, expandProps);
@@ -50,7 +50,7 @@ export function LocationControllerFactory(container: Container): interfaces.Cont
         body: LocationUpdateValidator
       }))
     )
-    private partiallyUpdateLoation(@requestParam('id') id: string, @requestBody() locationUpdate: LocationUpdate): Promise<Location> {
+    private async partiallyUpdateLoation(@requestParam('id') id: string, @requestBody() locationUpdate: LocationUpdate): Promise<Location> {
       return this.locationService.partiallyUpdateLocation(id, locationUpdate);
     }
 
@@ -62,7 +62,7 @@ export function LocationControllerFactory(container: Container): interfaces.Cont
         })
       }))
     )
-    private removeLocation(@requestParam('id') id: string): Promise<void> {
+    private async removeLocation(@requestParam('id') id: string): Promise<void> {
       return this.locationService.removeLocation(id);
     }
 
@@ -77,7 +77,7 @@ export function LocationControllerFactory(container: Container): interfaces.Cont
         })
       }))
     )
-    private getAllLocationUsers(@requestParam('id') id: string, @queryParam('expand') expand?: string): Promise<Pick<Location, 'users'>> {
+    private async getAllLocationUsers(@requestParam('id') id: string, @queryParam('expand') expand?: string): Promise<Pick<Location, 'users'>> {
       const expandProps = parseExpand(expand);
 
       return this.locationService.getAllLocationUsers(id, expandProps);
@@ -95,7 +95,7 @@ export function LocationControllerFactory(container: Container): interfaces.Cont
         })
       }))
     )
-    private addLocationUser(@requestParam('location_id') locationId: string, @requestParam('user_id') userId: string, @requestBody() { roles }: Pick<LocationUser, 'roles'>): Promise<LocationUser> {
+    private async addLocationUser(@requestParam('location_id') locationId: string, @requestParam('user_id') userId: string, @requestBody() { roles }: Pick<LocationUser, 'roles'>): Promise<LocationUser> {
       return this.locationService.addLocationUser(locationId, userId, roles);
     }
 
@@ -108,7 +108,7 @@ export function LocationControllerFactory(container: Container): interfaces.Cont
         })
       }))
     )
-    private removeLocationUser(@requestParam('location_id') locationId: string, @requestParam('user_id') userId: string): Promise<void> {
+    private async removeLocationUser(@requestParam('location_id') locationId: string, @requestParam('user_id') userId: string): Promise<void> {
       return this.locationService.removeLocationUser(locationId, userId);
     }
   }

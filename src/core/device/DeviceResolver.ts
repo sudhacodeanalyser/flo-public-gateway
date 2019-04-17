@@ -53,7 +53,7 @@ class DeviceResolver extends Resolver<Device> {
     return new DeviceRecord(updatedDeviceRecordData).toModel();
   }
 
-  public remove(id: string): Promise<void> {
+  public async remove(id: string): Promise<void> {
     return this.deviceTable.remove({ id });
   }
 
