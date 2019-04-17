@@ -9,7 +9,7 @@ import dynamoDbContainerModule from '../database/dynamo/containerModule';
 // Core container modules
 import coreContainerModules from '../core/containerModule';
 
-export default function ContainerFactory(container = new Container()) {
+export default function ContainerFactory(container: Container = new Container()): Container {
 
   container.bind<typeof config>('Config').toConstantValue(config);
 

@@ -8,7 +8,7 @@ import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddle
 import * as t from 'io-ts';
 import { parseExpand } from '../api/controllerUtils';
 
-export function LocationControllerFactory(container: Container) {
+export function LocationControllerFactory(container: Container): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
 
   @controller('/locations')
@@ -20,7 +20,7 @@ export function LocationControllerFactory(container: Container) {
     @httpPost(
       '/'
     )
-    private createLocation(@requestBody() location: Location) {
+    private createLocation(@requestBody() location: Location): Promise<Location> {
       return this.locationService.createLocation(location);
     }
 
@@ -35,7 +35,7 @@ export function LocationControllerFactory(container: Container) {
         })
       }))
     )
-    private getLocation(@requestParam('id') id: string, @queryParam('expand') expand?: string) {
+    private getLocation(@requestParam('id') id: string, @queryParam('expand') expand?: string): Promise<Location | {}> {
       const expandProps = parseExpand(expand);
 
       return this.locationService.getLocation(id, expandProps);
@@ -50,7 +50,7 @@ export function LocationControllerFactory(container: Container) {
         body: LocationUpdateValidator
       }))
     )
-    private partiallyUpdateLoation(@requestParam('id') id: string, @requestBody() locationUpdate: LocationUpdate) {
+    private partiallyUpdateLoation(@requestParam('id') id: string, @requestBody() locationUpdate: LocationUpdate): Promise<Location> {
       return this.locationService.partiallyUpdateLocation(id, locationUpdate);
     }
 
@@ -62,7 +62,7 @@ export function LocationControllerFactory(container: Container) {
         })
       }))
     )
-    private removeLocation(@requestParam('id') id: string) {
+    private removeLocation(@requestParam('id') id: string): Promise<void> {
       return this.locationService.removeLocation(id);
     }
 
@@ -77,7 +77,7 @@ export function LocationControllerFactory(container: Container) {
         })
       }))
     )
-    private getAllLocationUsers(@requestParam('id') id: string, @queryParam('expand') expand?: string) {
+    private getAllLocationUsers(@requestParam('id') id: string, @queryParam('expand') expand?: string): Promise<Pick<Location, 'users'>> {
       const expandProps = parseExpand(expand);
 
       return this.locationService.getAllLocationUsers(id, expandProps);
@@ -95,7 +95,7 @@ export function LocationControllerFactory(container: Container) {
         })
       }))
     )
-    private addLocationUser(@requestParam('location_id') locationId: string, @requestParam('user_id') userId: string, @requestBody() { roles }: Pick<LocationUser, 'roles'>) {
+    private addLocationUser(@requestParam('location_id') locationId: string, @requestParam('user_id') userId: string, @requestBody() { roles }: Pick<LocationUser, 'roles'>): Promise<LocationUser> {
       return this.locationService.addLocationUser(locationId, userId, roles);
     }
 
@@ -108,7 +108,7 @@ export function LocationControllerFactory(container: Container) {
         })
       }))
     )
-    private removeLocationUser(@requestParam('location_id') locationId: string, @requestParam('user_id') userId: string) {
+    private removeLocationUser(@requestParam('location_id') locationId: string, @requestParam('user_id') userId: string): Promise<void> {
       return this.locationService.removeLocationUser(locationId, userId);
     }
   }

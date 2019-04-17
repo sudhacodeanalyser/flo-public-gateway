@@ -15,7 +15,7 @@ import ExtendableError from '../core/api/ExtendableError';
 import swaggerUi from 'swagger-ui-express';
 import swaggerConfig, { swaggerOpts } from '../docs/swagger';
 
-function ServerConfigurationFactory(container: Container) {
+function ServerConfigurationFactory(container: Container): (app: express.Application) => void {
   return (app: express.Application) => {
     const config = container.get('Config');
 
@@ -85,7 +85,7 @@ function ServerConfigurationFactory(container: Container) {
   };
 }
 
-function configureServerErrorHandling(app: express.Application) {
+function configureServerErrorHandling(app: express.Application): void {
   app.use((err: Error, req: Request, res: express.Response, next: express.NextFunction) => {
     const logger: Logger | undefined = req.log;
 
@@ -102,7 +102,7 @@ function configureServerErrorHandling(app: express.Application) {
   });
 }
 
-export default function ServerFactory(container: Container) {
+export default function ServerFactory(container: Container): InversifyExpressServer {
   const server = new InversifyExpressServer(container);
 
   server.setConfig(ServerConfigurationFactory(container));

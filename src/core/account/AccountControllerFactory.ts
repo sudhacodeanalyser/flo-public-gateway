@@ -3,18 +3,19 @@ import { interfaces, controller, httpGet, httpPost, httpDelete, request, queryPa
 import { injectable, inject, Container } from 'inversify';
 import AccountService from './AccountService';
 
-export function AccountControllerFactory(container: Container) {
+export function AccountControllerFactory(container: Container): interfaces.Controller {
   @controller('/accounts', 'LoggerMiddleware')
   class AccountController implements interfaces.Controller {
     constructor(
       @inject('AccountService') private accountService: AccountService
     ) {}
 
-    @httpGet('/:id')
-    private getAccount(@requestParam('id') id: string) {
+    // TODO
+    // @httpGet('/:id')
+    // private getAccount(@requestParam('id') id: string):  {
 
-      return this.accountService.getAccountById(id);
-    }
+    //   return this.accountService.getAccountById(id);
+    // }
   }
 
   return AccountController;

@@ -3,7 +3,7 @@ import _ from 'lodash';
 
 dotenv.config();
 
-function getDefaults() {
+function getDefaults(): { [key: string]: any } {
   switch (process.env.NODE_ENV) {
     case 'production':
     case 'development':

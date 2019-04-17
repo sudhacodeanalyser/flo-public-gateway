@@ -7,7 +7,7 @@ import Request from '../core/api/Request';
 @injectable()
 class LoggerMiddleware extends BaseMiddleware {
 
-  public handler(req: Request, res: express.Response, next: express.NextFunction) {
+  public handler(req: Request, res: express.Response, next: express.NextFunction): void {
     try {
       const logger: Logger | undefined = req.log;
 
