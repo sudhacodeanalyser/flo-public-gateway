@@ -16,7 +16,7 @@ export enum UnitSystem {
 export interface User extends Timestamped {
   id: string,
   email: string,
-  password: string,
+  password?: string,
   is_active?: boolean,
   locations: Array<Expandable<UserLocation>>,
   account: Expandable<UserAccount>,

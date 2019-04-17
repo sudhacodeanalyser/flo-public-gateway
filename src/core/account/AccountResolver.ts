@@ -10,7 +10,7 @@ import { fromPartialRecord } from '../../database/Patch';
 class AccountResolver extends Resolver<Account> {
   protected propertyResolverMap: PropertyResolverMap<Account> = {}
   private locationResolverFactory: () => LocationResolver
-  
+
   constructor(
     @inject('AccountTable') private accountTable: AccountTable,
     @inject('DependencyFactoryFactory') depFactoryFactory: DependencyFactoryFactory

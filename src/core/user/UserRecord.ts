@@ -1,8 +1,10 @@
-export interface UserRecordData {
+import { Timestamped } from '../api/api';
+
+export interface UserRecord extends Timestamped {
   id: string,
   email: string,
+  email_hash: string,
   password: string,
-  is_active?: boolean,
-  created_at?: string,
-  updated_at?: string
+  source?: string,
+  is_active?: boolean
 }

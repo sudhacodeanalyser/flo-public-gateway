@@ -1,13 +1,14 @@
 import { inject, injectable } from 'inversify';
 import DatabaseClient from '../../database/DatabaseClient';
 import DatabaseTable from '../../database/DatabaseTable';
-import { UserRecord } from './UserRecord';
+import { DynamoDbQuery } from '../../database/dynamo/DynamoDbClient';
+import { UserDetailRecord } from './UserDetailRecord';
 
 @injectable()
-class UserTable extends DatabaseTable<UserRecord> {
+class UserDetailTable extends DatabaseTable<UserDetailRecord> {
   constructor(@inject('DatabaseClient') dbClient: DatabaseClient) {
-    super(dbClient, 'User');
+    super(dbClient, 'UserDetail');
   }
 }
 
-export default UserTable;
+export default UserDetailTable;
