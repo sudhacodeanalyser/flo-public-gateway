@@ -9,37 +9,31 @@ export interface LocationUser extends Partial<User> {
 // This will need to be enforced as a runtime validation
 type Integer = number;
 
-export interface Location extends Timestamped {
+const LocationMutableCodec = t.type({
+  address: t.string,
+  address2: t.union([t.string, t.undefined]),
+  city: t.string,
+  state: t.string,
+  country: t.string,
+  postalcode: t.string,
+  timezone: t.string,
+  gallons_per_day_goal: t.number,
+  occupants: t.union([t.number, t.undefined]),
+  stories: t.union([t.number, t.undefined]),
+  is_profile_complete: t.union([t.boolean, t.undefined])
+});
+
+export const LocationCreateValidator = t.exact(LocationMutableCodec);
+export type LocationCreate = t.TypeOf<typeof LocationCreateValidator>;
+
+export interface Location extends LocationCreate, Timestamped {
   id: string,
   account: Expandable<Account>,
   users: Array<Expandable<LocationUser>>,
-  devices: Array<Expandable<Device>>,
-  address: string,
-  address2?: string,
-  city: string,
-  state: string,
-  country: string,
-  postalcode: string,
-  timezone: string,
-  gallons_per_day_goal: Integer,
-  occupants?: Integer,
-  stories?: Integer,
-  is_profile_complete?: boolean,
+  devices: Array<Expandable<Device>>
   // TODO implement profile
 }
 
 // Add additional properties here as they are defined
-export const LocationUpdateValidator = t.exact(t.partial({
-  address: t.string,
-  address2: t.string,
-  city: t.string,
-  state: t.string,
-  postalcode: t.string,
-  timezone: t.string,
-  gallons_per_day_goal: t.number,
-  occupants: t.number,
-  stories: t.number
-}));
-
-
+export const LocationUpdateValidator = t.exact(t.partial(LocationMutableCodec.props));
 export type LocationUpdate = t.TypeOf<typeof LocationUpdateValidator>;
