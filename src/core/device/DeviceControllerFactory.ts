@@ -6,6 +6,7 @@ import { DeviceUpdate } from '../api/api';
 import DeviceService from './DeviceService';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
 import * as t from 'io-ts';
+import { parseExpand } from '../api/controllerUtils';
 
 export function DeviceControllerFactory(container: Container) {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
@@ -28,7 +29,7 @@ export function DeviceControllerFactory(container: Container) {
       }))
     )
     private getDevice(@requestParam('id') id: string, @queryParam('expand') expand?: string) {
-      const expandProps = (expand === undefined ? '' : expand).split(',').filter(prop => !_.isEmpty(prop));
+      const expandProps = parseExpand(expand);
 
       return this.deviceService.getDeviceById(id, expandProps);
     }

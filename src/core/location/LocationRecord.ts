@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import { Location } from '../api/api';
+import { Location, Timestamped } from '../api/api';
 
 export enum NoYesUnsure {
   NO = 0,
@@ -67,7 +67,7 @@ export interface LocationProfile {
 // This will need to be enforced as a runtime validation
 type Integer = number;
 
-export interface LocationRecordData extends LegacyLocationProfile {
+export interface LocationRecordData extends Partial<LegacyLocationProfile>, Timestamped {
   account_id: string,
   location_id: string
   address: string,
@@ -82,33 +82,80 @@ export interface LocationRecordData extends LegacyLocationProfile {
   stories?: Integer,
   is_profile_complete?: boolean,
   is_using_away_schedule?: boolean,
-  profile: LocationProfile,
-  created_at?: string,
-  updated_at?: string
+  profile?: LocationProfile
+}
+
+type CommonRecordModelProps =     
+    'address' |
+    'address2' |
+    'city' |
+    'state' |
+    'country' |
+    'postalcode' |
+    'timezone' |
+    'gallons_per_day_goal' |
+    'occupants' |
+    'stories' |
+    'is_profile_complete' |
+    'created_at' |
+    'updated_at';
+
+type CommonRecordModel = Pick<Location, CommonRecordModelProps>;
+
+function safePick<I, O>(source: I, keys: string[]): O {
+  return _.pick(source, keys) as any;
 }
 
 export class LocationRecord {
+
+  public static fromModel(location: Location): LocationRecordData {
+    const commonProps: CommonRecordModel = safePick<Location, CommonRecordModel>(
+      location, 
+      LocationRecord.commonModelRecordProps
+    );
+
+    return {
+      location_id: location.id,
+      account_id: location.account && location.account.id,
+      ...commonProps,
+    };
+  }
+
+  public static fromPartialModel(location: Partial<Location>): Partial<LocationRecordData> {
+    const commonProps = safePick<Partial<Location>, Partial<CommonRecordModel>>(
+      location, 
+      LocationRecord.commonModelRecordProps
+    );
+
+    return {
+      location_id: location.id,
+      account_id: location.account && location.account.id,
+      ...commonProps
+    };
+  }
+
+  private static commonModelRecordProps: string[] = [
+    'address',
+    'address2',
+    'city',
+    'state',
+    'country',
+    'postalcode',
+    'timezone',
+    'gallons_per_day_goal',
+    'occupants',
+    'stories',
+    'is_profile_complete',
+    'created_at',
+    'updated_at'
+  ];
+
   constructor(
     public data: LocationRecordData
   ) {}
 
   public toModel(): Location {
-    const commonProps = _.pick(this.data, [
-      'address',
-      'address2',
-      'city',
-      'state',
-      'country',
-      'postalcode',
-      'timezone',
-      'gallons_per_day_goal',
-      'occupants',
-      'stories',
-      'is_profile_complete',
-      'is_using_away_schedule',
-      'created_at',
-      'updated_at'
-    ]);
+    const commonProps = safePick<LocationRecordData, CommonRecordModel>(this.data, LocationRecord.commonModelRecordProps);
 
     // TODO Implement location profile 
     return {
