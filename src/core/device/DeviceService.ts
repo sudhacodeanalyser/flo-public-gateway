@@ -10,17 +10,17 @@ class DeviceService {
     @inject('DeviceResolver') private deviceResolver: DeviceResolver
   ) {}
 
-  public async getDeviceById(id: string, expand?: string[]) {
+  public async getDeviceById(id: string, expand?: string[]): Promise<Device | {}> {
     const device: Device | null = await this.deviceResolver.get(id, expand);
 
     return device === null ? {} : device;
   }
 
-  public partiallyUpdateDevice(id: string, deviceUpdate: DeviceUpdate) {
+  public async partiallyUpdateDevice(id: string, deviceUpdate: DeviceUpdate): Promise<Device> {
     return this.deviceResolver.updatePartial(id, deviceUpdate);
   }
 
-  public removeDevice(id: string) {
+  public async removeDevice(id: string): Promise<void> {
     return this.deviceResolver.remove(id);
   }
 }

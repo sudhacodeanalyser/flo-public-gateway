@@ -29,35 +29,33 @@ class DynamoDbClient implements DatabaseClient {
   ) {}
 
   public async put<T>(tableName: string, item: T): Promise<T> {
-    const { Attributes } = await this._put<T>(tableName, item);
+    const { Attributes } = await this._put<T>(tableName, item).promise();
 
     return Attributes as T;
   }
 
-  public _put<T>(tableName: string, item: T) {
+  public _put<T>(tableName: string, item: T): AWS.Request<AWS.DynamoDB.DocumentClient.PutItemOutput, AWS.AWSError> {
     return this.dynamoDb.put({
       TableName: this.tablePrefix + tableName,
       Item: item,
       ReturnValues: 'ALL_NEW'
-    })
-    .promise();
+    });
   }
 
-  public _get<T>(tableName: string, key: KeyMap) {
+  public _get<T>(tableName: string, key: KeyMap): AWS.Request<AWS.DynamoDB.DocumentClient.GetItemOutput, AWS.AWSError> {
     return this.dynamoDb.get({
       TableName: this.tablePrefix + tableName,
       Key: key
-    })
-    .promise();
+    });
   }
 
   public async get<T>(tableName: string, key: KeyMap): Promise<T | null> {
-    const { Item } = await this._get<T>(tableName, key);
+    const { Item } = await this._get<T>(tableName, key).promise();
 
     return _.isEmpty(Item) ? null : Item as T;
   }
 
-  public _update<T>(tableName: string, key: KeyMap, patch: Patch) {
+  public _update<T>(tableName: string, key: KeyMap, patch: Patch): AWS.Request<AWS.DynamoDB.DocumentClient.UpdateItemOutput, AWS.AWSError> {
     const {
       UpdateExpression,
       ExpressionAttributeNames: updateExprNames,
@@ -79,8 +77,7 @@ class DynamoDbClient implements DatabaseClient {
       },
       ExpressionAttributeValues,
       ReturnValues: 'ALL_NEW'
-    })
-    .promise();
+    });
   }
 
   public async update<T>(tableName: string, key: KeyMap, patch: Patch): Promise<T> {
@@ -89,7 +86,7 @@ class DynamoDbClient implements DatabaseClient {
         throw new Error('Cannot apply an empty patch');
       }
 
-      const { Attributes } = await this._update<T>(tableName, key, patch);
+      const { Attributes } = await this._update<T>(tableName, key, patch).promise();
 
       return Attributes as T;
     } catch (err) {
@@ -102,34 +99,32 @@ class DynamoDbClient implements DatabaseClient {
     }
   }
 
-  public _remove(tableName: string, key: KeyMap) {
+  public _remove(tableName: string, key: KeyMap): AWS.Request<AWS.DynamoDB.DocumentClient.DeleteItemOutput, AWS.AWSError> {
     return this.dynamoDb.delete({
       TableName: this.tablePrefix + tableName,
       Key: key
-    })
-    .promise();
+    });
   }
 
   public async remove(tableName: string, key: KeyMap): Promise<void> {
-    await this._remove(tableName, key);
+    await this._remove(tableName, key).promise();
   }
 
-  public async _query(tableName: string, queryOptions: DynamoDbQuery) {
+  public _query(tableName: string, queryOptions: DynamoDbQuery): AWS.Request<AWS.DynamoDB.DocumentClient.QueryOutput, AWS.AWSError> {
 
     return this.dynamoDb.query({
       TableName: this.tablePrefix + tableName,
       ...queryOptions
-    })
-    .promise();
+    });
   }
 
   public async query<T>(tableName: string, queryOptions: DynamoDbQuery): Promise<T[]> {
-    const { Items } = await this._query(tableName, queryOptions);
+    const { Items } = await this._query(tableName, queryOptions).promise();
 
     return Items as T[];
   }
 
-  private createCondition(key: KeyMap) {
+  private createCondition(key: KeyMap): Partial<AWS.DynamoDB.DocumentClient.UpdateItemInput> {
     const condTuples = _.map(key, (value, name) => ({
       name,
       exprName: `#${ name }`
@@ -145,7 +140,7 @@ class DynamoDbClient implements DatabaseClient {
     };
   }
 
-  private createUpdate(patch: Patch) {
+  private createUpdate(patch: Patch): Partial<AWS.DynamoDB.DocumentClient.UpdateItemInput> {
     const setUpdate = this.processSetOps(patch);
     const appendUpdate = this.processAppendOps(patch);
     const removeUpdate = this.processRemoveOps(patch);
@@ -182,21 +177,21 @@ class DynamoDbClient implements DatabaseClient {
     };
   }
 
-  private collectExpressionAttributeNames(exprTuples: ExpressionAttributeNameTuple[]) {
+  private collectExpressionAttributeNames(exprTuples: ExpressionAttributeNameTuple[]): AWS.DynamoDB.DocumentClient.UpdateItemInput['ExpressionAttributeNames'] {
     return exprTuples.reduce((acc, { exprName, name }) => ({
       ...acc,
       [exprName]: name
     }), {});
   }
 
-  private collectExpressionAttributeValues(exprTuples: ExpressionAttributeValueTuple[]) {
+  private collectExpressionAttributeValues(exprTuples: ExpressionAttributeValueTuple[]): AWS.DynamoDB.DocumentClient.UpdateItemInput['ExpressionAttributeValues'] {
     return exprTuples.reduce((acc, { exprValue, value }) => ({
       ...acc,
       [exprValue]: value
     }), {});
   }
 
-  private processSetOps(patch: Patch) {
+  private processSetOps(patch: Patch): { opStrs: string[] } & Partial<AWS.DynamoDB.DocumentClient.UpdateItemInput> {
     const setOps: SetOp[] | undefined = patch.setOps;
     const setExprTuples = setOps === undefined ? [] :
       setOps.map(setOp => ({
@@ -215,7 +210,7 @@ class DynamoDbClient implements DatabaseClient {
     };
   }
 
-  private processRemoveOps(patch: Patch) {
+  private processRemoveOps(patch: Patch): { opStrs: string[] } & Partial<AWS.DynamoDB.DocumentClient.UpdateItemInput> {
     const removeOps: RemoveOp[] | undefined = patch.removeOps;
     const removeExprTuples = removeOps === undefined ? [] :
       removeOps.map(removeOp => ({
@@ -232,7 +227,7 @@ class DynamoDbClient implements DatabaseClient {
     };
   }
 
-  private processAppendOps(patch: Patch) {
+  private processAppendOps(patch: Patch): { opStrs: string[] } & Partial<AWS.DynamoDB.DocumentClient.UpdateItemInput> {
     const appendOps: AppendOp[] | undefined = patch.appendOps;
     const appendExprTuples = appendOps === undefined ? [] :
       appendOps.map(appendOp => ({

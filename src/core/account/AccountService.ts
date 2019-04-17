@@ -9,11 +9,12 @@ class AccountService {
     @inject('AccountTable') private accountTable: AccountTable
   ) {}
 
-  public async getAccountById(id: string) {
-    this.logger.info('Testing 123');
+  // TODO
+  // public async getAccountById(id: string) {
+  //   this.logger.info('Testing 123');
 
-   return this.accountTable.get({ id });
-  }
+  //  return this.accountTable.get({ id });
+  // }
 }
 
 export default AccountService;

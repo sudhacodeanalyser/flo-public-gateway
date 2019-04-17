@@ -10,7 +10,7 @@ class DeviceTable extends DatabaseTable<DeviceRecordData> {
     super(dbClient, 'ICD');
   }
 
-  public getAllByLocationId(locationId: string): Promise<DeviceRecordData[]> {
+  public async getAllByLocationId(locationId: string): Promise<DeviceRecordData[]> {
     return this.query<DynamoDbQuery>({
       IndexName: 'LocationIdIndex',
       KeyConditionExpression: '#location_id = :location_id',

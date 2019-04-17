@@ -5,9 +5,10 @@ import { interfaces, controller, httpGet, httpPost, httpDelete, request, queryPa
 import { injectable, inject, Container } from 'inversify';
 import UserService from './UserService';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
+import { User } from '../api/api';
 import { parseExpand } from '../api/controllerUtils';
 
-export function UserControllerFactory(container: Container) {
+export function UserControllerFactory(container: Container): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
 
   @controller('/users', 'LoggerMiddleware')
@@ -27,7 +28,7 @@ export function UserControllerFactory(container: Container) {
         })
       }))
     )
-    private getUser(@requestParam('id') id: string, @queryParam('expand') expand?: string) {
+    private async getUser(@requestParam('id') id: string, @queryParam('expand') expand?: string): Promise<User | {}> {
       const expandProps = parseExpand(expand);
 
       return this.userService.getUserById(id, expandProps);

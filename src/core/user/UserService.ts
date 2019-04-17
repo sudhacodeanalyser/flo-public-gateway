@@ -10,7 +10,7 @@ class UserService {
     @inject('UserResolver') private userResolver: UserResolver
   ) {}
 
-  public async getUserById(id: string, expand?: string[]) {
+  public async getUserById(id: string, expand?: string[]): Promise<User | {}> {
     const user: User | null = await this.userResolver.get(id, expand);
 
     return user === null ? {} : user;

@@ -2,13 +2,13 @@ import _ from 'lodash';
 import * as express from 'express';
 import { interfaces, controller, httpGet, httpPost, httpDelete, request, queryParam, response, requestParam, requestBody } from 'inversify-express-utils';
 import { injectable, inject, Container } from 'inversify';
-import { DeviceUpdate } from '../api/api';
+import { Device, DeviceUpdate } from '../api/api';
 import DeviceService from './DeviceService';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
 import * as t from 'io-ts';
 import { parseExpand } from '../api/controllerUtils';
 
-export function DeviceControllerFactory(container: Container) {
+export function DeviceControllerFactory(container: Container): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
 
   @controller('/devices', 'LoggerMiddleware')
@@ -28,7 +28,7 @@ export function DeviceControllerFactory(container: Container) {
         })
       }))
     )
-    private getDevice(@requestParam('id') id: string, @queryParam('expand') expand?: string) {
+    private async getDevice(@requestParam('id') id: string, @queryParam('expand') expand?: string): Promise<Device | {}> {
       const expandProps = parseExpand(expand);
 
       return this.deviceService.getDeviceById(id, expandProps);
@@ -46,7 +46,7 @@ export function DeviceControllerFactory(container: Container) {
         ])
       }))
     )
-    private partialUpdateDevice(@requestParam('id') id: string, @requestBody() deviceUpdate: DeviceUpdate) {
+    private async partialUpdateDevice(@requestParam('id') id: string, @requestBody() deviceUpdate: DeviceUpdate): Promise<Device> {
 
       return this.deviceService.partiallyUpdateDevice(id, deviceUpdate);
     }
@@ -58,7 +58,7 @@ export function DeviceControllerFactory(container: Container) {
         })
       }))
     )
-    private removeDevice(@requestParam('id') id: string) {
+    private async removeDevice(@requestParam('id') id: string): Promise<void> {
 
       return this.deviceService.removeDevice(id);
     }

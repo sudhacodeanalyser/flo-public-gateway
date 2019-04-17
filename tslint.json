@@ -8,6 +8,8 @@
     "interface-over-type-literal": false,
     "no-submodule-imports": [ true, "io-ts"],
     "object-literal-sort-keys": false,
-    "ordered-imports": false
+    "ordered-imports": false,
+    "typedef": [true, "call-signature", "parameter"],
+    "promise-function-async": true
   }
 }

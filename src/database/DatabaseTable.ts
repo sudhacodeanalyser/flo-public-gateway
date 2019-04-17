@@ -9,23 +9,23 @@ class DatabaseTable<T> {
     @unmanaged() public tableName: string
   ) {}
 
-  public get(key: KeyMap): Promise<T | null> {
+  public async get(key: KeyMap): Promise<T | null> {
     return this.dbClient.get<T>(this.tableName, key);
   }
 
-  public put(item: T): Promise<T> {
+  public async put(item: T): Promise<T> {
     return this.dbClient.put<T>(this.tableName, item);
   }
 
-  public update(key: KeyMap, patch: Patch): Promise<T> {
+  public async update(key: KeyMap, patch: Patch): Promise<T> {
     return this.dbClient.update<T>(this.tableName, key, patch);
   }
 
-  public remove(key: KeyMap): Promise<void> {
+  public async remove(key: KeyMap): Promise<void> {
     return this.dbClient.remove(this.tableName, key);
   }
 
-  public query<Q>(queryOptions: Q): Promise<T[]> {
+  public async query<Q>(queryOptions: Q): Promise<T[]> {
     return this.dbClient.query<Q, T>(this.tableName, queryOptions);
   }
 }

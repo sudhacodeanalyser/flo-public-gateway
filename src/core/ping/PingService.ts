@@ -8,7 +8,7 @@ class PingService {
     @inject('Config') private readonly config: typeof Config
   ) {}
 
-  public ping() {
+  public ping(): { date: string, app: string } {
      return { date: new Date().toISOString(), app: this.config.appName };
   }
 }

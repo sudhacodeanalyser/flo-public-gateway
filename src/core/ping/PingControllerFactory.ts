@@ -2,7 +2,7 @@ import { interfaces, controller, httpGet, httpPost, httpDelete, request, queryPa
 import { injectable, inject, Container } from 'inversify';
 import PingService from './PingService';
 
-export function PingControllerFactory(container: Container) {
+export function PingControllerFactory(container: Container): interfaces.Controller {
   @controller('/', 'LoggerMiddleware')
   class PingController implements interfaces.Controller {
     constructor(
@@ -10,7 +10,7 @@ export function PingControllerFactory(container: Container) {
     ) {}
 
     @httpGet('/')
-    private ping() {
+    private async ping(): Promise<{ [key: string]: any }> {
       return this.pingService.ping();
     }
   }
