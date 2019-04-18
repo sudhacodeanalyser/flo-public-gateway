@@ -16,9 +16,6 @@ class ReqValidationMiddlewareFactory {
       if (result.isRight()) {
         next();
       } else {
-        // TODO: This should not directly send a response, but instead
-        // call next(err) to pass through the centralized error handling
-        // middleware
         next(new ReqValidationError(report.join(', ')));
       }
     };

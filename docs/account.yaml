@@ -1,5 +1,5 @@
 paths:
-  /accounts:
+  /accounts/{id}:
     get:
       summary: Retrieves an Account by ID.
       tags:
@@ -11,18 +11,16 @@ paths:
           name: id
           required: true
           schema:
-            type: integer
-            minimum: 1
-          description: The Account ID
+            type: string
+            format: uuid
+          description: Account ID
       responses:
         200:
-          description: An Account with the specified ID.
+          description: An Account with the specified ID or an empty object if not found.
           content:
             application/json:
               schema:
                 $ref: '#/definitions/Account'
-        404:
-          description: An Account with the specified ID was not found.
 
 definitions:
   Account:

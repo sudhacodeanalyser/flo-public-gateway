@@ -18,7 +18,6 @@ export function UserControllerFactory(container: Container): interfaces.Controll
     ) {}
 
     @httpGet('/:id',
-      // TODO refine validations
       reqValidator.create(t.type({
         params: t.type({
           id: t.string
@@ -34,6 +33,17 @@ export function UserControllerFactory(container: Container): interfaces.Controll
       return this.userService.getUserById(id, expandProps);
     }
 
+    @httpDelete(
+      '/:id',
+      reqValidator.create(t.type({
+        params: t.type({
+          id: t.string
+        })
+      }))
+    )
+    private async removeUser(@requestParam('id') id: string): Promise<void> {
+      return this.userService.removeUser(id);
+    }
   }
 
   return UserController;

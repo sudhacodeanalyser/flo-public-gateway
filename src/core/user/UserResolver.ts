@@ -26,7 +26,7 @@ class UserResolver extends Resolver<User> {
 
       return Promise.all(userLocations.map(
         async (userLocation) => {
-          const location: Location | null = await this.locationResolverFactory().get(userLocation.id);
+          const location = await this.locationResolverFactory().get(userLocation.id);
           return {
             ...userLocation,
             ...(location === null ? {} : location)
@@ -35,14 +35,13 @@ class UserResolver extends Resolver<User> {
       ));
     },
     account: async (model: User, shouldExpand = false) => {
-      const userAccountRoleRecordData: UserAccountRoleRecordData | null = await this.userAccountRoleTable.getByUserId(model.id);
+      const userAccountRoleRecordData = await this.userAccountRoleTable.getByUserId(model.id);
       if (userAccountRoleRecordData === null) {
         return null;
       }
 
       if (!shouldExpand) {
-        const userAccount: Expandable<UserAccount> = new UserAccountRoleRecord(userAccountRoleRecordData).toUserAccount();
-        return userAccount;
+        return new UserAccountRoleRecord(userAccountRoleRecordData).toUserAccount();
       }
 
       return this.accountResolverFactory().getAccount(userAccountRoleRecordData.account_id);
@@ -65,12 +64,11 @@ class UserResolver extends Resolver<User> {
     this.accountResolverFactory = depFactoryFactory<AccountResolver>('AccountResolver');
   }
 
-  public async get(id: string, expandProps: string[] = []): Promise<User | null> {
-    const [userRecord, userDetailRecord]: [UserRecord | null, UserDetailRecord | null] =
-      await Promise.all([
-        this.userTable.get({ id }),
-        this.userDetailTable.get({ user_id: id })
-      ]);
+  public async getUserById(id: string, expandProps: string[] = []): Promise<User | null> {
+    const [userRecord, userDetailRecord] = await Promise.all([
+      this.userTable.get({ id }),
+      this.userDetailTable.get({ user_id: id })
+    ]);
 
     if (userRecord === null || userDetailRecord === null) {
       return null;
@@ -79,12 +77,29 @@ class UserResolver extends Resolver<User> {
     return this.toModel(userRecord, userDetailRecord, expandProps);
   }
 
+  public async removeUser(id: string): Promise<void> {
+    // TODO: Make this transactional.
+    // https://aws.amazon.com/blogs/aws/new-amazon-dynamodb-transactions/
+    await Promise.all([
+      this.userLocationRoleTable.remove({ user_id: id }),
+      this.userAccountRoleTable.remove({ user_id: id }),
+      this.userDetailTable.remove({ user_id: id }),
+      this.userTable.remove({ id })
+    ]);
+  }
+
   private async toModel(userRecord: UserRecord, userDetailRecord: UserDetailRecord, expandProps: string[]): Promise<User> {
-    const userDetail = (({ user_id, ...rest }) => rest)(userDetailRecord);
-    const basicUserRecord = (({ password, email_hash, source, ...rest }) => rest)(userRecord);
     const user: User = {
-      ...basicUserRecord,
-      ...userDetail,
+      id: userRecord.id,
+      email: userRecord.email,
+      isActive: userRecord.is_active,
+      firstName: userDetailRecord.firstname,
+      middleName: userDetailRecord.middlename,
+      lastName: userDetailRecord.lastname,
+      prefixName: userDetailRecord.prefixname,
+      suffixName: userDetailRecord.suffixname,
+      unitSystem: userDetailRecord.unit_system,
+      phoneMobile: userDetailRecord.phone_mobile,
       locations: [],
       account: {
         id: ''

@@ -1,6 +1,6 @@
-import ExtendableError from '../core/api/ExtendableError';
+import ExtendableError from '../core/api/error/ExtendableError';
 
-export default class ReqValidationError extends ExtendableError {  
+export default class ReqValidationError extends ExtendableError {
   constructor(report: string) {
     super(report);
   }

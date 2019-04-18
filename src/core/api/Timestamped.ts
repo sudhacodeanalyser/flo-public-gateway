@@ -3,4 +3,9 @@ export interface Timestamped {
   updated_at?: string
 }
 
+export interface TimestampedModel {
+  createdAt?: string,
+  updatedAt?: string
+}
+
 export default Timestamped;

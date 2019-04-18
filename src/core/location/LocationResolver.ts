@@ -1,7 +1,7 @@
 import { inject, injectable, interfaces } from 'inversify';
 import { LocationRecordData, LocationRecord } from './LocationRecord';
 import { Location, LocationUser, DependencyFactoryFactory } from '../api/api';
-import ResourceDoesNotExistError from '../api/ResourceDoesNotExistError';
+import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import { Resolver,PropertyResolverMap, DeviceResolver, LocationUserResolver, AccountResolver } from '../resolver';
 import LocationTable from '../location/LocationTable';
 import { fromPartialRecord } from '../../database/Patch';
@@ -25,7 +25,7 @@ class LocationResolver extends Resolver<Location> {
         return location.account;
       }
 
-      return this.accountResolverFactory().getAccount(location.account.id);      
+      return this.accountResolverFactory().getAccount(location.account.id);
     }
   };
 
@@ -93,7 +93,7 @@ class LocationResolver extends Resolver<Location> {
   }
 
   // The DynamoDB Location table has account_id as a hash key on the primary
-  // table. The location_id is only a hash key on a Global Second Index on the 
+  // table. The location_id is only a hash key on a Global Second Index on the
   // table, and writes are not permitted against indices in Dynamo.
   // Therefore we must retrieve the account_id before doing any writes where we only
   // have the location_id previously known.

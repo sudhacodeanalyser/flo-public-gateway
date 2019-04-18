@@ -1,12 +1,13 @@
-import { injectable, inject } from 'inversify';
-import AccountTable from './AccountTable'
 import Logger from 'bunyan';
+import { injectable, inject } from 'inversify';
+import { Account } from '../api/api';
+import { AccountResolver } from '../resolver';
 
 @injectable()
 class AccountService {
   constructor(
     @inject('Logger') private readonly logger: Logger,
-    @inject('AccountTable') private accountTable: AccountTable
+    @inject('AccountResolver') private accountResolver: AccountResolver
   ) {}
 
   // TODO
@@ -15,6 +16,11 @@ class AccountService {
 
   //  return this.accountTable.get({ id });
   // }
+
+  public async getAccountByOwnerUserId(ownerUserId: string): Promise<Account | {}> {
+    const account = await this.accountResolver.getAccountByOwnerUserId(ownerUserId);
+    return account === null ? {} : account;
+  }
 }
 
 export default AccountService;
