@@ -2,7 +2,7 @@ version: '3'
 
 services:
   app:
-    image: "${DOCKER_REGISTRY:-registry.gitlab.com/flotechnologies}/${APP_NAME:-app}:${DOCKER_TAG:-latest}"
+    image: "${CI_REGISTRY_IMAGE:-registry.gitlab.com/flotechnologies/app}:${CI_PIPELINE_ID:-latest}"
     environment:
       NODE_ENV: "${NODE_ENV:-development}"
     ports:
