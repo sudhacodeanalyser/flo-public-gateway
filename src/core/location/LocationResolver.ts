@@ -97,6 +97,8 @@ class LocationResolver extends Resolver<Location> {
     const accountId: string | null = await this.getAccountId(id);
 
     if (accountId !== null) {
+      // TODO: Make this transactional.
+      // https://aws.amazon.com/blogs/aws/new-amazon-dynamodb-transactions/
       await Promise.all([
         this.locationTable.remove({ acount_id: accountId, location_id: id }),
         this.removeLocationUsersAllByLocationId(id)
@@ -138,7 +140,8 @@ class LocationResolver extends Resolver<Location> {
   public async removeLocationUsersAllByLocationId(locationId: string): Promise<void> {
     const userLocationRoleRecordData = await this.userLocationRoleTable.getAllByLocationId(locationId);
 
-    // TODO use transaction in the future
+    // TODO: Make this transactional.
+    // https://aws.amazon.com/blogs/aws/new-amazon-dynamodb-transactions/
     await Promise.all(
       userLocationRoleRecordData
         .map(datum =>
