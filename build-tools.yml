@@ -1,16 +1,42 @@
-version: '3'
+version: '3.7'
 
 services:
-  npm:
+  build: &build
+    image: "${CI_REGISTRY_IMAGE:-registry.gitlab.com/flotechnologies/app}:build"
     build:
       context: .
       dockerfile: Dockerfile.build
-    entrypoint: npm
+    environment:
+      BINTRAY_USER: "${BINTRAY_USER:-SetBintrayCredentialsPLS}"
+      BINTRAY_KEY: "${BINTRAY_KEY:-empty}"
     volumes:
       - .:/app
       - ".npm:/root/.npm"
       - ./tests:/app/tests
       - "./test-results:/app/test-results"
+      - "./logs:${CI_ARTIFACTS_DIR:-/app}/logs"
+      - "~/.aws:/root/.aws:ro"
+  npm:
+    entrypoint: npm
+    <<: *build
+
+  eb:
+    entrypoint: eb
+
+    <<: *build
+
+
+  gradle:
+    image: gradle:5.4.0-alpine
+    entrypoint: gradle --warn
+
+    working_dir: /home/gradle/project
+    environment:
+      BINTRAY_USER: "${BINTRAY_USER:-SetBintrayCredentialsPLS}"
+      BINTRAY_KEY: "${BINTRAY_KEY:-empty}"
+#      JAVA_TOOL_OPTIONS: xmx...
+    volumes:
+      - ./:/home/gradle/project
 
   run:
     entrypoint: npm
@@ -28,3 +54,4 @@ services:
       - ".npm:/root/.npm"
       - ./tests:/app/tests
       - "./test-results:/app/test-results"
+      - "./logs:${CI_ARTIFACTS_DIR:-.}/logs"
