@@ -5,6 +5,18 @@ ARG NODE_ENV=development
 
 RUN rm -rf /var/cache/apk/* && \
     rm -rf /tmp/* && \
-    apk add --no-cache --virtual .gyp gcc g++ make python
+    apk add --no-cache \
+      gcc \
+      g++ \
+      make \
+      python \
+      py-pip \
+      git \
+       && \
+    pip install \
+      awscli \
+      awsebcli \
+      direnv \
+      pipenv
 
 WORKDIR /app

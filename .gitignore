@@ -38,5 +38,13 @@ Thumbs.db
 # Ignore built ts files
 dist/**/*
 
-# NPM
-npm-debug.log
+# Logs
+*.log
+
+.app
+.gradle
+gradle/
+# Elastic Beanstalk Files
+.elasticbeanstalk/*
+!.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/*.global.yml
