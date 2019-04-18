@@ -5,8 +5,7 @@ import { Location, LocationUpdate, LocationUser } from '../api/api';
 @injectable()
 class LocationService {
   constructor(
-    @inject('LocationResolver') private locationResolver: LocationResolver,
-    @inject('LocationUserResolver') private locationUserResolver: LocationUserResolver
+    @inject('LocationResolver') private locationResolver: LocationResolver
   ) {}
 
   public async createLocation(location: Location): Promise<Location> {
@@ -28,7 +27,7 @@ class LocationService {
   }
 
   public async getAllLocationUsers(locationId: string, expand?: string[]): Promise<Pick<Location, 'users'>> {
-    const locationUsers = await this.locationUserResolver.getAllByLocationId(locationId, expand);
+    const locationUsers = await this.locationResolver.getAllLocationUsersByLocationId(locationId, expand);
 
     return {
       users: locationUsers
@@ -36,13 +35,13 @@ class LocationService {
   }
 
   public async addLocationUser(locationId: string, userId: string, roles: string[]): Promise<LocationUser> {
-    const locationUsers = await this.locationUserResolver.addLocationUser(locationId, userId, roles);
+    const locationUsers = await this.locationResolver.addLocationUser(locationId, userId, roles);
     
     return locationUsers;
   }
 
   public async removeLocationUser(locationId: string, userId: string): Promise<void> {
-    return this.locationUserResolver.removeLocationUser(locationId, userId);
+    return this.locationResolver.removeLocationUser(locationId, userId);
   }
 }
 

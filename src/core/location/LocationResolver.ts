@@ -1,9 +1,11 @@
 import { inject, injectable, interfaces } from 'inversify';
 import { LocationRecordData, LocationRecord } from './LocationRecord';
+import { UserLocationRoleRecordData, UserLocationRoleRecord } from '../user/UserLocationRoleRecord';
 import { Location, LocationUser, DependencyFactoryFactory } from '../api/api';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import { Resolver,PropertyResolverMap, DeviceResolver, LocationUserResolver, AccountResolver } from '../resolver';
 import LocationTable from '../location/LocationTable';
+import UserLocationRoleTable from '../user/UserLocationRoleTable';
 import { fromPartialRecord } from '../../database/Patch';
 
 @injectable()
@@ -35,6 +37,7 @@ class LocationResolver extends Resolver<Location> {
 
   constructor(
     @inject('LocationTable') private locationTable: LocationTable,
+    @inject('UserLocationRoleTable') private userLocationRoleTable: UserLocationRoleTable,
     @inject('DependencyFactoryFactory') depFactoryFactory: DependencyFactoryFactory
   ) {
     super();
@@ -92,6 +95,49 @@ class LocationResolver extends Resolver<Location> {
     }
   }
 
+  public async getAllByAccountId(accountId: string): Promise<Location[]> {
+    const locationRecordData = await this.locationTable.getAllByAccountId(accountId);
+
+    return locationRecordData.map(datum => new LocationRecord(datum).toModel());
+  }
+
+  public async getAllLocationUsersByLocationId(locationId: string, expandProps: string[] = []): Promise<LocationUser[]> {
+    const userLocationRoleRecordData = await this.userLocationRoleTable.getAllByLocationId(locationId);
+
+    return Promise.all(
+      userLocationRoleRecordData
+      .map(userLocationRoleDatum => 
+        new UserLocationRoleRecord(userLocationRoleDatum).toLocationUser()
+      )
+    );
+  }
+
+  public async addLocationUser(locationId: string, userId: string, roles: string[]): Promise<LocationUser> {
+    const userLocatioRoleRecordData = await this.userLocationRoleTable.put({
+      user_id: userId,
+      location_id: locationId,
+      roles
+    });
+
+    return new UserLocationRoleRecord(userLocatioRoleRecordData).toLocationUser();
+  }
+
+  public async removeLocationUser(locationId: string, userId: string): Promise<void> {
+    return this.userLocationRoleTable.remove({ user_id: userId, location_id: locationId });
+  }
+
+  public async removeAllByLocationId(locationId: string): Promise<void> {
+    const userLocationRoleRecordData = await this.userLocationRoleTable.getAllByLocationId(locationId);
+
+    // TODO use transaction in the future
+    await Promise.all(
+      userLocationRoleRecordData
+        .map(datum =>
+          this.removeLocationUser(datum.user_id, datum.location_id)
+        )
+    );
+  }
+
   // The DynamoDB Location table has account_id as a hash key on the primary
   // table. The location_id is only a hash key on a Global Second Index on the
   // table, and writes are not permitted against indices in Dynamo.
@@ -102,6 +148,7 @@ class LocationResolver extends Resolver<Location> {
 
     return locationRecordData === null ? null : locationRecordData.account_id;
   }
+
 }
 
 export { LocationResolver };
