@@ -11,7 +11,7 @@ import { parseExpand } from '../api/controllerUtils';
 export function LocationControllerFactory(container: Container): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
 
-  @controller('/locations')
+  @controller('/locations', 'LoggerMiddleware')
   class LocationController implements interfaces.Controller {
     constructor(
       @inject('LocationService') private locationService: LocationService
