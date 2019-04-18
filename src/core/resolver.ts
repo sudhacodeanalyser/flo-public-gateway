@@ -6,15 +6,18 @@ export type PropertyResolverMap<T> = {
   [P in keyof T]?: PropertyResolverFn<T, T[P]>
 };
 
+export const EXPAND_ALL = '_all';
+
 @injectable()
 class Resolver<T extends {}> {
   protected propertyResolverMap: PropertyResolverMap<T>
 
 
   protected async resolveProps<K extends keyof T>(model: T, expandProps?: string[]) : Promise<Partial<T>> {
+    const shouldExpandAll = expandProps !== undefined && _.includes(expandProps, EXPAND_ALL);
     const resolvedProps = await Promise.all(
       _.map(model, async (value: any, key: K) => {
-        return this.resolveProp(model, key, expandProps === undefined ? false : expandProps[0] === '_all' || _.includes(expandProps, key as string));
+        return this.resolveProp(model, key, expandProps === undefined ? false : shouldExpandAll || _.includes(expandProps, key as string));
       })
     );
 
