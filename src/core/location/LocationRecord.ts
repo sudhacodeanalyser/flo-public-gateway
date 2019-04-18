@@ -85,7 +85,8 @@ export interface LocationRecordData extends Partial<LegacyLocationProfile>, Time
   profile?: LocationProfile
 }
 
-type CommonRecordModelProps =     
+type CommonRecordProps =
+    'location_id' |     
     'address' |
     'address2' |
     'city' |
@@ -100,54 +101,84 @@ type CommonRecordModelProps =
     'created_at' |
     'updated_at';
 
-type CommonRecordModel = Pick<Location, CommonRecordModelProps>;
+type CommonModelProps = 
+    'id' |
+    'address' |
+    'address2' |
+    'city' |
+    'state' |
+    'country' |
+    'postalCode' |
+    'timezone' |
+    'gallonsPerDayGoal' |
+    'occupants' |
+    'stories' |
+    'isProfileComplete' |
+    'createdAt' |
+    'updatedAt';
 
-function safePick<I, O>(source: I, keys: string[]): O {
-  return _.pick(source, keys) as any;
+type RecordModelProp = Partial<Record<'common' | 'record' | 'model', string>>;
+
+
+function translate<S extends {}, D>(modelRecordProps: RecordModelProp[], source: keyof RecordModelProp, dest: keyof RecordModelProp, sourceData: S): D {
+  type PropMap = { [srcKey: string]: string };
+  const props: PropMap = modelRecordProps
+    .filter((prop: RecordModelProp) => 
+      prop.common !== undefined || 
+      prop[source] !== undefined
+    )
+    .reduce(
+      (acc: PropMap, prop: RecordModelProp) => ({
+        ...acc,
+        ...({ 
+          [prop.common !== undefined ? prop.common : (prop[source] as string)]: prop.common !== undefined ? 
+            prop.common : 
+            prop[dest]
+        })
+      }), 
+      {}
+    );
+
+  return _.chain(sourceData)
+    .pick(Object.keys(props))
+    .mapKeys((value: any, key: string) => props[key] === undefined ? key : props[key])
+    .value() as any;
 }
 
 export class LocationRecord {
 
   public static fromModel(location: Location): LocationRecordData {
-    const commonProps: CommonRecordModel = safePick<Location, CommonRecordModel>(
-      location, 
-      LocationRecord.commonModelRecordProps
-    );
-
+    type CommonProps = Pick<LocationRecordData, CommonRecordProps>;
+  
     return {
-      location_id: location.id,
       account_id: location.account && location.account.id,
-      ...commonProps,
+      ...translate<Location, CommonProps>(LocationRecord.modelRecordProps, 'model', 'record', location)
     };
   }
 
   public static fromPartialModel(location: Partial<Location>): Partial<LocationRecordData> {
-    const commonProps = safePick<Partial<Location>, Partial<CommonRecordModel>>(
-      location, 
-      LocationRecord.commonModelRecordProps
-    );
+    type CommonProps = Partial<Pick<LocationRecordData, CommonRecordProps>>;
 
     return {
-      location_id: location.id,
       account_id: location.account && location.account.id,
-      ...commonProps
+      ...translate<Partial<Location>, CommonProps>(LocationRecord.modelRecordProps, 'model', 'record', location)
     };
   }
 
-  private static commonModelRecordProps: string[] = [
-    'address',
-    'address2',
-    'city',
-    'state',
-    'country',
-    'postalcode',
-    'timezone',
-    'gallons_per_day_goal',
-    'occupants',
-    'stories',
-    'is_profile_complete',
-    'created_at',
-    'updated_at'
+  private static modelRecordProps: RecordModelProp[] = [
+    { record: 'location_id', model: 'id' },
+    { common: 'address' },
+    { common: 'address2' },
+    { common: 'city' },
+    { common: 'country' },
+    { record: 'postalcode', model: 'postalCode' },
+    { common: 'timezone' },
+    { record: 'gallons_per_day_goal', model: 'gallonsPerDayGoal' },
+    { common: 'occupants' },
+    { common: 'stories' },
+    { record: 'is_profile_complete', model: 'isProfileComplete' },
+    { record: 'created_at', model: 'createdAt' },
+    { record: 'updated_at', model: 'updatedAt' }
   ];
 
   constructor(
@@ -155,11 +186,11 @@ export class LocationRecord {
   ) {}
 
   public toModel(): Location {
-    const commonProps = safePick<LocationRecordData, CommonRecordModel>(this.data, LocationRecord.commonModelRecordProps);
+    type CommonProps = Pick<Location, CommonModelProps>;
+    const commonProps = translate<LocationRecordData, CommonProps>(LocationRecord.modelRecordProps, 'record', 'model', this.data)
 
     // TODO Implement location profile 
     return {
-      id: this.data.location_id,
       account: {
         id: this.data.account_id
       },

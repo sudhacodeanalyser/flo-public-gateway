@@ -1,14 +1,27 @@
 import { inject, injectable, interfaces } from 'inversify';
 import { AccountRecordData, AccountRecord } from './AccountRecord';
 import { Account, DependencyFactoryFactory } from '../api/api';
-import { Resolver, PropertyResolverMap, LocationResolver } from '../resolver';
+import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
+import { Resolver, PropertyResolverMap, LocationResolver, UserResolver } from '../resolver';
 import AccountTable from './AccountTable';
 import { fromPartialRecord } from '../../database/Patch';
 
 @injectable()
 class AccountResolver extends Resolver<Account> {
-  protected propertyResolverMap: PropertyResolverMap<Account> = {}
-  private locationResolverFactory: () => LocationResolver
+  protected propertyResolverMap: PropertyResolverMap<Account> = {
+    owner: async (account: Account, shouldExpand: boolean = false) => {
+      if (shouldExpand) {
+        return this.userResolverFactory().getUserById(account.owner.id);
+      } else {
+        return account.owner;
+      }
+    },
+    locations: async (account: Account, shouldExpand: boolean = false) => {
+      return this.locationResolverFactory().getAllByAccountId(account.id);
+    }
+  };
+  private locationResolverFactory: () => LocationResolver;
+  private userResolverFactory: () => UserResolver;
 
   constructor(
     @inject('AccountTable') private accountTable: AccountTable,
@@ -17,6 +30,7 @@ class AccountResolver extends Resolver<Account> {
     super();
 
     this.locationResolverFactory = depFactoryFactory<LocationResolver>('LocationResolver');
+    this.userResolverFactory = depFactoryFactory<UserResolver>('UserResolver');
   }
 
   public async getAccount(id: string, expandProps: string[] = []): Promise<Account | null> {
@@ -27,9 +41,12 @@ class AccountResolver extends Resolver<Account> {
     }
 
     const account = new AccountRecord(accountRecordData).toModel();
-    // const resolvedProps = await this.resolveProps(account, expandProps);
+    const resolvedProps = await this.resolveProps(account, expandProps);
 
-    return account;
+    return {
+      ...account,
+      ...resolvedProps
+    };
   }
 
   public async getAccountByOwnerUserId(ownerUserId: string): Promise<Account | null> {
@@ -41,6 +58,7 @@ class AccountResolver extends Resolver<Account> {
 
     return new AccountRecord(accountRecordData).toModel();
   }
+
 }
 
 export { AccountResolver };

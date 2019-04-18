@@ -6,12 +6,12 @@ import { Location, LocationUpdateValidator, LocationUpdate, LocationUser } from 
 import LocationService from './LocationService';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
 import * as t from 'io-ts';
-import { parseExpand } from '../api/controllerUtils';
+import { parseExpand, httpController } from '../api/controllerUtils';
 
 export function LocationControllerFactory(container: Container): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
 
-  @controller('/locations')
+  @httpController({ version: 1 }, '/locations')
   class LocationController implements interfaces.Controller {
     constructor(
       @inject('LocationService') private locationService: LocationService

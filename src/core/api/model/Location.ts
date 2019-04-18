@@ -1,4 +1,4 @@
-import { Expandable, Timestamped, User, Account, Device } from '../api';
+import { Expandable, TimestampedModel, User, Account, Device } from '../api';
 import * as t from 'io-ts';
 
 export interface LocationUser extends Partial<User> {
@@ -15,18 +15,18 @@ const LocationMutableCodec = t.type({
   city: t.string,
   state: t.string,
   country: t.string,
-  postalcode: t.string,
+  postalCode: t.string,
   timezone: t.string,
-  gallons_per_day_goal: t.number,
+  gallonsPerDayGoal: t.number,
   occupants: t.union([t.number, t.undefined]),
   stories: t.union([t.number, t.undefined]),
-  is_profile_complete: t.union([t.boolean, t.undefined])
+  isProfileComplete: t.union([t.boolean, t.undefined])
 });
 
 export const LocationCreateValidator = t.exact(LocationMutableCodec);
 export type LocationCreate = t.TypeOf<typeof LocationCreateValidator>;
 
-export interface Location extends LocationCreate, Timestamped {
+export interface Location extends LocationCreate, TimestampedModel {
   id: string,
   account: Expandable<Account>,
   users: Array<Expandable<LocationUser>>,

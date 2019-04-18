@@ -24,6 +24,18 @@ class LocationTable extends DatabaseTable<LocationRecordData> {
 
     return result.length ? result[0] : null;
   }
+
+  public async getAllByAccountId(accountId: string): Promise<LocationRecordData[]> {
+    return this.query<DynamoDbQuery>({
+      KeyConditionExpression: '#account_id = :account_id',
+      ExpressionAttributeNames: {
+        '#account_id': 'account_id'
+      },
+      ExpressionAttributeValues: {
+        ':account_id': accountId
+      }
+    });
+  }
 }
 
 export default LocationTable;
