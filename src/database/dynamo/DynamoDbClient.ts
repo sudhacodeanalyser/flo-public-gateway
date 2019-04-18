@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import AWS from 'aws-sdk';
 import DatabaseClient, { KeyMap } from '../DatabaseClient';
-import ResourceDoesNotExistError from '../../core/api/ResourceDoesNotExistError';
+import ResourceDoesNotExistError from '../../core/api/error/ResourceDoesNotExistError';
 import { Patch, AppendOp, SetOp, RemoveOp } from '../Patch';
 import { inject, injectable } from 'inversify';
 

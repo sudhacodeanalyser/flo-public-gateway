@@ -10,7 +10,7 @@ import { interfaces, InversifyExpressServer, TYPE } from 'inversify-express-util
 import LoggerFactory from '../logging/LoggerFactory';
 import Logger from 'bunyan';
 import Request from '../core/api/Request';
-import ExtendableError from '../core/api/ExtendableError';
+import ExtendableError from '../core/api/error/ExtendableError';
 
 import swaggerUi from 'swagger-ui-express';
 import swaggerConfig, { swaggerOpts } from '../docs/swagger';

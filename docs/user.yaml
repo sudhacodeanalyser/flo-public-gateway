@@ -1,0 +1,110 @@
+paths:
+  /users/{id}:
+    get:
+      summary: Retrieves a User by ID.
+      tags:
+        - users
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: User ID
+        - in: query
+          name: expand
+          required: false
+          schema:
+            type: array
+            style: form
+            explode: false
+          description: Comma-separated names of the attributes to be expanded
+      responses:
+        200:
+          description: A User with the specified ID or an empty object if not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/definitions/User'
+    delete:
+      summary: Deletes a User by ID.
+      tags:
+        - users
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: User ID
+      responses:
+        204:
+          description: The User was successfully deleted.
+        400:
+          description: The User must not be an Account owner.
+          schema:
+            $ref: '#/definitions/Error'
+
+definitions:
+  User:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uuid
+      email:
+        type: string
+      isActice:
+        type: boolean
+      locations:
+        type: array
+        items:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            roles:
+              type: array
+              items:
+                type: string
+      account:
+        type: object
+        properties:
+          id:
+            type: string
+            format: uuid
+          roles:
+            type: array
+            items:
+              type: string
+      firstName:
+        type: string
+      middleName:
+        type: string,
+      lastName:
+        type: string
+      prefixName:
+        type: string
+      suffixName:
+        type: string,
+      unitSystem:
+        type: string
+      phoneMobile:
+        type: string
+
+  Error:
+    type: object
+    properties:
+      error:
+        type: boolean
+        required: true
+      message:
+        type: string
+        required: true

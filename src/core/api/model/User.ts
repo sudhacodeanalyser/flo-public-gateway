@@ -1,4 +1,4 @@
-import { Expandable, Timestamped, Location, Account } from '../api';
+import { Expandable, TimestampedModel, Location, Account } from '../api';
 
 export interface UserLocation extends Location {
   roles: string[]
@@ -13,18 +13,18 @@ export enum UnitSystem {
   METRIC_KPA = 'metric_kpa'
 }
 
-export interface User extends Timestamped {
+export interface User extends TimestampedModel {
   id: string,
   email: string,
   password?: string,
-  is_active?: boolean,
+  isActive?: boolean,
   locations: Array<Expandable<UserLocation>>,
   account: Expandable<UserAccount>,
-  firstname?: string,
-  middlename?: string,
-  lastname?: string,
-  prefixname?: string,
-  suffixname?: string,
-  unit_system?: UnitSystem
-  phone_mobile?: string
+  firstName?: string,
+  middleName?: string,
+  lastName?: string,
+  prefixName?: string,
+  suffixName?: string,
+  unitSystem?: UnitSystem
+  phoneMobile?: string
 }
