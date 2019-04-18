@@ -3,7 +3,7 @@ import { LocationRecordData, LocationRecord } from './LocationRecord';
 import { UserLocationRoleRecordData, UserLocationRoleRecord } from '../user/UserLocationRoleRecord';
 import { Location, LocationUser, DependencyFactoryFactory } from '../api/api';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
-import { Resolver,PropertyResolverMap, DeviceResolver, LocationUserResolver, AccountResolver } from '../resolver';
+import { Resolver,PropertyResolverMap, DeviceResolver, UserResolver, AccountResolver } from '../resolver';
 import LocationTable from '../location/LocationTable';
 import UserLocationRoleTable from '../user/UserLocationRoleTable';
 import { fromPartialRecord } from '../../database/Patch';
@@ -13,13 +13,22 @@ class LocationResolver extends Resolver<Location> {
   protected propertyResolverMap: PropertyResolverMap<Location> = {
     devices: async (location: Location, shouldExpand = false) => this.deviceResolverFactory().getAllByLocationId(location.id),
     users: async (location: Location, shouldExpand = false) => {
+      const locationUsers = await this.getAllLocationUsersByLocationId(location.id);
 
-      // TODO: Need UserResolver
-      // if (shouldExpand) {
-      //
-      // }
+      if (shouldExpand) {
+        return Promise.all(
+          locationUsers.map(async (locationUser) => {
+            const user = await this.userResolverFactory().getUserById(locationUser.id);
 
-      return this.locationUserResolverFactory().getAllByLocationId(location.id)
+            return {
+              ...locationUser,
+              ...user
+            };
+          })
+        );
+      } else {
+        return locationUsers;
+      }
     },
     account: async (location: Location, shouldExpand = false) => {
 
@@ -32,8 +41,8 @@ class LocationResolver extends Resolver<Location> {
   };
 
   private deviceResolverFactory: () => DeviceResolver;
-  private locationUserResolverFactory: () => LocationUserResolver;
   private accountResolverFactory: () => AccountResolver;
+  private userResolverFactory: () => UserResolver;
 
   constructor(
     @inject('LocationTable') private locationTable: LocationTable,
@@ -43,8 +52,8 @@ class LocationResolver extends Resolver<Location> {
     super();
 
     this.deviceResolverFactory = depFactoryFactory<DeviceResolver>('DeviceResolver');
-    this.locationUserResolverFactory = depFactoryFactory<LocationUserResolver>('LocationUserResolver');
     this.accountResolverFactory = depFactoryFactory<AccountResolver>('AccountResolver');
+    this.userResolverFactory = depFactoryFactory<UserResolver>('UserResolver');
   }
 
   public async get(id: string, expandProps: string[] = []): Promise<Location | null> {
@@ -90,7 +99,7 @@ class LocationResolver extends Resolver<Location> {
     if (accountId !== null) {
       await Promise.all([
         this.locationTable.remove({ acount_id: accountId, location_id: id }),
-        this.locationUserResolverFactory().removeAllByLocationId(id)
+        this.removeLocationUsersAllByLocationId(id)
       ]);
     }
   }
@@ -126,7 +135,7 @@ class LocationResolver extends Resolver<Location> {
     return this.userLocationRoleTable.remove({ user_id: userId, location_id: locationId });
   }
 
-  public async removeAllByLocationId(locationId: string): Promise<void> {
+  public async removeLocationUsersAllByLocationId(locationId: string): Promise<void> {
     const userLocationRoleRecordData = await this.userLocationRoleTable.getAllByLocationId(locationId);
 
     // TODO use transaction in the future

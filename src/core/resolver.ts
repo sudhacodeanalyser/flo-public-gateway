@@ -37,6 +37,5 @@ class Resolver<T extends {}> {
 export { Resolver };
 export * from './device/DeviceResolver';
 export * from './location/LocationResolver';
-export * from './location/LocationUserResolver';
 export * from './user/UserResolver';
 export * from './account/AccountResolver';
