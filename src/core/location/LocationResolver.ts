@@ -117,9 +117,9 @@ class LocationResolver extends Resolver<Location> {
 
     return Promise.all(
       userLocationRoleRecordData
-      .map(userLocationRoleDatum => 
-        new UserLocationRoleRecord(userLocationRoleDatum).toLocationUser()
-      )
+        .map(userLocationRoleDatum => 
+          new UserLocationRoleRecord(userLocationRoleDatum).toLocationUser()
+        )
     );
   }
 
