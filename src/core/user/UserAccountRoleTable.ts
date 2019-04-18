@@ -24,8 +24,8 @@ class UserAccountRoleTable extends DatabaseTable<UserAccountRoleRecordData> {
     return result.length ? result[0] : null;
   }
 
-  public async getByAccountId(accountId: string): Promise<UserAccountRoleRecordData | null> {
-    const result = await this.query<DynamoDbQuery>({
+  public async getAllByAccountId(accountId: string): Promise<UserAccountRoleRecordData[]> {
+    return this.query<DynamoDbQuery>({
       IndexName: 'AccountIdIndex',
       KeyConditionExpression: '#account_id = :account_id',
       ExpressionAttributeNames: {
@@ -35,6 +35,10 @@ class UserAccountRoleTable extends DatabaseTable<UserAccountRoleRecordData> {
         ':account_id': accountId
       }
     });
+  }
+
+  public async getByAccountId(accountId: string): Promise<UserAccountRoleRecordData | null> {
+    const result = await this.getAllByAccountId(accountId);
 
     return result.length ? result[0] : null;
   }

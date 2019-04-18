@@ -1,6 +1,7 @@
 import { Expandable, Timestamped, User, Location } from '../api';
 
-export interface AccountUser extends User {
+export interface AccountUser extends Partial<User> {
+  id: string,
   roles: string[]
 }
 

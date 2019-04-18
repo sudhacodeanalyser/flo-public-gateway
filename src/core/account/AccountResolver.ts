@@ -1,9 +1,11 @@
 import { inject, injectable, interfaces } from 'inversify';
 import { AccountRecordData, AccountRecord } from './AccountRecord';
-import { Account, DependencyFactoryFactory } from '../api/api';
+import { Account, AccountUser, DependencyFactoryFactory } from '../api/api';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import { Resolver, PropertyResolverMap, LocationResolver, UserResolver } from '../resolver';
 import AccountTable from './AccountTable';
+import UserAccountRoleTable from '../user/UserAccountRoleTable';
+import { UserAccountRoleRecord } from '../user/UserAccountRoleRecord';
 import { fromPartialRecord } from '../../database/Patch';
 
 @injectable()
@@ -18,6 +20,24 @@ class AccountResolver extends Resolver<Account> {
     },
     locations: async (account: Account, shouldExpand: boolean = false) => {
       return this.locationResolverFactory().getAllByAccountId(account.id);
+    },
+    users: async (account: Account, shouldExpand: boolean = false) => {
+      const accountUsers = await this.getAllAccountUsersByAccountId(account.id);
+
+      if (shouldExpand) {
+        return Promise.all(
+          accountUsers.map(async (accountUser) => {
+            const user = await this.userResolverFactory().getUserById(accountUser.id);
+
+            return {
+              ...accountUser,
+              ...user
+            };
+          })
+        );
+      } else {
+        return accountUsers;
+      }
     }
   };
   private locationResolverFactory: () => LocationResolver;
@@ -25,6 +45,7 @@ class AccountResolver extends Resolver<Account> {
 
   constructor(
     @inject('AccountTable') private accountTable: AccountTable,
+    @inject('UserAccountRoleTable') private userAccountRoleTable: UserAccountRoleTable,
     @inject('DependencyFactoryFactory') depFactoryFactory: DependencyFactoryFactory
   ) {
     super();
@@ -59,6 +80,16 @@ class AccountResolver extends Resolver<Account> {
     return new AccountRecord(accountRecordData).toModel();
   }
 
+  public async getAllAccountUsersByAccountId(accountId: string): Promise<AccountUser[]> {
+    const userAccountRoleRecordData = await this.userAccountRoleTable.getAllByAccountId(accountId);
+
+    return Promise.all(
+      userAccountRoleRecordData
+        .map(userAccountRoleRecordDatum => 
+          new UserAccountRoleRecord(userAccountRoleRecordDatum).toAccountUser()
+        )
+    );
+  }
 }
 
 export { AccountResolver };
