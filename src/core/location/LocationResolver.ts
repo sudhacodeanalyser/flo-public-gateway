@@ -109,7 +109,18 @@ class LocationResolver extends Resolver<Location> {
   public async getAllByAccountId(accountId: string): Promise<Location[]> {
     const locationRecordData = await this.locationTable.getAllByAccountId(accountId);
 
-    return locationRecordData.map(datum => new LocationRecord(datum).toModel());
+    return Promise.all(
+      locationRecordData
+        .map(async (datum) => {
+          const location = new LocationRecord(datum).toModel();
+          const resolvedProps = await this.resolveProps(location);
+
+          return {
+            ...location,
+            ...resolvedProps
+          };
+        })
+    );
   }
 
   public async getAllLocationUsersByLocationId(locationId: string, expandProps: string[] = []): Promise<LocationUser[]> {
@@ -160,7 +171,6 @@ class LocationResolver extends Resolver<Location> {
 
     return locationRecordData === null ? null : locationRecordData.account_id;
   }
-
 }
 
 export { LocationResolver };
