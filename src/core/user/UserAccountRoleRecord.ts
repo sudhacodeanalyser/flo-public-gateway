@@ -13,14 +13,14 @@ export class UserAccountRoleRecord {
 
   public toUserAccountRole(): UserAccountRole {
     return {
-     id: this.data.account_id,
+     accountId: this.data.account_id,
      roles: this.data.roles
     };
   }
 
   public toAccountUserRole(): AccountUserRole {
     return {
-      id: this.data.user_id,
+      userId: this.data.user_id,
       roles: this.data.roles
     };  
   }

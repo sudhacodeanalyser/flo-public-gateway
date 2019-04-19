@@ -116,7 +116,7 @@ class UserResolver extends Resolver<User> {
       locations: [],
       locationRoles: [],
       accountRole: {
-        id: '',
+        accountId: '',
         roles: []
       },
       account: {

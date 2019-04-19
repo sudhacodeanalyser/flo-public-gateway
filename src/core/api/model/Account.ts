@@ -1,7 +1,7 @@
 import { Expandable, Timestamped, User, Location } from '../api';
 
 export interface AccountUserRole {
-  id: string,
+  userId: string,
   roles: string[]
 }
 

@@ -17,17 +17,17 @@ class LocationResolver extends Resolver<Location> {
 
       if (shouldExpand) {
         return Promise.all(
-          locationUserRoles.map(async (locationUser) => {
-            const user = await this.userResolverFactory().getUserById(locationUser.id);
+          locationUserRoles.map(async (locationUserRole) => {
+            const user = await this.userResolverFactory().getUserById(locationUserRole.userId);
 
             return {
               ...user,
-              id: locationUser.id
+              id: locationUserRole.userId
             };
           })
         );
       } else {
-        return locationUserRoles.map(({ id }) => ({ id }));
+        return locationUserRoles.map(({ userId }) => ({ id: userId }));
       }
     },
     userRoles: async (location: Location, shouldExpand = false) => {

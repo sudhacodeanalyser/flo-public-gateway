@@ -13,14 +13,14 @@ export class UserLocationRoleRecord {
 
   public toUserLocationRole(): UserLocationRole {
     return {
-     id: this.data.location_id,
+     locationId: this.data.location_id,
      roles: this.data.roles
     };
   }
 
   public toLocationUserRole(): LocationUserRole {
     return {
-      id: this.data.user_id,
+      userId: this.data.user_id,
       roles: this.data.roles
     };
   }

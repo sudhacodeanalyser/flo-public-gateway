@@ -1,12 +1,12 @@
 import { Expandable, TimestampedModel, Location, Account } from '../api';
 
 export interface UserLocationRole {
-  id: string;
+  locationId: string;
   roles: string[];
 }
 
 export interface UserAccountRole {
-  id: string;
+  accountId: string;
   roles: string[];
 }
 

@@ -2,7 +2,7 @@ import { Expandable, TimestampedModel, User, Account, Device } from '../api';
 import * as t from 'io-ts';
 
 export interface LocationUserRole {
-  id: string,
+  userId: string,
   roles: string[]
 }
 

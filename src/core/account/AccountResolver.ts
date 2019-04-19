@@ -27,16 +27,16 @@ class AccountResolver extends Resolver<Account> {
       if (shouldExpand) {
         return Promise.all(
           accountUserRoles.map(async (accountUserRole) => {
-            const user = await this.userResolverFactory().getUserById(accountUserRole.id);
+            const user = await this.userResolverFactory().getUserById(accountUserRole.userId);
 
             return {
               ...user,
-              id: accountUserRole.id
+              id: accountUserRole.userId
             };
           })
         );
       } else {
-        return accountUserRoles.map(({ id }) => ({ id }));
+        return accountUserRoles.map(({ userId }) => ({ id: userId }));
       }
     },
     userRoles: async (account: Account, shouldExpand: boolean = false) => {
