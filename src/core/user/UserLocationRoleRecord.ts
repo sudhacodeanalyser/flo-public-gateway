@@ -1,4 +1,4 @@
-import { Expandable, UserLocation, LocationUser, Timestamped } from '../api/api';
+import { Expandable, UserLocation, LocationUserRole, Timestamped } from '../api/api';
 
 export interface UserLocationRoleRecordData extends Timestamped {
   user_id: string,
@@ -18,7 +18,7 @@ export class UserLocationRoleRecord {
     };
   }
 
-  public toLocationUser(): LocationUser {
+  public toLocationUserRole(): LocationUserRole {
     return {
       id: this.data.user_id,
       roles: this.data.roles

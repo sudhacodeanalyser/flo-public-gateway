@@ -1,7 +1,7 @@
 import { Expandable, TimestampedModel, User, Account, Device } from '../api';
 import * as t from 'io-ts';
 
-export interface LocationUser extends Partial<User> {
+export interface LocationUserRole {
   id: string,
   roles: string[]
 }
@@ -29,7 +29,8 @@ export type LocationCreate = t.TypeOf<typeof LocationCreateValidator>;
 export interface Location extends LocationCreate, TimestampedModel {
   id: string,
   account: Expandable<Account>,
-  users: Array<Expandable<LocationUser>>,
+  userRoles: LocationUserRole[],
+  users: Array<Expandable<User>>,
   devices: Array<Expandable<Device>>
   // TODO implement profile
 }

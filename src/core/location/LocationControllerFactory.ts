@@ -2,7 +2,7 @@ import _ from 'lodash';
 import * as express from 'express';
 import { interfaces, controller, httpGet, httpPost, httpDelete, httpPut, request, queryParam, response, requestParam, requestBody } from 'inversify-express-utils';
 import { injectable, inject, Container } from 'inversify';
-import { Location, LocationUpdateValidator, LocationUpdate, LocationUser } from '../api/api';
+import { Location, LocationUpdateValidator, LocationUpdate, LocationUserRole } from '../api/api';
 import LocationService from './LocationService';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
 import * as t from 'io-ts';
@@ -66,23 +66,6 @@ export function LocationControllerFactory(container: Container): interfaces.Cont
       return this.locationService.removeLocation(id);
     }
 
-    @httpGet(
-      '/:id/users',
-      reqValidator.create(t.type({
-        params: t.type({
-          id: t.string
-        }),
-        query: t.partial({
-          expand: t.string
-        })
-      }))
-    )
-    private async getAllLocationUsers(@requestParam('id') id: string, @queryParam('expand') expand?: string): Promise<Pick<Location, 'users'>> {
-      const expandProps = parseExpand(expand);
-
-      return this.locationService.getAllLocationUsers(id, expandProps);
-    }
-
     @httpPut(
       '/:location_id/users/:user_id',
       reqValidator.create(t.type({
@@ -95,8 +78,8 @@ export function LocationControllerFactory(container: Container): interfaces.Cont
         })
       }))
     )
-    private async addLocationUser(@requestParam('location_id') locationId: string, @requestParam('user_id') userId: string, @requestBody() { roles }: Pick<LocationUser, 'roles'>): Promise<LocationUser> {
-      return this.locationService.addLocationUser(locationId, userId, roles);
+    private async addLocationUserRole(@requestParam('location_id') locationId: string, @requestParam('user_id') userId: string, @requestBody() { roles }: Pick<LocationUserRole, 'roles'>): Promise<LocationUserRole> {
+      return this.locationService.addLocationUserRole(locationId, userId, roles);
     }
 
     @httpDelete(
@@ -108,8 +91,8 @@ export function LocationControllerFactory(container: Container): interfaces.Cont
         })
       }))
     )
-    private async removeLocationUser(@requestParam('location_id') locationId: string, @requestParam('user_id') userId: string): Promise<void> {
-      return this.locationService.removeLocationUser(locationId, userId);
+    private async removeLocationUserRole(@requestParam('location_id') locationId: string, @requestParam('user_id') userId: string): Promise<void> {
+      return this.locationService.removeLocationUserRole(locationId, userId);
     }
   }
 

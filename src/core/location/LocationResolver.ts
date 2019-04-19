@@ -1,7 +1,7 @@
 import { inject, injectable, interfaces } from 'inversify';
 import { LocationRecordData, LocationRecord } from './LocationRecord';
 import { UserLocationRoleRecordData, UserLocationRoleRecord } from '../user/UserLocationRoleRecord';
-import { Location, LocationUser, DependencyFactoryFactory } from '../api/api';
+import { Location, LocationUserRole, DependencyFactoryFactory } from '../api/api';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import { Resolver,PropertyResolverMap, DeviceResolver, UserResolver, AccountResolver } from '../resolver';
 import LocationTable from '../location/LocationTable';
@@ -13,22 +13,25 @@ class LocationResolver extends Resolver<Location> {
   protected propertyResolverMap: PropertyResolverMap<Location> = {
     devices: async (location: Location, shouldExpand = false) => this.deviceResolverFactory().getAllByLocationId(location.id),
     users: async (location: Location, shouldExpand = false) => {
-      const locationUsers = await this.getAllLocationUsersByLocationId(location.id);
+      const locationUserRoles = await this.getAllUserRolesByLocationId(location.id);
 
       if (shouldExpand) {
         return Promise.all(
-          locationUsers.map(async (locationUser) => {
+          locationUserRoles.map(async (locationUser) => {
             const user = await this.userResolverFactory().getUserById(locationUser.id);
 
             return {
-              ...locationUser,
-              ...user
+              ...user,
+              id: locationUser.id
             };
           })
         );
       } else {
-        return locationUsers;
+        return locationUserRoles.map(({ id }) => ({ id }));
       }
+    },
+    userRoles: async (location: Location, shouldExpand = false) => {
+      return this.getAllUserRolesByLocationId(location.id);
     },
     account: async (location: Location, shouldExpand = false) => {
 
@@ -123,28 +126,28 @@ class LocationResolver extends Resolver<Location> {
     );
   }
 
-  public async getAllLocationUsersByLocationId(locationId: string, expandProps: string[] = []): Promise<LocationUser[]> {
+  public async getAllUserRolesByLocationId(locationId: string): Promise<LocationUserRole[]> {
     const userLocationRoleRecordData = await this.userLocationRoleTable.getAllByLocationId(locationId);
 
     return Promise.all(
       userLocationRoleRecordData
         .map(userLocationRoleDatum => 
-          new UserLocationRoleRecord(userLocationRoleDatum).toLocationUser()
+          new UserLocationRoleRecord(userLocationRoleDatum).toLocationUserRole()
         )
     );
   }
 
-  public async addLocationUser(locationId: string, userId: string, roles: string[]): Promise<LocationUser> {
+  public async addLocationUserRole(locationId: string, userId: string, roles: string[]): Promise<LocationUserRole> {
     const userLocatioRoleRecordData = await this.userLocationRoleTable.put({
       user_id: userId,
       location_id: locationId,
       roles
     });
 
-    return new UserLocationRoleRecord(userLocatioRoleRecordData).toLocationUser();
+    return new UserLocationRoleRecord(userLocatioRoleRecordData).toLocationUserRole();
   }
 
-  public async removeLocationUser(locationId: string, userId: string): Promise<void> {
+  public async removeLocationUserRole(locationId: string, userId: string): Promise<void> {
     return this.userLocationRoleTable.remove({ user_id: userId, location_id: locationId });
   }
 
@@ -156,7 +159,7 @@ class LocationResolver extends Resolver<Location> {
     await Promise.all(
       userLocationRoleRecordData
         .map(datum =>
-          this.removeLocationUser(datum.user_id, datum.location_id)
+          this.removeLocationUserRole(datum.user_id, datum.location_id)
         )
     );
   }

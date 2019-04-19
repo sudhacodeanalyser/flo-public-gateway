@@ -1,6 +1,6 @@
 import { inject, injectable } from 'inversify';
 import { LocationResolver } from '../resolver';
-import { Location, LocationUpdate, LocationUser } from '../api/api';
+import { Location, LocationUpdate, LocationUserRole } from '../api/api';
 
 @injectable()
 class LocationService {
@@ -26,22 +26,16 @@ class LocationService {
     return this.locationResolver.removeLocation(id);
   }
 
-  public async getAllLocationUsers(locationId: string, expand?: string[]): Promise<Pick<Location, 'users'>> {
-    const locationUsers = await this.locationResolver.getAllLocationUsersByLocationId(locationId, expand);
-
-    return {
-      users: locationUsers
-    };
+  public async getAllLocationUserRoles(locationId: string): Promise<LocationUserRole[]> {
+   return this.locationResolver.getAllUserRolesByLocationId(locationId);
   }
 
-  public async addLocationUser(locationId: string, userId: string, roles: string[]): Promise<LocationUser> {
-    const locationUsers = await this.locationResolver.addLocationUser(locationId, userId, roles);
-    
-    return locationUsers;
+  public async addLocationUserRole(locationId: string, userId: string, roles: string[]): Promise<LocationUserRole> {
+    return this.locationResolver.addLocationUserRole(locationId, userId, roles);
   }
 
-  public async removeLocationUser(locationId: string, userId: string): Promise<void> {
-    return this.locationResolver.removeLocationUser(locationId, userId);
+  public async removeLocationUserRole(locationId: string, userId: string): Promise<void> {
+    return this.locationResolver.removeLocationUserRole(locationId, userId);
   }
 }
 
