@@ -1,6 +1,6 @@
 import { inject, injectable, interfaces } from 'inversify';
 import { AccountRecordData, AccountRecord } from './AccountRecord';
-import { Account, AccountUser, DependencyFactoryFactory } from '../api/api';
+import { Account, AccountUserRole, DependencyFactoryFactory } from '../api/api';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import { Resolver, PropertyResolverMap, LocationResolver, UserResolver } from '../resolver';
 import AccountTable from './AccountTable';
@@ -22,22 +22,25 @@ class AccountResolver extends Resolver<Account> {
       return this.locationResolverFactory().getAllByAccountId(account.id);
     },
     users: async (account: Account, shouldExpand: boolean = false) => {
-      const accountUsers = await this.getAllAccountUsersByAccountId(account.id);
+      const accountUserRoles = await this.getAllAccountUserRolesByAccountId(account.id);
 
       if (shouldExpand) {
         return Promise.all(
-          accountUsers.map(async (accountUser) => {
-            const user = await this.userResolverFactory().getUserById(accountUser.id);
+          accountUserRoles.map(async (accountUserRole) => {
+            const user = await this.userResolverFactory().getUserById(accountUserRole.id);
 
             return {
-              ...accountUser,
-              ...user
+              ...user,
+              id: accountUserRole.id
             };
           })
         );
       } else {
-        return accountUsers;
+        return accountUserRoles.map(({ id }) => ({ id }));
       }
+    },
+    userRoles: async (account: Account, shouldExpand: boolean = false) => {
+      return this.getAllAccountUserRolesByAccountId(account.id);
     }
   };
   private locationResolverFactory: () => LocationResolver;
@@ -80,13 +83,13 @@ class AccountResolver extends Resolver<Account> {
     return new AccountRecord(accountRecordData).toModel();
   }
 
-  public async getAllAccountUsersByAccountId(accountId: string): Promise<AccountUser[]> {
+  public async getAllAccountUserRolesByAccountId(accountId: string): Promise<AccountUserRole[]> {
     const userAccountRoleRecordData = await this.userAccountRoleTable.getAllByAccountId(accountId);
 
     return Promise.all(
       userAccountRoleRecordData
         .map(userAccountRoleRecordDatum => 
-          new UserAccountRoleRecord(userAccountRoleRecordDatum).toAccountUser()
+          new UserAccountRoleRecord(userAccountRoleRecordDatum).toAccountUserRole()
         )
     );
   }
