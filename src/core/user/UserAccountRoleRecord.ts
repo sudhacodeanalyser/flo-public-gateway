@@ -1,4 +1,4 @@
-import { Expandable, Timestamped, UserAccount, AccountUserRole } from '../api/api';
+import { Expandable, Timestamped, UserAccountRole, AccountUserRole } from '../api/api';
 
 export interface UserAccountRoleRecordData extends Timestamped {
   user_id: string,
@@ -11,7 +11,7 @@ export class UserAccountRoleRecord {
     public data: UserAccountRoleRecordData
   ) {}
 
-  public toUserAccount(): Expandable<UserAccount> {
+  public toUserAccountRole(): UserAccountRole {
     return {
      id: this.data.account_id,
      roles: this.data.roles
