@@ -21,6 +21,7 @@ export class AccountRecord {
       },
       locations: [],
       users: [],
+      userRoles: [],
       created_at: this.data.created_at,
       updated_at: this.data.updated_at
     }
