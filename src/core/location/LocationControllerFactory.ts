@@ -67,7 +67,7 @@ export function LocationControllerFactory(container: Container): interfaces.Cont
     }
 
     @httpPut(
-      '/:location_id/users/:user_id',
+      '/:location_id/userroles/:user_id',
       reqValidator.create(t.type({
         params: t.type({
           id: t.string,
@@ -83,7 +83,7 @@ export function LocationControllerFactory(container: Container): interfaces.Cont
     }
 
     @httpDelete(
-      '/:location_id/users/:user_id',
+      '/:location_id/userroles/:user_id',
       reqValidator.create(t.type({
         params: t.type({
           id: t.string,
