@@ -56,32 +56,13 @@ push: docker
 	$(COMPOSE) -f build-tools.yml $(@) || true
 
 deploy:
-#	$(GRADLE) extractAppTemplates
+	$(GRADLE) extractAppTemplates
 	$(EB_INIT)
 	$(EB_DEPLOY)
 
 clean: down ## Remove build arifacts & related images
 	rm -rf node_modules
 	$(COMPOSE) kill
-
-auth:
-	@echo "Establishing authentication based on current environment"
-#	@echo "AWS"
-#	@mkdir -p ~/.aws/
-#	@# TODO: This should be crafting aws key name based on the uppercase env name
-#	@echo "\n\n[flo-${ENV}]\naws_access_key_id=$${AWS_ACCESS_KEY_ID}\naws_secret_access_key=$(AWS_ACCESS_KEY_ID)\n"
-#	@echo "\n\n[flo-${ENV}]\naws_access_key_id=$(AWS_ACCESS_KEY_ID)\naws_secret_access_key=$(AWS_SECRET_ACCESS_KEY)\n" >> ~/.aws/credentials
-#	@echo "ECR"
-#	@eval $(aws ecr get-login --profile=flo-${ENV} --no-include-email)
-
-env:
-	@echo "ENV: $(ENV)"
-#	@echo "AWS_ACCESS_KEY_ID_ENV_NAME=$(AWS_ACCESS_KEY_ID_ENV_NAME)"
-#	@echo "$(AWS_ACCESS_KEY_ID)"
-#	@echo "$(AWS_SECRET_ACCESS_KEY)"
-
-#	@echo "\n\n[flo-${ENV}]\naws_access_key_id=$(AWS_ACCESS_KEY_ID)\naws_secret_access_key=$(AWS_ACCESS_KEY_ID)\n"
-
 
 # Ensures docker is installed - does not enforce version, please use latest
 docker: docker-compose
