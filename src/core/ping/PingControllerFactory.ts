@@ -9,7 +9,7 @@ export function PingControllerFactory(container: Container): interfaces.Controll
       @inject('PingService') private pingService: PingService
     ) {}
 
-    @httpGet('/')
+    @httpGet('/ping')
     private async ping(): Promise<{ [key: string]: any }> {
       return this.pingService.ping();
     }
