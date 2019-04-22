@@ -1,5 +1,9 @@
 {
   "AWSEBDockerrunVersion": 2,
+  "authentication": {
+    "bucket": "flocloud-config",
+    "key": "docker"
+  },
   "containerDefinitions": [
     {
       "name": "app",

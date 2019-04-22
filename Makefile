@@ -1,5 +1,6 @@
 APP ?= flo-public-gateway
-ENV ?= $(shell current_branch=$$(git rev-parse --abbrev-ref HEAD); if [[ $$current_branch == "master" ]]; then current_env="prod"; else current_env=$${current_branch%.*}; fi; echo "$$current_env")
+# Default env is always dev. This can be overriden
+ENV ?= dev
 AWS_REGION ?= us-west-2
 DOCKER_IMAGE ?= ${CI_REGISTRY_IMAGE}
 DOCKER_REGISTRY ?= registry.gitlab.com/flotechnologies
@@ -10,8 +11,8 @@ NODE_ENV ?= development
 NPM ?= $(COMPOSE) -f build-tools.yml run --rm npm --node-env=$(NODE_ENV)
 GRADLE ?= $(COMPOSE) -f build-tools.yml run --rm gradle
 RUN ?= $(COMPOSE) -f build-tools.yml run --rm --service-ports run --node-env=$(NODE_ENV) run
-EB_INIT ?= $(COMPOSE) -f build-tools.yml run --rm eb init $(APP)-$(ENV) --profile=flo-${ENV} --region=${AWS_REGION} --platform docker-18.06.1-ce
-EB_DEPLOY ?= $(COMPOSE) -f build-tools.yml run --rm eb deploy $(APP)-$(ENV) --profile=flo-${ENV} --staged
+EB_INIT ?= $(COMPOSE) -f build-tools.yml run --rm eb init $(APP) --region=${AWS_REGION} --platform docker-18.06.1-ce
+EB_DEPLOY ?= $(COMPOSE) -f build-tools.yml run --rm eb deploy $(APP)-$(ENV) --staged
 
 .PHONY: help auth
 help: ## Display this help screen (default)
@@ -19,6 +20,7 @@ help: ## Display this help screen (default)
 
 build: install
 	$(COMPOSE) $(@) app
+	$(COMPOSE) $(@) app-tag
 
 install: docker ## Install npm packages using docker-based npm
 	$(NPM) $(@)
@@ -45,6 +47,14 @@ up: docker build ## Build and run application as it would be run in production (
 down: docker ## Stop application if running in the background
 	$(COMPOSE) $(@)
 
+pull: docker
+	$(COMPOSE) $(@) --quiet || true
+	$(COMPOSE) -f build-tools.yml $(@) --quiet || true
+
+push: docker
+	$(COMPOSE) $(@)
+	$(COMPOSE) -f build-tools.yml $(@) || true
+
 deploy:
 #	$(GRADLE) extractAppTemplates
 	$(EB_INIT)
@@ -55,12 +65,23 @@ clean: down ## Remove build arifacts & related images
 	$(COMPOSE) kill
 
 auth:
-	mkdir -p ~/.aws/
-	# TODO: This should be crafting aws key name based on the uppercase env name
-	echo -e "[flo-${ENV}]\naws_access_key_id=$AWS_ACCESS_KEY_ID\naws_secret_access_key=$AWS_SECRET_ACCESS_KEY\n" > ~/.aws/credentials
+	@echo "Establishing authentication based on current environment"
+#	@echo "AWS"
+#	@mkdir -p ~/.aws/
+#	@# TODO: This should be crafting aws key name based on the uppercase env name
+#	@echo "\n\n[flo-${ENV}]\naws_access_key_id=$${AWS_ACCESS_KEY_ID}\naws_secret_access_key=$(AWS_ACCESS_KEY_ID)\n"
+#	@echo "\n\n[flo-${ENV}]\naws_access_key_id=$(AWS_ACCESS_KEY_ID)\naws_secret_access_key=$(AWS_SECRET_ACCESS_KEY)\n" >> ~/.aws/credentials
+#	@echo "ECR"
+#	@eval $(aws ecr get-login --profile=flo-${ENV} --no-include-email)
 
 env:
 	@echo "ENV: $(ENV)"
+#	@echo "AWS_ACCESS_KEY_ID_ENV_NAME=$(AWS_ACCESS_KEY_ID_ENV_NAME)"
+#	@echo "$(AWS_ACCESS_KEY_ID)"
+#	@echo "$(AWS_SECRET_ACCESS_KEY)"
+
+#	@echo "\n\n[flo-${ENV}]\naws_access_key_id=$(AWS_ACCESS_KEY_ID)\naws_secret_access_key=$(AWS_ACCESS_KEY_ID)\n"
+
 
 # Ensures docker is installed - does not enforce version, please use latest
 docker: docker-compose

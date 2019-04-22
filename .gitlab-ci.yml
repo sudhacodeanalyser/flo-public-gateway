@@ -11,7 +11,9 @@ stages:
   - deploy
 
 before_script:
-  - apk add --no-cache make # TODO: this should be part of the compose image
+  - echo $SHELL
+  - apk add --no-cache make bash # TODO: this should be part of the compose image
+  - make env
   - make auth
   - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
   - |
@@ -23,6 +25,7 @@ Compile:
   stage: build
   except:
     - tags
+
   artifacts:
     paths:
       - logs/
@@ -39,13 +42,15 @@ Compile:
       - node_modules
 
   script:
-    - docker pull ${CI_REGISTRY_IMAGE}:latest || true
-    - docker pull ${CI_REGISTRY_IMAGE}:build || true
+    - make pull
+#    - docker pull ${CI_REGISTRY_IMAGE}:latest || true
+#    - docker pull ${CI_REGISTRY_IMAGE}:build || true
     - make build
-    - docker tag ${CI_REGISTRY_IMAGE}:${CI_PIPELINE_ID} ${CI_REGISTRY_IMAGE}:latest
-    - docker push ${CI_REGISTRY_IMAGE}:build
-    - docker push ${CI_REGISTRY_IMAGE}:${CI_PIPELINE_ID}
-    - docker push ${CI_REGISTRY_IMAGE}:latest
+    - make push
+#    - docker tag ${CI_REGISTRY_IMAGE}:${CI_PIPELINE_ID} ${CI_REGISTRY_IMAGE}:latest
+#    - docker push ${CI_REGISTRY_IMAGE}:build
+#    - docker push ${CI_REGISTRY_IMAGE}:${CI_PIPELINE_ID}
+#    - docker push ${CI_REGISTRY_IMAGE}:latest
 
 Sanity:
   stage: test
@@ -60,9 +65,15 @@ Sanity:
   dependencies:
     - Compile
   script:
+    - make pull
+#    - docker pull ${CI_REGISTRY_IMAGE}:latest || true
+#    - docker pull ${CI_REGISTRY_IMAGE}:build || true
     - make test | tee build.log
 
 Dev:
+  variables:
+    AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID_DEV}"
+    AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY_DEV}"
   stage: deploy
   dependencies:
     - Compile
@@ -72,5 +83,8 @@ Dev:
     name: dev
     url: https://public-gateway.flocloud.co
   script:
+#    - docker pull ${CI_REGISTRY_IMAGE}:latest || true
+#    - docker pull ${CI_REGISTRY_IMAGE}:build || true
+    - make pull
     - make deploy ENV=dev
 
