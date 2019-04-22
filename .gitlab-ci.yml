@@ -43,14 +43,9 @@ Compile:
 
   script:
     - make pull
-#    - docker pull ${CI_REGISTRY_IMAGE}:latest || true
-#    - docker pull ${CI_REGISTRY_IMAGE}:build || true
     - make build
     - make push
-#    - docker tag ${CI_REGISTRY_IMAGE}:${CI_PIPELINE_ID} ${CI_REGISTRY_IMAGE}:latest
-#    - docker push ${CI_REGISTRY_IMAGE}:build
-#    - docker push ${CI_REGISTRY_IMAGE}:${CI_PIPELINE_ID}
-#    - docker push ${CI_REGISTRY_IMAGE}:latest
+
 
 Sanity:
   stage: test
@@ -66,8 +61,6 @@ Sanity:
     - Compile
   script:
     - make pull
-#    - docker pull ${CI_REGISTRY_IMAGE}:latest || true
-#    - docker pull ${CI_REGISTRY_IMAGE}:build || true
     - make test | tee build.log
 
 Dev:
@@ -83,8 +76,6 @@ Dev:
     name: dev
     url: https://public-gateway.flocloud.co
   script:
-#    - docker pull ${CI_REGISTRY_IMAGE}:latest || true
-#    - docker pull ${CI_REGISTRY_IMAGE}:build || true
     - make pull
     - make deploy ENV=dev
 
