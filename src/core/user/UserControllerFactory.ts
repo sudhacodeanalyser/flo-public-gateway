@@ -5,17 +5,30 @@ import { interfaces, controller, httpGet, httpPost, httpDelete, request, queryPa
 import { injectable, inject, Container } from 'inversify';
 import UserService from './UserService';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
-import { User } from '../api/api';
-import { parseExpand } from '../api/controllerUtils';
+import { User, UserUpdateValidator, UserUpdate } from '../api/api';
+import { httpController, parseExpand } from '../api/controllerUtils';
 
 export function UserControllerFactory(container: Container): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
 
-  @controller('/users', 'LoggerMiddleware')
+  @httpController({ version: 1 }, '/users')
   class UserController implements interfaces.Controller {
     constructor(
       @inject('UserService') private userService: UserService
     ) {}
+
+    @httpPost(
+      '/:id',
+      reqValidator.create(t.type({
+        params: t.type({
+          id: t.string
+        }),
+        body: UserUpdateValidator
+      }))
+    )
+    private async updatePartialUser(@requestParam('id') id: string, @requestBody() userUpdate: UserUpdate): Promise<User> {
+      return this.userService.updatePartialUser(id, userUpdate);
+    }
 
     @httpGet('/:id',
       reqValidator.create(t.type({
