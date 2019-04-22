@@ -25,5 +25,5 @@ const config = {
 
 export default {
   ...getDefaults(),
-  ..._.omitBy(config, value => _.isUndefined(value))
+  ..._.pickBy(config, value => !_.isUndefined(value))
 };

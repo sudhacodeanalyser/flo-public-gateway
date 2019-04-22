@@ -21,7 +21,7 @@ export interface Patch {
 }
 
 export function fromPartialRecord<T>(partialRecord: Partial<T>): Patch {
-  const setOps = _.map(_.omitBy(partialRecord, _.isUndefined), (value: any, key: string) => ({
+  const setOps = _.map(_.pickBy(partialRecord, value => !_.isUndefined(value)), (value: any, key: string) => ({
     key,
     value
   }));
