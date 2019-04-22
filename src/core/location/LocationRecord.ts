@@ -196,6 +196,7 @@ export class LocationRecord {
       },
       users: [],
       devices: [],
+      userRoles: [],
       ...commonProps
     };
   }
