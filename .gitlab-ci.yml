@@ -11,10 +11,7 @@ stages:
   - deploy
 
 before_script:
-  - echo $SHELL
   - apk add --no-cache make bash # TODO: this should be part of the compose image
-  - make env
-  - make auth
   - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
   - |
     if [[ -f Dockerrun.aws.json ]]; then
