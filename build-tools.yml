@@ -9,6 +9,8 @@ services:
     environment:
       BINTRAY_USER: "${BINTRAY_USER:-SetBintrayCredentialsPLS}"
       BINTRAY_KEY: "${BINTRAY_KEY:-empty}"
+      AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID:-empty}"
+      AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY:-empty}"
     volumes:
       - .:/app
       - ".npm:/root/.npm"
@@ -22,9 +24,7 @@ services:
 
   eb:
     entrypoint: eb
-
     <<: *build
-
 
   gradle:
     image: gradle:5.4.0-alpine
