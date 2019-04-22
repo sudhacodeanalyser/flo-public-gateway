@@ -104,7 +104,9 @@ class LocationResolver extends Resolver<Location> {
       // https://aws.amazon.com/blogs/aws/new-amazon-dynamodb-transactions/
       await Promise.all([
         this.locationTable.remove({ acount_id: accountId, location_id: id }),
-        this.removeLocationUsersAllByLocationId(id)
+        this.removeLocationUsersAllByLocationId(id),
+        ...(await this.deviceResolverFactory().getAllByLocationId(id))
+          .map(async ({ id: icdId }) => this.deviceResolverFactory().remove(icdId))
       ]);
     }
   }

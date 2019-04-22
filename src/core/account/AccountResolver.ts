@@ -73,6 +73,34 @@ class AccountResolver extends Resolver<Account> {
     };
   }
 
+  public async removeAccount(id: string): Promise<void> {
+    const account = await this.getAccount(id);
+
+    if (account !== null) {
+      // TODO: Make this transactional.
+      // https://aws.amazon.com/blogs/aws/new-amazon-dynamodb-transactions/
+      await Promise.all([
+        this.accountTable.remove({ id }),
+        ...account.userRoles.map(async ({ userId }) => 
+          this.userAccountRoleTable.remove({ account_id: id, user_id: userId })
+        ),
+        ...account.users.map(async ({ id: userId }) => 
+          this.userResolverFactory().removeUser(userId)
+        ),
+        ...account.locations.map(async ({ id: locationId }) => 
+          this.locationResolverFactory().removeLocation(locationId)
+        )
+      ]);
+    }
+  }
+
+  public async updateAccountUserRole(accountId: string, userId: string, roles: string[]): Promise<AccountUserRole> {
+    const patch = fromPartialRecord({ roles });
+    const updatedUserAccountRoleRecordData = await this.userAccountRoleTable.update({ account_id: accountId, user_id: userId }, patch);
+
+    return new UserAccountRoleRecord(updatedUserAccountRoleRecordData).toAccountUserRole();
+  }
+
   public async getAccountByOwnerUserId(ownerUserId: string): Promise<Account | null> {
     const accountRecordData = await this.accountTable.getByOwnerUserId(ownerUserId);
 
