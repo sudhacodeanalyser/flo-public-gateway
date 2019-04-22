@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import * as express from 'express';
 import * as t from 'io-ts';
-import { interfaces, controller, httpGet, httpPost, httpDelete, request, queryParam, response, requestParam, requestBody } from 'inversify-express-utils';
+import { interfaces, httpGet, httpPost, httpDelete, request, queryParam, response, requestParam, requestBody } from 'inversify-express-utils';
 import { injectable, inject, Container } from 'inversify';
 import UserService from './UserService';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
