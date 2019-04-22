@@ -50,8 +50,8 @@ export function LocationControllerFactory(container: Container): interfaces.Cont
         body: LocationUpdateValidator
       }))
     )
-    private async partiallyUpdateLoation(@requestParam('id') id: string, @requestBody() locationUpdate: LocationUpdate): Promise<Location> {
-      return this.locationService.partiallyUpdateLocation(id, locationUpdate);
+    private async updatePartialLocation(@requestParam('id') id: string, @requestBody() locationUpdate: LocationUpdate): Promise<Location> {
+      return this.locationService.updatePartialLocation(id, locationUpdate);
     }
 
     @httpDelete(
