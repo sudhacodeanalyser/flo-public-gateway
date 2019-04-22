@@ -18,7 +18,7 @@ class LocationService {
     return location === null ? {} : location;
   }
 
-  public async partiallyUpdateLocation(id: string, locationUpdate: LocationUpdate): Promise<Location> {
+  public async updatePartialLocation(id: string, locationUpdate: LocationUpdate): Promise<Location> {
     return this.locationResolver.updatePartialLocation(id, locationUpdate);
   }
 

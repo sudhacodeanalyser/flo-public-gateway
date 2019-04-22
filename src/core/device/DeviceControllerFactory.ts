@@ -46,9 +46,9 @@ export function DeviceControllerFactory(container: Container): interfaces.Contro
         ])
       }))
     )
-    private async partialUpdateDevice(@requestParam('id') id: string, @requestBody() deviceUpdate: DeviceUpdate): Promise<Device> {
+    private async updatePartialDevice(@requestParam('id') id: string, @requestBody() deviceUpdate: DeviceUpdate): Promise<Device> {
 
-      return this.deviceService.partiallyUpdateDevice(id, deviceUpdate);
+      return this.deviceService.updatePartialDevice(id, deviceUpdate);
     }
 
     @httpDelete('/:id',
