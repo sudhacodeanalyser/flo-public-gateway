@@ -1,3 +1,4 @@
+import * as t from 'io-ts';
 import { Expandable, TimestampedModel, Location, Account } from '../api';
 
 export interface UserLocationRole {
@@ -15,7 +16,25 @@ export enum UnitSystem {
   METRIC_KPA = 'metric_kpa'
 }
 
-export interface User extends TimestampedModel {
+const UnitSystemCodec = t.keyof({
+  [UnitSystem.IMPERIAL_US]: null,
+  [UnitSystem.METRIC_KPA]: null,
+});
+
+const UserMutableCodec = t.type({
+  firstName: t.string,
+  middleName: t.string,
+  lastName: t.string,
+  prefixName: t.string,
+  suffixName: t.string,
+  unitSystem: UnitSystemCodec,
+  phoneMobile: t.string
+});
+
+export const UserUpdateValidator = t.exact(t.partial(UserMutableCodec.props));
+export type UserUpdate = t.TypeOf<typeof UserUpdateValidator>;
+
+export interface User extends UserUpdate, TimestampedModel {
   id: string,
   email: string,
   password?: string,
@@ -24,11 +43,4 @@ export interface User extends TimestampedModel {
   account: Expandable<Account>,
   locationRoles: UserLocationRole[],
   accountRole: UserAccountRole
-  firstName?: string,
-  middleName?: string,
-  lastName?: string,
-  prefixName?: string,
-  suffixName?: string,
-  unitSystem?: UnitSystem
-  phoneMobile?: string
 }

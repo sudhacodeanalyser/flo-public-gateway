@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import Logger from 'bunyan';
 import { injectable, inject } from 'inversify';
-import { User } from '../api/api';
+import { User, UserUpdate } from '../api/api';
 import { UserResolver } from '../resolver';
 import AccountService from '../account/AccountService';
 import ResourceNotDeletableError from '../api/error/ResourceNotDeletableError';
@@ -13,6 +13,10 @@ class UserService {
     @inject('UserResolver') private userResolver: UserResolver,
     @inject('AccountService') private accountService: AccountService
   ) {}
+
+  public async updatePartialUser(id: string, userUpdate: UserUpdate): Promise<User> {
+    return this.userResolver.updatePartialUser(id, userUpdate);
+  }
 
   public async getUserById(id: string, expand?: string[]): Promise<User | {}> {
     const user: User | null = await this.userResolver.getUserById(id, expand);

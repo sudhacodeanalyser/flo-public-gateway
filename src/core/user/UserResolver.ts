@@ -1,6 +1,7 @@
 import { inject, injectable, interfaces } from 'inversify';
-import { Expandable, User, UserAccountRole, UserLocationRole, Location, DependencyFactoryFactory } from '../api/api';
+import { DependencyFactoryFactory, Expandable, Location, User, UserAccountRole, UserLocationRole, UserUpdate } from '../api/api';
 import { Resolver, PropertyResolverMap, LocationResolver, AccountResolver } from '../resolver';
+import { fromPartialRecord } from '../../database/Patch';
 import { UserRecord } from './UserRecord';
 import { UserDetailRecord } from './UserDetailRecord';
 import UserDetailTable from './UserDetailTable';
@@ -9,6 +10,7 @@ import UserLocationRoleTable from './UserLocationRoleTable';
 import UserAccountRoleTable from './UserAccountRoleTable';
 import { UserAccountRoleRecordData, UserAccountRoleRecord } from './UserAccountRoleRecord';
 import { UserLocationRoleRecordData, UserLocationRoleRecord } from './UserLocationRoleRecord';
+import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 
 @injectable()
 class UserResolver extends Resolver<User> {
@@ -48,8 +50,8 @@ class UserResolver extends Resolver<User> {
     accountRole: async (model: User, shouldExpand = false) => {
       const userAccountRoleRecordData = await this.userAccountRoleTable.getByUserId(model.id);
 
-      return userAccountRoleRecordData === null ? 
-        null : 
+      return userAccountRoleRecordData === null ?
+        null :
         new UserAccountRoleRecord(userAccountRoleRecordData).toUserAccountRole();
     },
    locationRoles: async (model: User, shouldExpand = false) => {
@@ -77,6 +79,24 @@ class UserResolver extends Resolver<User> {
     this.accountResolverFactory = depFactoryFactory<AccountResolver>('AccountResolver');
   }
 
+  public async updatePartialUser(id: string, partialUser: Partial<User>): Promise<User> {
+    const userDetailRecord = this.fromModelToUserDetailRecord(partialUser);
+    const patch = fromPartialRecord(userDetailRecord);
+
+    const updatedUserDetail = await this.userDetailTable.update({ user_id: id }, patch);
+    const user = await this.getUserById(id);
+
+    if (user === null) {
+      // This should not happen, unless a user is deleted between the update and retrieval.
+      throw new ResourceDoesNotExistError();
+    }
+
+    return {
+      ...user,
+      ...updatedUserDetail
+    };
+  }
+
   public async getUserById(id: string, expandProps: string[] = []): Promise<User | null> {
     const [userRecord, userDetailRecord] = await Promise.all([
       this.userTable.get({ id }),
@@ -99,6 +119,18 @@ class UserResolver extends Resolver<User> {
       this.userDetailTable.remove({ user_id: id }),
       this.userTable.remove({ id })
     ]);
+  }
+
+  private fromModelToUserDetailRecord(user: Partial<User>): Partial<UserDetailRecord> {
+    return {
+      firstname: user.firstName,
+      middlename: user.middleName,
+      lastname: user.lastName,
+      prefixname: user.prefixName,
+      suffixname: user.suffixName,
+      unit_system: user.unitSystem,
+      phone_mobile: user.phoneMobile
+    };
   }
 
   private async toModel(userRecord: UserRecord, userDetailRecord: UserDetailRecord, expandProps: string[]): Promise<User> {
