@@ -16,7 +16,7 @@ class DeviceService {
     return device === null ? {} : device;
   }
 
-  public async partiallyUpdateDevice(id: string, deviceUpdate: DeviceUpdate): Promise<Device> {
+  public async updatePartialDevice(id: string, deviceUpdate: DeviceUpdate): Promise<Device> {
     return this.deviceResolver.updatePartial(id, deviceUpdate);
   }
 
