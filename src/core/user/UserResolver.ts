@@ -1,5 +1,5 @@
 import { inject, injectable, interfaces } from 'inversify';
-import { Expandable, User, UserAccount, UserLocation, Location, DependencyFactoryFactory } from '../api/api';
+import { Expandable, User, UserAccountRole, UserLocationRole, Location, DependencyFactoryFactory } from '../api/api';
 import { Resolver, PropertyResolverMap, LocationResolver, AccountResolver } from '../resolver';
 import { UserRecord } from './UserRecord';
 import { UserDetailRecord } from './UserDetailRecord';
@@ -16,21 +16,18 @@ class UserResolver extends Resolver<User> {
     locations: async (model: User, shouldExpand = false) => {
       const userLocationRoleRecordData: UserLocationRoleRecordData[] = await this.userLocationRoleTable.getAllByUserId(model.id);
 
-      const userLocations: Array<Expandable<UserLocation>> = userLocationRoleRecordData.map(userLocationRoleRecordDatum =>
-        new UserLocationRoleRecord(userLocationRoleRecordDatum).toUserLocation()
-      );
-
       if (!shouldExpand) {
-        return userLocations;
+        return userLocationRoleRecordData.map(({ location_id }) => ({ id: location_id }));
       }
 
-      return Promise.all(userLocations.map(
-        async (userLocation) => {
-          const location = await this.locationResolverFactory().get(userLocation.id);
+      return Promise.all(userLocationRoleRecordData.map(
+        async (userLocationRoleRecordDatum) => {
+          const location = await this.locationResolverFactory().get(userLocationRoleRecordDatum.location_id);
+
           return {
-            ...userLocation,
-            ...(location === null ? {} : location)
-          }
+            ...location,
+            id: userLocationRoleRecordDatum.location_id
+          };
         }
       ));
     },
@@ -41,10 +38,26 @@ class UserResolver extends Resolver<User> {
       }
 
       if (!shouldExpand) {
-        return new UserAccountRoleRecord(userAccountRoleRecordData).toUserAccount();
+        return {
+          id: userAccountRoleRecordData.account_id
+        };
       }
 
       return this.accountResolverFactory().getAccount(userAccountRoleRecordData.account_id);
+    },
+    accountRole: async (model: User, shouldExpand = false) => {
+      const userAccountRoleRecordData = await this.userAccountRoleTable.getByUserId(model.id);
+
+      return userAccountRoleRecordData === null ? 
+        null : 
+        new UserAccountRoleRecord(userAccountRoleRecordData).toUserAccountRole();
+    },
+   locationRoles: async (model: User, shouldExpand = false) => {
+      const userLocationRoleRecordData: UserLocationRoleRecordData[] = await this.userLocationRoleTable.getAllByUserId(model.id);
+
+      return userLocationRoleRecordData.map(userLocationRoleRecordDatum =>
+        new UserLocationRoleRecord(userLocationRoleRecordDatum).toUserLocationRole()
+      );
     }
   }
 
@@ -101,6 +114,11 @@ class UserResolver extends Resolver<User> {
       unitSystem: userDetailRecord.unit_system,
       phoneMobile: userDetailRecord.phone_mobile,
       locations: [],
+      locationRoles: [],
+      accountRole: {
+        accountId: '',
+        roles: []
+      },
       account: {
         id: ''
       }

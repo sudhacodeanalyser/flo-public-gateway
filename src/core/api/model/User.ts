@@ -1,11 +1,13 @@
 import { Expandable, TimestampedModel, Location, Account } from '../api';
 
-export interface UserLocation extends Location {
-  roles: string[]
+export interface UserLocationRole {
+  locationId: string;
+  roles: string[];
 }
 
-export interface UserAccount extends Account {
-  roles: string[]
+export interface UserAccountRole {
+  accountId: string;
+  roles: string[];
 }
 
 export enum UnitSystem {
@@ -18,8 +20,10 @@ export interface User extends TimestampedModel {
   email: string,
   password?: string,
   isActive?: boolean,
-  locations: Array<Expandable<UserLocation>>,
-  account: Expandable<UserAccount>,
+  locations: Array<Expandable<Location>>,
+  account: Expandable<Account>,
+  locationRoles: UserLocationRole[],
+  accountRole: UserAccountRole
   firstName?: string,
   middleName?: string,
   lastName?: string,
