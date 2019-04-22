@@ -1,7 +1,6 @@
-import * as express from 'express';
 import * as t from 'io-ts';
-import { interfaces, controller, httpGet, httpPost, httpDelete, request, queryParam, response, requestParam, requestBody } from 'inversify-express-utils';
-import { injectable, inject, Container } from 'inversify';
+import { interfaces, httpGet, httpPost, httpDelete, queryParam, requestParam, requestBody } from 'inversify-express-utils';
+import { inject, Container } from 'inversify';
 import AccountService from './AccountService';
 import { parseExpand, httpController } from '../api/controllerUtils';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
@@ -38,7 +37,7 @@ export function AccountControllerFactory(container: Container): interfaces.Contr
           id: t.string
         })
       }))
-    ) 
+    )
     private async removeAccount(@requestParam('id') id: string): Promise<void> {
 
       return this.accountService.removeAccount(id);

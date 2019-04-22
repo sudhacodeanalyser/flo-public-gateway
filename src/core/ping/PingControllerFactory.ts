@@ -1,5 +1,5 @@
-import { interfaces, controller, httpGet, httpPost, httpDelete, request, queryParam, response, requestParam } from 'inversify-express-utils';
-import { injectable, inject, Container } from 'inversify';
+import { interfaces, controller, httpGet } from 'inversify-express-utils';
+import { inject, Container } from 'inversify';
 import PingService from './PingService';
 
 export function PingControllerFactory(container: Container): interfaces.Controller {

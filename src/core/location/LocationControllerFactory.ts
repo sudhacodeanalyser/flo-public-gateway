@@ -1,7 +1,5 @@
-import _ from 'lodash';
-import * as express from 'express';
-import { interfaces, controller, httpGet, httpPost, httpDelete, httpPut, request, queryParam, response, requestParam, requestBody } from 'inversify-express-utils';
-import { injectable, inject, Container } from 'inversify';
+import { interfaces, httpGet, httpPost, httpDelete, httpPut, queryParam, requestParam, requestBody } from 'inversify-express-utils';
+import { inject, Container } from 'inversify';
 import { Location, LocationUpdateValidator, LocationUpdate, LocationUserRole } from '../api/api';
 import LocationService from './LocationService';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';

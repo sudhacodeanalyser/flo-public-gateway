@@ -1,5 +1,5 @@
-import { inject, injectable, interfaces } from 'inversify';
-import { DependencyFactoryFactory, Expandable, Location, User, UserAccountRole, UserLocationRole, UserUpdate } from '../api/api';
+import { inject, injectable } from 'inversify';
+import { DependencyFactoryFactory, User } from '../api/api';
 import { Resolver, PropertyResolverMap, LocationResolver, AccountResolver } from '../resolver';
 import { fromPartialRecord } from '../../database/Patch';
 import { UserRecord } from './UserRecord';
@@ -8,7 +8,7 @@ import UserDetailTable from './UserDetailTable';
 import UserTable from './UserTable';
 import UserLocationRoleTable from './UserLocationRoleTable';
 import UserAccountRoleTable from './UserAccountRoleTable';
-import { UserAccountRoleRecordData, UserAccountRoleRecord } from './UserAccountRoleRecord';
+import { UserAccountRoleRecord } from './UserAccountRoleRecord';
 import { UserLocationRoleRecordData, UserLocationRoleRecord } from './UserLocationRoleRecord';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 

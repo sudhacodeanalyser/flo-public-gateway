@@ -1,6 +1,6 @@
-import { inject, injectable, interfaces } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { LocationRecordData, LocationRecord } from './LocationRecord';
-import { UserLocationRoleRecordData, UserLocationRoleRecord } from '../user/UserLocationRoleRecord';
+import { UserLocationRoleRecord } from '../user/UserLocationRoleRecord';
 import { Location, LocationUserRole, DependencyFactoryFactory } from '../api/api';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import { Resolver,PropertyResolverMap, DeviceResolver, UserResolver, AccountResolver } from '../resolver';
@@ -133,7 +133,7 @@ class LocationResolver extends Resolver<Location> {
 
     return Promise.all(
       userLocationRoleRecordData
-        .map(userLocationRoleDatum => 
+        .map(userLocationRoleDatum =>
           new UserLocationRoleRecord(userLocationRoleDatum).toLocationUserRole()
         )
     );
