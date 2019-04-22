@@ -1,6 +1,6 @@
-import { inject, injectable, interfaces } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { DeviceRecordData, DeviceRecord } from './DeviceRecord';
-import { Device, Location, DependencyFactoryFactory } from '../api/api';
+import { Device, DependencyFactoryFactory } from '../api/api';
 import { Resolver, PropertyResolverMap, LocationResolver } from '../resolver';
 import { fromPartialRecord } from '../../database/Patch';
 import DeviceTable from '../device/DeviceTable';
@@ -64,7 +64,7 @@ class DeviceResolver extends Resolver<Device> {
     return {
       ...device,
       ...expandedProps
-    }; 
+    };
   }
 }
 

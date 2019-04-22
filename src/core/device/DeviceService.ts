@@ -1,12 +1,10 @@
 import { injectable, inject } from 'inversify';
-import Logger from 'bunyan';
 import { Device, DeviceUpdate } from '../api/api';
 import { DeviceResolver } from '../resolver';
 
 @injectable()
 class DeviceService {
   constructor(
-    @inject('Logger') private readonly logger: Logger,
     @inject('DeviceResolver') private deviceResolver: DeviceResolver
   ) {}
 

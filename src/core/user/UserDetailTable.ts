@@ -1,7 +1,6 @@
 import { inject, injectable } from 'inversify';
 import DatabaseClient from '../../database/DatabaseClient';
 import DatabaseTable from '../../database/DatabaseTable';
-import { DynamoDbQuery } from '../../database/dynamo/DynamoDbClient';
 import { UserDetailRecord } from './UserDetailRecord';
 
 @injectable()

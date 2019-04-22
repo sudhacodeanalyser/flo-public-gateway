@@ -1,5 +1,4 @@
 import { injectable, inject } from 'inversify';
-import Logger from 'bunyan';
 import Config from '../../config/config';
 
 @injectable()

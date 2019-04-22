@@ -1,4 +1,4 @@
-import { Container, ContainerModule, interfaces } from 'inversify';
+import { ContainerModule, interfaces } from 'inversify';
 import { DependencyFactoryFactory } from './api';
 
 function memoizedGet<T>(container: interfaces.Container, serviceId: string): () => T {
@@ -11,7 +11,7 @@ function memoizedGet<T>(container: interfaces.Container, serviceId: string): () 
 
       return instance;
     };
-  
+
 }
 
 export default new ContainerModule((bind: interfaces.Bind) => {

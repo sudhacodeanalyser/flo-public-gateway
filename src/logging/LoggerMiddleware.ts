@@ -1,4 +1,4 @@
-import { inject, injectable, named } from 'inversify';
+import { injectable } from 'inversify';
 import { BaseMiddleware } from 'inversify-express-utils';
 import express from 'express';
 import Logger from 'bunyan';

@@ -6,7 +6,7 @@ import cors from 'cors';
 // import enforce from 'express-sslify';
 import uuid from 'uuid';
 import { Container } from 'inversify';
-import { interfaces, InversifyExpressServer, TYPE } from 'inversify-express-utils';
+import { InversifyExpressServer } from 'inversify-express-utils';
 import LoggerFactory from '../logging/LoggerFactory';
 import Logger from 'bunyan';
 import Request from '../core/api/Request';

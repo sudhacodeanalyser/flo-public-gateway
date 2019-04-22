@@ -1,4 +1,4 @@
-import { Container, ContainerModule } from 'inversify';
+import { Container } from 'inversify';
 import config from '../config/config';
 
 // Shared container modules

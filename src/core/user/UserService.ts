@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import Logger from 'bunyan';
 import { injectable, inject } from 'inversify';
 import { User, UserUpdate } from '../api/api';
 import { UserResolver } from '../resolver';
@@ -9,7 +8,6 @@ import ResourceNotDeletableError from '../api/error/ResourceNotDeletableError';
 @injectable()
 class UserService {
   constructor(
-    @inject('Logger') private readonly logger: Logger,
     @inject('UserResolver') private userResolver: UserResolver,
     @inject('AccountService') private accountService: AccountService
   ) {}

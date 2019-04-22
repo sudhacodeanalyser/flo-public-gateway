@@ -1,7 +1,6 @@
-import { inject, injectable, interfaces } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { AccountRecordData, AccountRecord } from './AccountRecord';
 import { Account, AccountUserRole, DependencyFactoryFactory } from '../api/api';
-import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import { Resolver, PropertyResolverMap, LocationResolver, UserResolver } from '../resolver';
 import AccountTable from './AccountTable';
 import UserAccountRoleTable from '../user/UserAccountRoleTable';
@@ -81,13 +80,13 @@ class AccountResolver extends Resolver<Account> {
       // https://aws.amazon.com/blogs/aws/new-amazon-dynamodb-transactions/
       await Promise.all([
         this.accountTable.remove({ id }),
-        ...account.userRoles.map(async ({ userId }) => 
+        ...account.userRoles.map(async ({ userId }) =>
           this.userAccountRoleTable.remove({ account_id: id, user_id: userId })
         ),
-        ...account.users.map(async ({ id: userId }) => 
+        ...account.users.map(async ({ id: userId }) =>
           this.userResolverFactory().removeUser(userId)
         ),
-        ...account.locations.map(async ({ id: locationId }) => 
+        ...account.locations.map(async ({ id: locationId }) =>
           this.locationResolverFactory().removeLocation(locationId)
         )
       ]);
@@ -116,7 +115,7 @@ class AccountResolver extends Resolver<Account> {
 
     return Promise.all(
       userAccountRoleRecordData
-        .map(userAccountRoleRecordDatum => 
+        .map(userAccountRoleRecordDatum =>
           new UserAccountRoleRecord(userAccountRoleRecordDatum).toAccountUserRole()
         )
     );

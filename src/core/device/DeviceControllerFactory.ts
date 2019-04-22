@@ -1,17 +1,15 @@
-import _ from 'lodash';
-import * as express from 'express';
-import { interfaces, controller, httpGet, httpPost, httpDelete, request, queryParam, response, requestParam, requestBody } from 'inversify-express-utils';
-import { injectable, inject, Container } from 'inversify';
+import { interfaces, httpGet, httpPost, httpDelete, queryParam, requestParam, requestBody } from 'inversify-express-utils';
+import { inject, Container } from 'inversify';
 import { Device, DeviceUpdate } from '../api/api';
 import DeviceService from './DeviceService';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
 import * as t from 'io-ts';
-import { parseExpand } from '../api/controllerUtils';
+import { httpController, parseExpand } from '../api/controllerUtils';
 
 export function DeviceControllerFactory(container: Container): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
 
-  @controller('/devices', 'LoggerMiddleware')
+  @httpController({ version: 1 }, '/devices')
   class DeviceController implements interfaces.Controller {
     constructor(
       @inject('DeviceService') private deviceService: DeviceService

@@ -1,4 +1,3 @@
-import Logger from 'bunyan';
 import { injectable, inject } from 'inversify';
 import { Account, AccountUserRole } from '../api/api';
 import { AccountResolver } from '../resolver';
