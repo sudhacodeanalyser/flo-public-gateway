@@ -30,13 +30,13 @@ export class DeviceRecord {
       id: model.id,
       device_id: model.macAddress,
       nickname: model.nickname,
-      installation_point: model.installation_point,
+      installation_point: model.installationPoint,
       location_id: model.location && model.location.id,
-      created_at: model.created_at,
-      updated_at: model.updated_at,
+      created_at: model.createdAt,
+      updated_at: model.updatedAt,
       // TODO enum string ->
-      device_type: model.device_type && DeviceTypeData.FLO_DEVICE,
-      device_model: model.device_model && DeviceModelTypeData.FLO_DEVICE_THREE_QUARTER_INCH
+      device_type: model.deviceType && DeviceTypeData.FLO_DEVICE,
+      device_model: model.deviceModel && DeviceModelTypeData.FLO_DEVICE_THREE_QUARTER_INCH
     };
   }
 
@@ -49,15 +49,15 @@ export class DeviceRecord {
       id: this.data.id,
       macAddress: this.data.device_id,
       nickname: this.data.nickname,
-      installation_point: this.data.installation_point,
+      installationPoint: this.data.installation_point,
       location: {
         id: this.data.location_id
       },
-      created_at: this.data.created_at,
-      updated_at: this.data.updated_at,
+      createdAt: this.data.created_at,
+      updatedAt: this.data.updated_at,
       // TODO enum int -> string mapping
-      device_type: DeviceType.FLO_DEVICE,
-      device_model: DeviceModelType.FLO_DEVICE_THREE_QUARTER_INCH
+      deviceType: DeviceType.FLO_DEVICE,
+      deviceModel: DeviceModelType.FLO_DEVICE_THREE_QUARTER_INCH
     };
   }
 }
