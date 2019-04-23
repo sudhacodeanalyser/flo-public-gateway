@@ -108,11 +108,20 @@ class UserResolver extends Resolver<User> {
   }
 
   public async removeUser(id: string): Promise<void> {
+    const userLocationRoleRecordData: UserLocationRoleRecordData[] = await this.userLocationRoleTable.getAllByUserId(id);
+    const userAccountRoleRecordData = await this.userAccountRoleTable.getByUserId(id);
+
     // TODO: Make this transactional.
     // https://aws.amazon.com/blogs/aws/new-amazon-dynamodb-transactions/
     await Promise.all([
-      this.userLocationRoleTable.remove({ user_id: id }),
-      this.userAccountRoleTable.remove({ user_id: id }),
+      ...userLocationRoleRecordData.map(datum =>
+        this.userLocationRoleTable.remove({ user_id: id, location_id: datum.location_id }
+      )),
+
+      Promise.resolve<false | void>(userAccountRoleRecordData !== null &&
+        this.userAccountRoleTable.remove({ user_id: id, account_id: userAccountRoleRecordData.account_id })
+      ),
+
       this.userDetailTable.remove({ user_id: id }),
       this.userTable.remove({ id })
     ]);

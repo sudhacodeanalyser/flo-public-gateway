@@ -43,11 +43,11 @@ export function AccountControllerFactory(container: Container): interfaces.Contr
       return this.accountService.removeAccount(id);
     }
 
-    @httpPost('/:id/userroles/:user_id',
+    @httpPost('/:id/user-roles/:userId',
       reqValidator.create(t.type({
         params: t.type({
           id: t.string,
-          user_id: t.string
+          userId: t.string
         })
       }))
     )
