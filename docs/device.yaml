@@ -71,7 +71,7 @@ components:
     DeviceUpdate:
       type: object
       properties:
-        installation_point:
+        installationPoint:
           type: string
         nickname:
           type: string
@@ -94,7 +94,7 @@ components:
                       type: string
                       format: uuid
                 - $ref: '#/components/schemas/Location'
-            device_type:
+            deviceType:
               type: string
-            device_model:
+            deviceModel:
               type: string

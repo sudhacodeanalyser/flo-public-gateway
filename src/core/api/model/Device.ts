@@ -1,4 +1,5 @@
-import { Expandable, Timestamped, Location } from '../api';
+import * as t from 'io-ts';
+import { Expandable, TimestampedModel, Location } from '../api';
 
 export enum DeviceType {
   FLO_DEVICE = 'flo_device',
@@ -10,14 +11,18 @@ export enum DeviceModelType {
   FLO_DEVICE_ONE_AND_QUARTER_INCH = 'flo_device_1_1/4_inch'
 }
 
-export interface Device extends Timestamped {
+const DeviceMutableCodec = t.type({
+  installationPoint: t.string,
+  nickname: t.string
+});
+
+export const DeviceUpdateValidator = t.exact(t.partial(DeviceMutableCodec.props));
+export type DeviceUpdate = t.TypeOf<typeof DeviceUpdateValidator>;
+
+export interface Device extends DeviceUpdate, TimestampedModel {
   id: string,
   macAddress: string,
   location: Expandable<Location>,
-  device_type: DeviceType,
-  device_model: DeviceModelType,
-  installation_point?: string,
-  nickname?: string
+  deviceType: DeviceType,
+  deviceModel: DeviceModelType
 }
-
-export type DeviceUpdate = Pick<Partial<Device>, 'installation_point' | 'nickname'>;
