@@ -3,7 +3,7 @@ import { inject, Container } from 'inversify';
 import PingService from './PingService';
 
 export function PingControllerFactory(container: Container): interfaces.Controller {
-  @controller('/', 'LoggerMiddleware')
+  @controller('', 'LoggerMiddleware')
   class PingController implements interfaces.Controller {
     constructor(
       @inject('PingService') private pingService: PingService

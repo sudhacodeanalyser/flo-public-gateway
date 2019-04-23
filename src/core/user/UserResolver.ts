@@ -83,18 +83,15 @@ class UserResolver extends Resolver<User> {
     const userDetailRecord = this.fromModelToUserDetailRecord(partialUser);
     const patch = fromPartialRecord(userDetailRecord);
 
-    const updatedUserDetail = await this.userDetailTable.update({ user_id: id }, patch);
-    const user = await this.getUserById(id);
+    const updatedUserDetailRecord = await this.userDetailTable.update({ user_id: id }, patch);
+    const userRecord = await this.userTable.get({ id });
 
-    if (user === null) {
+    if (userRecord === null) {
       // This should not happen, unless a user is deleted between the update and retrieval.
       throw new ResourceDoesNotExistError();
     }
 
-    return {
-      ...user,
-      ...updatedUserDetail
-    };
+    return this.toModel(userRecord, updatedUserDetailRecord);
   }
 
   public async getUserById(id: string, expandProps: string[] = []): Promise<User | null> {
@@ -121,6 +118,7 @@ class UserResolver extends Resolver<User> {
     ]);
   }
 
+  // TODO: Refactor these methods to use translate (from Location).
   private fromModelToUserDetailRecord(user: Partial<User>): Partial<UserDetailRecord> {
     return {
       firstname: user.firstName,
@@ -133,7 +131,7 @@ class UserResolver extends Resolver<User> {
     };
   }
 
-  private async toModel(userRecord: UserRecord, userDetailRecord: UserDetailRecord, expandProps: string[]): Promise<User> {
+  private async toModel(userRecord: UserRecord, userDetailRecord: UserDetailRecord, expandProps: string[] = []): Promise<User> {
     const user: User = {
       id: userRecord.id,
       email: userRecord.email,
