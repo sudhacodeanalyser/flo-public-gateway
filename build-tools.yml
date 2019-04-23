@@ -44,7 +44,7 @@ services:
       GIT_AUTHOR_NAME: Gitlab
       GIT_AUTHOR_EMAIL: engineering@flotechnologies.com
     volumes:
-      - ./:/root
+      - ./:/git
 
   run:
     entrypoint: npm
