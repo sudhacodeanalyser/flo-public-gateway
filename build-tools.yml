@@ -38,6 +38,11 @@ services:
     volumes:
       - ./:/home/gradle/project
 
+  git:
+    image: git:latest
+    volumes:
+      - ./:/root
+
   run:
     entrypoint: npm
     environment:

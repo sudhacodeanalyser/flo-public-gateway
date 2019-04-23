@@ -10,6 +10,7 @@ COMPOSE ?= $(shell which docker-compose)
 NODE_ENV ?= development
 NPM ?= $(COMPOSE) -f build-tools.yml run --rm npm --node-env=$(NODE_ENV)
 GRADLE ?= $(COMPOSE) -f build-tools.yml run --rm gradle
+GIT ?= $(COMPOSE) -f build-tools.yml run --rm git
 RUN ?= $(COMPOSE) -f build-tools.yml run --rm --service-ports run --node-env=$(NODE_ENV) run
 EB_INIT ?= $(COMPOSE) -f build-tools.yml run --rm eb init $(APP) --region=${AWS_REGION} --platform docker-18.06.1-ce
 EB_DEPLOY ?= $(COMPOSE) -f build-tools.yml run --rm eb deploy $(APP)-$(ENV) --staged
@@ -57,6 +58,7 @@ push: docker
 
 deploy:
 	$(GRADLE) extractAppTemplates
+	$(GIT) commit -am "build"
 	$(EB_INIT)
 	$(EB_DEPLOY)
 
