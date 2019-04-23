@@ -9,7 +9,7 @@
       "name": "app",
       "image": "registry.gitlab.com/flotechnologies/flo-public-gateway:latest",
       "essential": true,
-      "memoryReservation": 512,
+      "memoryReservation": 256,
       "ulimits": [
         {
           "softLimit": 65536,
