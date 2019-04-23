@@ -39,7 +39,7 @@ services:
       - ./:/home/gradle/project
 
   git:
-    image: git:latest
+    image: alpine/git:latest
     environment:
       GIT_AUTHOR_NAME: Gitlab
       GIT_AUTHOR_EMAIL: engineering@flotechnologies.com
