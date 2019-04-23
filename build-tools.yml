@@ -40,9 +40,7 @@ services:
 
   git:
     image: alpine/git:latest
-    environment:
-      GIT_AUTHOR_NAME: Gitlab
-      GIT_AUTHOR_EMAIL: engineering@flotechnologies.com
+    entrypoint: git -c user.name='Gitlab' -c user.email='engineering@flotechnologies.com'
     volumes:
       - ./:/git
 
