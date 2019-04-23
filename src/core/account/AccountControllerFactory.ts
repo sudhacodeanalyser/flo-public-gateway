@@ -51,7 +51,7 @@ export function AccountControllerFactory(container: Container): interfaces.Contr
         })
       }))
     )
-    private async updateAccountUserRole(@requestParam('id') id: string, @requestParam('user_id') userId: string, @requestBody() { roles }: Pick<AccountUserRole, 'roles'>): Promise<AccountUserRole> {
+    private async updateAccountUserRole(@requestParam('id') id: string, @requestParam('userId') userId: string, @requestBody() { roles }: Pick<AccountUserRole, 'roles'>): Promise<AccountUserRole> {
 
       return this.accountService.updateAccountUserRole(id, userId, roles);
     }
