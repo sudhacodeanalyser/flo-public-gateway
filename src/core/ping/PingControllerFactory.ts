@@ -3,13 +3,13 @@ import { inject, Container } from 'inversify';
 import PingService from './PingService';
 
 export function PingControllerFactory(container: Container): interfaces.Controller {
-  @controller('', 'LoggerMiddleware')
+  @controller('/ping', 'LoggerMiddleware')
   class PingController implements interfaces.Controller {
     constructor(
       @inject('PingService') private pingService: PingService
     ) {}
 
-    @httpGet('/ping')
+    @httpGet('/')
     private async ping(): Promise<{ [key: string]: any }> {
       return this.pingService.ping();
     }
