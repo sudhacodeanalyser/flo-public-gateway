@@ -1,5 +1,14 @@
 paths:
   /users/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: User ID
+
     get:
       summary: Retrieves a User by ID.
       tags:
@@ -7,20 +16,15 @@ paths:
       produces:
         - application/json
       parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            format: uuid
-          description: User ID
         - in: query
           name: expand
           required: false
           schema:
             type: array
-            style: form
-            explode: false
+            items:
+              type: string
+          style: form
+          explode: false
           description: Comma-separated names of the attributes to be expanded
       responses:
         200:
@@ -28,83 +32,111 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/definitions/User'
+                oneOf:
+                  - $ref: '#/components/schemas/User'
+                  - $ref: '#/components/schemas/Empty'
     delete:
       summary: Deletes a User by ID.
       tags:
         - users
       produces:
         - application/json
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            format: uuid
-          description: User ID
       responses:
         204:
-          description: The User was successfully deleted.
+          description: The User was successfully deleted or not found.
         400:
           description: The User must not be an Account owner.
           schema:
-            $ref: '#/definitions/Error'
+            $ref: '#/components/schemas/Error'
 
-definitions:
-  User:
-    type: object
-    properties:
-      id:
-        type: string
-        format: uuid
-      email:
-        type: string
-      isActice:
-        type: boolean
-      locations:
-        type: array
-        items:
-          type: object
+    post:
+      summary: Updates a User by ID (partially).
+      tags:
+        - users
+      produces:
+        - application/json
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdate'
+      responses:
+        200:
+          description: The User was successfully updated.
+          schema:
+            $ref: '#/components/schemas/User'
+        409:
+          description: A User with the specified ID was not found.
+          schema:
+            $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    UserUpdate:
+      type: object
+      properties:
+        firstName:
+          type: string
+        middleName:
+          type: string
+        lastName:
+          type: string
+        prefixName:
+          type: string
+        suffixName:
+          type: string
+        unitSystem:
+          type: string
+        phoneMobile:
+          type: string
+
+    User:
+      allOf:
+        - $ref: '#/components/schemas/UserUpdate'
+        - type: object
           properties:
             id:
               type: string
               format: uuid
-            roles:
+            email:
+              type: string
+              format: email
+            isActive:
+              type: boolean
+            locations:
               type: array
               items:
-                type: string
-      account:
-        type: object
-        properties:
-          id:
-            type: string
-            format: uuid
-          roles:
-            type: array
-            items:
-              type: string
-      firstName:
-        type: string
-      middleName:
-        type: string,
-      lastName:
-        type: string
-      prefixName:
-        type: string
-      suffixName:
-        type: string,
-      unitSystem:
-        type: string
-      phoneMobile:
-        type: string
-
-  Error:
-    type: object
-    properties:
-      error:
-        type: boolean
-        required: true
-      message:
-        type: string
-        required: true
+                oneOf:
+                  - type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                  - $ref: '#/components/schemas/Location'
+            locationRoles:
+              type: array
+              items:
+                allOf:
+                  - type: object
+                    properties:
+                      locationId:
+                        type: string
+                        format: uuid
+                  - $ref: '#/components/schemas/Roles'
+            account:
+              oneOf:
+                - type: object
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                - $ref: '#/components/schemas/Account'
+            accountRole:
+              allOf:
+                - type: object
+                  properties:
+                    accountId:
+                      type: string
+                      format: uuid
+                - $ref: '#/components/schemas/Roles'

@@ -20,15 +20,71 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/definitions/Account'
+                oneOf:
+                  - $ref: '#/components/schemas/Account'
+                  - $ref: '#/components/schemas/Empty'
 
-definitions:
-  Account:
-    type: object
-    properties:
-      id:
-        type: string
-        format: uuid
-      owner_user_id:
-        type: string
-        format: uuid
+    delete:
+      summary: Deletes an Account by ID.
+      tags:
+        - accounts
+      produces:
+        - application/json
+      responses:
+        204:
+          description: The Account was successfully deleted or not found.
+
+  /accounts/{id}/user-roles/{userId}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Account ID
+      - in: path
+        name: userId
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: User ID
+    post:
+      summary: Updates an Account User Role for the given Account ID and User ID.
+      tags:
+        - accounts
+      produces:
+        - application/json
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Roles'
+      responses:
+        200:
+          description: The Account User Role was successfully updated.
+          schema:
+            $ref: '#/components/schemas/AccountUserRole'
+
+components:
+  schemas:
+    AccountUserRole:
+      allOf:
+        - type: object
+          properties:
+            userId:
+              type: string
+              format: uuid
+        - $ref: '#/components/schemas/Roles'
+
+    Account:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        owner_user_id:
+          type: string
+          format: uuid

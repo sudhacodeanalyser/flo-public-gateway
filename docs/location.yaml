@@ -1,0 +1,187 @@
+paths:
+  /locations:
+    post:
+      summary: Creates a Location.
+      tags:
+        - locations
+      produces:
+        - application/json
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Location'
+      responses:
+        200:
+          description: The newly created Location.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Location'
+
+  /locations/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Location ID
+    get:
+      summary: Retrieves a Location by ID.
+      tags:
+        - locations
+      produces:
+        - application/json
+      parameters:
+        - in: query
+          name: expand
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+          style: form
+          explode: false
+          description: Comma-separated names of the attributes to be expanded
+      responses:
+        200:
+          description: A Location with the specified ID or an empty object if not found.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/Location'
+                  - $ref: '#/components/schemas/Empty'
+    delete:
+      summary: Deletes a Location by ID.
+      tags:
+        - locations
+      produces:
+        - application/json
+      responses:
+        204:
+          description: The Location was successfully deleted.
+
+    post:
+      summary: Updates a Location by ID (partially).
+      tags:
+        - locations
+      produces:
+        - application/json
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LocationUpdate'
+      responses:
+        200:
+          description: The Location was successfully updated.
+          schema:
+            $ref: '#/components/schemas/Location'
+        409:
+          description: A Location with the specified ID was not found.
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  /locations/{id}/user-roles/{userId}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Location ID
+      - in: path
+        name: userId
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: User ID
+    put:
+      summary: Adds a Location User Role for the given Location ID and User ID.
+      tags:
+        - locations
+      produces:
+        - application/json
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Roles'
+      responses:
+        200:
+          description: The Location User Role was successfully added.
+          schema:
+            $ref: '#/components/schemas/LocationUserRole'
+
+    delete:
+      summary: Deletes a Location User Role given the Location ID and User ID.
+      tags:
+        - locations
+      produces:
+        - application/json
+      responses:
+        204:
+          description: The Location User Role was successfully deleted or not found.
+
+components:
+  schemas:
+    LocationUserRole:
+      allOf:
+        - type: object
+          properties:
+            userId:
+              type: string
+              format: uuid
+        - $ref: '#/components/schemas/Roles'
+    Location:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        account:
+          oneOf:
+            - type: object
+              properties:
+                id:
+                  type: string
+                  format: uuid
+            - $ref: '#/components/schemas/Account'
+        userRoles:
+          type: array
+          items:
+            allOf:
+              - type: object
+                properties:
+                  userId:
+                    type: string
+                    format: uuid
+              - $ref: '#/components/schemas/Roles'
+        users:
+          type: array
+          items:
+            oneOf:
+              - type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+              - $ref: '#/components/schemas/User'
+        locations:
+          type: array
+          items:
+            oneOf:
+              - type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+              - $ref: '#/components/schemas/Device'
