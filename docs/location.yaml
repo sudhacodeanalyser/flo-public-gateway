@@ -11,7 +11,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Location'
+              $ref: '#/components/schemas/LocationMutable'
       responses:
         200:
           description: The newly created Location.
@@ -76,7 +76,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/LocationUpdate'
+              $ref: '#/components/schemas/LocationMutable'
       responses:
         200:
           description: The Location was successfully updated.
@@ -141,6 +141,33 @@ components:
               type: string
               format: uuid
         - $ref: '#/components/schemas/Roles'
+
+    LocationMutable:
+      type: object
+      properties:
+        address:
+          type: string
+        address2:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        country:
+          type: string
+        postalCode:
+          type: string
+        timezone:
+          type: string
+        gallonsPerDayGoal:
+          type: number
+        occupants:
+          type: integer
+        stories:
+          type: integer
+        isProfileComplete:
+          type: boolean
+
     Location:
       type: object
       properties:
