@@ -2,12 +2,12 @@
   "AWSEBDockerrunVersion": 2,
   "authentication": {
     "bucket": "flocloud-config",
-    "key": "docker"
+    "key": "docker/.dockercfg"
   },
   "containerDefinitions": [
     {
       "name": "app",
-      "image": "098786959887.dkr.ecr.us-west-2.amazonaws.com/flo-hivemq:latest",
+      "image": "registry.gitlab.com/flotechnologies/flo-public-gateway:latest",
       "essential": true,
       "memoryReservation": 512,
       "ulimits": [
@@ -21,6 +21,10 @@
         {
           "hostPort": 3000,
           "containerPort": 3000
+        },
+        {
+          "hostPort": 80,
+          "containerPort": 80
         }
       ]
     }
