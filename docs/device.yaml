@@ -55,7 +55,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/DeviceUpdate'
+              $ref: '#/components/schemas/DeviceMutable'
       responses:
         200:
           description: The Device was successfully updated.
@@ -68,7 +68,7 @@ paths:
 
 components:
   schemas:
-    DeviceUpdate:
+    DeviceMutable:
       type: object
       properties:
         installationPoint:
@@ -78,7 +78,7 @@ components:
 
     Device:
       allOf:
-        - $ref: '#/components/schemas/DeviceUpdate'
+        - $ref: '#/components/schemas/DeviceMutable'
         - type: object
           properties:
             id:
