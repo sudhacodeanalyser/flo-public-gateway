@@ -1,5 +1,10 @@
 paths:
-  /:
+  /ping:
+
+    servers:
+      - url: /
+        description: Override base path for all operations with the /ping path
+
     get:
       summary: Ping endpoint.
       tags:
@@ -12,14 +17,15 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/definitions/Ping'
+                $ref: '#/components/schemas/Ping'
 
-definitions:
-  Ping:
-    type: object
-    properties:
-      date:
-        type: string
-        format: date-time
-      app:
-        type: string
+components:
+  schemas:
+    Ping:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date-time
+        app:
+          type: string

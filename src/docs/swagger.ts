@@ -7,13 +7,17 @@ export const swaggerOpts = {
 
 export default swaggerJsDoc({
   swaggerDefinition: {
+    openapi: '3.0.0',
     info: {
       title: pkg.name,
       version: pkg.version,
       description: pkg.description
     },
-    produces: ['application/json'],
-    consumes: ['application/json']
+    servers: [
+      {
+        url: '/api/v1'
+      }
+    ]
   },
   apis: [
     './dist/**/*.yaml'
