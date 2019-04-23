@@ -58,7 +58,7 @@ push: docker
 
 deploy:
 	$(GRADLE) extractAppTemplates
-	$(GIT) commit -am "build"
+	$(GIT) commit -am "$$CI_COMMIT_MESSAGE"
 	$(EB_INIT)
 	$(EB_DEPLOY)
 
