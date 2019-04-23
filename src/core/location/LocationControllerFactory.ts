@@ -65,31 +65,31 @@ export function LocationControllerFactory(container: Container): interfaces.Cont
     }
 
     @httpPut(
-      '/:location_id/userroles/:user_id',
+      '/:locationId/user-roles/:userId',
       reqValidator.create(t.type({
         params: t.type({
-          id: t.string,
-          user_id: t.string
+          locationId: t.string,
+          userId: t.string
         }),
         body: t.strict({
           roles: t.array(t.string)
         })
       }))
     )
-    private async addLocationUserRole(@requestParam('location_id') locationId: string, @requestParam('user_id') userId: string, @requestBody() { roles }: Pick<LocationUserRole, 'roles'>): Promise<LocationUserRole> {
+    private async addLocationUserRole(@requestParam('locationId') locationId: string, @requestParam('userId') userId: string, @requestBody() { roles }: Pick<LocationUserRole, 'roles'>): Promise<LocationUserRole> {
       return this.locationService.addLocationUserRole(locationId, userId, roles);
     }
 
     @httpDelete(
-      '/:location_id/userroles/:user_id',
+      '/:locationId/user-roles/:userId',
       reqValidator.create(t.type({
         params: t.type({
-          id: t.string,
-          user_id: t.string
+          locationId: t.string,
+          userId: t.string
         })
       }))
     )
-    private async removeLocationUserRole(@requestParam('location_id') locationId: string, @requestParam('user_id') userId: string): Promise<void> {
+    private async removeLocationUserRole(@requestParam('locationId') locationId: string, @requestParam('userId') userId: string): Promise<void> {
       return this.locationService.removeLocationUserRole(locationId, userId);
     }
   }
