@@ -3,11 +3,7 @@ import { inject, Container } from 'inversify';
 import PingService from './PingService';
 
 export function PingControllerFactory(container: Container): interfaces.Controller {
-<<<<<<< HEAD
   @controller('/ping', 'LoggerMiddleware')
-=======
-  @controller('', 'LoggerMiddleware')
->>>>>>> Fix endpoints
   class PingController implements interfaces.Controller {
     constructor(
       @inject('PingService') private pingService: PingService
