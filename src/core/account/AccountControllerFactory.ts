@@ -48,6 +48,9 @@ export function AccountControllerFactory(container: Container): interfaces.Contr
         params: t.type({
           id: t.string,
           userId: t.string
+        }),
+        body: t.strict({
+          roles: t.array(t.string)
         })
       }))
     )
