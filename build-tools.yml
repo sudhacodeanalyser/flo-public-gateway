@@ -40,7 +40,8 @@ services:
 
   git:
     image: alpine/git:latest
-    entrypoint: "git -c user.name=${GITLAB_USER_NAME:-user} -c user.email=${GITLAB_USER_EMAIL:-email}"
+    entrypoint: |
+      git -c user.name="${GITLAB_USER_NAME:-user}" -c user.email="${GITLAB_USER_EMAIL:-email}"
     volumes:
       - ./:/git
 

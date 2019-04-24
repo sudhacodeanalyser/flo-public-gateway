@@ -13,7 +13,7 @@ GRADLE ?= $(COMPOSE) -f build-tools.yml run --rm gradle
 GIT ?= $(COMPOSE) -f build-tools.yml run --rm git
 RUN ?= $(COMPOSE) -f build-tools.yml run --rm --service-ports run --node-env=$(NODE_ENV) run
 EB_INIT ?= $(COMPOSE) -f build-tools.yml run --rm eb init $(APP) --region=${AWS_REGION} --platform docker-18.06.1-ce
-EB_DEPLOY ?= $(COMPOSE) -f build-tools.yml run --rm eb deploy $(APP)-$(ENV) --staged
+EB_DEPLOY ?= $(COMPOSE) -f build-tools.yml run --rm eb deploy $(APP)-$(ENV)
 
 .PHONY: help auth
 help: ## Display this help screen (default)
