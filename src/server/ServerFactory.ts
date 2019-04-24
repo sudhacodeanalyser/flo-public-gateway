@@ -6,6 +6,7 @@ import cors from 'cors';
 // import enforce from 'express-sslify';
 import uuid from 'uuid';
 import { Container } from 'inversify';
+import { HttpError } from 'http-errors';
 import { InversifyExpressServer } from 'inversify-express-utils';
 import LoggerFactory from '../logging/LoggerFactory';
 import Logger from 'bunyan';
@@ -86,6 +87,11 @@ function ServerConfigurationFactory(container: Container): (app: express.Applica
 }
 
 function configureServerErrorHandling(app: express.Application): void {
+  // We need to do this since body-parser may return HttpError or SyntaxError
+  // (in both cases with a type attribute)
+  const isBodyParserError = (err: HttpError) => !_.isUndefined(err.type)
+  const genericErrorMessage = 'Something went wrong';
+
   app.use((err: Error, req: Request, res: express.Response, next: express.NextFunction) => {
     const logger: Logger | undefined = req.log;
 
@@ -95,9 +101,13 @@ function configureServerErrorHandling(app: express.Application): void {
 
     if (err instanceof ExtendableError) {
       res.status(err.statusCode).json({ error: true, message: err.message, ...err.data });
+    } else if (isBodyParserError(err as HttpError)) {
+      const httpError = err as HttpError;
+      const message = httpError.expose ? httpError.message : genericErrorMessage;
+      res.status(httpError.statusCode).json({ error: true, message });
     } else {
       // Don't expose internal error messages
-      res.status(500).json({ error: true, message: 'Something went wrong.' });
+      res.status(500).json({ error: true, message: genericErrorMessage });
     }
   });
 }
