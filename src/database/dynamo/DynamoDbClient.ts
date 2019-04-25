@@ -38,7 +38,7 @@ class DynamoDbClient implements DatabaseClient {
     return this.dynamoDb.put({
       TableName: this.tablePrefix + tableName,
       Item: item,
-      ReturnValues: 'ALL_NEW'
+      ReturnValues: 'NONE' // PutItem does not recognize any values other than NONE or ALL_OLD
     });
   }
 

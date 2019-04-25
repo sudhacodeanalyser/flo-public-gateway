@@ -140,11 +140,11 @@ class LocationResolver extends Resolver<Location> {
   }
 
   public async addLocationUserRole(locationId: string, userId: string, roles: string[]): Promise<LocationUserRole> {
-    const userLocatioRoleRecordData = await this.userLocationRoleTable.put({
-      user_id: userId,
-      location_id: locationId,
-      roles
-    });
+    const patch = fromPartialRecord({ roles });
+    const userLocatioRoleRecordData = await this.userLocationRoleTable.update(
+      { user_id: userId, location_id: locationId },
+      patch
+    );
 
     return new UserLocationRoleRecord(userLocatioRoleRecordData).toLocationUserRole();
   }
