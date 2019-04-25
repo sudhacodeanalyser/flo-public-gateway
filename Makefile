@@ -34,13 +34,13 @@ serve: docker ## Run serve task using docker-based npm
 	$(RUN) $(@)
 
 watch: docker ## Run watch task using docker-based npm
-	$(RUN) run $(@)
+	$(RUN) $(@)
 
 watch-test: docker ## Run watch-test task using docker-based npm
-	$(RUN) run $(@)
+	$(RUN) $(@)
 
 watch-debug: docker ## Run watch-debug task using docker-based npm
-	$(RUN) run $(@)
+	$(RUN) $(@)
 
 up: docker build ## Build and run application as it would be run in production (from image)
 	$(COMPOSE) $(@)

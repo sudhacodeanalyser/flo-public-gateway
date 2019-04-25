@@ -61,4 +61,4 @@ services:
       - ".npm:/root/.npm"
       - ./tests:/app/tests
       - "./test-results:/app/test-results"
-      - "./logs:${CI_ARTIFACTS_DIR:-.}/logs"
+      - "./logs:${CI_ARTIFACTS_DIR:-/app}/logs"
