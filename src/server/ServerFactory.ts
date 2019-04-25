@@ -6,6 +6,7 @@ import cors from 'cors';
 // import enforce from 'express-sslify';
 import uuid from 'uuid';
 import { Container } from 'inversify';
+// tslint:disable-next-line:no-implicit-dependencies
 import { HttpError } from 'http-errors';
 import { InversifyExpressServer } from 'inversify-express-utils';
 import LoggerFactory from '../logging/LoggerFactory';
