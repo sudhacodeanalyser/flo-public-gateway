@@ -32,7 +32,7 @@
   ],
   "containerDefinitions": [
     {
-      "name": "flo-device-service",
+      "name": "flo-public-gateway",
       "image": "registry.gitlab.com/flotechnologies/flo-public-gateway:latest",
       "essential": true,
       "memoryReservation": 256,
