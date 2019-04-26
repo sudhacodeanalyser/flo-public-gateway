@@ -149,12 +149,25 @@ class LocationResolver extends Resolver<Location> {
   }
 
   public async addLocationUserRole(locationId: string, userId: string, roles: string[]): Promise<LocationUserRole> {
-    const patch = fromPartialRecord({ roles });
-    const userLocatioRoleRecordData = await this.userLocationRoleTable.update(
-      { user_id: userId, location_id: locationId },
-      patch
-    );
+    const [user, location] = await Promise.all([
+      this.userResolverFactory().getUserById(userId),
+      this.get(locationId),
+    ]);
 
+
+    if (user === null || location === null) {
+      throw new ResourceDoesNotExistError();
+    }
+
+    const userLocatioRoleRecordData = {
+      user_id: userId,
+      location_id: locationId,
+      roles
+    }
+
+    await this.userLocationRoleTable.put(userLocatioRoleRecordData);
+
+    // TODO: We are cheating here. Otherwise, we will need to get what we have just put (and handle a possible null just as in createLocation)
     return new UserLocationRoleRecord(userLocatioRoleRecordData).toLocationUserRole();
   }
 
