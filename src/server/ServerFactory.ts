@@ -88,8 +88,9 @@ function ServerConfigurationFactory(container: Container): (app: express.Applica
 }
 
 function configureServerErrorHandling(app: express.Application): void {
+  // TODO: Find a better way of handling this exception.
   // We need to do this since body-parser may return HttpError or SyntaxError
-  // (in both cases with a type attribute)
+  // (both Errors contain a type attribute)
   const isBodyParserError = (err: HttpError) => !_.isUndefined(err.type)
   const genericErrorMessage = 'Something went wrong';
 

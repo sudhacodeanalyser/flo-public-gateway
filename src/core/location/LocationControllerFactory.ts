@@ -1,6 +1,8 @@
-import { interfaces, httpGet, httpPost, httpDelete, httpPut, queryParam, requestParam, requestBody } from 'inversify-express-utils';
+import _ from 'lodash';
+import express from 'express';
+import { interfaces, httpGet, httpPost, httpDelete, httpPut, queryParam, requestParam, requestBody, response } from 'inversify-express-utils';
 import { inject, Container } from 'inversify';
-import { Location, LocationUpdateValidator, LocationUpdate, LocationUserRole } from '../api/api';
+import { Location, LocationUpdateValidator, LocationUpdate, LocationUserRole, LocationCreateValidator } from '../api/api';
 import LocationService from './LocationService';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
 import * as t from 'io-ts';
@@ -16,10 +18,20 @@ export function LocationControllerFactory(container: Container): interfaces.Cont
     ) {}
 
     @httpPost(
-      '/'
+      '/',
+      reqValidator.create(t.type({
+        body: LocationCreateValidator
+      }))
     )
-    private async createLocation(@requestBody() location: Location): Promise<Location> {
-      return this.locationService.createLocation(location);
+    private async createLocation(@requestBody() location: Location, @response() res: express.Response): Promise<void> {
+      const createdLocation = await this.locationService.createLocation(location);
+
+      // TODO: Not sure if this is the best way of handling this.
+      if (_.isEmpty(createdLocation)) {
+        res.status(204).json(null);
+      } else {
+        res.status(201).json(createdLocation);
+      }
     }
 
     @httpGet(

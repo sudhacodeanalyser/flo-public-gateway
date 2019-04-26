@@ -10,7 +10,7 @@ export enum NoYesUnsure {
 // TODO Look up the actual names of these categories
 export enum LegacyLocationSizeCategory {
   ZERO = 0,
-  ONE, 
+  ONE,
   TWO,
   THREE,
   FOUR
@@ -24,8 +24,8 @@ export enum LegacyLocationType {
 }
 
 export enum LegacyBathroomAmenity {
-  HOT_TUB = 'Hot Tub', 
-  SPA = 'Spa', 
+  HOT_TUB = 'Hot Tub',
+  SPA = 'Spa',
   BATHTUB ='Bathtub'
 }
 
@@ -78,7 +78,7 @@ export interface LocationRecordData extends Partial<LegacyLocationProfile>, Time
   postalcode: string,
   timezone: string,
   gallons_per_day_goal: Integer,
-  occupants?: Integer, 
+  occupants?: Integer,
   stories?: Integer,
   is_profile_complete?: boolean,
   is_using_away_schedule?: boolean,
@@ -86,7 +86,7 @@ export interface LocationRecordData extends Partial<LegacyLocationProfile>, Time
 }
 
 type CommonRecordProps =
-    'location_id' |     
+    'location_id' |
     'address' |
     'address2' |
     'city' |
@@ -101,7 +101,7 @@ type CommonRecordProps =
     'created_at' |
     'updated_at';
 
-type CommonModelProps = 
+type CommonModelProps =
     'id' |
     'address' |
     'address2' |
@@ -123,19 +123,19 @@ type RecordModelProp = Partial<Record<'common' | 'record' | 'model', string>>;
 function translate<S extends {}, D>(modelRecordProps: RecordModelProp[], source: keyof RecordModelProp, dest: keyof RecordModelProp, sourceData: S): D {
   type PropMap = { [srcKey: string]: string };
   const props: PropMap = modelRecordProps
-    .filter((prop: RecordModelProp) => 
-      prop.common !== undefined || 
+    .filter((prop: RecordModelProp) =>
+      prop.common !== undefined ||
       prop[source] !== undefined
     )
     .reduce(
       (acc: PropMap, prop: RecordModelProp) => ({
         ...acc,
-        ...({ 
-          [prop.common !== undefined ? prop.common : (prop[source] as string)]: prop.common !== undefined ? 
-            prop.common : 
+        ...({
+          [prop.common !== undefined ? prop.common : (prop[source] as string)]: prop.common !== undefined ?
+            prop.common :
             prop[dest]
         })
-      }), 
+      }),
       {}
     );
 
@@ -149,7 +149,7 @@ export class LocationRecord {
 
   public static fromModel(location: Location): LocationRecordData {
     type CommonProps = Pick<LocationRecordData, CommonRecordProps>;
-  
+
     return {
       account_id: location.account && location.account.id,
       ...translate<Location, CommonProps>(LocationRecord.modelRecordProps, 'model', 'record', location)
@@ -170,6 +170,7 @@ export class LocationRecord {
     { common: 'address' },
     { common: 'address2' },
     { common: 'city' },
+    { common: 'state' },
     { common: 'country' },
     { record: 'postalcode', model: 'postalCode' },
     { common: 'timezone' },
@@ -189,7 +190,7 @@ export class LocationRecord {
     type CommonProps = Pick<Location, CommonModelProps>;
     const commonProps = translate<LocationRecordData, CommonProps>(LocationRecord.modelRecordProps, 'record', 'model', this.data)
 
-    // TODO Implement location profile 
+    // TODO Implement location profile
     return {
       account: {
         id: this.data.account_id

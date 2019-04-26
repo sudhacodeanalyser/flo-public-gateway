@@ -8,8 +8,10 @@ class LocationService {
     @inject('LocationResolver') private locationResolver: LocationResolver
   ) {}
 
-  public async createLocation(location: Location): Promise<Location> {
-    return this.locationResolver.createLocation(location);
+  public async createLocation(location: Location): Promise<Location | {}> {
+    const createdLocation: Location | null = await this.locationResolver.createLocation(location);
+
+    return createdLocation === null ? {} : createdLocation;
   }
 
   public async getLocation(id: string, expand?: string[]): Promise<Location | {}> {
