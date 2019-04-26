@@ -41,7 +41,6 @@ dist/**/*
 # Logs
 *.log
 
-.app
 .gradle
 gradle/
 # Elastic Beanstalk Files
