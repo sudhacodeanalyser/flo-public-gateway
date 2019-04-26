@@ -1,4 +1,5 @@
 import { inject, injectable } from 'inversify';
+import uuid from 'uuid';
 import { LocationRecordData, LocationRecord } from './LocationRecord';
 import { UserLocationRoleRecord } from '../user/UserLocationRoleRecord';
 import { Location, LocationUserRole, DependencyFactoryFactory } from '../api/api';
@@ -75,9 +76,17 @@ class LocationResolver extends Resolver<Location> {
     };
   }
 
-  public async createLocation(location: Location): Promise<Location> {
+  public async createLocation(location: Location): Promise<Location | null> {
     const locationRecordData = LocationRecord.fromModel(location);
-    const createdLocationRecordData = await this.locationTable.put(locationRecordData);
+    const locationId = locationRecordData.location_id = uuid.v4();
+
+    await this.locationTable.put(locationRecordData);
+    const createdLocationRecordData = await this.locationTable.getByLocationId(locationId);
+
+    if (createdLocationRecordData === null) {
+      // TODO: Figure out a better way to handle this case.
+      return null;
+    }
 
     return new LocationRecord(createdLocationRecordData).toModel();
   }

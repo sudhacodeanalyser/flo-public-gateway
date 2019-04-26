@@ -23,7 +23,13 @@ const LocationMutableCodec = t.type({
   isProfileComplete: t.union([t.boolean, t.undefined])
 });
 
-export const LocationCreateValidator = t.exact(LocationMutableCodec);
+const AccountId = t.strict({
+  account: t.strict({
+    id: t.string
+  })
+})
+
+export const LocationCreateValidator = t.intersection([t.exact(LocationMutableCodec), AccountId]);
 export type LocationCreate = t.TypeOf<typeof LocationCreateValidator>;
 
 export interface Location extends LocationCreate, TimestampedModel {
