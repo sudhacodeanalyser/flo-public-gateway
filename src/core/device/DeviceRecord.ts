@@ -1,3 +1,4 @@
+import { $enum } from 'ts-enum-util';
 // These should likely go into a lookup table
 import { Device, DeviceType, DeviceModelType } from '../api/api';
 
@@ -23,9 +24,21 @@ export interface DeviceRecordData {
   updated_at?: string;
 }
 
+const DeviceTypeDataEnum = $enum(DeviceTypeData);
+const DeviceModelTypeDataEnum = $enum(DeviceModelTypeData);
+
+const DeviceTypeEnum = $enum(DeviceType);
+const DeviceModelTypeEnum = $enum(DeviceModelType);
+
 export class DeviceRecord {
 
   public static fromPartialModel(model: Partial<Device>): Partial<DeviceRecordData> {
+    const deviceTypeKey = DeviceTypeEnum.getKeyOrDefault(model.deviceType);
+    const deviceType = deviceTypeKey && DeviceTypeData[deviceTypeKey];
+
+    const deviceModelKey = DeviceModelTypeEnum.getKeyOrDefault(model.deviceModel);
+    const deviceModel = deviceModelKey && DeviceModelTypeData[deviceModelKey];
+
     return {
       id: model.id,
       device_id: model.macAddress,
@@ -34,9 +47,8 @@ export class DeviceRecord {
       location_id: model.location && model.location.id,
       created_at: model.createdAt,
       updated_at: model.updatedAt,
-      // TODO enum string ->
-      device_type: model.deviceType && DeviceTypeData.FLO_DEVICE,
-      device_model: model.deviceModel && DeviceModelTypeData.FLO_DEVICE_THREE_QUARTER_INCH
+      device_type: deviceType,
+      device_model: deviceModel
     };
   }
 
@@ -45,6 +57,10 @@ export class DeviceRecord {
   ) {}
 
   public toModel(): Device {
+    // TODO: Check defaults.
+    const deviceTypeKey = DeviceTypeDataEnum.getKeyOrDefault(this.data.device_type, 'FLO_DEVICE');
+    const deviceModelKey = DeviceModelTypeDataEnum.getKeyOrDefault(this.data.device_model, 'FLO_DEVICE_THREE_QUARTER_INCH');
+
     return {
       id: this.data.id,
       macAddress: this.data.device_id,
@@ -55,9 +71,8 @@ export class DeviceRecord {
       },
       createdAt: this.data.created_at,
       updatedAt: this.data.updated_at,
-      // TODO enum int -> string mapping
-      deviceType: DeviceType.FLO_DEVICE,
-      deviceModel: DeviceModelType.FLO_DEVICE_THREE_QUARTER_INCH
+      deviceType: DeviceType[deviceTypeKey],
+      deviceModel: DeviceModelType[deviceModelKey]
     };
   }
 }
