@@ -20,8 +20,9 @@ help: ## Display this help screen (default)
 	@grep -h -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
 build: install
-	$(COMPOSE) $(@) app
-	$(COMPOSE) $(@) app-tag
+	$(COMPOSE) -f build-tools.yml $(@) --pull build
+	$(COMPOSE) $(@) --pull app
+	$(COMPOSE) $(@) --pull app-tag
 
 install: docker ## Install npm packages using docker-based npm
 	$(NPM) $(@)
@@ -57,8 +58,8 @@ push: docker
 	$(COMPOSE) -f build-tools.yml $(@) || true
 
 deploy:
-	$(GRADLE) extractAppTemplates
-	$(GIT) commit -am "$$CI_COMMIT_MESSAGE"
+	$(GRADLE) preDeploy
+	$(GIT) add .
 	$(EB_INIT)
 	$(EB_DEPLOY)
 

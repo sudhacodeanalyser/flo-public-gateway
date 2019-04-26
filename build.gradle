@@ -24,6 +24,14 @@ task extractAppTemplates(type: Sync) {
     into "$projectDir/.app"
 }
 
-task ("temp-repo") {
+
+task syncExtensions(type: Sync) {
     dependsOn "extractAppTemplates"
+    from "$projectDir/.app/.ebextensions"
+    into "$projectDir/.ebextensions"
+}
+
+task ("preDeploy") {
+    dependsOn "extractAppTemplates"
+    dependsOn "syncExtensions"
 }
