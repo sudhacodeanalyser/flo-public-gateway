@@ -50,7 +50,7 @@ function ServerConfigurationFactory(container: Container): (app: express.Applica
       res.setHeader('x-request-id', uuid.v4());
 
       // TODO: Remove me! Temporary hack
-      if (process.env.NODE_ENV === 'production' && req.headers.authorization !== '**Y0uSh4llN0tP4ss**') {
+      if (req.headers.authorization !== '**Y0uSh4llN0tP4ss**') {
         return res.status(401).json();
       }
 
