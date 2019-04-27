@@ -71,8 +71,24 @@ Dev:
     - master
   environment:
     name: dev
-    url: https://public-gateway.flocloud.co
+    url: https://flo-public-gateway.flocloud.co/ping
   script:
     - make pull
     - make deploy ENV=dev
+
+Prod:
+  variables:
+    AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID_PROD}"
+    AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY_PROD}"
+  stage: deploy
+  dependencies:
+    - Compile
+  only:
+    - master
+  environment:
+    name: prod
+    url: https://flo-public-gateway.flosecurecloud.co/ping
+  script:
+    - make pull
+    - make deploy ENV=prod
 
