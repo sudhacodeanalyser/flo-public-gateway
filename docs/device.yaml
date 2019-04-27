@@ -1,0 +1,100 @@
+paths:
+  /devices/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Device ID
+    get:
+      summary: Retrieves a Device by ID.
+      tags:
+        - devices
+      produces:
+        - application/json
+      parameters:
+        - in: query
+          name: expand
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+          style: form
+          explode: false
+          description: Comma-separated names of the attributes to be expanded
+      responses:
+        200:
+          description: A Device with the specified ID or an empty object if not found.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/Device'
+                  - $ref: '#/components/schemas/Empty'
+    delete:
+      summary: Deletes a Device by ID.
+      tags:
+        - devices
+      produces:
+        - application/json
+      responses:
+        204:
+          description: The Device was successfully deleted or not found.
+
+    post:
+      summary: Updates a Device by ID (partially).
+      tags:
+        - devices
+      produces:
+        - application/json
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeviceMutable'
+      responses:
+        200:
+          description: The Device was successfully updated.
+          schema:
+            $ref: '#/components/schemas/Device'
+        409:
+          description: A Device with the specified ID was not found.
+          schema:
+            $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    DeviceMutable:
+      type: object
+      properties:
+        installationPoint:
+          type: string
+        nickname:
+          type: string
+
+    Device:
+      allOf:
+        - $ref: '#/components/schemas/DeviceMutable'
+        - type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            macAddress:
+              type: string
+            location:
+              oneOf:
+                - type: object
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                - $ref: '#/components/schemas/Location'
+            deviceType:
+              type: string
+            deviceModel:
+              type: string

@@ -1,0 +1,21 @@
+version: '3'
+
+services:
+  app: &app
+    image: "${CI_REGISTRY_IMAGE:-registry.gitlab.com/flotechnologies/app}:latest"
+    environment:
+      NODE_ENV: "${NODE_ENV:-development}"
+
+    ports:
+      - 3000:3000
+      - 9229:9229
+    build:
+      context: .
+      dockerfile: Dockerfile.run
+
+  # This is used to automatically tag the image with CI_PIPELINE_ID
+  app-tag:
+    entrypoint: "true"
+    image: "${CI_REGISTRY_IMAGE:-registry.gitlab.com/flotechnologies/app}:${CI_PIPELINE_ID:-latest}"
+    ports: []
+    <<: *app

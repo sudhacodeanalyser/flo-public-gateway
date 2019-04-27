@@ -1,0 +1,37 @@
+repositories {
+    maven {
+        url  "https://flo.bintray.com/devops"
+        credentials  {
+            username = System.getenv('BINTRAY_USER')
+            password = System.getenv('BINTRAY_KEY')
+        }
+    }
+}
+
+configurations {
+    app_templates
+}
+dependencies {
+    app_templates 'com.flotechnologies:flo-app-templates:1.0-SNAPSHOT'
+}
+
+task extractAppTemplates(type: Sync) {
+    dependsOn configurations.app_templates
+
+    from { // use of closure defers evaluation until execution time
+        configurations.app_templates.collect { zipTree(it) }
+    }
+    into "$projectDir/.app"
+}
+
+
+task syncExtensions(type: Sync) {
+    dependsOn "extractAppTemplates"
+    from "$projectDir/.app/.ebextensions"
+    into "$projectDir/.ebextensions"
+}
+
+task ("preDeploy") {
+    dependsOn "extractAppTemplates"
+    dependsOn "syncExtensions"
+}

@@ -1,0 +1,94 @@
+# TODO: Make this file external, downloadable via versioned URL
+---
+image: kireevco/docker-compose:18.06-fat
+
+services:
+  - docker:dind
+
+stages:
+  - build
+  - test
+  - deploy
+
+before_script:
+  - apk add --no-cache make bash # TODO: this should be part of the compose image
+  - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
+  - |
+    if [[ -f Dockerrun.aws.json ]]; then
+      sed -i "s/:latest/:${CI_PIPELINE_ID}/g" Dockerrun.aws.json
+    fi
+
+Compile:
+  stage: build
+  except:
+    - tags
+
+  artifacts:
+    paths:
+      - logs/
+      - node_modules/
+      - dist
+      - /root/.npm/_logs
+
+    expire_in: 1 week
+    # Cache modules in between jobs
+  cache:
+    key: "$CI_PROJECT_NAME-$CI_COMMIT_REF_SLUG"
+    paths:
+      - .npm/
+      - node_modules
+
+  script:
+    - make pull
+    - make build
+    - make push
+
+
+Sanity:
+  stage: test
+  allow_failure: true
+  artifacts:
+    when: always
+    paths:
+      # Collect logs
+      - build.log
+      - /root/.npm/_logs
+
+  dependencies:
+    - Compile
+  script:
+    - make pull
+    - make test | tee build.log
+
+Dev:
+  variables:
+    AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID_DEV}"
+    AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY_DEV}"
+  stage: deploy
+  dependencies:
+    - Compile
+  except:
+    - master
+  environment:
+    name: dev
+    url: https://flo-public-gateway.flocloud.co/ping
+  script:
+    - make pull
+    - make deploy ENV=dev
+
+Prod:
+  variables:
+    AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID_PROD}"
+    AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY_PROD}"
+  stage: deploy
+  dependencies:
+    - Compile
+  only:
+    - master
+  environment:
+    name: prod
+    url: https://flo-public-gateway.flosecurecloud.co/ping
+  script:
+    - make pull
+    - make deploy ENV=prod
+

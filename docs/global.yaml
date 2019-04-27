@@ -1,0 +1,23 @@
+components:
+  schemas:
+    Roles:
+      type: object
+      properties:
+        roles:
+          type: array
+          items:
+            type: string
+
+    Empty:
+      type: object
+      properties:
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: boolean
+          required: true
+        message:
+          type: string
+          required: true

@@ -1,0 +1,64 @@
+version: '3.7'
+
+services:
+  build: &build
+    image: "${CI_REGISTRY_IMAGE:-registry.gitlab.com/flotechnologies/app}:build"
+    build:
+      context: .
+      dockerfile: Dockerfile.build
+    environment:
+      BINTRAY_USER: "${BINTRAY_USER:-SetBintrayCredentialsPLS}"
+      BINTRAY_KEY: "${BINTRAY_KEY:-empty}"
+      AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID:-empty}"
+      AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY:-empty}"
+    volumes:
+      - .:/app
+      - ".npm:/root/.npm"
+      - ./tests:/app/tests
+      - "./test-results:/app/test-results"
+      - "./logs:${CI_ARTIFACTS_DIR:-/app}/logs"
+      - "~/.aws:/root/.aws:ro"
+  npm:
+    entrypoint: npm
+    <<: *build
+
+  eb:
+    entrypoint: eb
+    <<: *build
+
+  gradle:
+    image: gradle:5.4.0-alpine
+    entrypoint: gradle --warn
+
+    working_dir: /home/gradle/project
+    environment:
+      BINTRAY_USER: "${BINTRAY_USER:-SetBintrayCredentialsPLS}"
+      BINTRAY_KEY: "${BINTRAY_KEY:-empty}"
+#      JAVA_TOOL_OPTIONS: xmx...
+    volumes:
+      - ./:/home/gradle/project
+
+  git:
+    image: alpine/git:latest
+    entrypoint: |
+      git -c user.name="${GITLAB_USER_NAME:-user}" -c user.email="${GITLAB_USER_EMAIL:-email}"
+    volumes:
+      - ./:/git
+
+  run:
+    entrypoint: npm
+    environment:
+      NODE_ENV: "${NODE_ENV:-development}"
+
+    ports:
+      - 3000:3000
+      - 9229:9229
+    build:
+      context: .
+      dockerfile: Dockerfile.build
+    volumes:
+      - .:/app
+      - ".npm:/root/.npm"
+      - ./tests:/app/tests
+      - "./test-results:/app/test-results"
+      - "./logs:${CI_ARTIFACTS_DIR:-/app}/logs"
