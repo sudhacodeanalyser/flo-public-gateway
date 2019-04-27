@@ -48,6 +48,12 @@ function ServerConfigurationFactory(container: Container): (app: express.Applica
 
     app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
       res.setHeader('x-request-id', uuid.v4());
+
+      // TODO: Remove me! Temporary hack
+      if (req.headers.authorization !== '**Y0uSh4llN0tP4ss**') {
+        return res.status(401).json();
+      }
+
       next();
     });
 
