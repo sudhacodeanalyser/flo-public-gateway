@@ -30,6 +30,15 @@ function getProps(validator: any): t.Props {
   return validator.props || (validator.type ? getProps(validator.type) : {});
 }
 
+function getUnexpectedProps(data: any, validator?: t.TypeC<any>): string[] {
+
+  return _.differenceWith(
+    _.keys(data),
+    _.keys(getProps(validator)),
+    _.isEqual
+  );
+}
+
 @injectable()
 class ReqValidationMiddlewareFactory {
 
@@ -37,10 +46,9 @@ class ReqValidationMiddlewareFactory {
     return (req: Request, res: express.Response, next: express.NextFunction) => {
       // Ensure no unexpected query string, URL params, or body data is
       // accepted if those sections do not have validators defined 
-      const unexpectedSections = _.differenceWith(
-        _.keys(_.chain(req).pick(['body', 'query', 'params']).pickBy(value => !_.isEmpty(value)).value()),
-        _.keys(reqType.props),
-        _.isEqual
+       const unexpectedSections = getUnexpectedProps(
+        _.chain(req).pick(['body', 'query', 'params']).pickBy(value => !_.isEmpty(value)).value(),
+        reqType
       );
 
       if (!_.isEmpty(unexpectedSections)) {
@@ -51,15 +59,13 @@ class ReqValidationMiddlewareFactory {
 
       // Ensure no unexpected properties are passed in the query string or request body
       // if those properties do not have validators defined
-      const unexpectedQueryProps = _.differenceWith(
-        _.keys(req.query),
-        _.keys(getProps(reqType.props.query || {})),
-        _.isEqual
+      const unexpectedQueryProps = getUnexpectedProps(
+        req.query,
+        reqType.props.query
       );
-      const unexpectedBodyProps = _.differenceWith(
-        _.keys(req.body),
-        _.keys(getProps(reqType.props.body || {})),
-        _.isEqual
+      const unexpectedBodyProps = getUnexpectedProps(
+        req.body,
+        reqType.props.body
       );
       const unexpectedProps = [...unexpectedQueryProps, ...unexpectedBodyProps];
 
