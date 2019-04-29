@@ -10,6 +10,23 @@ type RequestValidator = t.TypeC<any>;
 
 function getProps(validator: any): t.Props {
 
+  if (_.isEmpty(validator)) {
+    return {};
+  } else if (validator.props) {
+    return validator.props;
+  } else if (validator.types) {
+    // Handle intersection types
+    return validator.types.reduce(
+      (acc: t.Props, type: any) => ({ ...acc, ...getProps(type) }), 
+      {}
+    );
+  } else if (validator.type) {
+    // Handle refinement types
+    return getProps(validator.type);
+  } else {
+    return {};
+  }
+
   return validator.props || (validator.type ? getProps(validator.type) : {});
 }
 
