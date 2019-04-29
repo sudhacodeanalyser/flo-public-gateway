@@ -7,6 +7,7 @@ import LocationService from './LocationService';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
 import * as t from 'io-ts';
 import { parseExpand, httpController } from '../api/controllerUtils';
+import { NonEmptyArray } from '../api/validator/NonEmptyArray';
 
 export function LocationControllerFactory(container: Container): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
@@ -84,7 +85,7 @@ export function LocationControllerFactory(container: Container): interfaces.Cont
           userId: t.string
         }),
         body: t.strict({
-          roles: t.array(t.string)
+          roles: NonEmptyArray(t.string)
         })
       }))
     )
