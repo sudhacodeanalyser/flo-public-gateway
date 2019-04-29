@@ -32,11 +32,19 @@ class ReqValidationMiddlewareFactory {
         return next(new ReqValidationError(message));
       }
 
-      const unexpectedProps = _.differenceWith(
-        [..._.keys(req.query), ..._.keys(req.body)],
-        [..._.keys(getProps(reqType.props.query || {})), ..._.keys(getProps(reqType.props.body || {}))],
+      // Ensure no unexpected properties are passed in the query string or request body
+      // if those properties do not have validators defined
+      const unexpectedQueryProps = _.differenceWith(
+        _.keys(req.query),
+        _.keys(getProps(reqType.props.query || {})),
         _.isEqual
       );
+      const unexpectedBodyProps = _.differenceWith(
+        _.keys(req.body),
+        _.keys(getProps(reqType.props.body || {})),
+        _.isEqual
+      );
+      const unexpectedProps = [...unexpectedQueryProps, ...unexpectedBodyProps];
 
       if (!_.isEmpty(unexpectedProps)) {
         const message = 'Unexpected request parameters: ' + unexpectedProps.join(', ');
