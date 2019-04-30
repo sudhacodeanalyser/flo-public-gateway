@@ -35,11 +35,12 @@ class DynamoDbClient implements DatabaseClient {
   }
 
   public _put<T>(tableName: string, item: T): AWS.Request<AWS.DynamoDB.DocumentClient.PutItemOutput, AWS.AWSError> {
-    return this.dynamoDb.put({
+    await this.dynamoDb.put({
       TableName: this.tablePrefix + tableName,
       Item: item,
-      ReturnValues: 'NONE' // PutItem does not recognize any values other than NONE or ALL_OLD
     });
+
+    return item;
   }
 
   public _get<T>(tableName: string, key: KeyMap): AWS.Request<AWS.DynamoDB.DocumentClient.GetItemOutput, AWS.AWSError> {

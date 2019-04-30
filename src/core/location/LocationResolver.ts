@@ -80,13 +80,7 @@ class LocationResolver extends Resolver<Location> {
     const locationRecordData = LocationRecord.fromModel(location);
     const locationId = locationRecordData.location_id = uuid.v4();
 
-    await this.locationTable.put(locationRecordData);
-    const createdLocationRecordData = await this.locationTable.getByLocationId(locationId);
-
-    if (createdLocationRecordData === null) {
-      // TODO: Figure out a better way to handle this case.
-      return null;
-    }
+    const createdLocationRecordData = await this.locationTable.put(locationRecordData);
 
     return new LocationRecord(createdLocationRecordData).toModel();
   }
