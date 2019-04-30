@@ -10,7 +10,33 @@ type RequestValidator = t.TypeC<any>;
 
 function getProps(validator: any): t.Props {
 
+  if (_.isEmpty(validator)) {
+    return {};
+  } else if (validator.props) {
+    return validator.props;
+  } else if (validator.types) {
+    // Handle intersection types
+    return validator.types.reduce(
+      (acc: t.Props, type: any) => ({ ...acc, ...getProps(type) }), 
+      {}
+    );
+  } else if (validator.type) {
+    // Handle refinement types
+    return getProps(validator.type);
+  } else {
+    return {};
+  }
+
   return validator.props || (validator.type ? getProps(validator.type) : {});
+}
+
+function getUnexpectedProps(data: any, validator?: t.TypeC<any>): string[] {
+
+  return _.differenceWith(
+    _.keys(data),
+    _.keys(getProps(validator)),
+    _.isEqual
+  );
 }
 
 @injectable()
@@ -20,10 +46,9 @@ class ReqValidationMiddlewareFactory {
     return (req: Request, res: express.Response, next: express.NextFunction) => {
       // Ensure no unexpected query string, URL params, or body data is
       // accepted if those sections do not have validators defined 
-      const unexpectedSections = _.differenceWith(
-        _.keys(_.chain(req).pick(['body', 'query', 'params']).pickBy(value => !_.isEmpty(value)).value()),
-        _.keys(reqType.props),
-        _.isEqual
+       const unexpectedSections = getUnexpectedProps(
+        _.chain(req).pick(['body', 'query', 'params']).pickBy(value => !_.isEmpty(value)).value(),
+        reqType
       );
 
       if (!_.isEmpty(unexpectedSections)) {
@@ -32,11 +57,17 @@ class ReqValidationMiddlewareFactory {
         return next(new ReqValidationError(message));
       }
 
-      const unexpectedProps = _.differenceWith(
-        [..._.keys(req.query), ..._.keys(req.body)],
-        [..._.keys(getProps(reqType.props.query || {})), ..._.keys(getProps(reqType.props.body || {}))],
-        _.isEqual
+      // Ensure no unexpected properties are passed in the query string or request body
+      // if those properties do not have validators defined
+      const unexpectedQueryProps = getUnexpectedProps(
+        req.query,
+        reqType.props.query
       );
+      const unexpectedBodyProps = getUnexpectedProps(
+        req.body,
+        reqType.props.body
+      );
+      const unexpectedProps = [...unexpectedQueryProps, ...unexpectedBodyProps];
 
       if (!_.isEmpty(unexpectedProps)) {
         const message = 'Unexpected request parameters: ' + unexpectedProps.join(', ');
