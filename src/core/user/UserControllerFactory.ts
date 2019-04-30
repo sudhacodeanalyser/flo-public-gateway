@@ -1,19 +1,21 @@
 import * as t from 'io-ts';
-import { interfaces, httpGet, httpPost, httpDelete, queryParam, requestParam, requestBody } from 'inversify-express-utils';
+import { interfaces, httpGet, httpPost, httpDelete, queryParam, requestParam, requestBody, BaseHttpController } from 'inversify-express-utils';
 import { inject, Container } from 'inversify';
 import UserService from './UserService';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
 import { User, UserUpdateValidator, UserUpdate } from '../api/api';
-import { httpController, parseExpand } from '../api/controllerUtils';
+import { httpController, parseExpand, deleteMethod } from '../api/controllerUtils';
 
 export function UserControllerFactory(container: Container): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
 
   @httpController({ version: 1 }, '/users')
-  class UserController implements interfaces.Controller {
+  class UserController extends BaseHttpController {
     constructor(
       @inject('UserService') private userService: UserService
-    ) {}
+    ) {
+      super();
+    }
 
     @httpPost(
       '/:id',
@@ -52,6 +54,7 @@ export function UserControllerFactory(container: Container): interfaces.Controll
         })
       }))
     )
+    @deleteMethod
     private async removeUser(@requestParam('id') id: string): Promise<void> {
       return this.userService.removeUser(id);
     }

@@ -111,6 +111,8 @@ class LocationResolver extends Resolver<Location> {
         ...(await this.deviceResolverFactory().getAllByLocationId(id))
           .map(async ({ id: icdId }) => this.deviceResolverFactory().remove(icdId))
       ]);
+    } else {
+      throw new ResourceDoesNotExistError();
     }
   }
 
