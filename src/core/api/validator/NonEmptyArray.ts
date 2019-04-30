@@ -6,6 +6,6 @@ interface NonEmptyArrayBrand {
 
 export const NonEmptyArray = <C extends t.Mixed>(codec: C) => t.brand(
   t.array(codec),
-  (arr): arr is t.Branded<t.TypeOf<C>[], NonEmptyArrayBrand> => arr.length > 0,
+  (arr): arr is t.Branded<Array<t.TypeOf<C>>, NonEmptyArrayBrand> => arr.length > 0,
   'NonEmptyArray'
 )
