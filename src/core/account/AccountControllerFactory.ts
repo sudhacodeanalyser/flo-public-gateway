@@ -5,6 +5,7 @@ import AccountService from './AccountService';
 import { parseExpand, httpController } from '../api/controllerUtils';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
 import { Account, AccountUserRole } from '../api/api';
+import { NonEmptyArray } from '../api/validator/NonEmptyArray';
 
 export function AccountControllerFactory(container: Container): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
@@ -50,7 +51,7 @@ export function AccountControllerFactory(container: Container): interfaces.Contr
           userId: t.string
         }),
         body: t.strict({
-          roles: t.array(t.string)
+          roles: NonEmptyArray(t.string)
         })
       }))
     )

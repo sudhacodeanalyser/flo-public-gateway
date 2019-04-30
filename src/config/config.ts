@@ -20,7 +20,8 @@ function getDefaults(): { [key: string]: any } {
 const config = {
   appName: process.env.APP_NAME,
   port: process.env.PORT,
-  enforceSSL: process.env.enforceSSL
+  enforceSSL: process.env.enforceSSL,
+  dynamoTablePrefix: process.env.DYNAMO_TABLE_PREFIX
 };
 
 export default {
