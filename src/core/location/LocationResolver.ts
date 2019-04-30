@@ -157,12 +157,10 @@ class LocationResolver extends Resolver<Location> {
       user_id: userId,
       location_id: locationId,
       roles
-    }
+    };
+    const createdUserLocatioRoleRecordData = await this.userLocationRoleTable.put(userLocatioRoleRecordData);
 
-    await this.userLocationRoleTable.put(userLocatioRoleRecordData);
-
-    // TODO: We are cheating here. Otherwise, we will need to get what we have just put (and handle a possible null just as in createLocation)
-    return new UserLocationRoleRecord(userLocatioRoleRecordData).toLocationUserRole();
+    return new UserLocationRoleRecord(createdUserLocatioRoleRecordData).toLocationUserRole();
   }
 
   public async removeLocationUserRole(locationId: string, userId: string): Promise<void> {
