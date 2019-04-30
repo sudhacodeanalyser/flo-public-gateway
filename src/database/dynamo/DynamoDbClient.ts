@@ -29,18 +29,17 @@ class DynamoDbClient implements DatabaseClient {
   ) {}
 
   public async put<T>(tableName: string, item: T): Promise<T> {
-    const { Attributes } = await this._put<T>(tableName, item).promise();
+    await this._put<T>(tableName, item).promise();
 
-    return Attributes as T;
+    return item;
   }
 
   public _put<T>(tableName: string, item: T): AWS.Request<AWS.DynamoDB.DocumentClient.PutItemOutput, AWS.AWSError> {
-    await this.dynamoDb.put({
+    return this.dynamoDb.put({
       TableName: this.tablePrefix + tableName,
       Item: item,
+      ReturnValues: 'NONE' // PutItem does not recognize any values other than NONE or ALL_OLD
     });
-
-    return item;
   }
 
   public _get<T>(tableName: string, key: KeyMap): AWS.Request<AWS.DynamoDB.DocumentClient.GetItemOutput, AWS.AWSError> {
