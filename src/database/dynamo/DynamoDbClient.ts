@@ -100,14 +100,30 @@ class DynamoDbClient implements DatabaseClient {
   }
 
   public _remove(tableName: string, key: KeyMap): AWS.Request<AWS.DynamoDB.DocumentClient.DeleteItemOutput, AWS.AWSError> {
+    const {
+      ConditionExpression,
+      ExpressionAttributeNames
+    } = this.createCondition(key);
+
     return this.dynamoDb.delete({
       TableName: this.tablePrefix + tableName,
-      Key: key
+      Key: key,
+      ConditionExpression,
+      ExpressionAttributeNames
     });
   }
 
   public async remove(tableName: string, key: KeyMap): Promise<void> {
-    await this._remove(tableName, key).promise();
+    try {
+      await this._remove(tableName, key).promise();
+    } catch (err) {
+      // There's no type defined for this, so we check the name string
+      if (err.name === 'ConditionalCheckFailedException') {
+        throw new ResourceDoesNotExistError();
+      } else {
+        throw err;
+      }
+    }
   }
 
   public _query(tableName: string, queryOptions: DynamoDbQuery): AWS.Request<AWS.DynamoDB.DocumentClient.QueryOutput, AWS.AWSError> {
