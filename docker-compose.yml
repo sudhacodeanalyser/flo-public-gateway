@@ -5,6 +5,7 @@ services:
     image: "${CI_REGISTRY_IMAGE:-registry.gitlab.com/flotechnologies/app}:latest"
     environment:
       NODE_ENV: "${NODE_ENV:-development}"
+      DYNAMO_TABLE_PREFIX: "${DYNAMO_TABLE_PREFIX}"
 
     ports:
       - 3000:3000
