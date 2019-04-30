@@ -4,7 +4,7 @@ import { Device, DeviceUpdate, DeviceUpdateValidator } from '../api/api';
 import DeviceService from './DeviceService';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
 import * as t from 'io-ts';
-import { httpController, parseExpand } from '../api/controllerUtils';
+import { httpController, parseExpand, deleteMethod } from '../api/controllerUtils';
 
 export function DeviceControllerFactory(container: Container): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
@@ -53,6 +53,7 @@ export function DeviceControllerFactory(container: Container): interfaces.Contro
         })
       }))
     )
+    @deleteMethod
     private async removeDevice(@requestParam('id') id: string): Promise<void> {
 
       return this.deviceService.removeDevice(id);

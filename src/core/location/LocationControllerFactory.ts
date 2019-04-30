@@ -88,6 +88,7 @@ export function LocationControllerFactory(container: Container): interfaces.Cont
         })
       }))
     )
+    @createMethod
     private async addLocationUserRole(@requestParam('locationId') locationId: string, @requestParam('userId') userId: string, @requestBody() { roles }: Pick<LocationUserRole, 'roles'>): Promise<LocationUserRole> {
       return this.locationService.addLocationUserRole(locationId, userId, roles);
     }

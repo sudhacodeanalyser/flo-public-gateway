@@ -4,7 +4,7 @@ import { inject, Container } from 'inversify';
 import UserService from './UserService';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
 import { User, UserUpdateValidator, UserUpdate } from '../api/api';
-import { httpController, parseExpand } from '../api/controllerUtils';
+import { httpController, parseExpand, deleteMethod } from '../api/controllerUtils';
 
 export function UserControllerFactory(container: Container): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
@@ -52,6 +52,7 @@ export function UserControllerFactory(container: Container): interfaces.Controll
         })
       }))
     )
+    @deleteMethod
     private async removeUser(@requestParam('id') id: string): Promise<void> {
       return this.userService.removeUser(id);
     }
