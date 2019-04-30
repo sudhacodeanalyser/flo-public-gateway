@@ -29,9 +29,9 @@ class DynamoDbClient implements DatabaseClient {
   ) {}
 
   public async put<T>(tableName: string, item: T): Promise<T> {
-    const { Attributes } = await this._put<T>(tableName, item).promise();
+    await this._put<T>(tableName, item).promise();
 
-    return Attributes as T;
+    return item;
   }
 
   public _put<T>(tableName: string, item: T): AWS.Request<AWS.DynamoDB.DocumentClient.PutItemOutput, AWS.AWSError> {
