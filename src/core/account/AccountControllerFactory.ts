@@ -1,5 +1,5 @@
 import * as t from 'io-ts';
-import { interfaces, httpGet, httpPost, httpDelete, queryParam, requestParam, requestBody } from 'inversify-express-utils';
+import { interfaces, httpGet, httpPost, httpDelete, queryParam, requestParam, requestBody, BaseHttpController } from 'inversify-express-utils';
 import { inject, Container } from 'inversify';
 import AccountService from './AccountService';
 import { parseExpand, httpController, deleteMethod } from '../api/controllerUtils';
@@ -11,10 +11,12 @@ export function AccountControllerFactory(container: Container): interfaces.Contr
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
 
   @httpController({ version: 1 }, '/accounts')
-  class AccountController implements interfaces.Controller {
+  class AccountController extends BaseHttpController {
     constructor(
       @inject('AccountService') private accountService: AccountService
-    ) {}
+    ) {
+      super();
+    }
 
     @httpGet('/:id',
       reqValidator.create(t.type({

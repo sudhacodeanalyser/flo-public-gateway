@@ -1,4 +1,4 @@
-import { interfaces, httpGet, httpPost, httpDelete, queryParam, requestParam, requestBody } from 'inversify-express-utils';
+import { interfaces, httpGet, httpPost, httpDelete, queryParam, requestParam, requestBody, BaseHttpController } from 'inversify-express-utils';
 import { inject, Container } from 'inversify';
 import { Device, DeviceUpdate, DeviceUpdateValidator } from '../api/api';
 import DeviceService from './DeviceService';
@@ -10,10 +10,12 @@ export function DeviceControllerFactory(container: Container): interfaces.Contro
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
 
   @httpController({ version: 1 }, '/devices')
-  class DeviceController implements interfaces.Controller {
+  class DeviceController extends BaseHttpController {
     constructor(
       @inject('DeviceService') private deviceService: DeviceService
-    ) {}
+    ) {
+      super();
+    }
 
     @httpGet('/:id',
       // TODO refine validations
