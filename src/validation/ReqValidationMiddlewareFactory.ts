@@ -6,22 +6,82 @@ import * as express from 'express';
 import { injectable } from 'inversify';
 import ReqValidationError from './ReqValidationError';
 
+type RequestValidator = t.TypeC<any>;
+
+function getProps(validator: any): t.Props {
+
+  if (_.isEmpty(validator)) {
+    return {};
+  } else if (validator.props) {
+    return validator.props;
+  } else if (validator.types) {
+    // Handle intersection types
+    return validator.types.reduce(
+      (acc: t.Props, type: any) => ({ ...acc, ...getProps(type) }), 
+      {}
+    );
+  } else if (validator.type) {
+    // Handle refinement types
+    return getProps(validator.type);
+  } else {
+    return {};
+  }
+
+  return validator.props || (validator.type ? getProps(validator.type) : {});
+}
+
+function getUnexpectedProps(data: any, validator?: t.TypeC<any>): string[] {
+
+  return _.differenceWith(
+    _.keys(data),
+    _.keys(getProps(validator)),
+    _.isEqual
+  );
+}
+
 @injectable()
 class ReqValidationMiddlewareFactory {
 
-  public create(reqType: t.Type<any>): express.RequestHandler {
+  public create(reqType: RequestValidator): express.RequestHandler {
     return (req: Request, res: express.Response, next: express.NextFunction) => {
-      const result = reqType.decode(req);
-      // TODO: Figure out a better of validating (this relies on t.exact)
-      const bodyDiff = _.differenceWith(_.keys(req.body), _.keys(result.value.body), _.isEqual);
-      const validationPassed = _.isEmpty(bodyDiff);
+      // Ensure no unexpected query string, URL params, or body data is
+      // accepted if those sections do not have validators defined 
+       const unexpectedSections = getUnexpectedProps(
+        _.chain(req).pick(['body', 'query', 'params']).pickBy(value => !_.isEmpty(value)).value(),
+        reqType
+      );
 
-      if (result.isRight() && validationPassed) {
+      if (!_.isEmpty(unexpectedSections)) {
+        const message = 'Unexpected section: ' + unexpectedSections.join(', ');
+
+        return next(new ReqValidationError(message));
+      }
+
+      // Ensure no unexpected properties are passed in the query string or request body
+      // if those properties do not have validators defined
+      const unexpectedQueryProps = getUnexpectedProps(
+        req.query,
+        reqType.props.query
+      );
+      const unexpectedBodyProps = getUnexpectedProps(
+        req.body,
+        reqType.props.body
+      );
+      const unexpectedProps = [...unexpectedQueryProps, ...unexpectedBodyProps];
+
+      if (!_.isEmpty(unexpectedProps)) {
+        const message = 'Unexpected request parameters: ' + unexpectedProps.join(', ');
+
+        return next(new ReqValidationError(message));
+      }
+
+      const result = reqType.decode(req);
+
+      if (result.isRight()) {
         next();
       } else {
-        const message = result.isLeft() ?
-          PathReporter.report(result).join(', ') :
-          `Invalid request parameters: ${bodyDiff}`;
+        const message = PathReporter.report(result).join(', ');
+
         next(new ReqValidationError(message));
       }
     };
