@@ -7,6 +7,7 @@ export * from './model/Account';
 export * from './model/User';
 export * from './model/Location';
 export * from './model/Device';
+export * from './model/Subscription';
 
 // Utils
 export type DependencyFactoryFactory = <T>(dep: string) => () => T;
