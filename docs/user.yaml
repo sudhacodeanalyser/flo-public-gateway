@@ -16,16 +16,7 @@ paths:
       produces:
         - application/json
       parameters:
-        - in: query
-          name: expand
-          required: false
-          schema:
-            type: array
-            items:
-              type: string
-          style: form
-          explode: false
-          description: Comma-separated names of the attributes to be expanded
+        - $ref: '#/components/parameters/ExpandParam'
       responses:
         200:
           description: A User with the specified ID or an empty object if not found.
@@ -42,8 +33,14 @@ paths:
       produces:
         - application/json
       responses:
+        200:
+          description: The User was successfully deleted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Empty'
         204:
-          description: The User was successfully deleted or not found.
+          description: A User with the specified ID was not found.
         400:
           description: The User must not be an Account owner.
           schema:
@@ -94,6 +91,7 @@ components:
     User:
       allOf:
         - $ref: '#/components/schemas/UserMutable'
+        - $ref: '#/components/schemas/Timestamped'
         - type: object
           properties:
             id:
@@ -107,13 +105,7 @@ components:
             locations:
               type: array
               items:
-                oneOf:
-                  - type: object
-                    properties:
-                      id:
-                        type: string
-                        format: uuid
-                  - $ref: '#/components/schemas/Location'
+                $ref: '#/components/schemas/LocationExpandable'
             locationRoles:
               type: array
               items:
@@ -125,13 +117,7 @@ components:
                         format: uuid
                   - $ref: '#/components/schemas/Roles'
             account:
-              oneOf:
-                - type: object
-                  properties:
-                    id:
-                      type: string
-                      format: uuid
-                - $ref: '#/components/schemas/Account'
+              $ref: '#/components/schemas/AccountExpandable'
             accountRole:
               allOf:
                 - type: object
@@ -140,3 +126,11 @@ components:
                       type: string
                       format: uuid
                 - $ref: '#/components/schemas/Roles'
+    UserExpandable:
+      oneOf:
+        - type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+        - $ref: '#/components/schemas/User'

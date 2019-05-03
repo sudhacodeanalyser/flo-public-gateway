@@ -6,6 +6,7 @@ import { DeviceControllerFactory } from './device/DeviceControllerFactory';
 import { AccountControllerFactory } from './account/AccountControllerFactory';
 import { LocationControllerFactory } from './location/LocationControllerFactory';
 import { UserControllerFactory } from './user/UserControllerFactory';
+import { SubscriptionControllerFactory } from './subscription/SubscriptionControllerFactory';
 
 export default function ControllerFactory(container: Container): interfaces.Controller[] {
   return [
@@ -13,7 +14,8 @@ export default function ControllerFactory(container: Container): interfaces.Cont
     AccountControllerFactory,
     DeviceControllerFactory,
     LocationControllerFactory,
-    UserControllerFactory
+    UserControllerFactory,
+    SubscriptionControllerFactory
   ]
   .map(controllerFactory => controllerFactory(container));
 }

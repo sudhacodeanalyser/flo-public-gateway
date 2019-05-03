@@ -42,3 +42,4 @@ export * from './device/DeviceResolver';
 export * from './location/LocationResolver';
 export * from './user/UserResolver';
 export * from './account/AccountResolver';
+export * from './subscription/SubscriptionResolver';

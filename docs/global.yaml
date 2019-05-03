@@ -8,6 +8,16 @@ components:
           items:
             type: string
 
+    Timestamped:
+      type: object
+      properties:
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
     Empty:
       type: object
       properties:
@@ -21,3 +31,16 @@ components:
         message:
           type: string
           required: true
+
+  parameters:
+    ExpandParam:
+      in: query
+      name: expand
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+      style: form
+      explode: false
+      description: Comma-separated names of the attributes to be expanded
