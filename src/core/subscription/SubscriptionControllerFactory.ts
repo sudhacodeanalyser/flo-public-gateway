@@ -6,10 +6,10 @@ import SubscriptionService from './SubscriptionService';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
 import { httpController, parseExpand, createMethod, deleteMethod } from '../api/controllerUtils';
 
-export function SubscriptionControllerFactory(container: Container): interfaces.Controller {
+export function SubscriptionControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
 
-  @httpController({ version: 1 }, '/subscriptions')
+  @httpController({ version: apiVersion }, '/subscriptions')
   class SubscriptionController extends BaseHttpController {
     constructor(
       @inject('SubscriptionService') private subscriptionService: SubscriptionService

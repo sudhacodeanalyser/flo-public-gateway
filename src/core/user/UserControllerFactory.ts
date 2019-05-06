@@ -6,10 +6,10 @@ import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddle
 import { User, UserUpdateValidator, UserUpdate } from '../api/api';
 import { httpController, parseExpand, deleteMethod } from '../api/controllerUtils';
 
-export function UserControllerFactory(container: Container): interfaces.Controller {
+export function UserControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
 
-  @httpController({ version: 1 }, '/users')
+  @httpController({ version: apiVersion }, '/users')
   class UserController extends BaseHttpController {
     constructor(
       @inject('UserService') private userService: UserService

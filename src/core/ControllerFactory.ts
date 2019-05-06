@@ -8,7 +8,7 @@ import { LocationControllerFactory } from './location/LocationControllerFactory'
 import { UserControllerFactory } from './user/UserControllerFactory';
 import { SubscriptionControllerFactory } from './subscription/SubscriptionControllerFactory';
 
-export default function ControllerFactory(container: Container): interfaces.Controller[] {
+export default function ControllerFactory(container: Container, apiVersion: number = 2): interfaces.Controller[] {
   return [
     PingControllerFactory,
     AccountControllerFactory,
@@ -17,6 +17,6 @@ export default function ControllerFactory(container: Container): interfaces.Cont
     UserControllerFactory,
     SubscriptionControllerFactory
   ]
-  .map(controllerFactory => controllerFactory(container));
+  .map(controllerFactory => controllerFactory(container, apiVersion));
 }
 

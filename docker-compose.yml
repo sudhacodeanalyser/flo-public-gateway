@@ -6,6 +6,7 @@ services:
     environment:
       NODE_ENV: "${NODE_ENV:-development}"
       DYNAMO_TABLE_PREFIX: "${DYNAMO_TABLE_PREFIX}"
+      API_VERSION: "${API_VERSION}"
       AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID-empty}"
       AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY-empty}"
 
