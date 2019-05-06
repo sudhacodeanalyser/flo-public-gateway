@@ -1,20 +1,22 @@
 import * as t from 'io-ts';
-import { interfaces, httpGet, httpPost, httpDelete, queryParam, requestParam, requestBody } from 'inversify-express-utils';
+import { interfaces, httpGet, httpPost, httpDelete, queryParam, requestParam, requestBody, BaseHttpController } from 'inversify-express-utils';
 import { inject, Container } from 'inversify';
 import AccountService from './AccountService';
-import { parseExpand, httpController } from '../api/controllerUtils';
+import { parseExpand, httpController, deleteMethod } from '../api/controllerUtils';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
 import { Account, AccountUserRole } from '../api/api';
 import { NonEmptyArray } from '../api/validator/NonEmptyArray';
 
-export function AccountControllerFactory(container: Container): interfaces.Controller {
+export function AccountControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
 
-  @httpController({ version: 1 }, '/accounts')
-  class AccountController implements interfaces.Controller {
+  @httpController({ version: apiVersion }, '/accounts')
+  class AccountController extends BaseHttpController {
     constructor(
       @inject('AccountService') private accountService: AccountService
-    ) {}
+    ) {
+      super();
+    }
 
     @httpGet('/:id',
       reqValidator.create(t.type({
@@ -55,6 +57,7 @@ export function AccountControllerFactory(container: Container): interfaces.Contr
         })
       }))
     )
+    @deleteMethod
     private async updateAccountUserRole(@requestParam('id') id: string, @requestParam('userId') userId: string, @requestBody() { roles }: Pick<AccountUserRole, 'roles'>): Promise<AccountUserRole> {
 
       return this.accountService.updateAccountUserRole(id, userId, roles);

@@ -11,7 +11,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/LocationCreation'
+              $ref: '#/components/schemas/LocationCreate'
       responses:
         201:
           description: The newly created Location.
@@ -36,16 +36,7 @@ paths:
       produces:
         - application/json
       parameters:
-        - in: query
-          name: expand
-          required: false
-          schema:
-            type: array
-            items:
-              type: string
-          style: form
-          explode: false
-          description: Comma-separated names of the attributes to be expanded
+        - $ref: '#/components/parameters/ExpandParam'
       responses:
         200:
           description: A Location with the specified ID or an empty object if not found.
@@ -62,8 +53,14 @@ paths:
       produces:
         - application/json
       responses:
-        204:
+        200:
           description: The Location was successfully deleted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Empty'
+        204:
+          description: A Location with the specified ID was not found.
 
     post:
       summary: Updates a Location by ID (partially).
@@ -168,7 +165,7 @@ components:
         isProfileComplete:
           type: boolean
 
-    LocationCreation:
+    LocationCreate:
       allOf:
         - type: object
           properties:
@@ -180,46 +177,39 @@ components:
                   format: uuid
         - $ref: '#/components/schemas/LocationMutable'
     Location:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        account:
-          oneOf:
-            - type: object
-              properties:
-                id:
-                  type: string
-                  format: uuid
-            - $ref: '#/components/schemas/Account'
-        userRoles:
-          type: array
-          items:
-            allOf:
-              - type: object
-                properties:
-                  userId:
-                    type: string
-                    format: uuid
-              - $ref: '#/components/schemas/Roles'
-        users:
-          type: array
-          items:
-            oneOf:
-              - type: object
-                properties:
-                  id:
-                    type: string
-                    format: uuid
-              - $ref: '#/components/schemas/User'
-        locations:
-          type: array
-          items:
-            oneOf:
-              - type: object
-                properties:
-                  id:
-                    type: string
-                    format: uuid
-              - $ref: '#/components/schemas/Device'
+      allOf:
+        - $ref: '#/components/schemas/LocationMutable'
+        - $ref: '#/components/schemas/Timestamped'
+        - type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            account:
+              $ref: '#/components/schemas/AccountExpandable'
+            userRoles:
+              type: array
+              items:
+                allOf:
+                  - type: object
+                    properties:
+                      userId:
+                        type: string
+                        format: uuid
+                  - $ref: '#/components/schemas/Roles'
+            users:
+              type: array
+              items:
+                $ref: '#/components/schemas/UserExpandable'
+            locations:
+              type: array
+              items:
+                $ref: '#/components/schemas/DeviceExpandable'
+    LocationExpandable:
+      oneOf:
+        - type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+        - $ref: '#/components/schemas/Location'

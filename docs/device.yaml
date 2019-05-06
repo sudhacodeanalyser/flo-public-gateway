@@ -15,16 +15,7 @@ paths:
       produces:
         - application/json
       parameters:
-        - in: query
-          name: expand
-          required: false
-          schema:
-            type: array
-            items:
-              type: string
-          style: form
-          explode: false
-          description: Comma-separated names of the attributes to be expanded
+        - $ref: '#/components/parameters/ExpandParam'
       responses:
         200:
           description: A Device with the specified ID or an empty object if not found.
@@ -41,8 +32,14 @@ paths:
       produces:
         - application/json
       responses:
+        200:
+          description: The Device was successfully deleted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Empty'
         204:
-          description: The Device was successfully deleted or not found.
+          description: A Device with the specified ID was not found.
 
     post:
       summary: Updates a Device by ID (partially).
@@ -79,6 +76,7 @@ components:
     Device:
       allOf:
         - $ref: '#/components/schemas/DeviceMutable'
+        - $ref: '#/components/schemas/Timestamped'
         - type: object
           properties:
             id:
@@ -87,14 +85,16 @@ components:
             macAddress:
               type: string
             location:
-              oneOf:
-                - type: object
-                  properties:
-                    id:
-                      type: string
-                      format: uuid
-                - $ref: '#/components/schemas/Location'
+              $ref: '#/components/schemas/LocationExpandable'
             deviceType:
               type: string
             deviceModel:
               type: string
+    DeviceExpandable:
+      oneOf:
+        - type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+        - $ref: '#/components/schemas/Device'

@@ -4,6 +4,7 @@ import deviceContainerModule from './device/containerModule';
 import apiContainerModule from './api/containerModule';
 import locationContainerModule from './location/containerModule';
 import userContainerModule from './user/containerModule';
+import subscriptionContainerModule from './subscription/containerModule';
 
 export default [
   pingContainerModule,
@@ -11,5 +12,6 @@ export default [
   deviceContainerModule,
   apiContainerModule,
   locationContainerModule,
-  userContainerModule
+  userContainerModule,
+  subscriptionContainerModule
 ];

@@ -4,7 +4,7 @@ import { LocationRecordData, LocationRecord } from './LocationRecord';
 import { UserLocationRoleRecord } from '../user/UserLocationRoleRecord';
 import { Location, LocationUserRole, DependencyFactoryFactory } from '../api/api';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
-import { Resolver,PropertyResolverMap, DeviceResolver, UserResolver, AccountResolver } from '../resolver';
+import { Resolver, PropertyResolverMap, DeviceResolver, UserResolver, AccountResolver, SubscriptionResolver } from '../resolver';
 import LocationTable from '../location/LocationTable';
 import UserLocationRoleTable from '../user/UserLocationRoleTable';
 import { fromPartialRecord } from '../../database/Patch';
@@ -12,7 +12,9 @@ import { fromPartialRecord } from '../../database/Patch';
 @injectable()
 class LocationResolver extends Resolver<Location> {
   protected propertyResolverMap: PropertyResolverMap<Location> = {
-    devices: async (location: Location, shouldExpand = false) => this.deviceResolverFactory().getAllByLocationId(location.id),
+    devices: async (location: Location, shouldExpand = false) =>
+      this.deviceResolverFactory().getAllByLocationId(location.id),
+
     users: async (location: Location, shouldExpand = false) => {
       const locationUserRoles = await this.getAllUserRolesByLocationId(location.id);
 
@@ -41,12 +43,28 @@ class LocationResolver extends Resolver<Location> {
       }
 
       return this.accountResolverFactory().getAccount(location.account.id);
+    },
+    subscription: async (location: Location, shouldExpand = false) => {
+      const subscription = await this.subscriptionResolverFactory().getByRelatedEntityId(location.id);
+
+      if (subscription === null) {
+        return null;
+      }
+
+      if (!shouldExpand) {
+        return {
+          id: subscription.id
+        };
+      }
+
+      return subscription;
     }
   };
 
   private deviceResolverFactory: () => DeviceResolver;
   private accountResolverFactory: () => AccountResolver;
   private userResolverFactory: () => UserResolver;
+  private subscriptionResolverFactory: () => SubscriptionResolver;
 
   constructor(
     @inject('LocationTable') private locationTable: LocationTable,
@@ -58,6 +76,7 @@ class LocationResolver extends Resolver<Location> {
     this.deviceResolverFactory = depFactoryFactory<DeviceResolver>('DeviceResolver');
     this.accountResolverFactory = depFactoryFactory<AccountResolver>('AccountResolver');
     this.userResolverFactory = depFactoryFactory<UserResolver>('UserResolver');
+    this.subscriptionResolverFactory = depFactoryFactory<SubscriptionResolver>('SubscriptionResolver');
   }
 
   public async get(id: string, expandProps: string[] = []): Promise<Location | null> {
@@ -107,10 +126,18 @@ class LocationResolver extends Resolver<Location> {
       // https://aws.amazon.com/blogs/aws/new-amazon-dynamodb-transactions/
       await Promise.all([
         this.locationTable.remove({ account_id: accountId, location_id: id }),
+
         this.removeLocationUsersAllByLocationId(id),
+
         ...(await this.deviceResolverFactory().getAllByLocationId(id))
-          .map(async ({ id: icdId }) => this.deviceResolverFactory().remove(icdId))
+          .map(async ({ id: icdId }) => this.deviceResolverFactory().remove(icdId)),
+
+        this.subscriptionResolverFactory().getByRelatedEntityId(id).then<false | void>(subscription =>
+          subscription !== null && this.subscriptionResolverFactory().remove(subscription.id)
+        )
       ]);
+    } else {
+      throw new ResourceDoesNotExistError();
     }
   }
 

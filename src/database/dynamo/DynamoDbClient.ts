@@ -100,14 +100,20 @@ class DynamoDbClient implements DatabaseClient {
   }
 
   public _remove(tableName: string, key: KeyMap): AWS.Request<AWS.DynamoDB.DocumentClient.DeleteItemOutput, AWS.AWSError> {
+
     return this.dynamoDb.delete({
       TableName: this.tablePrefix + tableName,
-      Key: key
+      Key: key,
+      ReturnValues:'ALL_OLD'
     });
   }
 
   public async remove(tableName: string, key: KeyMap): Promise<void> {
-    await this._remove(tableName, key).promise();
+    const { Attributes } = await this._remove(tableName, key).promise();
+
+    if (_.isEmpty(Attributes)) {
+      throw new ResourceDoesNotExistError();
+    } 
   }
 
   public _query(tableName: string, queryOptions: DynamoDbQuery): AWS.Request<AWS.DynamoDB.DocumentClient.QueryOutput, AWS.AWSError> {

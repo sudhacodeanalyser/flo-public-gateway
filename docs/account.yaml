@@ -31,8 +31,14 @@ paths:
       produces:
         - application/json
       responses:
+        200:
+          description: The Account was successfully deleted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Empty'
         204:
-          description: The Account was successfully deleted or not found.
+          description: An Account with the specified ID was not found.
 
   /accounts/{id}/user-roles/{userId}:
     parameters:
@@ -80,11 +86,22 @@ components:
         - $ref: '#/components/schemas/Roles'
 
     Account:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        owner_user_id:
-          type: string
-          format: uuid
+      allOf:
+        - type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            owner_user_id:
+              type: string
+              format: uuid
+        - $ref: '#/components/schemas/Timestamped'
+
+    AccountExpandable:
+      oneOf:
+        - type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+        - $ref: '#/components/schemas/Account'

@@ -7,12 +7,12 @@ import ControllerFactory from './core/ControllerFactory';
 
 const container = ContainerFactory();
 const server = ServerFactory(container);
+const config = container.get<typeof Config>('Config');
 
-ControllerFactory(container);
+ControllerFactory(container, config.apiVersion);
 
 const app = server.build();
 const logger = container.get<Logger>('Logger');
-const config = container.get<typeof Config>('Config');
 
 app.listen(config.port, () => {
   logger.info('Started', { port: config.port });
