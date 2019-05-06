@@ -4,7 +4,7 @@ import PingService from './PingService';
 import { httpController } from '../api/controllerUtils';
 
 export function PingControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
-  @httpController({ version: apiVersion }, '/ping', 'LoggerMiddleware')
+  @httpController({ version: apiVersion }, '/ping')
   class PingController implements interfaces.Controller {
     constructor(
       @inject('PingService') private pingService: PingService
