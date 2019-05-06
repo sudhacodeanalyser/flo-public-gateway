@@ -12,7 +12,8 @@ function getDefaults(): { [key: string]: any } {
         port: 3000,
         appName: 'flo-public-gateway-local',
         enforceSSL: false,
-        dynamoTablePrefix: 'dev_'
+        dynamoTablePrefix: 'dev_',
+        apiVersion: 2
       };
   }
 }
@@ -21,7 +22,8 @@ const config = {
   appName: process.env.APP_NAME,
   port: process.env.PORT,
   enforceSSL: process.env.enforceSSL,
-  dynamoTablePrefix: process.env.DYNAMO_TABLE_PREFIX
+  dynamoTablePrefix: process.env.DYNAMO_TABLE_PREFIX,
+  API_VERSION: process.env.API_VERSION
 };
 
 export default {

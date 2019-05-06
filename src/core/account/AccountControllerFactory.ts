@@ -7,10 +7,10 @@ import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddle
 import { Account, AccountUserRole } from '../api/api';
 import { NonEmptyArray } from '../api/validator/NonEmptyArray';
 
-export function AccountControllerFactory(container: Container): interfaces.Controller {
+export function AccountControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
 
-  @httpController({ version: 1 }, '/accounts')
+  @httpController({ version: apiVersion }, '/accounts')
   class AccountController extends BaseHttpController {
     constructor(
       @inject('AccountService') private accountService: AccountService

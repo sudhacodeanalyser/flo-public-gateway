@@ -6,10 +6,10 @@ import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddle
 import * as t from 'io-ts';
 import { httpController, parseExpand, deleteMethod } from '../api/controllerUtils';
 
-export function DeviceControllerFactory(container: Container): interfaces.Controller {
+export function DeviceControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
 
-  @httpController({ version: 1 }, '/devices')
+  @httpController({ version: apiVersion }, '/devices')
   class DeviceController extends BaseHttpController {
     constructor(
       @inject('DeviceService') private deviceService: DeviceService

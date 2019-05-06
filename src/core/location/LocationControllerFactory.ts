@@ -11,10 +11,10 @@ import { NonEmptyArray } from '../api/validator/NonEmptyArray';
 
 
 
-export function LocationControllerFactory(container: Container): interfaces.Controller {
+export function LocationControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
 
-  @httpController({ version: 1 }, '/locations')
+  @httpController({ version: apiVersion }, '/locations')
   class LocationController extends BaseHttpController {
     constructor(
       @inject('LocationService') private locationService: LocationService
