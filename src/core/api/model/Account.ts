@@ -1,11 +1,11 @@
-import { Expandable, Timestamped, User, Location } from '../api';
+import { Expandable, TimestampedModel, User, Location } from '../api';
 
 export interface AccountUserRole {
   userId: string,
   roles: string[]
 }
 
-export interface Account extends Timestamped {
+export interface Account extends TimestampedModel {
   id: string,
   owner: Expandable<User>,
   locations: Array<Expandable<Location>>,

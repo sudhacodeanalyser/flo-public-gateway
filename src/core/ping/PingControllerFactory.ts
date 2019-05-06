@@ -1,9 +1,10 @@
 import { interfaces, controller, httpGet } from 'inversify-express-utils';
 import { inject, Container } from 'inversify';
 import PingService from './PingService';
+import { httpController } from '../api/controllerUtils';
 
-export function PingControllerFactory(container: Container): interfaces.Controller {
-  @controller('/ping', 'LoggerMiddleware')
+export function PingControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
+  @httpController({ version: apiVersion }, '/ping')
   class PingController implements interfaces.Controller {
     constructor(
       @inject('PingService') private pingService: PingService

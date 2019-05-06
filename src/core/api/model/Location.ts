@@ -1,4 +1,4 @@
-import { Expandable, TimestampedModel, User, Account, Device } from '../api';
+import { Expandable, TimestampedModel, User, Account, Device, Subscription } from '../api';
 import * as t from 'io-ts';
 
 export interface LocationUserRole {
@@ -37,7 +37,8 @@ export interface Location extends LocationCreate, TimestampedModel {
   account: Expandable<Account>,
   userRoles: LocationUserRole[],
   users: Array<Expandable<User>>,
-  devices: Array<Expandable<Device>>
+  devices: Array<Expandable<Device>>,
+  subscription?: Expandable<Subscription>
   // TODO implement profile
 }
 

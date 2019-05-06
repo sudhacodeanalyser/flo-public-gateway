@@ -1,19 +1,21 @@
-import { interfaces, httpGet, httpPost, httpDelete, queryParam, requestParam, requestBody } from 'inversify-express-utils';
+import { interfaces, httpGet, httpPost, httpDelete, queryParam, requestParam, requestBody, BaseHttpController } from 'inversify-express-utils';
 import { inject, Container } from 'inversify';
 import { Device, DeviceUpdate, DeviceUpdateValidator } from '../api/api';
 import DeviceService from './DeviceService';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
 import * as t from 'io-ts';
-import { httpController, parseExpand } from '../api/controllerUtils';
+import { httpController, parseExpand, deleteMethod } from '../api/controllerUtils';
 
-export function DeviceControllerFactory(container: Container): interfaces.Controller {
+export function DeviceControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
 
-  @httpController({ version: 1 }, '/devices')
-  class DeviceController implements interfaces.Controller {
+  @httpController({ version: apiVersion }, '/devices')
+  class DeviceController extends BaseHttpController {
     constructor(
       @inject('DeviceService') private deviceService: DeviceService
-    ) {}
+    ) {
+      super();
+    }
 
     @httpGet('/:id',
       // TODO refine validations
@@ -53,6 +55,7 @@ export function DeviceControllerFactory(container: Container): interfaces.Contro
         })
       }))
     )
+    @deleteMethod
     private async removeDevice(@requestParam('id') id: string): Promise<void> {
 
       return this.deviceService.removeDevice(id);

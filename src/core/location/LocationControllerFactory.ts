@@ -1,22 +1,26 @@
 import _ from 'lodash';
 import express from 'express';
-import { interfaces, httpGet, httpPost, httpDelete, httpPut, queryParam, requestParam, requestBody, response } from 'inversify-express-utils';
+import { interfaces, httpGet, httpPost, httpDelete, httpPut, queryParam, requestParam, requestBody, BaseHttpController } from 'inversify-express-utils';
 import { inject, Container } from 'inversify';
 import { Location, LocationUpdateValidator, LocationUpdate, LocationUserRole, LocationCreateValidator } from '../api/api';
 import LocationService from './LocationService';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
 import * as t from 'io-ts';
-import { parseExpand, httpController } from '../api/controllerUtils';
+import { parseExpand, httpController, createMethod, deleteMethod } from '../api/controllerUtils';
 import { NonEmptyArray } from '../api/validator/NonEmptyArray';
 
-export function LocationControllerFactory(container: Container): interfaces.Controller {
+
+
+export function LocationControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
 
-  @httpController({ version: 1 }, '/locations')
-  class LocationController implements interfaces.Controller {
+  @httpController({ version: apiVersion }, '/locations')
+  class LocationController extends BaseHttpController {
     constructor(
       @inject('LocationService') private locationService: LocationService
-    ) {}
+    ) {
+      super();
+    }
 
     @httpPost(
       '/',
@@ -24,15 +28,9 @@ export function LocationControllerFactory(container: Container): interfaces.Cont
         body: LocationCreateValidator
       }))
     )
-    private async createLocation(@requestBody() location: Location, @response() res: express.Response): Promise<void> {
-      const createdLocation = await this.locationService.createLocation(location);
-
-      // TODO: Not sure if this is the best way of handling this.
-      if (_.isEmpty(createdLocation)) {
-        res.status(204).json(null);
-      } else {
-        res.status(201).json(createdLocation);
-      }
+    @createMethod
+    private async createLocation(@requestBody() location: Location): Promise<Location | {}> {
+      return this.locationService.createLocation(location);
     }
 
     @httpGet(
@@ -73,6 +71,7 @@ export function LocationControllerFactory(container: Container): interfaces.Cont
         })
       }))
     )
+    @deleteMethod
     private async removeLocation(@requestParam('id') id: string): Promise<void> {
       return this.locationService.removeLocation(id);
     }
@@ -89,6 +88,7 @@ export function LocationControllerFactory(container: Container): interfaces.Cont
         })
       }))
     )
+    @createMethod
     private async addLocationUserRole(@requestParam('locationId') locationId: string, @requestParam('userId') userId: string, @requestBody() { roles }: Pick<LocationUserRole, 'roles'>): Promise<LocationUserRole> {
       return this.locationService.addLocationUserRole(locationId, userId, roles);
     }
@@ -102,6 +102,7 @@ export function LocationControllerFactory(container: Container): interfaces.Cont
         })
       }))
     )
+    @deleteMethod
     private async removeLocationUserRole(@requestParam('locationId') locationId: string, @requestParam('userId') userId: string): Promise<void> {
       return this.locationService.removeLocationUserRole(locationId, userId);
     }
