@@ -23,7 +23,7 @@ const config = {
   port: process.env.PORT,
   enforceSSL: process.env.enforceSSL,
   dynamoTablePrefix: process.env.DYNAMO_TABLE_PREFIX,
-  API_VERSION: process.env.API_VERSION
+  apiVersion: process.env.API_VERSION
 };
 
 export default {
