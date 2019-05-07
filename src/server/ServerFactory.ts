@@ -89,7 +89,7 @@ function ServerConfigurationFactory(container: Container): (app: express.Applica
       next();
     });
 
-    app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerConfig, swaggerOpts));
+    app.use('/api/v2/_docs', swaggerUi.serve, swaggerUi.setup(swaggerConfig, swaggerOpts));
   };
 }
 
