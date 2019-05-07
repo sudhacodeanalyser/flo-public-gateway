@@ -11,6 +11,7 @@ stages:
   - deploy
 
 before_script:
+  - export DOCKER_HOST=tcp://localhost:2375
   - apk add --no-cache make bash # TODO: this should be part of the compose image
   - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
   - |
