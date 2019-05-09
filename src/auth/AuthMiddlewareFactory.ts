@@ -16,7 +16,8 @@ class AuthMiddlewareFactory {
       try {
         const logger = req.log;
         const token = req.get('Authorization');
-        const methodId = req.method + req.route.path;
+        const path = req.route.path.split('/').map((p: string) => p.replace(/:.+/g, '$')).join('/');
+        const methodId = req.method + path;
         const params = getParams !== undefined && (await getParams(req));
         const authResponse = await axios({
           method: 'post',
