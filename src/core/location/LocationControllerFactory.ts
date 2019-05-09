@@ -8,11 +8,16 @@ import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddle
 import * as t from 'io-ts';
 import { parseExpand, httpController, createMethod, deleteMethod } from '../api/controllerUtils';
 import { NonEmptyArray } from '../api/validator/NonEmptyArray';
-
+import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
+import Request from '../api/Request';
 
 
 export function LocationControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
+  const authMiddlewareFactory = container.get<AuthMiddlewareFactory>('AuthMiddlewareFactory');
+  const authWithId = authMiddlewareFactory.create(async ({ params: { id } }: Request) => ({ location_id: id }));
+  const authWithLocationId = authMiddlewareFactory.create(async ({ params: { locationId } }: Request) => ({ location_id: locationId }));
+
 
   @httpController({ version: apiVersion }, '/locations')
   class LocationController extends BaseHttpController {
@@ -24,6 +29,9 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
 
     @httpPost(
       '/',
+      authMiddlewareFactory.create(
+        async ({ body }: Request) => ({ account_id: _.get(body, 'account.id', null) })
+      ),
       reqValidator.create(t.type({
         body: LocationCreateValidator
       }))
@@ -35,6 +43,7 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
 
     @httpGet(
       '/:id',
+      authWithId,
       reqValidator.create(t.type({
         params: t.type({
           id: t.string
@@ -52,6 +61,7 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
 
     @httpPost(
       '/:id',
+      authWithId,
       reqValidator.create(t.type({
         params: t.type({
           id: t.string
@@ -65,6 +75,7 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
 
     @httpDelete(
       '/:id',
+      authWithId,
       reqValidator.create(t.type({
         params: t.type({
           id: t.string
@@ -78,6 +89,7 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
 
     @httpPut(
       '/:locationId/user-roles/:userId',
+      authWithLocationId,
       reqValidator.create(t.type({
         params: t.type({
           locationId: t.string,
@@ -95,6 +107,7 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
 
     @httpDelete(
       '/:locationId/user-roles/:userId',
+      authWithLocationId,
       reqValidator.create(t.type({
         params: t.type({
           locationId: t.string,
