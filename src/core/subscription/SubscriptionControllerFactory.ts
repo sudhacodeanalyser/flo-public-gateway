@@ -5,9 +5,16 @@ import { Subscription, SubscriptionCreateValidator, SubscriptionCreate } from '.
 import SubscriptionService from './SubscriptionService';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
 import { httpController, parseExpand, createMethod, deleteMethod } from '../api/controllerUtils';
+import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
+import Request from '../api/Request';
 
 export function SubscriptionControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
+  const authMiddlewareFactory = container.get<AuthMiddlewareFactory>('AuthMiddlewareFactory');
+  // TODO: Figure out what resource role (e.g. location owner, account owner) is necessary
+  // to authorize subscription requests. This currently will only require a valid token, regardless
+  // of which location or account for which you are creating the subscription.
+  const auth = authMiddlewareFactory.create();
 
   @httpController({ version: apiVersion }, '/subscriptions')
   class SubscriptionController extends BaseHttpController {
@@ -19,6 +26,7 @@ export function SubscriptionControllerFactory(container: Container, apiVersion: 
 
     @httpPost(
       '/',
+      auth,
       reqValidator.create(t.type({
         body: SubscriptionCreateValidator
       }))
@@ -29,6 +37,7 @@ export function SubscriptionControllerFactory(container: Container, apiVersion: 
     }
 
     @httpGet('/:id',
+      auth,
       reqValidator.create(t.type({
         params: t.type({
           id: t.string
@@ -46,6 +55,7 @@ export function SubscriptionControllerFactory(container: Container, apiVersion: 
 
     @httpDelete(
       '/:id',
+      auth,
       reqValidator.create(t.type({
         params: t.type({
           id: t.string
