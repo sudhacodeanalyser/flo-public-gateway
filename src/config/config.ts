@@ -14,7 +14,7 @@ function getDefaults(): { [key: string]: any } {
         enforceSSL: false,
         dynamoTablePrefix: 'dev_',
         apiVersion: 2,
-        authUrl: 'http://localhost:8000/api/v1/accesscontrol/authorize'
+        authUrl: 'https://api-dev.flocloud.co/api/v1/accesscontrol/authorize'
       };
   }
 }
