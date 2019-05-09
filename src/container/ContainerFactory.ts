@@ -5,6 +5,7 @@ import config from '../config/config';
 import loggerFactoryContainerModule from '../logging/containerModule';
 import validationContainerModule from '../validation/containerModule';
 import dynamoDbContainerModule from '../database/dynamo/containerModule';
+import authContainerModule from '../auth/containerModule';
 
 // Core container modules
 import coreContainerModules from '../core/containerModule';
@@ -17,6 +18,7 @@ export default function ContainerFactory(container: Container = new Container())
     loggerFactoryContainerModule,
     validationContainerModule,
     dynamoDbContainerModule,
+    authContainerModule,
     ...coreContainerModules
   );
 

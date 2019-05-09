@@ -13,7 +13,8 @@ function getDefaults(): { [key: string]: any } {
         appName: 'flo-public-gateway-local',
         enforceSSL: false,
         dynamoTablePrefix: 'dev_',
-        apiVersion: 2
+        apiVersion: 2,
+        authUrl: 'http://localhost:8000/api/v1/accesscontrol/authorize'
       };
   }
 }
@@ -23,7 +24,8 @@ const config = {
   port: process.env.PORT,
   enforceSSL: process.env.enforceSSL,
   dynamoTablePrefix: process.env.DYNAMO_TABLE_PREFIX,
-  apiVersion: process.env.API_VERSION
+  apiVersion: process.env.API_VERSION,
+  authUrl: process.env.AUTH_URL
 };
 
 export default {
