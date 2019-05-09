@@ -14,7 +14,7 @@ export function SubscriptionControllerFactory(container: Container, apiVersion: 
   // TODO: Figure out what resource role (e.g. location owner, account owner) is necessary
   // to authorize subscription requests. This currently will only require a valid token, regardless
   // of which location or account for which you are creating the subscription.
-  const auth = authMiddlewareFactory.create();
+  const auth = authMiddlewareFactory.create(undefined, 'ALL/subscriptions');
 
   @httpController({ version: apiVersion }, '/subscriptions')
   class SubscriptionController extends BaseHttpController {

@@ -11,13 +11,12 @@ type GetParams = (req: Request) => Promise<{ [param: string]: any }>;
 class AuthMiddlewareFactory {
   @inject('AuthUrl') private authUrl: string;
 
-  public create(getParams?: GetParams): express.Handler {
+  public create(getParams?: GetParams, methodId?: string): express.Handler {
     return async (req: Request, res: express.Response, next: express.NextFunction): Promise<void> => {
       try {
         const logger = req.log;
         const token = req.get('Authorization');
-        const path = req.route.path.split('/').map((p: string) => p.replace(/:.+/g, '$')).join('/');
-        const methodId = req.method + path;
+        const path = methodId || req.route.path.split('/').map((p: string) => p.replace(/:.+/g, '$')).join('/');
         const params = getParams !== undefined && (await getParams(req));
         const authResponse = await axios({
           method: 'post',
@@ -27,7 +26,7 @@ class AuthMiddlewareFactory {
             Authorization: token
           },
           data: {
-            method_id: methodId,
+            method_id: methodId || (req.method + path),
             params
           }
         });
