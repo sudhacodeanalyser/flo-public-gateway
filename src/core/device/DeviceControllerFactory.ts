@@ -3,11 +3,15 @@ import { inject, Container } from 'inversify';
 import { Device, DeviceUpdate, DeviceUpdateValidator } from '../api/api';
 import DeviceService from './DeviceService';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
+import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import * as t from 'io-ts';
 import { httpController, parseExpand, deleteMethod } from '../api/controllerUtils';
+import Request from '../api/Request';
 
 export function DeviceControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
+  const authMiddlewareFactory = container.get<AuthMiddlewareFactory>('AuthMiddlewareFactory');
+  const authWithId = authMiddlewareFactory.create(async ({ params: { id } }: Request) => ({ icd_id: id }));
 
   @httpController({ version: apiVersion }, '/devices')
   class DeviceController extends BaseHttpController {
@@ -18,7 +22,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     }
 
     @httpGet('/:id',
-      // TODO refine validations
+      authWithId,
       reqValidator.create(t.type({
         params: t.type({
           id: t.string
@@ -35,6 +39,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     }
 
     @httpPost('/:id',
+      authWithId,
       reqValidator.create(t.type({
         params: t.type({
           id: t.string
@@ -49,6 +54,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     }
 
     @httpDelete('/:id',
+      authWithId,
       reqValidator.create(t.type({
         params: t.type({
           id: t.string

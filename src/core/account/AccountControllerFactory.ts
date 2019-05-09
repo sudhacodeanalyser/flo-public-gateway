@@ -6,9 +6,13 @@ import { parseExpand, httpController, deleteMethod } from '../api/controllerUtil
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
 import { Account, AccountUserRole } from '../api/api';
 import { NonEmptyArray } from '../api/validator/NonEmptyArray';
+import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
+import Request from '../api/Request';
 
 export function AccountControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
+  const authMiddlewareFactory = container.get<AuthMiddlewareFactory>('AuthMiddlewareFactory');
+  const authWithId = authMiddlewareFactory.create(async ({ params: { id } }: Request) => ({ account_id: id }));
 
   @httpController({ version: apiVersion }, '/accounts')
   class AccountController extends BaseHttpController {
@@ -19,6 +23,7 @@ export function AccountControllerFactory(container: Container, apiVersion: numbe
     }
 
     @httpGet('/:id',
+      authWithId,
       reqValidator.create(t.type({
         params: t.type({
           id: t.string
@@ -35,6 +40,7 @@ export function AccountControllerFactory(container: Container, apiVersion: numbe
     }
 
     @httpDelete('/:id',
+      authWithId,
       reqValidator.create(t.type({
         params: t.type({
           id: t.string
@@ -47,6 +53,7 @@ export function AccountControllerFactory(container: Container, apiVersion: numbe
     }
 
     @httpPost('/:id/user-roles/:userId',
+      authWithId,
       reqValidator.create(t.type({
         params: t.type({
           id: t.string,

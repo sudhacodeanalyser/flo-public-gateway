@@ -5,9 +5,13 @@ import UserService from './UserService';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
 import { User, UserUpdateValidator, UserUpdate } from '../api/api';
 import { httpController, parseExpand, deleteMethod } from '../api/controllerUtils';
+import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
+import Request from '../api/Request';
 
 export function UserControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
+  const authMiddlewareFactory = container.get<AuthMiddlewareFactory>('AuthMiddlewareFactory');
+  const authWithId = authMiddlewareFactory.create(async ({ params: { id } }: Request) => ({ user_id: id }));
 
   @httpController({ version: apiVersion }, '/users')
   class UserController extends BaseHttpController {
@@ -19,6 +23,7 @@ export function UserControllerFactory(container: Container, apiVersion: number):
 
     @httpPost(
       '/:id',
+      authWithId,
       reqValidator.create(t.type({
         params: t.type({
           id: t.string
@@ -31,6 +36,7 @@ export function UserControllerFactory(container: Container, apiVersion: number):
     }
 
     @httpGet('/:id',
+      authWithId,
       reqValidator.create(t.type({
         params: t.type({
           id: t.string
@@ -48,6 +54,7 @@ export function UserControllerFactory(container: Container, apiVersion: number):
 
     @httpDelete(
       '/:id',
+      authWithId,
       reqValidator.create(t.type({
         params: t.type({
           id: t.string
