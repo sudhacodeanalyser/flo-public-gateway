@@ -1,14 +1,10 @@
 paths:
   /ping:
-
-    servers:
-      - url: /
-        description: Override base path for all operations with the /ping path
-
     get:
       summary: Ping endpoint.
       tags:
         - ping
+      security: [] # No Security
       produces:
         - application/json
       responses:

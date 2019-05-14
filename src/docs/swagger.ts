@@ -18,7 +18,12 @@ export default swaggerJsDoc({
       {
         url: `/api/v${config.apiVersion}`
       }
-    ]
+    ],
+    security: [
+      {
+        authorizationHeader: []
+      }
+    ],
   },
   apis: [
     './dist/**/*.yaml'
