@@ -1,3 +1,4 @@
+import _ from 'lodash';
 import { inject, injectable } from 'inversify';
 import Request from '../core/api/Request';
 import express from 'express';
@@ -18,6 +19,11 @@ class AuthMiddlewareFactory {
         const token = req.get('Authorization');
         const path = methodId || req.route.path.split('/').map((p: string) => p.replace(/:.+/g, '$')).join('/');
         const params = getParams !== undefined ? (await getParams(req)) : undefined;
+
+        if (_.isEmpty(token)) {
+          return next(new UnauthorizedError('Missing or invalid access token.'));
+        }
+
         const authResponse = await axios({
           method: 'post',
           url: this.authUrl,
