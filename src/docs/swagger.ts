@@ -1,5 +1,6 @@
 import swaggerJsDoc from 'swagger-jsdoc';
 import pkg from 'pjson';
+import config from '../config/config';
 
 export const swaggerOpts = {
   customSiteTitle: `${pkg.name} - ${pkg.version}`
@@ -15,7 +16,7 @@ export default swaggerJsDoc({
     },
     servers: [
       {
-        url: '/api/v1'
+        url: `/api/v${config.apiVersion}`
       }
     ]
   },
