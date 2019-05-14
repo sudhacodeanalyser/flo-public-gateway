@@ -13,13 +13,14 @@ import LoggerFactory from '../logging/LoggerFactory';
 import Logger from 'bunyan';
 import Request from '../core/api/Request';
 import ExtendableError from '../core/api/error/ExtendableError';
+import Config from '../config/config';
 
 import swaggerUi from 'swagger-ui-express';
 import swaggerConfig, { swaggerOpts } from '../docs/swagger';
 
 function ServerConfigurationFactory(container: Container): (app: express.Application) => void {
   return (app: express.Application) => {
-    const config = container.get('Config');
+    const config = container.get<typeof Config>('Config');
 
     app.set('strict routing', true);
     app.set('case sensitive routing', true);
@@ -48,7 +49,6 @@ function ServerConfigurationFactory(container: Container): (app: express.Applica
 
     app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
       res.setHeader('x-request-id', uuid.v4());
-      
       next();
     });
 
@@ -84,7 +84,7 @@ function ServerConfigurationFactory(container: Container): (app: express.Applica
       next();
     });
 
-    app.use('/api/v2/_docs', swaggerUi.serve, swaggerUi.setup(swaggerConfig, swaggerOpts));
+    app.use(`/api/v${config.apiVersion}/_docs`, swaggerUi.serve, swaggerUi.setup(swaggerConfig, swaggerOpts));
   };
 }
 

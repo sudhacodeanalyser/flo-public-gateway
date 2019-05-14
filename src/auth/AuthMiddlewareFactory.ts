@@ -17,7 +17,7 @@ class AuthMiddlewareFactory {
         const logger = req.log;
         const token = req.get('Authorization');
         const path = methodId || req.route.path.split('/').map((p: string) => p.replace(/:.+/g, '$')).join('/');
-        const params = getParams !== undefined && (await getParams(req));
+        const params = getParams !== undefined ? (await getParams(req)) : undefined;
         const authResponse = await axios({
           method: 'post',
           url: this.authUrl,
@@ -32,7 +32,6 @@ class AuthMiddlewareFactory {
         });
 
         if (authResponse.status === 200) {
-          
           if (logger !== undefined) {
             logger.info({ token: authResponse.data });
           }
