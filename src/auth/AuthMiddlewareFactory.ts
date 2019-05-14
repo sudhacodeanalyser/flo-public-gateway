@@ -32,7 +32,7 @@ class AuthMiddlewareFactory {
         });
 
         if (authResponse.status === 200) {
-          
+
           if (logger !== undefined) {
             logger.info({ token: authResponse.data });
           }

@@ -49,7 +49,11 @@ function ServerConfigurationFactory(container: Container): (app: express.Applica
 
     app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
       res.setHeader('x-request-id', uuid.v4());
+<<<<<<< HEAD
 
+=======
+      
+>>>>>>> master
       next();
     });
 
