@@ -23,6 +23,10 @@ paths:
                 oneOf:
                   - $ref: '#/components/schemas/Account'
                   - $ref: '#/components/schemas/Empty'
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        403:
+          $ref: '#/components/responses/ForbiddenError'
 
     delete:
       summary: Deletes an Account by ID.
@@ -39,6 +43,10 @@ paths:
                 $ref: '#/components/schemas/Empty'
         204:
           description: An Account with the specified ID was not found.
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        403:
+          $ref: '#/components/responses/ForbiddenError'
 
   /accounts/{id}/user-roles/{userId}:
     parameters:
@@ -73,6 +81,10 @@ paths:
           description: The Account User Role was successfully updated.
           schema:
             $ref: '#/components/schemas/AccountUserRole'
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        403:
+          $ref: '#/components/responses/ForbiddenError'
 
 components:
   schemas:

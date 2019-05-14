@@ -26,6 +26,11 @@ paths:
                 oneOf:
                   - $ref: '#/components/schemas/User'
                   - $ref: '#/components/schemas/Empty'
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        403:
+          $ref: '#/components/responses/ForbiddenError'
+
     delete:
       summary: Deletes a User by ID.
       tags:
@@ -45,6 +50,10 @@ paths:
           description: The User must not be an Account owner.
           schema:
             $ref: '#/components/schemas/Error'
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        403:
+          $ref: '#/components/responses/ForbiddenError'
 
     post:
       summary: Updates a User by ID (partially).
@@ -63,6 +72,10 @@ paths:
           description: The User was successfully updated.
           schema:
             $ref: '#/components/schemas/User'
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        403:
+          $ref: '#/components/responses/ForbiddenError'
         409:
           description: A User with the specified ID was not found.
           schema:
