@@ -19,6 +19,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Location'
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        403:
+          $ref: '#/components/responses/ForbiddenError'
 
   /locations/{id}:
     parameters:
@@ -46,6 +50,11 @@ paths:
                 oneOf:
                   - $ref: '#/components/schemas/Location'
                   - $ref: '#/components/schemas/Empty'
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        403:
+          $ref: '#/components/responses/ForbiddenError'
+
     delete:
       summary: Deletes a Location by ID.
       tags:
@@ -61,6 +70,10 @@ paths:
                 $ref: '#/components/schemas/Empty'
         204:
           description: A Location with the specified ID was not found.
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        403:
+          $ref: '#/components/responses/ForbiddenError'
 
     post:
       summary: Updates a Location by ID (partially).
@@ -79,6 +92,10 @@ paths:
           description: The Location was successfully updated.
           schema:
             $ref: '#/components/schemas/Location'
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        403:
+          $ref: '#/components/responses/ForbiddenError'
         409:
           description: A Location with the specified ID was not found.
           schema:
@@ -117,6 +134,10 @@ paths:
           description: The Location User Role was successfully added.
           schema:
             $ref: '#/components/schemas/LocationUserRole'
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        403:
+          $ref: '#/components/responses/ForbiddenError'
 
     delete:
       summary: Deletes a Location User Role given the Location ID and User ID.
@@ -127,6 +148,10 @@ paths:
       responses:
         204:
           description: The Location User Role was successfully deleted or not found.
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        403:
+          $ref: '#/components/responses/ForbiddenError'
 
 components:
   schemas:
