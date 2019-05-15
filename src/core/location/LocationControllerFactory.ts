@@ -2,7 +2,7 @@ import _ from 'lodash';
 import express from 'express';
 import { interfaces, httpGet, httpPost, httpDelete, httpPut, queryParam, requestParam, requestBody, BaseHttpController } from 'inversify-express-utils';
 import { inject, Container } from 'inversify';
-import { Location, LocationUpdateValidator, LocationUpdate, LocationUserRole, LocationCreateValidator } from '../api/api';
+import { Location, LocationUpdateValidator, LocationUpdate, LocationUserRole, LocationCreateValidator } from '../api';
 import LocationService from './LocationService';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
 import * as t from 'io-ts';

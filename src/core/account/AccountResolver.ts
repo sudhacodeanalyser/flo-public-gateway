@@ -1,6 +1,6 @@
 import { inject, injectable } from 'inversify';
 import { AccountRecordData, AccountRecord } from './AccountRecord';
-import { Account, AccountUserRole, DependencyFactoryFactory } from '../api/api';
+import { Account, AccountUserRole, DependencyFactoryFactory } from '../api';
 import { Resolver, PropertyResolverMap, LocationResolver, UserResolver } from '../resolver';
 import AccountTable from './AccountTable';
 import UserAccountRoleTable from '../user/UserAccountRoleTable';

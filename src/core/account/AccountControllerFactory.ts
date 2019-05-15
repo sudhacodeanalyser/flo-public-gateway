@@ -4,7 +4,7 @@ import { inject, Container } from 'inversify';
 import AccountService from './AccountService';
 import { parseExpand, httpController, deleteMethod } from '../api/controllerUtils';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
-import { Account, AccountUserRole } from '../api/api';
+import { Account, AccountUserRole } from '../api';
 import { NonEmptyArray } from '../api/validator/NonEmptyArray';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import Request from '../api/Request';

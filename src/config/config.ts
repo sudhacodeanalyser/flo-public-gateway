@@ -25,6 +25,8 @@ const config = {
   port: process.env.PORT,
   enforceSSL: process.env.enforceSSL,
   dynamoTablePrefix: process.env.DYNAMO_TABLE_PREFIX,
+  stripeSecretKey: process.env.STRIPE_SECRET_KEY,
+  stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
   apiVersion: process.env.API_VERSION,
   authUrl: process.env.AUTH_URL
 };

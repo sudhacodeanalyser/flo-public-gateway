@@ -1,4 +1,4 @@
-import { Timestamped, SubscriptionPlan } from "../api/api";
+import { Timestamped, SubscriptionPlan } from '../api';
 
 export interface SubscriptionPlanRecordData extends Timestamped {
   plan_id: string

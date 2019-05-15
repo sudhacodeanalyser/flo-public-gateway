@@ -1,4 +1,4 @@
-import { Timestamped, UserAccountRole, AccountUserRole } from '../api/api';
+import { Timestamped, UserAccountRole, AccountUserRole } from '../api';
 
 export interface UserAccountRoleRecordData extends Timestamped {
   user_id: string,

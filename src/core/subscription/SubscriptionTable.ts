@@ -24,6 +24,21 @@ class SubscriptionTable extends DatabaseTable<SubscriptionRecordData> {
 
     return result.length ? result[0] : null;
   }
+
+  public async getByProviderCustomerId(customerId: string): Promise<SubscriptionRecordData | null> {
+    const result = await this.query<DynamoDbQuery>({
+      IndexName: 'ProviderCustomerId',
+      KeyConditionExpression: '#provider_customer_id = :provider_customer_id',
+      ExpressionAttributeNames: {
+        '#provider_customer_id': 'provider_customer_id'
+      },
+      ExpressionAttributeValues: {
+        ':provider_customer_id': customerId
+      }
+    });
+
+    return result.length ? result[0] : null;
+  }
 }
 
 export default SubscriptionTable;

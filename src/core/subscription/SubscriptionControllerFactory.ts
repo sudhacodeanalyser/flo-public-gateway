@@ -1,12 +1,15 @@
 import { interfaces, httpGet, httpPost, httpDelete, queryParam, requestParam, requestBody, BaseHttpController } from 'inversify-express-utils';
-import { inject, Container } from 'inversify';
+import { inject, Container, multiInject } from 'inversify';
 import * as t from 'io-ts';
-import { Subscription, SubscriptionCreateValidator, SubscriptionCreate } from '../api/api';
+import _ from 'lodash';
+import { Subscription, SubscriptionCreateValidator, SubscriptionCreate, SubscriptionProviderWebhookHandler } from '../api';
 import SubscriptionService from './SubscriptionService';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
 import { httpController, parseExpand, createMethod, deleteMethod } from '../api/controllerUtils';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import Request from '../api/Request';
+import { SubscriptionResponse, Responses } from '../api/response';
+import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 
 export function SubscriptionControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
@@ -19,7 +22,8 @@ export function SubscriptionControllerFactory(container: Container, apiVersion: 
   @httpController({ version: apiVersion }, '/subscriptions')
   class SubscriptionController extends BaseHttpController {
     constructor(
-      @inject('SubscriptionService') private subscriptionService: SubscriptionService
+      @inject('SubscriptionService') private subscriptionService: SubscriptionService,
+      @multiInject('SubscriptionProviderWebhookHandler') private webhookHandlers: SubscriptionProviderWebhookHandler[]
     ) {
       super();
     }
@@ -32,8 +36,10 @@ export function SubscriptionControllerFactory(container: Container, apiVersion: 
       }))
     )
     @createMethod
-    private async createSubscription(@requestBody() subscription: SubscriptionCreate): Promise<Subscription | {}> {
-      return this.subscriptionService.createSubscription(subscription);
+    private async createSubscription(@requestBody() subscription: SubscriptionCreate): Promise<SubscriptionResponse> {
+      const createdSubscription = await this.subscriptionService.createSubscription(subscription);
+
+      return this.toResponse(createdSubscription);
     }
 
     @httpGet('/:id',
@@ -47,10 +53,15 @@ export function SubscriptionControllerFactory(container: Container, apiVersion: 
         })
       }))
     )
-    private async getSubscription(@requestParam('id') id: string, @queryParam('expand') expand?: string): Promise<Subscription | {}> {
+    private async getSubscription(@requestParam('id') id: string, @queryParam('expand') expand?: string): Promise<SubscriptionResponse | {}> {
       const expandProps = parseExpand(expand);
+      const subscription = await this.subscriptionService.getSubscriptionById(id, expandProps);
 
-      return this.subscriptionService.getSubscriptionById(id, expandProps);
+      if (_.isEmpty(subscription)) {
+        return subscription;
+      }
+
+      return this.toResponse(subscription as Subscription);
     }
 
     @httpDelete(
@@ -65,6 +76,26 @@ export function SubscriptionControllerFactory(container: Container, apiVersion: 
     @deleteMethod
     private async removeSubscription(@requestParam('id') id: string): Promise<void> {
       return this.subscriptionService.removeSubscription(id);
+    }
+
+    @httpPost(
+      '/webhooks/stripe',
+      'StripeWebhookAuthMiddleware'
+    )
+    private async handleStripeWebhook(event: { [key: string]: any }): Promise<void> {
+      return this.getWebhookHandler('stripe').handle(event);
+    }
+
+    private toResponse(subscription: Subscription): SubscriptionResponse {
+      return Responses.Subscription.fromModel(subscription as Subscription);
+    }
+
+    private getWebhookHandler(providerName: string): SubscriptionProviderWebhookHandler {
+      const webhookHandler = _.find(this.webhookHandlers, ['name', providerName]);
+      if (!webhookHandler) {
+        throw new ResourceDoesNotExistError('Provider does not exist.');
+      }
+      return webhookHandler;
     }
   }
 

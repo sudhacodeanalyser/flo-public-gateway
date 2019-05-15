@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import { Location, Timestamped } from '../api/api';
+import { Location, Timestamped } from '../api';
 
 export enum NoYesUnsure {
   NO = 0,

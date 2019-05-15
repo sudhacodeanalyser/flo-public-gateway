@@ -35,6 +35,20 @@ function ServerConfigurationFactory(container: Container): (app: express.Applica
       }
     }));
 
+    app.use((req: Request, res: express.Response, next: express.NextFunction) => {
+      req.rawBody = '';
+
+      req.on('data', (chunk) => {
+        req.rawBody += chunk;
+      });
+
+      req.on('end', () => {
+        next();
+      });
+
+      next();
+    });
+
     app.use(bodyParser.json());
 
     // if (config.enforceSSL) {

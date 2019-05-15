@@ -1,4 +1,4 @@
-import { Expandable, TimestampedModel, User, Account, Device, Subscription } from '../api';
+import { Expandable, TimestampedModel, User, Account, Device, Subscription } from '../../api';
 import * as t from 'io-ts';
 
 export interface LocationUserRole {
