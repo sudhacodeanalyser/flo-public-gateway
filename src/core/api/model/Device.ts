@@ -1,5 +1,5 @@
 import * as t from 'io-ts';
-import { Expandable, TimestampedModel, Location } from '../api';
+import { Expandable, TimestampedModel, Location } from '../../api';
 
 export enum DeviceType {
   FLO_DEVICE = 'flo_device',

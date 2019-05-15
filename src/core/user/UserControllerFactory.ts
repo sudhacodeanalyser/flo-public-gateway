@@ -3,7 +3,7 @@ import { interfaces, httpGet, httpPost, httpDelete, queryParam, requestParam, re
 import { inject, Container } from 'inversify';
 import UserService from './UserService';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
-import { User, UserUpdateValidator, UserUpdate } from '../api/api';
+import { User, UserUpdateValidator, UserUpdate } from '../api';
 import { httpController, parseExpand, deleteMethod } from '../api/controllerUtils';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import Request from '../api/Request';

@@ -19,10 +19,24 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Subscription'
+        400:
+          description: |
+            This error can happen if:
+              - The User is not the Account Owner
+              - A Subscription already exists for the given Location
+          schema:
+            $ref: '#/components/schemas/Error'
         401:
           $ref: '#/components/responses/UnauthorizedError'
         403:
           $ref: '#/components/responses/ForbiddenError'
+        409:
+          description: |
+            This error can happen if:
+              - A User with the specified ID was not found
+              - A Location with the specified ID was not found
+          schema:
+            $ref: '#/components/schemas/Error'
 
   /subscriptions/{id}:
     parameters:
@@ -104,6 +118,8 @@ components:
             id:
               type: string
               format: uuid
+        isActive:
+          type: boolean
         plan:
           type: object
           properties:

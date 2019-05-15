@@ -1,5 +1,5 @@
 import { injectable, inject } from 'inversify';
-import { Account, AccountUserRole } from '../api/api';
+import { Account, AccountUserRole } from '../api';
 import { AccountResolver } from '../resolver';
 
 @injectable()

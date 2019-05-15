@@ -1,5 +1,5 @@
 import { injectable, inject } from 'inversify';
-import { Device, DeviceUpdate } from '../api/api';
+import { Device, DeviceUpdate } from '../api';
 import { DeviceResolver } from '../resolver';
 
 @injectable()

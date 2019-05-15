@@ -6,6 +6,8 @@ services:
     environment:
       NODE_ENV: "${NODE_ENV:-development}"
       DYNAMO_TABLE_PREFIX: "${DYNAMO_TABLE_PREFIX}"
+      STRIPE_SECRET_KEY: "${STRIPE_SECRET_KEY}"
+      STRIPE_WEBHOOK_SECRET: "${STRIPE_WEBHOOK_SECRET}"
       API_VERSION: "${API_VERSION}"
       AUTH_URL: "${AUTH_URL}"
       AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID-empty}"

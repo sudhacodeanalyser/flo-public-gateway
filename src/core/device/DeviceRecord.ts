@@ -1,6 +1,6 @@
 import { $enum } from 'ts-enum-util';
 // These should likely go into a lookup table
-import { Device, DeviceType, DeviceModelType } from '../api/api';
+import { Device, DeviceType, DeviceModelType } from '../api';
 
 export enum DeviceTypeData {
   FLO_DEVICE = 1,
