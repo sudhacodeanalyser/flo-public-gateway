@@ -1,10 +1,9 @@
-import _ from 'lodash';
+import express from 'express';
 import { inject, injectable } from 'inversify';
 import { BaseMiddleware } from 'inversify-express-utils';
-import express from 'express';
 import Stripe from 'stripe';
-import Request from '../../core/api/Request';
 import UnauthorizedError from '../../auth/UnauthorizedError';
+import Request from '../../core/api/Request';
 
 @injectable()
 class StripeWebhookAuthMiddleware extends BaseMiddleware {
@@ -28,7 +27,7 @@ class StripeWebhookAuthMiddleware extends BaseMiddleware {
       this.stripeClient.webhooks.constructEvent(payload, signature, this.stripeWebhookSecret);
       next();
     } catch (err) {
-      if (err.type == 'StripeSignatureVerificationError') {
+      if (err.type === 'StripeSignatureVerificationError') {
         return next(new UnauthorizedError('Invalid signature.'));
       }
       return next(err);

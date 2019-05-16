@@ -1,13 +1,13 @@
 import { inject, injectable } from 'inversify';
 import uuid from 'uuid';
-import { SubscriptionRecord, SubscriptionRecordData } from './SubscriptionRecord';
-import { SubscriptionPlanRecordData, SubscriptionPlanRecord } from './SubscriptionPlanRecord';
-import { DependencyFactoryFactory, Subscription, PartialBy } from '../api';
-import { Resolver, PropertyResolverMap, LocationResolver } from '../resolver';
 import { fromPartialRecord } from '../../database/Patch';
-import SubscriptionTable from '../subscription/SubscriptionTable';
-import SubscriptionPlanTable from '../subscription/SubscriptionPlanTable';
+import { DependencyFactoryFactory, PartialBy, Subscription } from '../api';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
+import { LocationResolver, PropertyResolverMap, Resolver } from '../resolver';
+import SubscriptionPlanTable from '../subscription/SubscriptionPlanTable';
+import SubscriptionTable from '../subscription/SubscriptionTable';
+import { SubscriptionPlanRecord, SubscriptionPlanRecordData } from './SubscriptionPlanRecord';
+import { SubscriptionRecord, SubscriptionRecordData } from './SubscriptionRecord';
 
 @injectable()
 class SubscriptionResolver extends Resolver<Subscription> {

@@ -1,4 +1,4 @@
-import { Subscription, SubscriptionProviderInfo, SubscriptionCreate, User } from '../api';
+import { Subscription, SubscriptionCreate, SubscriptionProviderInfo, User } from '../api';
 
 type Id = { id: string };
 export type SubscriptionData = SubscriptionCreate & Id;

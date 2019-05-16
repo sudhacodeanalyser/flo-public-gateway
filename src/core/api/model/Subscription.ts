@@ -1,5 +1,5 @@
-import { Expandable, Location, TimestampedModel, User } from '../../api';
 import * as t from 'io-ts';
+import { Expandable, Location, TimestampedModel } from '../../api';
 
 export interface SubscriptionPlan  extends TimestampedModel {
   id: string,

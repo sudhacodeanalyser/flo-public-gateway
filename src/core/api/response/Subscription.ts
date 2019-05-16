@@ -20,7 +20,7 @@ export namespace Responses {
         providerInfo: {
           ...(_.pickBy(subscription.provider.data, (value, key) => key !== 'customerId' && key !== 'subscriptionId'))
         }
-      } as SubscriptionResponse;
+      } as any as SubscriptionResponse;
     }
   }
 }

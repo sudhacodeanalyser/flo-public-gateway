@@ -1,15 +1,14 @@
-import { interfaces, httpGet, httpPost, httpDelete, queryParam, requestParam, requestBody, BaseHttpController } from 'inversify-express-utils';
-import { inject, Container, multiInject } from 'inversify';
+import { Container, inject, multiInject } from 'inversify';
+import { BaseHttpController, httpDelete, httpGet, httpPost, interfaces, queryParam, requestBody, requestParam } from 'inversify-express-utils';
 import * as t from 'io-ts';
 import _ from 'lodash';
-import { Subscription, SubscriptionCreateValidator, SubscriptionCreate, SubscriptionProviderWebhookHandler } from '../api';
-import SubscriptionService from './SubscriptionService';
-import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
-import { httpController, parseExpand, createMethod, deleteMethod } from '../api/controllerUtils';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
-import Request from '../api/Request';
-import { SubscriptionResponse, Responses } from '../api/response';
+import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
+import { Subscription, SubscriptionCreate, SubscriptionCreateValidator, SubscriptionProviderWebhookHandler } from '../api';
+import { createMethod, deleteMethod, httpController, parseExpand } from '../api/controllerUtils';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
+import { Responses, SubscriptionResponse } from '../api/response';
+import SubscriptionService from './SubscriptionService';
 
 export function SubscriptionControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
