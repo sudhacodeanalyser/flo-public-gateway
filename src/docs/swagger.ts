@@ -3,25 +3,29 @@ import pkg from 'pjson';
 import config from '../config/config';
 
 export const swaggerOpts = {
-  customSiteTitle: `${pkg.name} - ${pkg.version}`
+  customSiteTitle: `Flo Public Gateway`
 }
 
 export default swaggerJsDoc({
   swaggerDefinition: {
     openapi: '3.0.0',
     info: {
-      title: pkg.name,
-      version: pkg.version,
-      description: pkg.description
+      title: 'Flo Technologies Public Gateway',
+      description: 'Public Api providing client access to account information.<br/>Multiple versions of API are accessible side by side.<br/><br/><strong>DO NOT</strong> use any DEPRECATED APIs, they will be removed without notice.'
     },
     servers: [
       {
-        url: `/api/v${config.apiVersion}`
+        description: 'Current',
+        url: '/'
+      },
+      {
+        description: 'Production',
+        url: 'https://api-gw.meetflo.com'
       }
     ],
     security: [
       {
-        authorizationHeader: []
+        bearerAuth: []
       }
     ],
   },

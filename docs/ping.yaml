@@ -1,27 +1,24 @@
 paths:
-  /ping:
+  /api/v2/ping:
     get:
-      summary: Ping endpoint.
+      summary: Ping Api v2 System
       tags:
-        - ping
+        - System Ops
       security: [] # No Security
       produces:
         - application/json
       responses:
         200:
-          description: An object with basic information.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Ping'
+          description: Responds with 200 OK if system is up
 
-components:
-  schemas:
-    Ping:
-      type: object
-      properties:
-        date:
-          type: string
-          format: date-time
-        app:
-          type: string
+  /api/v1/ping:
+    get:
+      summary: Ping Api v1 System
+      tags:
+        - System Ops
+      security: [] # No Security
+      produces:
+        - application/json
+      responses:
+        200:
+          description: Responds with 200 OK if system is up
