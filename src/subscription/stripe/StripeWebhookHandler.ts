@@ -41,7 +41,8 @@ class StripeWebhookHandler implements SubscriptionProviderWebhookHandler {
     if (_.isEmpty(subscription)) {
       return Promise.resolve();
     }
-    return this.subscriptionService.removeSubscription((subscription as Subscription).id);
+
+    return this.makeSubscriptionInactiveByCustomerId(customer.id);
   }
 
   private async handleSubscriptionCreated(data: any): Promise<void> {
@@ -113,13 +114,30 @@ class StripeWebhookHandler implements SubscriptionProviderWebhookHandler {
   private async handleSubscriptionDeleted(data: any): Promise<void> {
     const { object: stripeSubscription } = data;
 
-    const subscription = await this.subscriptionService.getSubscriptionByProviderCustomerId(stripeSubscription.customer);
+    return this.makeSubscriptionInactiveByCustomerId(stripeSubscription.customer);
+  }
 
-    // TODO: Do we really want to delete it? In API V1 we just update the record.
-    if (_.isEmpty(subscription)) {
+  private async makeSubscriptionInactiveByCustomerId(customerId: string): Promise<void> {
+    const maybeSubscription = await this.subscriptionService.getSubscriptionByProviderCustomerId(customerId);
+
+    if (_.isEmpty(maybeSubscription)) {
       return Promise.resolve();
     }
-    return this.subscriptionService.removeSubscription((subscription as Subscription).id);
+
+    const subscription = (maybeSubscription as Subscription);
+    const inactivePartialSubscription = {
+      provider: {
+        name: 'stripe',
+        isActive: false,
+        data: {
+          isActive: false,
+          customerId: subscription.provider.data.customerId,
+          subscriptionId: subscription.provider.data.subscriptionId
+        }
+      }
+    };
+
+    await this.subscriptionService.updateSubscription(subscription.id, inactivePartialSubscription);
   }
 }
 
