@@ -1,5 +1,5 @@
-import _ from 'lodash';
 import { inject, injectable } from 'inversify';
+import _ from 'lodash';
 import Stripe from 'stripe';
 import { Subscription, SubscriptionData, SubscriptionProvider, SubscriptionProviderInfo, User } from '../../core/api';
 import { isSubscriptionActive } from './StripeUtils';

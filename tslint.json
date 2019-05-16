@@ -6,8 +6,9 @@
   "rules": {
     "interface-name": [true, "never-prefix"],
     "interface-over-type-literal": false,
-    "no-submodule-imports": [ true, "io-ts"],
     "no-namespace": false,
+    "no-shadowed-variable": [ true, { "temporalDeadZone": false } ],
+    "no-submodule-imports": [ true, "io-ts" ],
     "object-literal-sort-keys": false,
     "ordered-imports": false,
     "promise-function-async": true,

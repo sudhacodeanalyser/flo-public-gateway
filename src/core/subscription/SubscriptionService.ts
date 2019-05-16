@@ -1,11 +1,11 @@
+import { inject, injectable, multiInject } from 'inversify';
 import _ from 'lodash';
-import { injectable, inject, multiInject } from 'inversify';
-import { Location, Omit, Subscription, SubscriptionCreate, SubscriptionProvider, User, PartialBy } from '../api';
-import { SubscriptionResolver } from '../resolver';
-import UserService from '../user/UserService';
+import { Location, PartialBy, Subscription, SubscriptionCreate, SubscriptionProvider, User } from '../api';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import ValidationError from '../api/error/ValidationError';
 import LocationService from '../location/LocationService';
+import { SubscriptionResolver } from '../resolver';
+import UserService from '../user/UserService';
 
 @injectable()
 class SubscriptionService {
