@@ -94,7 +94,8 @@ function ServerConfigurationFactory(container: Container): (app: express.Applica
       next();
     });
 
-    app.use(`/api/v${config.apiVersion}/_docs`, swaggerUi.serve, swaggerUi.setup(swaggerConfig, swaggerOpts));
+    // Swagger Documentation
+    app.use(`/docs`, swaggerUi.serve, swaggerUi.setup(swaggerConfig, swaggerOpts));
   };
 }
 
@@ -134,4 +135,3 @@ export default function ServerFactory(container: Container): InversifyExpressSer
 
   return server;
 }
-
