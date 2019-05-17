@@ -1,6 +1,4 @@
 import swaggerJsDoc from 'swagger-jsdoc';
-import pkg from 'pjson';
-import config from '../config/config';
 
 export const swaggerOpts = {
   customSiteTitle: `Flo Public Gateway`
