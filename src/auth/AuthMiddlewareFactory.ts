@@ -1,8 +1,8 @@
-import _ from 'lodash';
-import { inject, injectable } from 'inversify';
-import Request from '../core/api/Request';
-import express from 'express';
 import axios from 'axios';
+import express from 'express';
+import { inject, injectable } from 'inversify';
+import _ from 'lodash';
+import Request from '../core/api/Request';
 import ForbiddenError from './ForbiddenError';
 import UnauthorizedError from './UnauthorizedError';
 

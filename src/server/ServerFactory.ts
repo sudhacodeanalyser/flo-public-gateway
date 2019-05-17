@@ -1,22 +1,22 @@
-import express from 'express';
-import _ from 'lodash';
-import helmet from 'helmet';
 import bodyParser from 'body-parser';
+import Logger from 'bunyan';
 import cors from 'cors';
-// import enforce from 'express-sslify';
-import uuid from 'uuid';
-import { Container } from 'inversify';
+import express from 'express';
+import helmet from 'helmet';
 // tslint:disable-next-line:no-implicit-dependencies
 import { HttpError } from 'http-errors';
+import { Container } from 'inversify';
 import { InversifyExpressServer } from 'inversify-express-utils';
-import LoggerFactory from '../logging/LoggerFactory';
-import Logger from 'bunyan';
-import Request from '../core/api/Request';
-import ExtendableError from '../core/api/error/ExtendableError';
-import Config from '../config/config';
-
+import _ from 'lodash';
 import swaggerUi from 'swagger-ui-express';
+// import enforce from 'express-sslify';
+import uuid from 'uuid';
+import Config from '../config/config';
+import ExtendableError from '../core/api/error/ExtendableError';
+import Request from '../core/api/Request';
 import swaggerConfig, { swaggerOpts } from '../docs/swagger';
+import LoggerFactory from '../logging/LoggerFactory';
+
 
 function ServerConfigurationFactory(container: Container): (app: express.Application) => void {
   return (app: express.Application) => {
@@ -40,10 +40,6 @@ function ServerConfigurationFactory(container: Container): (app: express.Applica
 
       req.on('data', (chunk) => {
         req.rawBody += chunk;
-      });
-
-      req.on('end', () => {
-        next();
       });
 
       next();
