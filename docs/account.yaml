@@ -1,9 +1,9 @@
 paths:
-  /accounts/{id}:
+  /api/v2/accounts/{id}:
     get:
       summary: Retrieves an Account by ID.
       tags:
-        - accounts
+        - Accounts
       produces:
         - application/json
       parameters:
@@ -31,7 +31,7 @@ paths:
     delete:
       summary: Deletes an Account by ID.
       tags:
-        - accounts
+        - Accounts
       produces:
         - application/json
       responses:
@@ -48,7 +48,7 @@ paths:
         403:
           $ref: '#/components/responses/ForbiddenError'
 
-  /accounts/{id}/user-roles/{userId}:
+  /api/v2/accounts/{id}/user-roles/{userId}:
     parameters:
       - in: path
         name: id
@@ -67,7 +67,7 @@ paths:
     post:
       summary: Updates an Account User Role for the given Account ID and User ID.
       tags:
-        - accounts
+        - Accounts
       produces:
         - application/json
       requestBody:

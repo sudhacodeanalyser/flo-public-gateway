@@ -1,9 +1,9 @@
 paths:
-  /subscriptions:
+  /api/v2/subscriptions:
     post:
       summary: Creates a Subscription.
       tags:
-        - subscriptions
+        - Subscriptions
       produces:
         - application/json
       requestBody:
@@ -38,7 +38,7 @@ paths:
           schema:
             $ref: '#/components/schemas/Error'
 
-  /subscriptions/{id}:
+  /api/v2/subscriptions/{id}:
     parameters:
       - in: path
         name: id
@@ -51,7 +51,7 @@ paths:
     get:
       summary: Retrieves a Subscription by ID.
       tags:
-        - subscriptions
+        - Subscriptions
       produces:
         - application/json
       parameters:
@@ -73,7 +73,7 @@ paths:
     delete:
       summary: Deletes a Subscription by ID.
       tags:
-        - subscriptions
+        - Subscriptions
       produces:
         - application/json
       responses:
