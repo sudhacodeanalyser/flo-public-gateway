@@ -48,15 +48,13 @@ class StripeWebhookHandler implements SubscriptionProviderWebhookHandler {
   private async handleSubscriptionCreated(data: any): Promise<void> {
     const { object: stripeSubscription } = data;
 
-    const locationId = await this.subscriptionService
-      .getSubscriptionByProviderCustomerId(stripeSubscription.customer)
-      .then(subscription => {
-        if (!_.isEmpty(subscription)) {
-          return (subscription as Subscription).location.id;
-        }
-        return this.stripeClient.customers.retrieve(stripeSubscription.customer)
-          .then((customer: Stripe.customers.ICustomer) => customer && customer.metadata.location_id);
-      });
+    const maybeSubscription = await this.subscriptionService.getSubscriptionByProviderCustomerId(stripeSubscription.customer);
+    if (!_.isEmpty(maybeSubscription)) {
+      return Promise.resolve();
+    }
+
+    const customer = await this.stripeClient.customers.retrieve(stripeSubscription.customer);
+    const locationId = await customer && customer.metadata.location_id;
 
     if (!locationId) {
       return Promise.resolve();

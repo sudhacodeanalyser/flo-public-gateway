@@ -81,7 +81,7 @@ export function SubscriptionControllerFactory(container: Container, apiVersion: 
       '/webhooks/stripe',
       'StripeWebhookAuthMiddleware'
     )
-    private async handleStripeWebhook(event: { [key: string]: any }): Promise<void> {
+    private async handleStripeWebhook(@requestBody() event: { [key: string]: any }): Promise<void> {
       return this.getWebhookHandler('stripe').handle(event);
     }
 
