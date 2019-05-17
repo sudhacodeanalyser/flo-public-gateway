@@ -34,7 +34,6 @@
     "inversify-express-utils": "^6.3.2",
     "io-ts": "^1.8.5",
     "lodash": "^4.17.11",
-    "pjson": "^1.0.9",
     "reflect-metadata": "^0.1.13",
     "stripe": "^6.31.2",
     "swagger-jsdoc": "^3.2.9",
@@ -44,7 +43,6 @@
   },
   "devDependencies": {
     "@types/aws-sdk": "^2.7.0",
-    "@types/axios": "^0.14.0",
     "@types/body-parser": "^1.17.0",
     "@types/bunyan": "^1.8.6",
     "@types/cors": "^2.8.4",
