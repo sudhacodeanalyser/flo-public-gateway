@@ -32,11 +32,11 @@ paths:
             schema:
               $ref: '#/components/schemas/OauthPayload'
             example:
-              client_id: ffffffff-ffff-4fff-8fff-ffffffffffff
-              client_secret: ffffffff-ffff-4fff-8fff-ffffffffffff
+              client_id: string
+              client_secret: string
               grant_type: password
-              username: user@example.com
-              password: ffffffff
+              username: username
+              password: abc123
         description: Oauth descriptor.
         required: true
       x-code-samples:
@@ -48,7 +48,7 @@ paths:
             MediaType mediaType = MediaType.parse("application/json");
 
             RequestBody body = RequestBody.create(mediaType,
-            "{\"client_id\":\"ffffffff-ffff-4fff-8fff-ffffffffffff\",\"client_secret\":\"ffffffff-ffff-4fff-8fff-ffffffffffff\",\"grant_type\":\"password\",\"username\":\"user@example.com\",\"password\":\"ffffffff\"}");
+            "{\"client_id\":\"string\",\"client_secret\":\"string\",\"grant_type\":\"password\",\"username\":\"johnDoe\",\"password\":\"ffffffff\"}");
 
             Request request = new Request.Builder()
               .url("https://api.meetflo.com//api/v1/oauth2/token")
@@ -60,10 +60,10 @@ paths:
         - lang: Javascript_xhr
           source: |-
             var data = JSON.stringify({
-              "client_id": "ffffffff-ffff-4fff-8fff-ffffffffffff",
-              "client_secret": "ffffffff-ffff-4fff-8fff-ffffffffffff",
+              "client_id": "string",
+              "client_secret": "string",
               "grant_type": "password",
-              "username": "user@example.com",
+              "username": "johnDoe",
               "password": "ffffffff"
             });
 
@@ -110,11 +110,10 @@ paths:
             });
 
 
-            req.write(JSON.stringify({ client_id:
-            'ffffffff-ffff-4fff-8fff-ffffffffffff',
-              client_secret: 'ffffffff-ffff-4fff-8fff-ffffffffffff',
+            req.write(JSON.stringify({ client_id: 'string',
+              client_secret: 'string',
               grant_type: 'password',
-              username: 'user@example.com',
+              username: 'johnDoe',
               password: 'ffffffff' }));
             req.end();
         - lang: Python_python3
@@ -126,7 +125,7 @@ paths:
 
 
             payload =
-            "{\"client_id\":\"ffffffff-ffff-4fff-8fff-ffffffffffff\",\"client_secret\":\"ffffffff-ffff-4fff-8fff-ffffffffffff\",\"grant_type\":\"password\",\"username\":\"user@example.com\",\"password\":\"ffffffff\"}"
+            "{\"client_id\":\"string\",\"client_secret\":\"string\",\"grant_type\":\"password\",\"username\":\"johnDoe\",\"password\":\"ffffffff\"}"
 
 
             headers = { 'content-type': "application/json" }
@@ -150,7 +149,7 @@ paths:
 
 
             payload =
-            "{\"client_id\":\"ffffffff-ffff-4fff-8fff-ffffffffffff\",\"client_secret\":\"ffffffff-ffff-4fff-8fff-ffffffffffff\",\"grant_type\":\"password\",\"username\":\"user@example.com\",\"password\":\"ffffffff\"}"
+            "{\"client_id\":\"string\",\"client_secret\":\"string\",\"grant_type\":\"password\",\"username\":\"johnDoe\",\"password\":\"ffffffff\"}"
 
             headers = {'content-type': 'application/json'}
 
@@ -165,7 +164,7 @@ paths:
             curl --request POST \
               --url https://api.meetflo.com//api/v1/oauth2/token \
               --header 'content-type: application/json' \
-              --data '{"client_id":"ffffffff-ffff-4fff-8fff-ffffffffffff","client_secret":"ffffffff-ffff-4fff-8fff-ffffffffffff","grant_type":"password","username":"user@example.com","password":"ffffffff"}'
+              --data '{"client_id":"string","client_secret":"string","grant_type":"password","username":"johnDoe","password":"ffffffff"}'
   /api/v1/users/auth:
     post:
       summary: Generate access token for use in API
@@ -178,7 +177,7 @@ paths:
             schema:
               $ref: '#/components/schemas/LegacyAuthPayload'
             example:
-              username: user@example.com
+              username: johnDoe
               password: ffffffff
         description: Oauth descriptor.
         required: true
@@ -368,10 +367,10 @@ components:
         - username
         - password
       example:
-        client_id: ffffffff-ffff-4fff-8fff-ffffffffffff
-        client_secret: ffffffff-ffff-4fff-8fff-ffffffffffff
+        client_id: string
+        client_secret: string
         grant_type: password
-        username: user@example.com
+        username: johnDoe
         password: ffffffff
   responses:
     NotFoundError:
