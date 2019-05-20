@@ -1,14 +1,14 @@
 import { injectable, inject } from 'inversify';
 import Config from '../../config/config';
-import {PresenseData} from "../api/model/Presense";
+import {PresenceData} from "../api/model/Presence";
 
 @injectable()
-class PresenseService {
+class PresenceService {
     constructor(
         @inject('Config') private readonly config: typeof Config
     ) {}
 
-    public report(payload: PresenseData, ipAddress: string, userId: string, appName: string): PresenseData {
+    public report(payload: PresenceData, ipAddress: string, userId: string, appName: string): PresenceData {
         // Set default values
         payload.action = "report";
         payload.date = new Date().toISOString();
@@ -39,19 +39,19 @@ class PresenseService {
         return payload;
     }
 
-    public postToKafka(payload: PresenseData): void {
-        // TODO: Post the payload to Kafka topic "presense-activity-v1"
+    public postToKafka(payload: PresenceData): void {
+        // TODO: Post the payload to Kafka topic "presence-activity-v1"
     }
 
-    public addToRedis(payload: PresenseData): void {
+    public addToRedis(payload: PresenceData): void {
         // TODO: Write data to Redis
 
         // Redis Format
         // HashSet
-        // Key = presense.user.{id}
+        // Key = presence.user.{id}
         // Expire based on TTL in the payload ( ttl is seconds )
         // Property: {appname}+{appversion}, Value: JSON of the payload
     }
 }
 
-export default PresenseService;
+export default PresenceService;

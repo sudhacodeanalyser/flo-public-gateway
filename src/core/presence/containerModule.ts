@@ -1,8 +1,8 @@
 import { ContainerModule, interfaces } from 'inversify';
-import PresenseService from './PresenseService';
+import PresenceService from './PresenceService';
 
 export default new ContainerModule((bind: interfaces.Bind) => {
 
-  bind<PresenseService>('PresenseService').to(PresenseService);
+  bind<PresenceService>('PresenceService').to(PresenceService);
 
 });
