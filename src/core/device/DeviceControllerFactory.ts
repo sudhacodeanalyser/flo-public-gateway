@@ -1,17 +1,20 @@
-import { interfaces, httpGet, httpPost, httpDelete, queryParam, requestParam, requestBody, BaseHttpController } from 'inversify-express-utils';
+import { interfaces, httpGet, httpPost, httpDelete, queryParam, requestParam, requestBody, requestHeaders, BaseHttpController } from 'inversify-express-utils';
 import { inject, Container } from 'inversify';
-import { Device, DeviceUpdate, DeviceUpdateValidator } from '../api';
+import { Device, DeviceUpdate, DeviceUpdateValidator, DeviceCreate, DeviceCreateValidator } from '../api';
 import DeviceService from './DeviceService';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import * as t from 'io-ts';
-import { httpController, parseExpand, deleteMethod } from '../api/controllerUtils';
+import { httpController, parseExpand, deleteMethod, createMethod } from '../api/controllerUtils';
 import Request from '../api/Request';
+import { QrData, PairingData, QrDataValidator } from '../../api-v1/ApiV1PairingService';
 
 export function DeviceControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
   const authMiddlewareFactory = container.get<AuthMiddlewareFactory>('AuthMiddlewareFactory');
+  const auth = authMiddlewareFactory.create();
   const authWithId = authMiddlewareFactory.create(async ({ params: { id } }: Request) => ({ icd_id: id }));
+  const authWithLocation = authMiddlewareFactory.create(async ({ body: { location: { id } } }: Request) => ({ location_id: id }));
 
   @httpController({ version: apiVersion }, '/devices')
   class DeviceController extends BaseHttpController {
@@ -65,6 +68,29 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     private async removeDevice(@requestParam('id') id: string): Promise<void> {
 
       return this.deviceService.removeDevice(id);
+    }
+
+    @httpPost('/pair/qr',
+      auth,
+      reqValidator.create(t.type({
+        body: QrDataValidator 
+      }))
+    )
+    private async scanQrCode(@requestHeaders('Authorization') authToken: string, @requestBody() qrData: QrData): Promise<PairingData> {
+
+      return this.deviceService.scanQrCode(authToken, qrData);
+    }
+
+    @httpPost('/pair',
+      authWithLocation,
+      reqValidator.create(t.type({
+        body: DeviceCreateValidator
+      }))
+    )
+    @createMethod
+    private async pairDevice(@requestHeaders('Authorization') authToken: string, @requestBody() deviceCreate: DeviceCreate): Promise<Device> {
+
+      return this.deviceService.pairDevice(authToken, deviceCreate);
     }
   }
 

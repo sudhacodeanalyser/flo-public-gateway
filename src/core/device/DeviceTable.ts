@@ -1,3 +1,4 @@
+import _ from 'lodash';
 import { inject, injectable } from 'inversify';
 import DatabaseClient from '../../database/DatabaseClient';
 import DatabaseTable from '../../database/DatabaseTable';
@@ -21,7 +22,22 @@ class DeviceTable extends DatabaseTable<DeviceRecordData> {
         ':location_id': locationId
       }
     });
-  } 
+  }
+
+  public async getByMacAddress(macAddress: string): Promise<DeviceRecordData | null> {
+    const devices = await this.query<DynamoDbQuery>({
+      IndexName: 'DeviceIdIndex',
+      KeyConditionExpression: '#device_id = :device_id',
+      ExpressionAttributeNames: {
+        '#device_id': 'device_id'
+      },
+      ExpressionAttributeValues: {
+        ':device_id': macAddress
+      }
+    });
+
+    return _.isEmpty(devices) ? null : devices[0];
+  }
 }
 
 export default DeviceTable;

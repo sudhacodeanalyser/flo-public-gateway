@@ -1,4 +1,5 @@
 import { $enum } from 'ts-enum-util';
+import _ from 'lodash';
 // These should likely go into a lookup table
 import { Device, DeviceType, DeviceModelType } from '../api';
 
@@ -22,6 +23,7 @@ export interface DeviceRecordData {
   nickname?: string;
   created_at?: string;
   updated_at?: string;
+  is_paired?: boolean;
 }
 
 const DeviceTypeDataEnum = $enum(DeviceTypeData);
@@ -48,8 +50,13 @@ export class DeviceRecord {
       created_at: model.createdAt,
       updated_at: model.updatedAt,
       device_type: deviceType,
-      device_model: deviceModel
+      device_model: deviceModel,
+      is_paired: model.isPaired
     };
+  }
+
+  public static fromModel(model: Device): DeviceRecordData {
+    return DeviceRecord.fromPartialModel(model) as DeviceRecordData;
   }
 
   constructor(
@@ -72,7 +79,8 @@ export class DeviceRecord {
       createdAt: this.data.created_at,
       updatedAt: this.data.updated_at,
       deviceType: DeviceType[deviceTypeKey],
-      deviceModel: DeviceModelType[deviceModelKey]
+      deviceModel: DeviceModelType[deviceModelKey],
+      isPaired: _.get(this.data, 'is_paired', false) 
     };
   }
 }
