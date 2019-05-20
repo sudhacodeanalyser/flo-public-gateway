@@ -8,4 +8,5 @@ export type Token = {
 export default interface Request extends express.Request {
   log?: Logger;
   token?: Token;
+  rawBody?: string;
 }

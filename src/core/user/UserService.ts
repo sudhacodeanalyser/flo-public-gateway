@@ -1,9 +1,9 @@
 import _ from 'lodash';
 import { injectable, inject } from 'inversify';
-import { User, UserUpdate } from '../api/api';
+import { User, UserUpdate } from '../api';
 import { UserResolver } from '../resolver';
 import AccountService from '../account/AccountService';
-import ResourceNotDeletableError from '../api/error/ResourceNotDeletableError';
+import ValidationError from '../api/error/ValidationError';
 
 @injectable()
 class UserService {
@@ -25,10 +25,14 @@ class UserService {
   public async removeUser(id: string): Promise<void> {
     const account = await this.accountService.getAccountByOwnerUserId(id);
     if (!_.isEmpty(account)) {
-      throw new ResourceNotDeletableError('Cannot delete Account owner.');
+      throw new ValidationError('Cannot delete Account owner.');
     }
 
     return this.userResolver.removeUser(id);
+  }
+
+  public isUserAccountOwner(user: User): boolean {
+    return _.includes(user.accountRole.roles, 'owner');
   }
 }
 

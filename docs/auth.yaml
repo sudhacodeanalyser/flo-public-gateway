@@ -1,0 +1,389 @@
+paths:
+  /api/v1/oauth2/token:
+    post:
+      operationId: login
+      summary: Generate access and refresh tokens
+      description: |
+        Returns a Token contains JWT
+      tags:
+        - Authentication
+      responses:
+        '200':
+          description: Successful response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OauthToken'
+              example:
+                access_token: >-
+                  eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJmZmZmZmZmZi1mZmZmLTRmZmYtOGZmZi1mZmZmZmZmZmZmZmYiLCJ1c2VyX2lkIjoiZmZmZmZmZmYtZmZmZi00ZmZmLThmZmYtZmZmZmZmZmZmZmZmIiwiaWF0IjoxNTQ4NzQ0ODg2LCJleHAiOjE1NDg4MzEyODYsImp0aSI6ImZmZmZmZmZmLWZmZmYtNGZmZi04ZmZmLWZmZmZmZmZmZmZmZiJ9.Xh7tDNBCHUZBr_oqolwYUJVkSBm3BGiXli76qjldZD8
+                token_type: Bearer
+                refresh_token: >-
+                  eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJmZmZmZmZmZi1mZmZmLTRmZmYtOGZmZi1mZmZmZmZmZmZmZmYiLCJ1c2VyX2lkIjoiZmZmZmZmZmYtZmZmZi00ZmZmLThmZmYtZmZmZmZmZmZmZmZmIiwiaWF0IjoxNTQ4NzQ0ODg2LCJleHAiOjE1NDg4MzEyODYsImp0aSI6ImZmZmZmZmZmLWZmZmYtNGZmZi04ZmZmLWZmZmZmZmZmZmZmZiJ9.Xh7tDNBCHUZBr_oqolwYUJVkSBm3BGiXli76qjldZD8
+                expires_in: 86400
+                expires_at: '2019-01-01T16:58:51.639Z'
+                issued_at: '2019-01-01T16:58:51.639Z'
+                user_id: ffffffff-ffff-4fff-8fff-ffffffffffff
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OauthPayload'
+            example:
+              client_id: string
+              client_secret: string
+              grant_type: password
+              username: username
+              password: abc123
+        description: Oauth descriptor.
+        required: true
+      x-code-samples:
+        - lang: Java_okhttp
+          source: >-
+            OkHttpClient client = new OkHttpClient();
+
+
+            MediaType mediaType = MediaType.parse("application/json");
+
+            RequestBody body = RequestBody.create(mediaType,
+            "{\"client_id\":\"string\",\"client_secret\":\"string\",\"grant_type\":\"password\",\"username\":\"johnDoe\",\"password\":\"ffffffff\"}");
+
+            Request request = new Request.Builder()
+              .url("https://api.meetflo.com//api/v1/oauth2/token")
+              .post(body)
+              .addHeader("content-type", "application/json")
+              .build();
+
+            Response response = client.newCall(request).execute();
+        - lang: Javascript_xhr
+          source: |-
+            var data = JSON.stringify({
+              "client_id": "string",
+              "client_secret": "string",
+              "grant_type": "password",
+              "username": "johnDoe",
+              "password": "ffffffff"
+            });
+
+            var xhr = new XMLHttpRequest();
+            xhr.withCredentials = true;
+
+            xhr.addEventListener("readystatechange", function () {
+              if (this.readyState === this.DONE) {
+                console.log(this.responseText);
+              }
+            });
+
+            xhr.open("POST", "https://api.meetflo.com//api/v1/oauth2/token");
+            xhr.setRequestHeader("content-type", "application/json");
+
+            xhr.send(data);
+        - lang: Node_native
+          source: >-
+            var http = require("https");
+
+
+            var options = {
+              "method": "POST",
+              "hostname": "api.meetflo.com",
+              "port": null,
+              "path": "//api/v1/oauth2/token",
+              "headers": {
+                "content-type": "application/json"
+              }
+            };
+
+
+            var req = http.request(options, function (res) {
+              var chunks = [];
+
+              res.on("data", function (chunk) {
+                chunks.push(chunk);
+              });
+
+              res.on("end", function () {
+                var body = Buffer.concat(chunks);
+                console.log(body.toString());
+              });
+            });
+
+
+            req.write(JSON.stringify({ client_id: 'string',
+              client_secret: 'string',
+              grant_type: 'password',
+              username: 'johnDoe',
+              password: 'ffffffff' }));
+            req.end();
+        - lang: Python_python3
+          source: >-
+            import http.client
+
+
+            conn = http.client.HTTPSConnection("api.meetflo.com")
+
+
+            payload =
+            "{\"client_id\":\"string\",\"client_secret\":\"string\",\"grant_type\":\"password\",\"username\":\"johnDoe\",\"password\":\"ffffffff\"}"
+
+
+            headers = { 'content-type': "application/json" }
+
+
+            conn.request("POST", "//api/v1/oauth2/token", payload, headers)
+
+
+            res = conn.getresponse()
+
+            data = res.read()
+
+
+            print(data.decode("utf-8"))
+        - lang: Python_requests
+          source: >-
+            import requests
+
+
+            url = "https://api.meetflo.com//api/v1/oauth2/token"
+
+
+            payload =
+            "{\"client_id\":\"string\",\"client_secret\":\"string\",\"grant_type\":\"password\",\"username\":\"johnDoe\",\"password\":\"ffffffff\"}"
+
+            headers = {'content-type': 'application/json'}
+
+
+            response = requests.request("POST", url, data=payload,
+            headers=headers)
+
+
+            print(response.text)
+        - lang: Shell_curl
+          source: |-
+            curl --request POST \
+              --url https://api.meetflo.com//api/v1/oauth2/token \
+              --header 'content-type: application/json' \
+              --data '{"client_id":"string","client_secret":"string","grant_type":"password","username":"johnDoe","password":"ffffffff"}'
+  /api/v1/users/auth:
+    post:
+      summary: Generate access token for use in API
+      deprecated: true
+      tags:
+        - Authentication
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LegacyAuthPayload'
+            example:
+              username: johnDoe
+              password: ffffffff
+        description: Oauth descriptor.
+        required: true
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      x-code-samples:
+        - lang: Java_okhttp
+          source: |-
+            OkHttpClient client = new OkHttpClient();
+
+            Request request = new Request.Builder()
+              .url("https://api.meetflo.com//api/v1/users/auth")
+              .post(null)
+              .addHeader("authorization", "Bearer REPLACE_BEARER_TOKEN")
+              .build();
+
+            Response response = client.newCall(request).execute();
+        - lang: Javascript_xhr
+          source: >-
+            var data = null;
+
+
+            var xhr = new XMLHttpRequest();
+
+            xhr.withCredentials = true;
+
+
+            xhr.addEventListener("readystatechange", function () {
+              if (this.readyState === this.DONE) {
+                console.log(this.responseText);
+              }
+            });
+
+
+            xhr.open("POST", "https://api.meetflo.com//api/v1/users/auth");
+
+            xhr.setRequestHeader("authorization", "Bearer
+            REPLACE_BEARER_TOKEN");
+
+
+            xhr.send(data);
+        - lang: Node_native
+          source: |-
+            var http = require("https");
+
+            var options = {
+              "method": "POST",
+              "hostname": "api.meetflo.com",
+              "port": null,
+              "path": "//api/v1/users/auth",
+              "headers": {
+                "authorization": "Bearer REPLACE_BEARER_TOKEN"
+              }
+            };
+
+            var req = http.request(options, function (res) {
+              var chunks = [];
+
+              res.on("data", function (chunk) {
+                chunks.push(chunk);
+              });
+
+              res.on("end", function () {
+                var body = Buffer.concat(chunks);
+                console.log(body.toString());
+              });
+            });
+
+            req.end();
+        - lang: Python_python3
+          source: |-
+            import http.client
+
+            conn = http.client.HTTPSConnection("api.meetflo.com")
+
+            headers = { 'authorization': "Bearer REPLACE_BEARER_TOKEN" }
+
+            conn.request("POST", "//api/v1/users/auth", headers=headers)
+
+            res = conn.getresponse()
+            data = res.read()
+
+            print(data.decode("utf-8"))
+        - lang: Python_requests
+          source: |-
+            import requests
+
+            url = "https://api.meetflo.com//api/v1/users/auth"
+
+            headers = {'authorization': 'Bearer REPLACE_BEARER_TOKEN'}
+
+            response = requests.request("POST", url, headers=headers)
+
+            print(response.text)
+        - lang: Shell_curl
+          source: |-
+            curl --request POST \
+              --url https://api.meetflo.com//api/v1/users/auth \
+              --header 'authorization: Bearer REPLACE_BEARER_TOKEN'
+
+components:
+  schemas:
+    LegacyAuthPayload:
+      description: Legacy Auth Payload
+      type: object
+      properties:
+        username:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password        
+      required:
+        - username
+        - password   
+    OauthToken:
+      type: object
+      properties:
+        access_token:
+          type: string
+          format: JWT
+          description: |
+            JWT
+        token_type:
+          type: string
+          default: Bearer
+        refresh_token:
+          type: string
+          description: |
+            JWT
+        expires_in:
+          type: integer
+          description: |
+            Used to be 1d or 30d
+        expires_at:
+          type: string
+          format: date-time
+          description: |
+            ISO 8601
+        issued_at:
+          type: string
+          format: date-time
+          description: |
+            ISO 8601
+        user_id:
+          type: string
+          example: ffffffff-ffff-4fff-8fff-ffffffffffff
+          format: uuid
+      example:
+        access_token: >-
+          eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJmZmZmZmZmZi1mZmZmLTRmZmYtOGZmZi1mZmZmZmZmZmZmZmYiLCJ1c2VyX2lkIjoiZmZmZmZmZmYtZmZmZi00ZmZmLThmZmYtZmZmZmZmZmZmZmZmIiwiaWF0IjoxNTQ4NzQ0ODg2LCJleHAiOjE1NDg4MzEyODYsImp0aSI6ImZmZmZmZmZmLWZmZmYtNGZmZi04ZmZmLWZmZmZmZmZmZmZmZiJ9.Xh7tDNBCHUZBr_oqolwYUJVkSBm3BGiXli76qjldZD8
+        token_type: Bearer
+        refresh_token: >-
+          eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJmZmZmZmZmZi1mZmZmLTRmZmYtOGZmZi1mZmZmZmZmZmZmZmYiLCJ1c2VyX2lkIjoiZmZmZmZmZmYtZmZmZi00ZmZmLThmZmYtZmZmZmZmZmZmZmZmIiwiaWF0IjoxNTQ4NzQ0ODg2LCJleHAiOjE1NDg4MzEyODYsImp0aSI6ImZmZmZmZmZmLWZmZmYtNGZmZi04ZmZmLWZmZmZmZmZmZmZmZiJ9.Xh7tDNBCHUZBr_oqolwYUJVkSBm3BGiXli76qjldZD8
+        expires_in: 86400
+        expires_at: '2019-01-01T16:58:51.639Z'
+        issued_at: '2019-01-01T16:58:51.639Z'
+        user_id: ffffffff-ffff-4fff-8fff-ffffffffffff
+    OauthPayload:
+      description: Oauth payload
+      type: object
+      properties:
+        client_id:
+          type: string
+          example: ffffffff-ffff-4fff-8fff-ffffffffffff
+          format: uuid
+        client_secret:
+          type: string
+        grant_type:
+          type: string
+          default: password
+        username:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+      required:
+        - client_id
+        - client_secret
+        - grant_type
+        - username
+        - password
+      example:
+        client_id: string
+        client_secret: string
+        grant_type: password
+        username: johnDoe
+        password: ffffffff
+  responses:
+    NotFoundError:
+      description: Not Found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    InternalServerError:
+      description: Internal Server Error.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Ok:
+      description: Ok

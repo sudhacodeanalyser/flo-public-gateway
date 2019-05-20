@@ -1,8 +1,8 @@
 import { ContainerModule, interfaces } from 'inversify';
+import SubscriptionPlanTable from './SubscriptionPlanTable';
 import { SubscriptionResolver } from './SubscriptionResolver';
 import SubscriptionService from './SubscriptionService';
 import SubscriptionTable from './SubscriptionTable';
-import SubscriptionPlanTable from './SubscriptionPlanTable';
 
 export default new ContainerModule((bind: interfaces.Bind) => {
   bind<SubscriptionPlanTable>('SubscriptionPlanTable').to(SubscriptionPlanTable);

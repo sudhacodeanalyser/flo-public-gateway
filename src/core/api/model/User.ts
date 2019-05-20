@@ -1,5 +1,5 @@
 import * as t from 'io-ts';
-import { Expandable, TimestampedModel, Location, Account } from '../api';
+import { Expandable, TimestampedModel, Location, Account } from '../../api';
 
 export interface UserLocationRole {
   locationId: string;

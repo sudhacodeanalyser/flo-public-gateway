@@ -1,5 +1,5 @@
 paths:
-  /users/{id}:
+  /api/v2/users/{id}:
     parameters:
       - in: path
         name: id
@@ -12,7 +12,7 @@ paths:
     get:
       summary: Retrieves a User by ID.
       tags:
-        - users
+        - Users
       produces:
         - application/json
       parameters:
@@ -34,7 +34,7 @@ paths:
     delete:
       summary: Deletes a User by ID.
       tags:
-        - users
+        - Users
       produces:
         - application/json
       responses:
@@ -58,7 +58,7 @@ paths:
     post:
       summary: Updates a User by ID (partially).
       tags:
-        - users
+        - Users
       produces:
         - application/json
       requestBody:

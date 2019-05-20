@@ -1,6 +1,6 @@
 import { inject, injectable } from 'inversify';
 import { DeviceRecordData, DeviceRecord } from './DeviceRecord';
-import { Device, DependencyFactoryFactory } from '../api/api';
+import { Device, DependencyFactoryFactory } from '../api';
 import { Resolver, PropertyResolverMap, LocationResolver } from '../resolver';
 import { fromPartialRecord } from '../../database/Patch';
 import DeviceTable from '../device/DeviceTable';

@@ -1,23 +1,38 @@
-import { Expandable, Location, TimestampedModel, User } from '../api';
 import * as t from 'io-ts';
+import { Expandable, Location, TimestampedModel } from '../../api';
 
 export interface SubscriptionPlan  extends TimestampedModel {
-  id: string
-  features: string[]
+  id: string,
+  features: string[],
   monthlyCost: number
+}
+
+// TODO: Move this out.
+export interface StripeProviderData {
+  customerId: string,
+  subscriptionId: string,
+  status?: string,
+  currentPeriodStart?: string,
+  currentPeriodEnd?: string,
+  cancelAtPeriodEnd?: boolean,
+  canceledAt?: string,
+  endedAt?: string
+}
+
+export type SubscriptionProviderData = StripeProviderData // | AnotherProviderData
+
+export interface SubscriptionProviderInfo {
+  name: string,
+  isActive: boolean,
+  data: SubscriptionProviderData
 }
 
 export interface Subscription extends TimestampedModel {
   id: string,
-  plan: Expandable<SubscriptionPlan>
-  location: Expandable<Location>
-  sourceId: string
-}
-
-export interface SubscriptionProvider {
-  name: string
-  customerId: string
-  subscriptionId: string
+  plan: Expandable<SubscriptionPlan>,
+  location: Expandable<Location>,
+  sourceId: string,
+  provider: SubscriptionProviderInfo
 }
 
 // TODO: Externalize providers somehow?
@@ -25,7 +40,7 @@ export interface SubscriptionProvider {
 const ProvidersCodec = t.strict({
   name: t.literal('stripe'),
   token: t.string,
-  couponId: t.string
+  couponId: t.union([t.string, t.undefined])
 });
 
 const SubscriptionCreateCodec = t.strict({

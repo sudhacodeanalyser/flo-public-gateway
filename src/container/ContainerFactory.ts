@@ -6,6 +6,7 @@ import loggerFactoryContainerModule from '../logging/containerModule';
 import validationContainerModule from '../validation/containerModule';
 import dynamoDbContainerModule from '../database/dynamo/containerModule';
 import authContainerModule from '../auth/containerModule';
+import subscriptionProviderModule from '../subscription/containerModule';
 
 // Core container modules
 import coreContainerModules from '../core/containerModule';
@@ -19,6 +20,7 @@ export default function ContainerFactory(container: Container = new Container())
     validationContainerModule,
     dynamoDbContainerModule,
     authContainerModule,
+    subscriptionProviderModule,
     ...coreContainerModules
   );
 

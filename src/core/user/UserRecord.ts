@@ -1,4 +1,4 @@
-import { Timestamped } from '../api/api';
+import { Timestamped } from '../api';
 
 export interface UserRecord extends Timestamped {
   id: string,

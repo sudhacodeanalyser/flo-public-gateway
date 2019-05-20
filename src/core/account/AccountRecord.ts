@@ -1,4 +1,4 @@
-import { Timestamped, Account } from '../api/api';
+import { Timestamped, Account } from '../api';
 
 export interface AccountRecordData extends Timestamped {
   id: string,

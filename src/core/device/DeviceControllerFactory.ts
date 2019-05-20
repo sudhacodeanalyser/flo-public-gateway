@@ -1,6 +1,6 @@
 import { interfaces, httpGet, httpPost, httpDelete, queryParam, requestParam, requestBody, BaseHttpController } from 'inversify-express-utils';
 import { inject, Container } from 'inversify';
-import { Device, DeviceUpdate, DeviceUpdateValidator } from '../api/api';
+import { Device, DeviceUpdate, DeviceUpdateValidator } from '../api';
 import DeviceService from './DeviceService';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
