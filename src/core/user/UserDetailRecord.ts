@@ -1,4 +1,4 @@
-import { Timestamped } from '../api/api';
+import { Timestamped } from '../api';
 
 export enum UnitSystem {
   IMPERIAL_US = 'imperial_us',

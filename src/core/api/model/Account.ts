@@ -1,4 +1,4 @@
-import { Expandable, TimestampedModel, User, Location } from '../api';
+import { Expandable, TimestampedModel, User, Location } from '../../api';
 
 export interface AccountUserRole {
   userId: string,

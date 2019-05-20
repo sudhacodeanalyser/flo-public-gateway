@@ -1,5 +1,5 @@
 import { inject, injectable } from 'inversify';
-import { DependencyFactoryFactory, User } from '../api/api';
+import { DependencyFactoryFactory, User } from '../api';
 import { Resolver, PropertyResolverMap, LocationResolver, AccountResolver } from '../resolver';
 import { fromPartialRecord } from '../../database/Patch';
 import { UserRecord } from './UserRecord';

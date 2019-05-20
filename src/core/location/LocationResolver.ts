@@ -2,7 +2,7 @@ import { inject, injectable } from 'inversify';
 import uuid from 'uuid';
 import { LocationRecordData, LocationRecord } from './LocationRecord';
 import { UserLocationRoleRecord } from '../user/UserLocationRoleRecord';
-import { Location, LocationUserRole, DependencyFactoryFactory } from '../api/api';
+import { Location, LocationUserRole, DependencyFactoryFactory } from '../api';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import { Resolver, PropertyResolverMap, DeviceResolver, UserResolver, AccountResolver, SubscriptionResolver } from '../resolver';
 import LocationTable from '../location/LocationTable';

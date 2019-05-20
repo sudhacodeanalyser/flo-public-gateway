@@ -1,6 +1,6 @@
 import { inject, injectable } from 'inversify';
 import { LocationResolver } from '../resolver';
-import { Location, LocationUpdate, LocationUserRole } from '../api/api';
+import { Location, LocationUpdate, LocationUserRole } from '../api';
 
 @injectable()
 class LocationService {

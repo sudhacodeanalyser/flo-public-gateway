@@ -1,4 +1,4 @@
-import { UserLocationRole, LocationUserRole, Timestamped } from '../api/api';
+import { UserLocationRole, LocationUserRole, Timestamped } from '../api';
 
 export interface UserLocationRoleRecordData extends Timestamped {
   user_id: string,
