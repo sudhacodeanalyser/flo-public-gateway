@@ -2,7 +2,7 @@ import * as t from 'io-ts';
 import {Expandable, TimestampedModel, Location, DeviceUpdate, DeviceType, DeviceModelType} from '../../api';
 
 
-export interface PresenseData {
+export interface PresenceData {
     action: string,
     userId: string,
     accountId: string,
