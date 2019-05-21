@@ -11,7 +11,7 @@ export interface ApiV1Request {
 
 @injectable()
 class ApiV1Service {
-  protected async sendRequest<Response extends {}>(request: ApiV1Request): Promise<Response> {
+  protected async sendRequest(request: ApiV1Request): Promise<any> {
     try {
       const response = await axios({
         method: request.method,
@@ -23,7 +23,7 @@ class ApiV1Service {
         data: request.body
       });
 
-      return response.data as Response;
+      return response.data;
 
     } catch (err) {
       if (!err.response) {

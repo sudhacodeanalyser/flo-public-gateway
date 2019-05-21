@@ -7,7 +7,7 @@ import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import * as t from 'io-ts';
 import { httpController, parseExpand, deleteMethod, createMethod } from '../api/controllerUtils';
 import Request from '../api/Request';
-import { QrData, PairingData, QrDataValidator } from '../../api-v1/ApiV1PairingService';
+import { QrData, PairingData, QrDataValidator } from '../../api-v1/pairing/PairingService';
 
 export function DeviceControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');

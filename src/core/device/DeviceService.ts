@@ -3,7 +3,7 @@ import { injectable, inject } from 'inversify';
 import { Device, DeviceUpdate, DeviceCreate, Location } from '../api';
 import { DeviceResolver } from '../resolver';
 import LocationService from '../location/LocationService';
-import { ApiV1PairingService, PairingData, QrData } from '../../api-v1/ApiV1PairingService';
+import { PairingService, PairingData, QrData } from '../../api-v1/pairing/PairingService';
 import ConflictError from '../api/error/ConflictError';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import Logger from 'bunyan';
@@ -13,7 +13,7 @@ class DeviceService {
   constructor(
     @inject('DeviceResolver') private deviceResolver: DeviceResolver,
     @inject('LocationService') private locationService: LocationService,
-    @inject('ApiV1PairingService') private apiV1PairingService: ApiV1PairingService,
+    @inject('PairingService') private apiV1PairingService: PairingService,
     @inject('Logger') private readonly logger: Logger
   ) {}
 
