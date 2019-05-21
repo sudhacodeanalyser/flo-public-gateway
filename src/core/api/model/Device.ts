@@ -1,5 +1,6 @@
 import * as t from 'io-ts';
-import { Expandable, TimestampedModel, Location } from '../../api';
+import {Expandable, Location, TimestampedModel} from '../../api';
+import {FwProperties, InternalDeviceService} from "../../../internal-device-service/models";
 
 export enum DeviceType {
   FLO_DEVICE = 'flo_device',
@@ -24,5 +25,11 @@ export interface Device extends DeviceUpdate, TimestampedModel {
   macAddress: string,
   location: Expandable<Location>,
   deviceType: DeviceType,
-  deviceModel: DeviceModelType
+  deviceModel: DeviceModelType,
 }
+
+export interface AdditionalDeviceProps extends Pick<InternalDeviceService, 'isConnected' | 'lastHeardFromTime' | 'fwVersion'> {
+  fwProperties: null | FwProperties
+}
+
+export interface DeviceResponse extends Device, AdditionalDeviceProps{}

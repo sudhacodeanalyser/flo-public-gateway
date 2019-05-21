@@ -1,5 +1,5 @@
 import {inject, injectable} from 'inversify';
-import {FwProperties, InternalDeviceService, FwPropertiesCodec, InternalDeviceServiceCodec} from './models';
+import {FwPropertiesCodec, InternalDeviceService, InternalDeviceServiceCodec} from './models';
 import {InternalDeviceServiceHandler} from "./internalDeviceServiceHandler";
 
 @injectable()
@@ -10,7 +10,7 @@ class InternalDeviceServiceFetcher extends InternalDeviceServiceHandler {
 
     const request = {
       method: 'get',
-      url: `${this.internalDeviceServiceBaseURL}/device/${deviceId}`,
+      url: `${this.internalDeviceServiceBaseURL}/devices/${deviceId}`,
       body: null,
     };
 
@@ -21,23 +21,22 @@ class InternalDeviceServiceFetcher extends InternalDeviceServiceHandler {
     }
 
     return response as InternalDeviceService;
-
   }
 
-  public async modifyDeviceFwProperties(deviceId: string, data: FwProperties): Promise<void> {
+  public async setDeviceFwProperties(deviceId: string, data: any): Promise<void> {
+
+    if (!FwPropertiesCodec.is(data)) {
+      throw new Error('Invalid input.');
+    }
 
     const request = {
       method: 'post',
-      url: `${this.internalDeviceServiceBaseURL}/device/${deviceId}/fwproperties`,
+      url: `${this.internalDeviceServiceBaseURL}/devices/${deviceId}/fwproperties`,
       body: data,
     };
 
-    const response = await this.sendRequest(request);
-
-    return;
-
+    await this.sendRequest(request);
   }
-
 }
 
-export { InternalDeviceServiceFetcher };
+export {InternalDeviceServiceFetcher};

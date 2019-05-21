@@ -25,5 +25,7 @@ const InternalDeviceServiceCodec = t.type( {
 type FwProperties = t.TypeOf<typeof FwPropertiesCodec>;
 type InternalDeviceService = t.TypeOf<typeof InternalDeviceServiceCodec>;
 
+export const FwPropertiesValidator = t.exact(t.partial(FwPropertiesCodec.props));
+
 export {FwProperties, InternalDeviceService, FwPropertiesCodec, InternalDeviceServiceCodec};
 
