@@ -5,7 +5,7 @@ import DeviceService from './DeviceService';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import * as t from 'io-ts';
-import { httpController, parseExpand, deleteMethod, createMethod } from '../api/controllerUtils';
+import { httpController, parseExpand, deleteMethod, createMethod, authorizationHeader } from '../api/controllerUtils';
 import Request from '../api/Request';
 import { QrData, PairingData, QrDataValidator } from '../../api-v1/pairing/PairingService';
 
@@ -76,7 +76,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
         body: QrDataValidator 
       }))
     )
-    private async scanQrCode(@requestHeaders('Authorization') authToken: string, @requestBody() qrData: QrData): Promise<PairingData> {
+    private async scanQrCode(@authorizationHeader() authToken: string, @requestBody() qrData: QrData): Promise<PairingData> {
 
       return this.deviceService.scanQrCode(authToken, qrData);
     }
@@ -88,7 +88,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       }))
     )
     @createMethod
-    private async pairDevice(@requestHeaders('Authorization') authToken: string, @requestBody() deviceCreate: DeviceCreate): Promise<Device> {
+    private async pairDevice(@authorizationHeader() authToken: string, @requestBody() deviceCreate: DeviceCreate): Promise<Device> {
 
       return this.deviceService.pairDevice(authToken, deviceCreate);
     }
