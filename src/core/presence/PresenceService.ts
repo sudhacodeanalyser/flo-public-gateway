@@ -1,46 +1,39 @@
 import { injectable, inject } from 'inversify';
-import Config from '../../config/config';
-import {PresenceData} from "../api/model/Presence";
+import { PresenceRequest, PresenceData } from "../api/model/Presence";
+import { KafkaProducer } from '../../kafka/KafkaProducer';
+import _ from 'lodash';
 
 @injectable()
 class PresenceService {
     constructor(
-        @inject('Config') private readonly config: typeof Config
+        @inject('PresenceKafkaTopic') private readonly kafkaTopic: string,
+        @inject('KafkaProducer') private readonly kafkaProducer: KafkaProducer
     ) {}
 
-    public report(payload: PresenceData, ipAddress: string, userId: string, appName: string): PresenceData {
-        // Set default values
-        payload.action = "report";
-        payload.date = new Date().toISOString();
-        payload.ipAddress = ipAddress;
-        payload.userId = userId;
-        payload.type = "user";
+    public async report(payload: PresenceRequest, ipAddress: string, userId: string, clientId: string): Promise<PresenceData> {
+        const presenceData = {
+            action: 'report',
+            date: new Date().toISOString(),
+            ipAddress,
+            userId,
+            type: 'user',
+            ttl: payload.ttl === undefined || payload.ttl < 60 ? 60 : (payload.ttl > 3600 ? 3600 : payload.ttl),
+            appName: clientId,
+            appVersion: undefined,
+            accountId: undefined,
+            deviceId: undefined,
+            ..._.omitBy(payload, value => _.isEmpty(value))
+        };
 
-        // Resolve the account id and devices to help consumers
-        payload.accountId = "";
-        payload.deviceId = [];
+        await this.postToKafka(presenceData);
+        this.addToRedis(presenceData);
 
-        // Ensure TTL is within a valid range ( 60 seconds - 1 hour )
-        if (payload.ttl < 60) {
-            payload.ttl = 60
-        }
-        if (payload.ttl > 3600) {
-            payload.ttl = 3600
-        }
-
-        // Set the appName to provided value if not already set in payload
-        if (payload.appName === "" || payload.appName === undefined) {
-            payload.appName = appName;
-        }
-
-        this.postToKafka(payload);
-        this.addToRedis(payload);
-
-        return payload;
+        return presenceData;
     }
 
     public postToKafka(payload: PresenceData): void {
-        // TODO: Post the payload to Kafka topic "presence-activity-v1"
+
+        this.kafkaProducer.send(this.kafkaTopic, payload);
     }
 
     public addToRedis(payload: PresenceData): void {

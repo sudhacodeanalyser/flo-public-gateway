@@ -7,6 +7,7 @@ import validationContainerModule from '../validation/containerModule';
 import dynamoDbContainerModule from '../database/dynamo/containerModule';
 import authContainerModule from '../auth/containerModule';
 import subscriptionProviderModule from '../subscription/containerModule';
+import kafkaContainerModule from '../kafka/containerModule';
 
 // Core container modules
 import coreContainerModules from '../core/containerModule';
@@ -21,6 +22,7 @@ export default function ContainerFactory(container: Container = new Container())
     dynamoDbContainerModule,
     authContainerModule,
     subscriptionProviderModule,
+    kafkaContainerModule,
     ...coreContainerModules
   );
 
