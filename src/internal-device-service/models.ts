@@ -1,4 +1,5 @@
 import * as t from 'io-ts';
+import _ from 'lodash';
 
 const FwPropertiesCodec = t.type({
     fw_ver: t.string,
@@ -25,7 +26,18 @@ const InternalDeviceServiceCodec = t.type( {
 type FwProperties = t.TypeOf<typeof FwPropertiesCodec>;
 type InternalDeviceService = t.TypeOf<typeof InternalDeviceServiceCodec>;
 
-export const FwPropertiesValidator = t.exact(t.partial(FwPropertiesCodec.props));
 
-export {FwProperties, InternalDeviceService, FwPropertiesCodec, InternalDeviceServiceCodec};
+interface FwPropertiesCodecAtLeastOneBrand {
+    readonly FwPropertiesAtLeastOne: unique symbol
+}
+
+const FwPropertiesMutableAtLeastOne = t.brand(
+  t.partial(FwPropertiesCodec.props),
+  (obj): obj is t.Branded<t.TypeOf<typeof FwPropertiesCodec>, FwPropertiesCodecAtLeastOneBrand> => !_.isEmpty(obj),
+  'FwPropertiesAtLeastOne'
+);
+
+const FwPropertiesValidator = t.exact(FwPropertiesMutableAtLeastOne);
+
+export {FwProperties, InternalDeviceService, FwPropertiesCodec, InternalDeviceServiceCodec, FwPropertiesValidator};
 

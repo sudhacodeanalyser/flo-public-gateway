@@ -8,17 +8,19 @@ import {
   requestBody,
   requestParam
 } from 'inversify-express-utils';
+
 import {Container, inject} from 'inversify';
-import {Device, DeviceResponse, DeviceUpdate, DeviceUpdateValidator} from '../api';
+import {Device, DeviceUpdate, DeviceUpdateValidator} from '../api';
+import {DeviceResponse} from '../api/response';
 import DeviceService from './DeviceService';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import * as t from 'io-ts';
 import {deleteMethod, httpController, parseExpand} from '../api/controllerUtils';
 import Request from '../api/Request';
-import {InternalDeviceServiceFetcher} from "../../internal-device-service/InternalDeviceServiceFetcher";
-import _ from 'lodash';
-import {FwProperties, FwPropertiesValidator} from "../../internal-device-service/models";
+import {InternalDeviceServiceFetcher} from '../../internal-device-service/InternalDeviceServiceFetcher';
+import {FwProperties, FwPropertiesValidator} from '../../internal-device-service/models';
+import {DeviceDataAggregator} from './DeviceDataAggregator'
 
 export function DeviceControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
@@ -29,7 +31,8 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
   class DeviceController extends BaseHttpController {
     constructor(
       @inject('DeviceService') private deviceService: DeviceService,
-      @inject('InternalDeviceServiceFetcher') private internalDeviceServiceFetcher: InternalDeviceServiceFetcher
+      @inject('InternalDeviceServiceFetcher') private internalDeviceServiceFetcher: InternalDeviceServiceFetcher,
+      @inject('DeviceDataAggregator') private  deviceDataAggregator: DeviceDataAggregator
     ) {
       super();
     }
@@ -47,21 +50,8 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     )
     private async getDevice(@requestParam('id') id: string, @queryParam('expand') expand?: string): Promise<DeviceResponse | {}> {
       const expandProps = parseExpand(expand);
-      const additionalProperties = _.pick(
-        await this.internalDeviceServiceFetcher.getDevice(id),
-        ['fwProperties',
-          'fwVersion',
-          'lastHeardFromTime',
-          'isConnected']
-      );
 
-      const device = await this.deviceService.getDeviceById(id, expandProps);
-
-      if (device === null) {
-        return {}
-      }
-
-      return {...device, ...additionalProperties}
+      return this.deviceDataAggregator.getDevicebyId(id, expandProps)
     }
 
     @httpPost('/:id',
@@ -85,7 +75,6 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
         params: t.type({
           id: t.string
         }),
-        // TODO Do not allow empty
         body: FwPropertiesValidator
       }))
     )

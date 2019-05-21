@@ -31,5 +31,3 @@ export interface Device extends DeviceUpdate, TimestampedModel {
 export interface AdditionalDeviceProps extends Pick<InternalDeviceService, 'isConnected' | 'lastHeardFromTime' | 'fwVersion'> {
   fwProperties: null | FwProperties
 }
-
-export interface DeviceResponse extends Device, AdditionalDeviceProps{}

@@ -30,7 +30,7 @@ const config = {
   stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
   apiVersion: process.env.API_VERSION,
   authUrl: process.env.AUTH_URL,
-  deviceServiceBaseURL: process.env.INTERNAL_DEVICE_SERVICE_BASE_URL
+  internalDeviceServiceBaseURL: process.env.INTERNAL_DEVICE_SERVICE_BASE_URL
 };
 
 export default {
