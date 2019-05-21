@@ -12,7 +12,8 @@ services:
       AUTH_URL: "${AUTH_URL}"
       AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID-empty}"
       AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY-empty}"
-
+      KAFKA_HOST: "${KAFKA_HOST}"
+      KAFKA_TIMEOUT_MS: "${KAFKA_TIMEOUT_MS}"
     ports:
       - 3000:3000
       - 9229:9229
