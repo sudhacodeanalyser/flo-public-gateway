@@ -15,7 +15,7 @@ function getDefaults(): { [key: string]: any } {
         dynamoTablePrefix: 'dev_',
         apiVersion: 2,
         authUrl: 'https://api-dev.flocloud.co/api/v1/accesscontrol/authorize',
-        deviceServiceBaseURL: 'https://flo-device-service.flocloud.co/v1',
+        internalDeviceServiceBaseURL: 'https://flo-device-service.flocloud.co/v1',
       };
   }
 }
@@ -30,7 +30,7 @@ const config = {
   stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
   apiVersion: process.env.API_VERSION,
   authUrl: process.env.AUTH_URL,
-  deviceServiceBaseURL: process.env.DEVICE_SERVICE_BASE_URL
+  deviceServiceBaseURL: process.env.INTERNAL_DEVICE_SERVICE_BASE_URL
 };
 
 export default {
