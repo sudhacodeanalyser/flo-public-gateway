@@ -7,6 +7,7 @@ import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import * as t from 'io-ts';
 import { httpController, parseExpand, deleteMethod } from '../api/controllerUtils';
 import Request from '../api/Request';
+import {InternalDeviceServiceFetcher} from "../../internal-device-service/InternalDeviceServiceFetcher";
 
 export function DeviceControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
@@ -16,7 +17,8 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
   @httpController({ version: apiVersion }, '/devices')
   class DeviceController extends BaseHttpController {
     constructor(
-      @inject('DeviceService') private deviceService: DeviceService
+      @inject('DeviceService') private deviceService: DeviceService,
+      @inject('InternalDeviceServiceFetcher') private internalDeviceServiceFetcher: InternalDeviceServiceFetcher
     ) {
       super();
     }

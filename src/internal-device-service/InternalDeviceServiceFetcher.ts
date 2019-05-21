@@ -1,5 +1,5 @@
 import {inject, injectable} from 'inversify';
-import {FwProperties, InternalDeviceService, FwPropertiesCodec, InternalDeviceServiceCodec} from './model';
+import {FwProperties, InternalDeviceService, FwPropertiesCodec, InternalDeviceServiceCodec} from './models';
 import {InternalDeviceServiceHandler} from "./internalDeviceServiceHandler";
 
 @injectable()
@@ -39,3 +39,5 @@ class InternalDeviceServiceFetcher extends InternalDeviceServiceHandler {
   }
 
 }
+
+export { InternalDeviceServiceFetcher };
