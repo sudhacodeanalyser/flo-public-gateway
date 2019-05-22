@@ -1,6 +1,13 @@
 import {inject, injectable} from 'inversify';
-import {FwPropertiesCodec, InternalDevice, InternalDeviceCodec} from './models';
+import {
+  defaultInternalDeviceServicePayload,
+  FwProperties,
+  FwPropertiesCodec,
+  InternalDevice,
+  InternalDeviceCodec
+} from './models';
 import {InternalDeviceServiceHandler} from "./internalDeviceServiceHandler";
+import InternalDeviceServiceError from "./internalDeviceServiceError";
 
 @injectable()
 class InternalDeviceService extends InternalDeviceServiceHandler {
@@ -8,22 +15,30 @@ class InternalDeviceService extends InternalDeviceServiceHandler {
 
   public async getDevice(macAddress: string): Promise<InternalDevice> {
 
-    const request = {
-      method: 'get',
-      url: `${this.internalDeviceServiceBaseUrl}/devices/${macAddress}`,
-      body: null,
-    };
+    try {
+      const request = {
+        method: 'get',
+        url: `${this.internalDeviceServiceBaseUrl}/devices/${macAddress}`,
+        body: null,
+      };
 
-    const response = await this.sendRequest(request);
+      const response = await this.sendRequest(request);
 
-    if (InternalDeviceCodec.decode(response).isLeft()) {
-      throw new Error('Invalid response.');
+      if (InternalDeviceCodec.decode(response).isLeft()) {
+        throw new Error('Invalid response.');
+      }
+
+      return response as InternalDevice;
+    } catch (err) {
+      if (err instanceof InternalDeviceServiceError && err.statusCode === 404) {
+        return defaultInternalDeviceServicePayload;
+      } else {
+        throw err;
+      }
     }
-
-    return response as InternalDevice;
   }
 
-  public async setDeviceFwProperties(deviceId: string, data: any): Promise<void> {
+  public async setDeviceFwProperties(deviceId: string, data: Partial<FwProperties>): Promise<void> {
 
     const request = {
       method: 'post',

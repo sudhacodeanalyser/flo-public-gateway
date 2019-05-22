@@ -39,4 +39,24 @@ const FwPropertiesMutableAtLeastOne = t.brand(
 
 const FwPropertiesValidator = t.exact(FwPropertiesMutableAtLeastOne);
 
-export {FwProperties, InternalDevice, FwPropertiesCodec, InternalDeviceCodec, FwPropertiesValidator};
+const defaultInternalDeviceServicePayload = {
+  "deviceId": "",
+  "isConnected": false,
+  "fwVersion": "",
+  "createdTime": "0001-01-01T00:00:00Z",
+  "lastHeardFromTime": "0001-01-01T00:00:00Z",
+  "updatedTime": "0001-01-01T00:00:00Z",
+  "fwProperties": {
+    "fw_ver": "",
+    "motor_delay_open": 0,
+    "motor_delay_close": 0,
+    "reboot_count": 0,
+    "serial_number": "",
+    "system_mode": 0,
+    "valve_state": 0,
+    "wifi_sta_ssid": "",
+    "wifi_sta_enc": ""
+  }
+};
+
+export {FwProperties, InternalDevice, FwPropertiesCodec, InternalDeviceCodec, FwPropertiesValidator, defaultInternalDeviceServicePayload};

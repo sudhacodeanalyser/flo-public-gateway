@@ -17,6 +17,8 @@ class DeviceResolver extends Resolver<Device> {
       return this.locationResolverFactory().get(device.location.id);
     },
     additionalProps: async (device: Device, shouldExpand = false) => {
+      // tslint:disable
+      console.log("device mac address is " + device.macAddress);
       return this.internalDeviceService.getDevice(device.macAddress);
     }
   };
