@@ -24,7 +24,7 @@ export type QrData = t.TypeOf<typeof QrDataCodec>;
 export const PairingDataCodec = t.type({
   id: t.string,
   ap_name: t.string,
-  ap_password: t.string,
+  ap_password: t.union([t.string, t.undefined]),
   device_id: t.string,
   login_token: t.string,
   client_cert: t.string,
