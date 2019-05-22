@@ -1,6 +1,6 @@
 import { inject, injectable } from 'inversify';
 import { DeviceRecordData, DeviceRecord } from './DeviceRecord';
-import { Device, DependencyFactoryFactory, DeviceCreate } from '../api';
+import { Device, DependencyFactoryFactory, DeviceCreate, DeviceType, DeviceModelType } from '../api';
 import { Resolver, PropertyResolverMap, LocationResolver } from '../resolver';
 import { fromPartialRecord } from '../../database/Patch';
 import DeviceTable from '../device/DeviceTable';
@@ -71,6 +71,8 @@ class DeviceResolver extends Resolver<Device> {
   public async createDevice(deviceCreate: DeviceCreate, isPaired: boolean = false): Promise<Device> {
     const device = {
       ...deviceCreate,
+      deviceType: DeviceType.FLO_DEVICE,
+      deviceModel: DeviceModelType.FLO_DEVICE_THREE_QUARTER_INCH,
       isPaired,
       id: uuid.v4()
     };

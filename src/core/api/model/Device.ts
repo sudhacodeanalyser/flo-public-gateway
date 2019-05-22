@@ -32,12 +32,10 @@ const DeviceMutableCodec = t.type({
 });
 
 const DeviceCreateCodec = t.intersection([
-  DeviceMutableCodec,
+  t.partial(DeviceMutableCodec.props),
   t.type({
     macAddress: t.string,
-    location: t.strict({ id: t.string }),
-    deviceType: DeviceTypeCodec,
-    deviceModel: DeviceModelTypeCodec
+    location: t.strict({ id: t.string })
   })
 ]);
 
