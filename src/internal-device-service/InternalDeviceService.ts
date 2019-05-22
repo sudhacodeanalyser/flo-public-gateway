@@ -25,10 +25,6 @@ class InternalDeviceService extends InternalDeviceServiceHandler {
 
   public async setDeviceFwProperties(deviceId: string, data: any): Promise<void> {
 
-    if (!FwPropertiesCodec.is(data)) {
-      throw new Error('Invalid input.');
-    }
-
     const request = {
       method: 'post',
       url: `${this.internalDeviceServiceBaseUrl}/devices/${deviceId}/fwproperties`,
