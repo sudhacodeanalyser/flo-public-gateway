@@ -1,5 +1,6 @@
 import * as t from 'io-ts';
-import { Expandable, TimestampedModel, Location } from '../../api';
+import {Expandable, Location, TimestampedModel} from '../../api';
+import {FwProperties, InternalDevice} from '../../../internal-device-service/models';
 import { $enum } from 'ts-enum-util';
 import _ from 'lodash';
 
@@ -50,5 +51,10 @@ export interface Device extends DeviceUpdate, TimestampedModel {
   location: Expandable<Location>,
   deviceType: DeviceType,
   deviceModel: DeviceModelType,
-  isPaired: boolean
+  isPaired: boolean,
+  additionalProps: AdditionalDeviceProps | null
+}
+
+export interface AdditionalDeviceProps extends Pick<InternalDevice, 'isConnected' | 'lastHeardFromTime' | 'fwVersion'> {
+  fwProperties: null | FwProperties
 }

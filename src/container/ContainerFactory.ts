@@ -7,6 +7,7 @@ import validationContainerModule from '../validation/containerModule';
 import dynamoDbContainerModule from '../database/dynamo/containerModule';
 import authContainerModule from '../auth/containerModule';
 import subscriptionProviderModule from '../subscription/containerModule';
+import internalDeviceServiceFetcherModule from '../internal-device-service/containerModule';
 import apiV1ContainerModule from '../api-v1/containerModule';
 
 // Core container modules
@@ -22,6 +23,7 @@ export default function ContainerFactory(container: Container = new Container())
     dynamoDbContainerModule,
     authContainerModule,
     subscriptionProviderModule,
+    internalDeviceServiceFetcherModule,
     apiV1ContainerModule,
     ...coreContainerModules
   );

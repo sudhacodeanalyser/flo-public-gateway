@@ -1,6 +1,16 @@
-import { interfaces, httpGet, httpPost, httpDelete, queryParam, requestParam, requestBody, requestHeaders, BaseHttpController } from 'inversify-express-utils';
-import { inject, Container } from 'inversify';
-import { Device, DeviceUpdate, DeviceUpdateValidator, DeviceCreate, DeviceCreateValidator } from '../api';
+import {
+  BaseHttpController,
+  httpDelete,
+  httpGet,
+  httpPost,
+  interfaces,
+  queryParam,
+  requestBody,
+  requestParam
+} from 'inversify-express-utils';
+import {Container, inject} from 'inversify';
+import { Device, DeviceUpdate, DeviceUpdateValidator, DeviceCreateValidator, DeviceCreate } from '../api';
+import * as Responses from '../api/response';
 import DeviceService from './DeviceService';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
@@ -8,18 +18,22 @@ import * as t from 'io-ts';
 import { httpController, parseExpand, deleteMethod, createMethod, authorizationHeader } from '../api/controllerUtils';
 import Request from '../api/Request';
 import { QrData, PairingData, QrDataValidator } from '../../api-v1/pairing/PairingService';
+import {InternalDeviceService} from '../../internal-device-service/InternalDeviceService';
+import {FwProperties, FwPropertiesValidator} from '../../internal-device-service/models';
+import _ from 'lodash';
 
 export function DeviceControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
   const authMiddlewareFactory = container.get<AuthMiddlewareFactory>('AuthMiddlewareFactory');
   const auth = authMiddlewareFactory.create();
-  const authWithId = authMiddlewareFactory.create(async ({ params: { id } }: Request) => ({ icd_id: id }));
+  const authWithId = authMiddlewareFactory.create(async ({params: {id}}: Request) => ({icd_id: id}));
   const authWithLocation = authMiddlewareFactory.create(async ({ body: { location: { id } } }: Request) => ({ location_id: id }));
 
-  @httpController({ version: apiVersion }, '/devices')
+  @httpController({version: apiVersion}, '/devices')
   class DeviceController extends BaseHttpController {
     constructor(
-      @inject('DeviceService') private deviceService: DeviceService
+      @inject('DeviceService') private deviceService: DeviceService,
+      @inject('InternalDeviceService') private internalDeviceService: InternalDeviceService
     ) {
       super();
     }
@@ -35,10 +49,16 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
         })
       }))
     )
-    private async getDevice(@requestParam('id') id: string, @queryParam('expand') expand?: string): Promise<Device | {}> {
+    private async getDevice(@requestParam('id') id: string, @queryParam('expand') expand?: string): Promise<Responses.DeviceResponse | {}> {
       const expandProps = parseExpand(expand);
 
-      return this.deviceService.getDeviceById(id, expandProps);
+      const deviceModel = await this.deviceService.getDeviceById(id, expandProps);
+
+      if (_.isEmpty(deviceModel)) {
+        return {};
+      }
+
+      return Responses.Device.fromModel(deviceModel as Device);
     }
 
     @httpPost('/:id',
@@ -51,9 +71,23 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
         body: DeviceUpdateValidator
       }))
     )
-    private async updatePartialDevice(@requestParam('id') id: string, @requestBody() deviceUpdate: DeviceUpdate): Promise<Device> {
+    private async updatePartialDevice(@requestParam('id') id: string, @requestBody() deviceUpdate: DeviceUpdate): Promise<Responses.DeviceResponse> {
 
-      return this.deviceService.updatePartialDevice(id, deviceUpdate);
+      return Responses.Device.fromModel(await this.deviceService.updatePartialDevice(id, deviceUpdate));
+    }
+
+    @httpPost('/:id/fwproperties',
+      authWithId,
+      reqValidator.create(t.type({
+        params: t.type({
+          id: t.string
+        }),
+        body: FwPropertiesValidator
+      }))
+    )
+    private async setDeviceFwProperties(@requestParam('id') id: string, @requestBody() fwProperties: FwProperties): Promise<void> {
+
+      return this.internalDeviceService.setDeviceFwProperties(id, fwProperties);
     }
 
     @httpDelete('/:id',

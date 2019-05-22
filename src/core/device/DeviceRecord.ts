@@ -80,7 +80,8 @@ export class DeviceRecord {
       updatedAt: this.data.updated_at,
       deviceType: DeviceType[deviceTypeKey],
       deviceModel: DeviceModelType[deviceModelKey],
-      isPaired: _.get(this.data, 'is_paired', false) 
+      isPaired: _.get(this.data, 'is_paired', false),
+      additionalProps: null
     };
   }
 }
