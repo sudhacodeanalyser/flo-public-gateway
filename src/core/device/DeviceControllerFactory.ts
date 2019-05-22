@@ -70,7 +70,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       return this.deviceService.removeDevice(id);
     }
 
-    @httpPost('/pair/qr',
+    @httpPost('/pair/init',
       auth,
       reqValidator.create(t.type({
         body: QrDataValidator 
@@ -81,7 +81,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       return this.deviceService.scanQrCode(authToken, qrData);
     }
 
-    @httpPost('/pair',
+    @httpPost('/pair/complete',
       authWithLocation,
       reqValidator.create(t.type({
         body: DeviceCreateValidator
