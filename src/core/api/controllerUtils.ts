@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import { controller, interfaces, HttpResponseMessage, JsonContent } from 'inversify-express-utils';
+import { controller, interfaces, HttpResponseMessage, JsonContent, requestHeaders } from 'inversify-express-utils';
 import ResourceDoesNotExistError from './error/ResourceDoesNotExistError';
 
 export function parseExpand(expand?: string): string[] {
@@ -44,4 +44,8 @@ export function deleteMethod(target: any, propertyName: string, propertyDescript
 
     } 
   };
+}
+
+export function authorizationHeader(): ParameterDecorator {
+  return requestHeaders('Authorization');
 }

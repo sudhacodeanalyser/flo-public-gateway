@@ -1,9 +1,10 @@
 import { inject, injectable } from 'inversify';
 import { DeviceRecordData, DeviceRecord } from './DeviceRecord';
-import { Device, DependencyFactoryFactory } from '../api';
+import { Device, DependencyFactoryFactory, DeviceCreate, DeviceType, DeviceModelType } from '../api';
 import { Resolver, PropertyResolverMap, LocationResolver } from '../resolver';
 import { fromPartialRecord } from '../../database/Patch';
 import DeviceTable from '../device/DeviceTable';
+import uuid from 'uuid';
 import {InternalDeviceService} from "../../internal-device-service/InternalDeviceService";
 
 @injectable()
@@ -44,6 +45,16 @@ class DeviceResolver extends Resolver<Device> {
     return this.toModel(deviceRecordData, expandProps);
   }
 
+  public async getByMacAddress(macAddress: string, expandProps: string[] = []): Promise<Device | null> {
+    const deviceRecordData = await this.deviceTable.getByMacAddress(macAddress);
+
+    if (deviceRecordData === null) {
+      return null;
+    }
+
+    return this.toModel(deviceRecordData, expandProps);
+  }
+
   public async getAllByLocationId(locationId: string, expandProps: string[] = []): Promise<Device[]> {
     const deviceRecordData = await this.deviceTable.getAllByLocationId(locationId);
 
@@ -62,6 +73,21 @@ class DeviceResolver extends Resolver<Device> {
 
   public async remove(id: string): Promise<void> {
     return this.deviceTable.remove({ id });
+  }
+
+  public async createDevice(deviceCreate: DeviceCreate, isPaired: boolean = false): Promise<Device> {
+    const device = {
+      ...deviceCreate,
+      deviceType: DeviceType.FLO_DEVICE,
+      deviceModel: DeviceModelType.FLO_DEVICE_THREE_QUARTER_INCH,
+      additionalProps: null,
+      isPaired,
+      id: uuid.v4()
+    };
+    const deviceRecordData = DeviceRecord.fromModel(device);
+    const createdDeviceRecordData = await this.deviceTable.put(deviceRecordData);
+
+    return new DeviceRecord(createdDeviceRecordData).toModel();
   }
 
   private async toModel(deviceRecordData: DeviceRecordData, expandProps: string[] = []): Promise<Device> {
