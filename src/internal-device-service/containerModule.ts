@@ -1,8 +1,8 @@
 import { ContainerModule, interfaces } from 'inversify';
 import config from '../config/config';
-import { InternalDeviceServiceFetcher } from "./InternalDeviceServiceFetcher";
+import { InternalDeviceService } from './InternalDeviceService';
 
 export default new ContainerModule((bind: interfaces.Bind) => {
-  bind<string>('InternalDeviceServiceBaseURL').toConstantValue(config.internalDeviceServiceBaseURL);
-  bind<InternalDeviceServiceFetcher>('InternalDeviceServiceFetcher').to(InternalDeviceServiceFetcher);
+  bind<string>('InternalDeviceServiceBaseUrl').toConstantValue(config.internalDeviceServiceBaseUrl);
+  bind<InternalDeviceService>('InternalDeviceService').to(InternalDeviceService);
 });

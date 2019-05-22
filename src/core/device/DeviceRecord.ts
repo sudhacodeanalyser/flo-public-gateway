@@ -72,7 +72,8 @@ export class DeviceRecord {
       createdAt: this.data.created_at,
       updatedAt: this.data.updated_at,
       deviceType: DeviceType[deviceTypeKey],
-      deviceModel: DeviceModelType[deviceModelKey]
+      deviceModel: DeviceModelType[deviceModelKey],
+      additionalProps: null
     };
   }
 }
