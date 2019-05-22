@@ -2,7 +2,6 @@ import {inject, injectable} from 'inversify';
 import {
   defaultInternalDeviceServicePayload,
   FwProperties,
-  FwPropertiesCodec,
   InternalDevice,
   InternalDeviceCodec
 } from './models';

@@ -1,6 +1,6 @@
 import * as t from 'io-ts';
 import {Expandable, Location, TimestampedModel} from '../../api';
-import {FwProperties, InternalDevice} from "../../../internal-device-service/models";
+import {FwProperties, InternalDevice} from '../../../internal-device-service/models';
 
 export enum DeviceType {
   FLO_DEVICE = 'flo_device',
