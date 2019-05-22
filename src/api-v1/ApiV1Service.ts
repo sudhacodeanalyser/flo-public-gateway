@@ -28,7 +28,7 @@ class ApiV1Service {
     } catch (err) {
       if (!err.response) {
         throw err;
-      } else if (err.response.status === 409 || err.response.status === 401 || err.response.status === 403) {
+      } else if (err.response.status === 409 || err.response.status === 401 || err.response.status === 403 || err.response.status === 404) {
         throw new ApiV1Error(err.response.status, err.response.data.message);
       } else {
         throw err;
