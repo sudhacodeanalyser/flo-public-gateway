@@ -60,15 +60,10 @@ class DeviceService {
     } catch (err) {
       // Failure to complete the pairing process should not cause the pairing to completely fail.
       // This is how pairing works in API v1.
-      this.logger.info({ err });
+      this.logger.error({ err });
     }
 
     return createdDevice;
-  }
-
-  private async completePairing(authToken: string, device: Device, timezone: string): Promise<void> {
-
-      return ;
   }
 }
 
