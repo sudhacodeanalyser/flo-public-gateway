@@ -19,9 +19,10 @@ class PairingService extends ApiV1Service {
     };
     const response = await this.sendRequest(request);
 
-    if (!PairingDataCodec.is(response)) {
-      throw new Error('Invalid response.');
-    } 
+    if (PairingDataCodec.decode(response).isLeft()) {
+
+       throw new Error('Invalid response.');
+    }
 
     return response as PairingData;
   }
