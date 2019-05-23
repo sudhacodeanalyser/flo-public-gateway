@@ -3,7 +3,7 @@ import * as t from 'io-ts';
 const InternalDeviceCodec = t.type({
   createdTime: t.string,
   deviceId: t.string,
-  fwProperties: t.object,
+  fwProperties: t.record(t.string, t.any),
   fwVersion: t.string,
   isConnected: t.boolean,
   lastHeardFromTime: t.string,

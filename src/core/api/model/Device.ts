@@ -81,6 +81,10 @@ export interface Device extends DeviceUpdate, TimestampedModel {
   additionalProps: AdditionalDeviceProps | null
 }
 
+interface FwProperties {
+  [prop: string]: any
+}
+
 export interface AdditionalDeviceProps extends Pick<InternalDevice, 'isConnected' | 'lastHeardFromTime' | 'fwVersion'> {
-  fwProperties: object | null
+  fwProperties: FwProperties | null
 }
