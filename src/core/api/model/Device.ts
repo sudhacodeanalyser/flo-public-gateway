@@ -1,8 +1,8 @@
 import * as t from 'io-ts';
-import {Expandable, Location, TimestampedModel} from '../../api';
-import {FwProperties, InternalDevice} from '../../../internal-device-service/models';
-import { $enum } from 'ts-enum-util';
 import _ from 'lodash';
+import { $enum } from 'ts-enum-util';
+import { InternalDevice } from '../../../internal-device-service/models';
+import { Expandable, Location, TimestampedModel } from '../../api';
 
 export enum DeviceType {
   FLO_DEVICE = 'flo_device',
@@ -82,5 +82,5 @@ export interface Device extends DeviceUpdate, TimestampedModel {
 }
 
 export interface AdditionalDeviceProps extends Pick<InternalDevice, 'isConnected' | 'lastHeardFromTime' | 'fwVersion'> {
-  fwProperties: null | FwProperties
+  fwProperties: object | null
 }

@@ -1,18 +1,13 @@
-import {inject, injectable} from 'inversify';
-import {
-  defaultInternalDeviceServicePayload,
-  FwProperties,
-  InternalDevice,
-  InternalDeviceCodec
-} from './models';
-import {InternalDeviceServiceHandler} from "./internalDeviceServiceHandler";
+import { inject, injectable } from 'inversify';
 import InternalDeviceServiceError from "./internalDeviceServiceError";
+import { InternalDeviceServiceHandler } from "./internalDeviceServiceHandler";
+import { InternalDevice, InternalDeviceCodec } from './models';
 
 @injectable()
 class InternalDeviceService extends InternalDeviceServiceHandler {
   @inject('InternalDeviceServiceBaseUrl') private internalDeviceServiceBaseUrl: string;
 
-  public async getDevice(macAddress: string): Promise<InternalDevice> {
+  public async getDevice(macAddress: string): Promise<InternalDevice | null> {
 
     try {
       const request = {
@@ -30,14 +25,14 @@ class InternalDeviceService extends InternalDeviceServiceHandler {
       return response as InternalDevice;
     } catch (err) {
       if (err instanceof InternalDeviceServiceError && err.statusCode === 404) {
-        return defaultInternalDeviceServicePayload;
+        return null;
       } else {
         throw err;
       }
     }
   }
 
-  public async setDeviceFwProperties(deviceId: string, data: Partial<FwProperties>): Promise<void> {
+  public async setDeviceFwProperties(deviceId: string, data: object): Promise<void> {
 
     const request = {
       method: 'post',
@@ -49,4 +44,5 @@ class InternalDeviceService extends InternalDeviceServiceHandler {
   }
 }
 
-export {InternalDeviceService};
+export { InternalDeviceService };
+

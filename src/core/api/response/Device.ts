@@ -1,4 +1,4 @@
-import {AdditionalDeviceProps, Device as DeviceModel, Omit} from '../../api';
+import { AdditionalDeviceProps, Device as DeviceModel, Omit } from '../../api';
 
 export interface DeviceResponse extends Omit<DeviceModel, 'additionalProps'>, AdditionalDeviceProps {
 }

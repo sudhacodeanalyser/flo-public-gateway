@@ -1,26 +1,16 @@
-import {
-  BaseHttpController,
-  httpDelete,
-  httpGet,
-  httpPost,
-  interfaces,
-  queryParam,
-  requestBody,
-  requestParam
-} from 'inversify-express-utils';
-import {Container, inject} from 'inversify';
-import { Device, DeviceUpdate, DeviceUpdateValidator, DeviceCreateValidator, DeviceCreate } from '../api';
+import { Container, inject } from 'inversify';
+import { BaseHttpController, httpDelete, httpGet, httpPost, interfaces, queryParam, requestBody, requestParam } from 'inversify-express-utils';
+import * as t from 'io-ts';
+import _ from 'lodash';
+import { PairingData, QrData, QrDataValidator } from '../../api-v1/pairing/PairingService';
+import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
+import { InternalDeviceService } from '../../internal-device-service/InternalDeviceService';
+import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
+import { Device, DeviceCreate, DeviceCreateValidator, DeviceUpdate, DeviceUpdateValidator } from '../api';
+import { authorizationHeader, createMethod, deleteMethod, httpController, parseExpand } from '../api/controllerUtils';
+import Request from '../api/Request';
 import * as Responses from '../api/response';
 import DeviceService from './DeviceService';
-import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
-import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
-import * as t from 'io-ts';
-import { httpController, parseExpand, deleteMethod, createMethod, authorizationHeader } from '../api/controllerUtils';
-import Request from '../api/Request';
-import { QrData, PairingData, QrDataValidator } from '../../api-v1/pairing/PairingService';
-import {InternalDeviceService} from '../../internal-device-service/InternalDeviceService';
-import {FwProperties, FwPropertiesValidator} from '../../internal-device-service/models';
-import _ from 'lodash';
 
 export function DeviceControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
@@ -81,11 +71,11 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       reqValidator.create(t.type({
         params: t.type({
           id: t.string
-        }),
-        body: FwPropertiesValidator
+        })
+        // TODO Do not allow empty
       }))
     )
-    private async setDeviceFwProperties(@requestParam('id') id: string, @requestBody() fwProperties: FwProperties): Promise<void> {
+    private async setDeviceFwProperties(@requestParam('id') id: string, @requestBody() fwProperties: any): Promise<void> {
 
       return this.internalDeviceService.setDeviceFwProperties(id, fwProperties);
     }
@@ -107,7 +97,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     @httpPost('/pair/init',
       auth,
       reqValidator.create(t.type({
-        body: QrDataValidator 
+        body: QrDataValidator
       }))
     )
     private async scanQrCode(@authorizationHeader() authToken: string, @requestBody() qrData: QrData): Promise<PairingData> {
