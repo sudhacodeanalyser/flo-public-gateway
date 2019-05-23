@@ -14,6 +14,18 @@ export enum DeviceModelType {
   FLO_DEVICE_ONE_AND_QUARTER_INCH = 'flo_device_1_1/4_inch'
 }
 
+export enum NoYesUnsure {
+  NO = 'no',
+  YES = 'yes',
+  UNSURE = 'unsure'
+}
+
+export enum IrrigationType {
+  NONE = 'none',
+  SPRINKLERS = 'sprinklers',
+  DRIP = 'drip'
+}
+
 const deviceModelTypeValues = $enum(DeviceModelType).getValues();
 const DeviceModelTypeCodec = t.keyof(
   _.zipObject(deviceModelTypeValues, deviceModelTypeValues.map(() => null)) as {
@@ -26,10 +38,24 @@ const DeviceTypeCodec = t.keyof(
     [k in DeviceType]: null
   }
 );
+const noYesUnsureValues = $enum(NoYesUnsure).getValues();
+const NoYesUnsureCodec = t.keyof(
+  _.zipObject(noYesUnsureValues, noYesUnsureValues.map(() => null)) as {
+    [k in NoYesUnsure]: null
+  }
+);
+const irrigationTypeValues = $enum(NoYesUnsure).getValues();
+const IrrigationTypeCodec = t.keyof(
+  _.zipObject(irrigationTypeValues, irrigationTypeValues.map(() => null)) as {
+    [k in IrrigationType]: null
+  }
+);
 
 const DeviceMutableCodec = t.type({
   installationPoint: t.string,
-  nickname: t.string
+  nickname: t.string,
+  prvInstalledAfter: NoYesUnsureCodec,
+  irrigationType: IrrigationTypeCodec
 });
 
 const DeviceCreateCodec = t.intersection([
