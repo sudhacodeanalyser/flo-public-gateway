@@ -32,7 +32,7 @@ class InternalDeviceService extends InternalDeviceServiceHandler {
     }
   }
 
-  public async setDeviceFwProperties(deviceId: string, data: object): Promise<void> {
+  public async setDeviceFwProperties(deviceId: string, data: { [prop: string]: any }): Promise<void> {
 
     const request = {
       method: 'post',
