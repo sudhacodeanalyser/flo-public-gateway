@@ -1,11 +1,11 @@
 import { inject, injectable } from 'inversify';
-import { DeviceRecordData, DeviceRecord } from './DeviceRecord';
-import { Device, DependencyFactoryFactory, DeviceCreate, DeviceType, DeviceModelType } from '../api';
-import { Resolver, PropertyResolverMap, LocationResolver } from '../resolver';
-import { fromPartialRecord } from '../../database/Patch';
-import DeviceTable from '../device/DeviceTable';
 import uuid from 'uuid';
-import {InternalDeviceService} from "../../internal-device-service/InternalDeviceService";
+import { fromPartialRecord } from '../../database/Patch';
+import { InternalDeviceService } from "../../internal-device-service/InternalDeviceService";
+import { DependencyFactoryFactory, Device, DeviceCreate, DeviceModelType, DeviceType } from '../api';
+import DeviceTable from '../device/DeviceTable';
+import { LocationResolver, PropertyResolverMap, Resolver } from '../resolver';
+import { DeviceRecord, DeviceRecordData } from './DeviceRecord';
 
 @injectable()
 class DeviceResolver extends Resolver<Device> {
@@ -18,8 +18,6 @@ class DeviceResolver extends Resolver<Device> {
       return this.locationResolverFactory().get(device.location.id);
     },
     additionalProps: async (device: Device, shouldExpand = false) => {
-      // tslint:disable
-      console.log("device mac address is " + device.macAddress);
       return this.internalDeviceService.getDevice(device.macAddress);
     }
   };
