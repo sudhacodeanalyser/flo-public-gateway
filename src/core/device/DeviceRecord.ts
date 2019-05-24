@@ -1,6 +1,7 @@
 import { $enum } from 'ts-enum-util';
+import _ from 'lodash';
 // These should likely go into a lookup table
-import { Device, DeviceType, DeviceModelType } from '../api';
+import { Device, DeviceType, DeviceModelType, NoYesUnsure, IrrigationType } from '../api';
 
 export enum DeviceTypeData {
   FLO_DEVICE = 1,
@@ -10,6 +11,18 @@ export enum DeviceTypeData {
 export enum DeviceModelTypeData {
   FLO_DEVICE_THREE_QUARTER_INCH = 1,
   FLO_DEVICE_ONE_AND_QUARTER_INCH
+}
+
+export enum NoYesUnsureData {
+  NO = 0,
+  YES = 1,
+  UNSURE = 2
+}
+
+export enum IrrigationTypeData {
+  NONE = 0,
+  SPRINKLERS = 1,
+  DRIP = 2
 }
 
 export interface DeviceRecordData {
@@ -22,6 +35,9 @@ export interface DeviceRecordData {
   nickname?: string;
   created_at?: string;
   updated_at?: string;
+  is_paired?: boolean;
+  prv_installed_after?: NoYesUnsureData;
+  irrigation_type?: IrrigationTypeData;
 }
 
 const DeviceTypeDataEnum = $enum(DeviceTypeData);
@@ -29,6 +45,12 @@ const DeviceModelTypeDataEnum = $enum(DeviceModelTypeData);
 
 const DeviceTypeEnum = $enum(DeviceType);
 const DeviceModelTypeEnum = $enum(DeviceModelType);
+
+const NoYesUnsureEnum = $enum(NoYesUnsure);
+const NoYesUnsureDataEnum = $enum(NoYesUnsureData);
+
+const IrrigationTypeEnum = $enum(IrrigationType);
+const IrrigationTypeDataEnum = $enum(IrrigationTypeData);
 
 export class DeviceRecord {
 
@@ -38,6 +60,8 @@ export class DeviceRecord {
 
     const deviceModelKey = DeviceModelTypeEnum.getKeyOrDefault(model.deviceModel);
     const deviceModel = deviceModelKey && DeviceModelTypeData[deviceModelKey];
+    const prvInstalledAfterKey = NoYesUnsureEnum.getKeyOrDefault(model.prvInstalledAfter, 'UNSURE');
+    const irrigationTypeKey = IrrigationTypeEnum.getKeyOrDefault(model.irrigationType);
 
     return {
       id: model.id,
@@ -48,8 +72,15 @@ export class DeviceRecord {
       created_at: model.createdAt,
       updated_at: model.updatedAt,
       device_type: deviceType,
-      device_model: deviceModel
+      device_model: deviceModel,
+      is_paired: model.isPaired,
+      prv_installed_after: NoYesUnsureData[prvInstalledAfterKey],
+      irrigation_type: irrigationTypeKey && IrrigationTypeData[irrigationTypeKey]
     };
+  }
+
+  public static fromModel(model: Device): DeviceRecordData {
+    return DeviceRecord.fromPartialModel(model) as DeviceRecordData;
   }
 
   constructor(
@@ -60,6 +91,8 @@ export class DeviceRecord {
     // TODO: Check defaults.
     const deviceTypeKey = DeviceTypeDataEnum.getKeyOrDefault(this.data.device_type, 'FLO_DEVICE');
     const deviceModelKey = DeviceModelTypeDataEnum.getKeyOrDefault(this.data.device_model, 'FLO_DEVICE_THREE_QUARTER_INCH');
+    const prvInstalledAfterKey = NoYesUnsureDataEnum.getKeyOrDefault(this.data.prv_installed_after, 'UNSURE');
+    const irrigationTypeKey = IrrigationTypeDataEnum.getKeyOrDefault(this.data.irrigation_type, 'NONE');
 
     return {
       id: this.data.id,
@@ -72,7 +105,11 @@ export class DeviceRecord {
       createdAt: this.data.created_at,
       updatedAt: this.data.updated_at,
       deviceType: DeviceType[deviceTypeKey],
-      deviceModel: DeviceModelType[deviceModelKey]
+      deviceModel: DeviceModelType[deviceModelKey],
+      isPaired: _.get(this.data, 'is_paired', false),
+      additionalProps: null,
+      prvInstalledAfter: NoYesUnsure[prvInstalledAfterKey],
+      irrigationType: IrrigationType[irrigationTypeKey]
     };
   }
 }
