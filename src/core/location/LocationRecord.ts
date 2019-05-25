@@ -234,12 +234,13 @@ const RecordToModelSchema: StrictSchema<Location, LocationRecordData> = {
     }
   },
   residenceType: (input: LocationRecordData) => {
-    return input.profile && input.profile.residence_type !== undefined && 
+    return input.profile && input.profile.residence_type !== undefined ? 
       translateStringToNumericEnum(
         ResidenceType,
         ResidenceTypeData,
         input.profile.residence_type
-      );
+      ) :
+      undefined;
   },
   waterSource: (input: LocationRecordData) => {
     return input.profile && input.profile.water_source &&
