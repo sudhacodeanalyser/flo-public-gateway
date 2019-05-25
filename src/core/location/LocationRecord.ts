@@ -30,10 +30,6 @@ function translateStringToNumericEnum<
     );
 }
 
-function copyProp<T>(prop: keyof T) {
-  return { [prop]: prop };
-}
-
 export enum LegacyLocationSizeCategory {
   LTE_700 = 0,
   GT_700_LTE_1000,
@@ -189,66 +185,6 @@ export interface LocationRecordData extends Partial<LegacyLocationProfile>, Time
   is_profile_complete?: boolean,
   is_using_away_schedule?: boolean,
   profile?: LocationProfile
-}
-
-type CommonRecordProps =
-    'location_id' |
-    'address' |
-    'address2' |
-    'city' |
-    'state' |
-    'country' |
-    'postalcode' |
-    'timezone' |
-    'gallons_per_day_goal' |
-    'occupants' |
-    'stories' |
-    'is_profile_complete' |
-    'created_at' |
-    'updated_at';
-
-type CommonModelProps =
-    'id' |
-    'address' |
-    'address2' |
-    'city' |
-    'state' |
-    'country' |
-    'postalCode' |
-    'timezone' |
-    'gallonsPerDayGoal' |
-    'occupants' |
-    'stories' |
-    'isProfileComplete' |
-    'createdAt' |
-    'updatedAt';
-
-type RecordModelProp = Partial<Record<'common' | 'record' | 'model', string>>;
-
-
-function translate<S extends {}, D>(modelRecordProps: RecordModelProp[], source: keyof RecordModelProp, dest: keyof RecordModelProp, sourceData: S): D {
-  type PropMap = { [srcKey: string]: string };
-  const props: PropMap = modelRecordProps
-    .filter((prop: RecordModelProp) =>
-      prop.common !== undefined ||
-      prop[source] !== undefined
-    )
-    .reduce(
-      (acc: PropMap, prop: RecordModelProp) => ({
-        ...acc,
-        ...({
-          [prop.common !== undefined ? prop.common : (prop[source] as string)]: prop.common !== undefined ?
-            prop.common :
-            prop[dest]
-        })
-      }),
-      {}
-    );
-
-  return _.chain(sourceData)
-    .pick(Object.keys(props))
-    .mapKeys((value: any, key: string) => props[key] === undefined ? key : props[key])
-    .value() as any;
 }
 
 const RecordToModelSchema: StrictSchema<Location, LocationRecordData> = {
