@@ -449,23 +449,6 @@ export class LocationRecord {
     return morphism(ModelToRecordSchema, location);
   }
 
-  private static modelRecordProps: RecordModelProp[] = [
-    { record: 'location_id', model: 'id' },
-    { common: 'address' },
-    { common: 'address2' },
-    { common: 'city' },
-    { common: 'state' },
-    { common: 'country' },
-    { record: 'postalcode', model: 'postalCode' },
-    { common: 'timezone' },
-    { record: 'gallons_per_day_goal', model: 'gallonsPerDayGoal' },
-    { common: 'occupants' },
-    { common: 'stories' },
-    { record: 'is_profile_complete', model: 'isProfileComplete' },
-    { record: 'created_at', model: 'createdAt' },
-    { record: 'updated_at', model: 'updatedAt' }
-  ];
-
   constructor(
     public data: LocationRecordData
   ) {}
