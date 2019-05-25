@@ -317,7 +317,7 @@ const RecordToModelSchema: StrictSchema<Location, LocationRecordData> = {
           case LegacyKitchenAmenity.WASHING_MACHINE:
             return IndoorAmenity.WASHING_MACHINE;
           default:
-            undefined;
+            return undefined;
         }
       })
       .filter(indoorAmenity => indoorAmenity !== undefined) as IndoorAmenity[];
