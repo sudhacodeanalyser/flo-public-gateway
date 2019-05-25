@@ -1,19 +1,45 @@
+import { $enum, EnumWrapper } from 'ts-enum-util';
 import _ from 'lodash';
-import { Location, Timestamped } from '../api';
+import { 
+  Location, 
+  LocationCodec, 
+  Timestamped, 
+  NoYesUnsure, 
+  LocationType, 
+  WaterSource, 
+  ResidenceType,
+  WaterDamageClaim,
+  PlumbingType,
+  IndoorAmenity,
+  OutdoorAmenity,
+  PlumbingAppliance,
+  LocationSize
+} from '../api';
+import { morphism, StrictSchema } from 'morphism';
 
-export enum NoYesUnsure {
-  NO = 0,
-  YES,
-  UNSURE
+function translateStringToNumericEnum<
+  S extends Record<Extract<keyof S, string>, string>,
+  N extends Record<Extract<keyof N, string>, number>
+>(strEnumType: S, numEnumType: N, value: number, defaultKey?: Extract<keyof N, string>): S[keyof S] | undefined {
+  const strEnumKey = $enum(numEnumType).getKeyOrDefault(value, defaultKey);
+
+  return strEnumKey && 
+    (
+      $enum(strEnumType).getValueOrDefault(strEnumKey) || 
+      undefined
+    );
 }
 
-// TODO Look up the actual names of these categories
+function copyProp<T>(prop: keyof T) {
+  return { [prop]: prop };
+}
+
 export enum LegacyLocationSizeCategory {
-  ZERO = 0,
-  ONE,
-  TWO,
-  THREE,
-  FOUR
+  LTE_700 = 0,
+  GT_700_LTE_1000,
+  GT_1000_LTE_2000,
+  GT_2000_LTE_4000,
+  GT_4000
 }
 
 export enum LegacyLocationType {
@@ -32,7 +58,7 @@ export enum LegacyBathroomAmenity {
 export enum LegacyKitchenAmenity {
   DISHWASHER = 'Dishwasher',
   WASHING_MACHINE = 'Washer / Dryer',
-  REFRIDGERATOR_ICE_MAKE = 'Fridge with Ice Maker'
+  REFRIDGERATOR_ICE_MAKER = 'Fridge with Ice Maker'
 }
 
 export enum LegacyOutdoorAmenity {
@@ -59,9 +85,89 @@ export interface LegacyLocationProfile {
 }
 
 // Location Profile V2
+
+enum LocationTypeData {
+  OTHER = 0,
+  SFH,
+  APARTMENT,
+  CONDO,
+  VACATION
+}
+
+enum ResidenceTypeData {
+  OTHER = 0,
+  PRIMARY,
+  RENTAL,
+  VACATION
+}
+
+enum WaterSourceData {
+  UTILITY = 1,
+  CITY
+}
+
+enum LocationSizeData {
+  LTE_700_FT = 1,
+  GT_700_FT_LTE_1000_FT,
+  GT_1000_FT_LTE_2000_FT,
+  GT_2000_FT_LTE_4000_FT,
+  GT_4000_FT
+}
+
+enum PlumbingTypeData {
+  COPPER = 1,
+  GALVANIZED = 2
+}
+
+enum IndoorAmenityData {
+  BATHTUB = 1,
+  HOT_TUB,
+  WASHING_MACHINE,
+  DISHWASHER,
+  ICE_MAKER
+}
+
+enum OutdoorAmenityData {
+  POOL = 1,
+  POOL_AUTO_FILL,
+  HOT_TUB,
+  FOUNTAIN,
+  POND
+}
+
+enum PlumbingApplicanceData {
+  TANKLESS_WATER_HEATER = 1,
+  EXPANSION_TANK,
+  WHOLE_HOME_FILTRATION,
+  WHOLE_HOME_HUMIDIFIER,
+  RECIRCULATION_PUMP,
+  REVERSE_OSMOSIS,
+  WATER_SOFTENER,
+  PRESSURE_REDUCING_VALVE
+}
+
+enum WaterDamageClaimData {
+  LTE_10K_USD = 1,
+  GT_10K_USD_LTE_50K_USD,
+  GT_50K_USD_LTE_100K_USD,
+  GT_100K_USD
+}
+
 export interface LocationProfile {
-  // TODO
-  foo: any
+  location_type: LocationTypeData,
+  residence_type: ResidenceTypeData,
+  water_source: WaterSourceData,
+  location_size: LocationSizeData,
+  shower_bath_count: number,
+  toilet_count: number,
+  water_shutoff_known: NoYesUnsure,
+  plumbing_type: PlumbingTypeData,
+  indoor_amenities: IndoorAmenityData[],
+  outdoor_amenities: OutdoorAmenityData[],
+  plumbing_applicances: PlumbingApplicanceData[],
+  home_owners_insurance?: string,
+  has_past_water_damage: boolean,
+  past_water_damage_claim_amount?: WaterDamageClaimData
 }
 
 // This will need to be enforced as a runtime validation
@@ -187,19 +293,221 @@ export class LocationRecord {
   ) {}
 
   public toModel(): Location {
-    type CommonProps = Pick<Location, CommonModelProps>;
-    const commonProps = translate<LocationRecordData, CommonProps>(LocationRecord.modelRecordProps, 'record', 'model', this.data)
-
-    // TODO Implement location profile
-    return {
+    const schema: StrictSchema<Location, LocationRecordData> = {
+      id: 'location_id',
       account: {
-        id: this.data.account_id
+        id: 'account_id'
       },
-      users: [],
-      devices: [],
-      userRoles: [],
-      subscription: undefined,
-      ...commonProps
+      users: () => [],
+      devices: () => [],
+      userRoles: () => [],
+      subscription: () => undefined,
+      address: 'address',
+      address2: 'address2',
+      city: 'city',
+      state: 'state',
+      country: 'country',
+      postalCode: 'postalcode',
+      timezone: 'timezone',
+      gallonsPerDayGoal: 'gallons_per_day_goal',
+      occupants: 'occupants',
+      stories: 'stories',
+      isProfileComplete: 'is_profile_complete',
+      createdAt: 'created_at',
+      updatedAt: 'updated_at',
+      homeownersInsurance: 'profile.home_owners_insurance',
+      hasPastWaterDamage: 'profile.has_past_water_damage',
+      showerBathCount: 'profile.shower_bath_count',
+      toiletCount: 'profile.toilet_count',
+      locationType: (input: LocationRecordData) => {
+        if (input.profile !== undefined) {
+          return translateStringToNumericEnum(
+            LocationType,
+            LocationTypeData,
+            input.profile.location_type
+          );
+        }
+
+        switch (input.location_type) {
+          case LegacyLocationType.APARTMENT:
+            return LocationType.APARTMENT;
+          case LegacyLocationType.CONDO:
+            return LocationType.CONDO;
+          case LegacyLocationType.SINGLE_FAMILY_HOME:
+            return LocationType.SFH
+          default:
+            return undefined;
+        }
+      },
+      residenceType: (input: LocationRecordData) => {
+        return input.profile && translateStringToNumericEnum(
+          ResidenceType,
+          ResidenceTypeData,
+          input.profile.residence_type
+        );
+      },
+      waterSource: (input: LocationRecordData) => {
+        return input.profile && 
+          translateStringToNumericEnum(
+            WaterSource, 
+            WaterSourceData, 
+            input.profile.water_source
+          );
+      },
+      locationSize: (input: LocationRecordData) => {
+        if (input.profile) {
+          return translateStringToNumericEnum(
+            LocationSize,
+            LocationSizeData,
+            input.profile.location_size
+          );
+        }
+
+        switch (input.location_size_category) {
+          case LegacyLocationSizeCategory.LTE_700:
+            return LocationSize.LTE_700_FT;
+          case LegacyLocationSizeCategory.GT_700_LTE_1000:
+            return LocationSize.GT_700_FT_LTE_1000_FT;
+          case LegacyLocationSizeCategory.GT_1000_LTE_2000:
+            return LocationSize.GT_1000_FT_LTE_2000_FT;
+          case LegacyLocationSizeCategory.GT_2000_LTE_4000:
+            return LocationSize.GT_2000_FT_LTE_4000_FT;
+          case LegacyLocationSizeCategory.GT_4000:
+          default:
+            return LocationSize.GT_4000_FT;
+        }
+      },
+      waterShutoffKnown: (input: LocationRecordData) => {
+        const value = input.profile && 
+         (input.profile.water_shutoff_known || input.water_shutoff_known);
+
+        return value || NoYesUnsure.UNSURE;
+      },
+      plumbingType: (input: LocationRecordData) => {
+        if (input.galvanized_plumbing === NoYesUnsure.YES) {
+          return PlumbingType.GALVANIZED;
+        } else if (input.galvanized_plumbing === NoYesUnsure.NO) {
+          return PlumbingType.COPPER;
+        } else if (input.profile !== undefined) {
+          return translateStringToNumericEnum(
+            PlumbingType, 
+            PlumbingTypeData, 
+            input.profile.plumbing_type
+           );
+        } else {
+          return undefined;
+        }
+      },
+      indoorAmenities: (input: LocationRecordData) => {
+        if (input.profile !== undefined && !_.isEmpty(input.profile.indoor_amenities)) {
+          return input.profile.indoor_amenities
+            .map(indoorAmenity => 
+              translateStringToNumericEnum(
+                IndoorAmenity, 
+                IndoorAmenityData, 
+                indoorAmenity
+              )
+            )
+            .filter(indoorAmenity => indoorAmenity !== undefined) as IndoorAmenity[];
+        } 
+
+        const kitchenAmenities = (input.kitchen_amenities || [])
+          .map(kitchenAmenity => {
+            switch (kitchenAmenity) {
+              case LegacyKitchenAmenity.DISHWASHER:
+                return IndoorAmenity.DISHWASHER;
+              case LegacyKitchenAmenity.REFRIDGERATOR_ICE_MAKER:
+                return IndoorAmenity.ICE_MAKER;
+              case LegacyKitchenAmenity.WASHING_MACHINE:
+                return IndoorAmenity.WASHING_MACHINE;
+              default:
+                undefined;
+            }
+          })
+          .filter(indoorAmenity => indoorAmenity !== undefined) as IndoorAmenity[];
+        const bathroomAmenities = (input.bathroom_amenities || [])
+          .map(bathroomAmenity => {
+            switch (bathroomAmenity) {
+              case LegacyBathroomAmenity.BATHTUB:
+                return IndoorAmenity.BATHTUB;
+              case LegacyBathroomAmenity.HOT_TUB:
+              case LegacyBathroomAmenity.SPA:
+                return IndoorAmenity.HOT_TUB;              
+              default:
+                return undefined;
+            }
+          })
+          .filter(indoorAmenity => indoorAmenity !== undefined) as IndoorAmenity[];
+
+        return [...kitchenAmenities, ...bathroomAmenities];
+      },
+      outdoorAmenities: (input: LocationRecordData) => {
+        if (input.profile !== undefined && !_.isEmpty(input.profile.outdoor_amenities)) {
+          return (input.profile.outdoor_amenities || [])
+            .map(outdoorAmenity => 
+              translateStringToNumericEnum(
+                OutdoorAmenity, 
+                OutdoorAmenityData, 
+                outdoorAmenity
+              )
+            )
+            .filter(outdoorAmenity => outdoorAmenity !== undefined) as OutdoorAmenity[];
+        }
+
+        return (input.outdoor_amenities || [])
+          .map(outdoorAmenity => {
+            switch (outdoorAmenity) {
+              case LegacyOutdoorAmenity.SWIMMING_POOL: 
+                return OutdoorAmenity.POOL;
+              case LegacyOutdoorAmenity.FOUNTAIN:
+                return OutdoorAmenity.FOUNTAIN;
+              case LegacyOutdoorAmenity.SPA:
+              case LegacyOutdoorAmenity.HOT_TUB:
+                return OutdoorAmenity.HOT_TUB;
+              default:
+                return undefined;
+            }
+          })
+          .filter(outdoorAmenity => outdoorAmenity !== undefined) as OutdoorAmenity[];
+      },
+      plumbingApplicances: (input: LocationRecordData) => {
+        if (input.profile !== undefined && !_.isEmpty(input.profile.plumbing_applicances)) {
+          return (input.profile.plumbing_applicances || [])
+            .map(plumbingAppliance => 
+              translateStringToNumericEnum(
+                PlumbingAppliance,
+                PlumbingApplicanceData,
+                plumbingAppliance
+              )
+            )
+            .filter(plumbingAppliance => plumbingAppliance !== undefined) as PlumbingAppliance[];
+        }
+
+        return [
+          input.hot_water_recirculation === NoYesUnsure.YES && 
+            PlumbingAppliance.RECIRCULATION_PUMP,
+          input.water_filtering_system === NoYesUnsure.YES && 
+            PlumbingAppliance.WHOLE_HOME_FILTRATION,
+          input.tankless === NoYesUnsure.YES &&
+            PlumbingAppliance.TANKLESS_WATER_HEATER,
+          input.expansion_tank === NoYesUnsure.YES &&
+            PlumbingAppliance.EXPANSION_TANK,
+          input.whole_house_humidifier &&
+            PlumbingAppliance.WHOLE_HOME_HUMIDIFIER
+        ]
+        .filter(plumbingAppliance => plumbingAppliance) as PlumbingAppliance[];
+      },
+      pastWaterDamageClaimAmount: (input: LocationRecordData) => {
+        return input.profile && input.profile.past_water_damage_claim_amount && 
+          translateStringToNumericEnum(
+            WaterDamageClaim, 
+            WaterDamageClaimData, 
+            input.profile.past_water_damage_claim_amount
+          );
+      }
     };
+
+    return morphism(schema, this.data);
   }
 }
+
