@@ -127,8 +127,7 @@ const LocationProfileCodec = t.type({
   plumbingType: t.union([PlumbingTypeCodec, t.undefined]),
   homeownersInsurance: t.union([t.string, t.undefined]),
   hasPastWaterDamage: t.boolean,
-  pastWaterDamageClaimAmount: t.union([WaterDamageClaimCodec, t.undefined]),
-
+  pastWaterDamageClaimAmount: t.union([WaterDamageClaimCodec, t.undefined])
 });
 
 const AddressCodec = t.type({
