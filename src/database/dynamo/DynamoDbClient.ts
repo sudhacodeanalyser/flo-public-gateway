@@ -55,12 +55,12 @@ class DynamoDbClient implements DatabaseClient {
     return _.isEmpty(Item) ? null : Item as T;
   }
 
-  public _update<T>(tableName: string, key: KeyMap, patch: Patch): AWS.Request<AWS.DynamoDB.DocumentClient.UpdateItemOutput, AWS.AWSError> {
+  public _update<T>(tableName: string, key: KeyMap, patch: Patch, flattenNestedProps: boolean = true): AWS.Request<AWS.DynamoDB.DocumentClient.UpdateItemOutput, AWS.AWSError> {
     const {
       UpdateExpression,
       ExpressionAttributeNames: updateExprNames,
-      ExpressionAttributeValues
-    } = this.createUpdate(patch);
+      ExpressionAttributeValues,
+    } = this.createUpdate(patch, flattenNestedProps);
     const {
       ConditionExpression,
       ExpressionAttributeNames: conditionExprNames
@@ -80,19 +80,24 @@ class DynamoDbClient implements DatabaseClient {
     });
   }
 
-  public async update<T>(tableName: string, key: KeyMap, patch: Patch): Promise<T> {
+  public async update<T>(tableName: string, key: KeyMap, patch: Patch, flattenNestedProps: boolean = true, attemptCount: number = 0): Promise<T> {
     try {
       if (_.isEmpty(patch) || (_.isEmpty(patch.setOps) && _.isEmpty(patch.appendOps) && _.isEmpty(patch.removeOps))) {
         throw new Error('Cannot apply an empty patch');
       }
 
-      const { Attributes } = await this._update<T>(tableName, key, patch).promise();
+      const { Attributes } = await this._update<T>(tableName, key, patch, flattenNestedProps).promise();
 
       return Attributes as T;
     } catch (err) {
       // There's no type defined for this, so we check the name string
       if (err.name === 'ConditionalCheckFailedException') {
         throw new ResourceDoesNotExistError();
+      } else if (err.name === 'ValidationException' && attemptCount === 0) {
+        // This exception likely due to a nested object not existing on the record. 
+        // Therefore we will try once more without flattening the nested properties in order to 
+        // upsert the nested object.
+        return this.update(tableName, key, patch, false, attemptCount + 1);
       } else {
         throw err;
       }
@@ -146,12 +151,13 @@ class DynamoDbClient implements DatabaseClient {
     };
   }
 
-  private createUpdate(patch: Patch): Partial<AWS.DynamoDB.DocumentClient.UpdateItemInput> {
-    const setUpdate = this.processSetOps(patch);
+  private createUpdate(patch: Patch, flattenNestedProps: boolean = true): Partial<AWS.DynamoDB.DocumentClient.UpdateItemInput> {
+    const setUpdate = this.processSetOps(patch, flattenNestedProps);
+    const nestedSetUpdate = this.processNestedSetOps(patch, flattenNestedProps);
     const appendUpdate = this.processAppendOps(patch);
     const removeUpdate = this.processRemoveOps(patch);
-    const setExpr = setUpdate.opStrs.length || appendUpdate.opStrs.length ?
-      `SET ${ [...setUpdate.opStrs, ...appendUpdate.opStrs].join(', ') }` :
+    const setExpr = setUpdate.opStrs.length || nestedSetUpdate.opStrs.length || appendUpdate.opStrs.length ?
+      `SET ${ [...setUpdate.opStrs, ...nestedSetUpdate.opStrs, ...appendUpdate.opStrs].join(', ') }` :
       '';
     const removeExpr = removeUpdate.opStrs.length ?
       `REMOVE ${ removeUpdate.opStrs.join(', ') }` :
@@ -160,6 +166,7 @@ class DynamoDbClient implements DatabaseClient {
     const ExpressionAttributeNames =
       [
         setUpdate,
+        nestedSetUpdate,
         appendUpdate,
         removeUpdate
       ].reduce((acc, { ExpressionAttributeNames: exprNames }) => ({
@@ -169,6 +176,7 @@ class DynamoDbClient implements DatabaseClient {
     const ExpressionAttributeValues =
       [
         setUpdate,
+        nestedSetUpdate,
         appendUpdate,
         removeUpdate
       ].reduce((acc, { ExpressionAttributeValues: exprValues }) => ({
@@ -179,7 +187,7 @@ class DynamoDbClient implements DatabaseClient {
     return {
       UpdateExpression,
       ExpressionAttributeNames,
-      ExpressionAttributeValues
+      ExpressionAttributeValues,
     };
   }
 
@@ -197,8 +205,9 @@ class DynamoDbClient implements DatabaseClient {
     }), {});
   }
 
-  private processSetOps(patch: Patch): { opStrs: string[] } & Partial<AWS.DynamoDB.DocumentClient.UpdateItemInput> {
-    const setOps: SetOp[] | undefined = patch.setOps;
+  private processSetOps(patch: Patch, flattenNestedProps: boolean = true): { opStrs: string[] } & Partial<AWS.DynamoDB.DocumentClient.UpdateItemInput> {
+    const setOps: SetOp[] | undefined = patch.setOps && patch.setOps
+      .filter(({ value }) => !flattenNestedProps || (_.isArray(value) || !_.isObject(value)));
     const setExprTuples = setOps === undefined ? [] :
       setOps.map(setOp => ({
         name: setOp.key,
@@ -214,6 +223,48 @@ class DynamoDbClient implements DatabaseClient {
       ExpressionAttributeValues: this.collectExpressionAttributeValues(setExprTuples),
       opStrs: setStrs
     };
+  }
+
+  // Only handles single level of nesting
+  private processNestedSetOps(patch: Patch, flattenNestedProps: boolean = true): { opStrs: string[] } & Partial<AWS.DynamoDB.DocumentClient.UpdateItemInput> {
+    const setOps = patch.setOps && patch.setOps
+      .filter(({ value }) =>  flattenNestedProps && !_.isArray(value) && _.isObject(value));
+    const setExprTuples = setOps === undefined ? [] :
+      _.flatMap(setOps, setOp => 
+        Object.keys(setOp.value)
+          .filter(nestedKey => setOp.value[nestedKey] !== undefined)
+          .map(nestedKey => ({
+            name: nestedKey,
+            exprName: `#${ setOp.key }.#${ nestedKey }`,
+            value: setOp.value[nestedKey],
+            exprValue: `:${ nestedKey }`
+          }))
+      );
+      const setStrs = setExprTuples.map(({ exprName, exprValue }) =>
+        `${ exprName } = ${ exprValue }`
+      );
+      const ExpressionAttributeNames = this.collectExpressionAttributeNames(
+        setExprTuples.map(({ exprName, ...rest }) => ({
+          ...rest,
+          exprName: _.last(exprName.split('.')) || exprName
+        }))
+      );
+      const ExpressionAttributeValues = this.collectExpressionAttributeValues(
+        setExprTuples
+      );
+      const topLevelNames = setOps && setOps.reduce(
+        (acc, { key }) => ({ ...acc, [`#${ key }`]: key }),
+        {}
+      );
+
+      return {
+        ExpressionAttributeNames: {
+          ...ExpressionAttributeNames,
+          ...topLevelNames
+        },
+        ExpressionAttributeValues,
+        opStrs: setStrs
+      };
   }
 
   private processRemoveOps(patch: Patch): { opStrs: string[] } & Partial<AWS.DynamoDB.DocumentClient.UpdateItemInput> {

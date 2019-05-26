@@ -1,6 +1,7 @@
-import { Expandable, TimestampedModel, User, Account, Device, Subscription, NoYesUnsure, NoYesUnsureCodec } from '../../api';
+import { Expandable, TimestampedModel, User, Account, Device, Subscription } from '../../api';
+import { NoYesUnsure } from '../NoYesUnsure';
+import { convertEnumtoCodec } from '../enumUtils';
 import * as t from 'io-ts';
-import { $enum } from 'ts-enum-util';
 import _ from 'lodash'
 
 export const LocationUserRoleCodec = t.type({
@@ -9,18 +10,6 @@ export const LocationUserRoleCodec = t.type({
 });
 
 export type LocationUserRole = t.TypeOf<typeof LocationUserRoleCodec>;
-
-function convertEnumtoCodec<T extends Record<Extract<keyof T, string>, string>>(enumType: T): t.KeyofC<{ [k in T[keyof T]]: null }> {
-  const values = $enum(enumType).getValues();
-  ///  Record<T[keyof T], null>
-  return t.keyof(
-    _.zipObject(values, values.map(() => null)) as {
-      [k in T[keyof T]]: null
-    }
-  );
-}
-
-const DbEnum = t.string;
 
 export enum LocationType {
   OTHER = 'other',
@@ -98,19 +87,12 @@ export enum WaterDamageClaim {
 }
 export const WaterDamageClaimCodec = convertEnumtoCodec(WaterDamageClaim);
 
-function withoutLegacy<C extends t.Mixed>(codec: C): t.UnionC<[C, t.UndefinedC]> {
-  return t.union([codec, t.undefined]);
-}
-
-const withPartialLegacy = withoutLegacy;
-
-
 // These properties have corresponding legacy properties
 const LocationProfileWithLegacyCodec = t.type({
-  waterShutoffKnown: NoYesUnsureCodec,
+  waterShutoffKnown: NoYesUnsure.Codec,
   indoorAmenities: t.array(IndoorAmenityCodec),
   outdoorAmenities: t.array(OutdoorAmenityCodec),
-  plumbingApplicances: t.array(PlumbingApplicanceCodec),
+  plumbingAppliances: t.array(PlumbingApplicanceCodec),
   gallonsPerDayGoal: t.number,
   occupants: t.union([t.Int, t.undefined]),
   stories: t.union([t.Int, t.undefined]),
