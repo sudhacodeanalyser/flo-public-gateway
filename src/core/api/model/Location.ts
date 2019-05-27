@@ -24,7 +24,7 @@ export enum ResidenceType {
   OTHER = 'other',
   PRIMARY = 'primary',
   RENTAL = 'rental',
-  VACATION  = 'vaction'
+  VACATION  = 'vacation'
 }
 export const ResidenceTypeCodec = convertEnumtoCodec(ResidenceType);
 

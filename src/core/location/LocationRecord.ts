@@ -42,7 +42,7 @@ export enum LegacyBathroomAmenity {
 export enum LegacyKitchenAmenity {
   DISHWASHER = 'Dishwasher',
   WASHING_MACHINE = 'Washer / Dryer',
-  REFRIDGERATOR_ICE_MAKER = 'Fridge with Ice Maker'
+  REFRIGERATOR_ICE_MAKER = 'Fridge with Ice Maker'
 }
 
 export enum LegacyOutdoorAmenity {
@@ -302,7 +302,7 @@ const RecordToModelSchema: StrictSchema<Location, LocationRecordData> = {
         switch (kitchenAmenity) {
           case LegacyKitchenAmenity.DISHWASHER:
             return IndoorAmenity.DISHWASHER;
-          case LegacyKitchenAmenity.REFRIDGERATOR_ICE_MAKER:
+          case LegacyKitchenAmenity.REFRIGERATOR_ICE_MAKER:
             return IndoorAmenity.ICE_MAKER;
           case LegacyKitchenAmenity.WASHING_MACHINE:
             return IndoorAmenity.WASHING_MACHINE;
