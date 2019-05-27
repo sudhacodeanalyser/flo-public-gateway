@@ -80,7 +80,7 @@ class DynamoDbClient implements DatabaseClient {
     });
   }
 
-  public async update<T>(tableName: string, key: KeyMap, patch: Patch, flattenNestedProps: boolean = true, attemptCount: number = 0): Promise<T> {
+  public async update<T>(tableName: string, key: KeyMap, patch: Patch, flattenNestedProps: boolean = true): Promise<T> {
     try {
       if (_.isEmpty(patch) || (_.isEmpty(patch.setOps) && _.isEmpty(patch.appendOps) && _.isEmpty(patch.removeOps))) {
         throw new Error('Cannot apply an empty patch');
@@ -93,11 +93,11 @@ class DynamoDbClient implements DatabaseClient {
       // There's no type defined for this, so we check the name string
       if (err.name === 'ConditionalCheckFailedException') {
         throw new ResourceDoesNotExistError();
-      } else if (err.name === 'ValidationException' && attemptCount === 0) {
+      } else if (err.name === 'ValidationException' && flattenNestedProps) {
         // This exception likely due to a nested object not existing on the record. 
         // Therefore we will try once more without flattening the nested properties in order to 
         // upsert the nested object.
-        return this.update(tableName, key, patch, false, attemptCount + 1);
+        return this.update(tableName, key, patch, false);
       } else {
         throw err;
       }
