@@ -1,7 +1,9 @@
 import { $enum } from 'ts-enum-util';
 import _ from 'lodash';
 // These should likely go into a lookup table
-import { Device, DeviceType, DeviceModelType, NoYesUnsure, IrrigationType } from '../api';
+import { Device, DeviceType, DeviceModelType, IrrigationType } from '../api';
+import { NoYesUnsure } from '../api/NoYesUnsure';
+import { translateNumericToStringEnum, translateStringToNumericEnum } from '../api/enumUtils';
 
 export enum DeviceTypeData {
   FLO_DEVICE = 1,
@@ -11,12 +13,6 @@ export enum DeviceTypeData {
 export enum DeviceModelTypeData {
   FLO_DEVICE_THREE_QUARTER_INCH = 1,
   FLO_DEVICE_ONE_AND_QUARTER_INCH
-}
-
-export enum NoYesUnsureData {
-  NO = 0,
-  YES = 1,
-  UNSURE = 2
 }
 
 export enum IrrigationTypeData {
@@ -36,32 +32,36 @@ export interface DeviceRecordData {
   created_at?: string;
   updated_at?: string;
   is_paired?: boolean;
-  prv_installed_after?: NoYesUnsureData;
+  prv_installed_after?: NoYesUnsure.Numeric;
   irrigation_type?: IrrigationTypeData;
 }
-
-const DeviceTypeDataEnum = $enum(DeviceTypeData);
-const DeviceModelTypeDataEnum = $enum(DeviceModelTypeData);
-
-const DeviceTypeEnum = $enum(DeviceType);
-const DeviceModelTypeEnum = $enum(DeviceModelType);
-
-const NoYesUnsureEnum = $enum(NoYesUnsure);
-const NoYesUnsureDataEnum = $enum(NoYesUnsureData);
-
-const IrrigationTypeEnum = $enum(IrrigationType);
-const IrrigationTypeDataEnum = $enum(IrrigationTypeData);
 
 export class DeviceRecord {
 
   public static fromPartialModel(model: Partial<Device>): Partial<DeviceRecordData> {
-    const deviceTypeKey = DeviceTypeEnum.getKeyOrDefault(model.deviceType);
-    const deviceType = deviceTypeKey && DeviceTypeData[deviceTypeKey];
-
-    const deviceModelKey = DeviceModelTypeEnum.getKeyOrDefault(model.deviceModel);
-    const deviceModel = deviceModelKey && DeviceModelTypeData[deviceModelKey];
-    const prvInstalledAfterKey = NoYesUnsureEnum.getKeyOrDefault(model.prvInstalledAfter, 'UNSURE');
-    const irrigationTypeKey = IrrigationTypeEnum.getKeyOrDefault(model.irrigationType);
+    const deviceType = translateStringToNumericEnum(
+      DeviceTypeData,
+      DeviceType,
+      model.deviceType,
+      'FLO_DEVICE'
+    ) || DeviceTypeData.FLO_DEVICE;
+    const deviceModel = translateStringToNumericEnum(
+      DeviceModelTypeData,
+      DeviceModelType,
+      model.deviceModel,
+      'FLO_DEVICE_THREE_QUARTER_INCH'
+    ) || DeviceModelTypeData.FLO_DEVICE_THREE_QUARTER_INCH;
+    const prvInstalledAfter = translateStringToNumericEnum(
+      NoYesUnsure.Numeric, 
+      NoYesUnsure.String, 
+      model.prvInstalledAfter, 
+      'UNSURE'
+    );
+    const irrigationType = translateStringToNumericEnum(
+      IrrigationTypeData, 
+      IrrigationType, 
+      model.irrigationType
+    );
 
     return {
       id: model.id,
@@ -74,8 +74,8 @@ export class DeviceRecord {
       device_type: deviceType,
       device_model: deviceModel,
       is_paired: model.isPaired,
-      prv_installed_after: NoYesUnsureData[prvInstalledAfterKey],
-      irrigation_type: irrigationTypeKey && IrrigationTypeData[irrigationTypeKey]
+      prv_installed_after: prvInstalledAfter,
+      irrigation_type: irrigationType
     };
   }
 
@@ -89,10 +89,29 @@ export class DeviceRecord {
 
   public toModel(): Device {
     // TODO: Check defaults.
-    const deviceTypeKey = DeviceTypeDataEnum.getKeyOrDefault(this.data.device_type, 'FLO_DEVICE');
-    const deviceModelKey = DeviceModelTypeDataEnum.getKeyOrDefault(this.data.device_model, 'FLO_DEVICE_THREE_QUARTER_INCH');
-    const prvInstalledAfterKey = NoYesUnsureDataEnum.getKeyOrDefault(this.data.prv_installed_after, 'UNSURE');
-    const irrigationTypeKey = IrrigationTypeDataEnum.getKeyOrDefault(this.data.irrigation_type, 'NONE');
+    const deviceType = translateNumericToStringEnum(
+      DeviceType,
+      DeviceTypeData,
+      this.data.device_type,
+      'FLO_DEVICE'
+    ) || DeviceType.FLO_DEVICE;
+    const deviceModel = translateNumericToStringEnum(
+      DeviceModelType,
+      DeviceModelTypeData,
+      this.data.device_model,
+      'FLO_DEVICE_THREE_QUARTER_INCH'
+    ) || DeviceModelType.FLO_DEVICE_THREE_QUARTER_INCH;
+    const irrigationType = translateNumericToStringEnum(
+      IrrigationType, 
+      IrrigationTypeData, 
+      this.data.irrigation_type
+    );
+    const prvInstalledAfter = translateNumericToStringEnum(
+      NoYesUnsure.String, 
+      NoYesUnsure.Numeric, 
+      this.data.prv_installed_after, 
+      'UNSURE'
+    );
 
     return {
       id: this.data.id,
@@ -104,12 +123,12 @@ export class DeviceRecord {
       },
       createdAt: this.data.created_at,
       updatedAt: this.data.updated_at,
-      deviceType: DeviceType[deviceTypeKey],
-      deviceModel: DeviceModelType[deviceModelKey],
+      deviceType,
+      deviceModel,
       isPaired: _.get(this.data, 'is_paired', false),
       additionalProps: null,
-      prvInstalledAfter: NoYesUnsure[prvInstalledAfterKey],
-      irrigationType: IrrigationType[irrigationTypeKey]
+      prvInstalledAfter,
+      irrigationType
     };
   }
 }

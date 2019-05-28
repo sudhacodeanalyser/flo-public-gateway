@@ -106,7 +106,7 @@ class LocationResolver extends Resolver<Location> {
 
   public async updatePartialLocation(id: string, location: Partial<Location>): Promise<Location> {
     const locationRecordData = LocationRecord.fromPartialModel(location);
-    const patch = fromPartialRecord<Location>(locationRecordData);
+    const patch = fromPartialRecord(locationRecordData);
     const accountId: string | null = await this.getAccountId(id);
 
     if (accountId === null) {
