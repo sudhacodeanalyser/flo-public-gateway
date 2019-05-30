@@ -1,6 +1,6 @@
 import { ContainerModule, interfaces } from 'inversify';
 import { PairingService } from './pairing/PairingService';
-import { ApiV1UserRegistrationService } from './user-registration/UserRegistrationService';
+import { ApiV1UserRegistrationService } from './user-registration/ApiV1UserRegistrationService';
 import { UserRegistrationService } from '../core/user/UserRegistrationService';
 import config from '../config/config';
 
