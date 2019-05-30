@@ -63,58 +63,6 @@ paths:
           description: Invalid request body data
         404:
           description: Pending registration not found for given email
-<<<<<<< Updated upstream
-=======
-  /api/v2/users/register/verify:
-    post:
-      summary: Complete email verification, create user, and retrieve tokens
-      tags:
-        - User Registration
-      produces:
-        - application/json
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                clientId:
-                  type: string
-                clientSecret:
-                  type: string
-                token:
-                  type: string
-      responses:
-        201:
-          description: 'User created and tokens returned'
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  access_token:
-                    type: string
-                  refresh_token:
-                    type: string
-                  expires_in:
-                    type: number
-                  user_id:
-                    type: string
-                    format: uuid
-                  issued_at:
-                    type: string
-                    format: date-time
-                  expires_at:
-                    type: string
-                    format: date-time
-        400:
-          description: 'Invalid request body, invalid token, or expired token'
-        401:
-          description: 'Invalid client'
-        403:
-          description: 'Unauthorized client'
->>>>>>> Stashed changes
   /api/v2/users/{id}:
     parameters:
       - in: path
