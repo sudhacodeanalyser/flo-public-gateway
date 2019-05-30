@@ -51,8 +51,6 @@ class UserRegistrationService extends ApiV1Service {
       }
     };
     const response = await this.sendRequest(request);
-    // tslint:disable
-    console.log(JSON.stringify(response, null, 4));
     const result = EmailAvailabilityCodec.decode(response);
 
     if (result.isLeft() || !EmailAvailabilityCodec.is(result.value)) {
