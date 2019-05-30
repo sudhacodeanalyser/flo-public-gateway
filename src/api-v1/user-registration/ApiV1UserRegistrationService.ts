@@ -87,8 +87,6 @@ class ApiV1UserRegistrationService extends ApiV1Service implements UserRegistrat
       }
     };
     const response = await this.sendRequest(request);
-    // tslint:disable
-    console.log(JSON.stringify(response, null, 4));
     const result = OAuth2ResponseCodec.decode(response);
 
     if (result.isLeft()) {
