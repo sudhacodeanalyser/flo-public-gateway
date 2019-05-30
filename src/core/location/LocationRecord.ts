@@ -172,7 +172,8 @@ export interface LocationRecordData extends Partial<LegacyLocationProfile>, Time
   stories?: Integer,
   is_profile_complete?: boolean,
   is_using_away_schedule?: boolean,
-  profile?: LocationProfile
+  profile?: LocationProfile,
+  location_name?: string
 }
 
 const RecordToModelSchema: StrictSchema<Location, LocationRecordData> = {
@@ -201,6 +202,7 @@ const RecordToModelSchema: StrictSchema<Location, LocationRecordData> = {
   hasPastWaterDamage: 'profile.has_past_water_damage',
   showerBathCount: 'profile.shower_bath_count',
   toiletCount: 'profile.toilet_count',
+  nickname: 'location_name',
   locationType: (input: LocationRecordData) => {
     if (input.profile !== undefined && input.profile.location_type !== undefined) {
       return translateNumericToStringEnum(
@@ -409,6 +411,7 @@ const ModelToRecordSchema: StrictSchema<LocationRecordData, Location> = {
   is_profile_complete: 'isProfileComplete',
   created_at: 'createdAt',
   updated_at: 'updatedAt',
+  location_name: 'nickname',
   profile: (input: Partial<Location>) => {
     return {
       location_type: translateStringToNumericEnum(
@@ -500,6 +503,7 @@ const PartialModelToPartialRecordSchema: StrictSchema<PartialLocationRecordData,
   is_profile_complete: 'isProfileComplete',
   created_at: 'createdAt',
   updated_at: 'updatedAt',
+  location_name: 'nickname',
   profile: (input: Partial<Location>) => {
     return {
       location_type: translateStringToNumericEnum(
