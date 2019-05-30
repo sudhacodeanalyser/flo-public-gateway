@@ -1,26 +1,11 @@
 import * as t from 'io-ts';
 import _ from 'lodash';
-
-export const UserRegistrationDataCodec = t.type({
-  email: t.string,
-  password: t.string,
-  firstName: t.string,
-  lastName: t.string,
-  country: t.string,
-  phone: t.string
-});
-
-export type UserRegistrationData = t.TypeOf<typeof UserRegistrationDataCodec>;
+import { EmailAvailability } from '../../core/user/UserRegistrationService';
 
 const EmailAvailablityResponse = t.type({
   is_registered: t.boolean,
   is_pending: t.boolean
 });
-
-export interface EmailAvailability {
-  isRegistered: boolean;
-  isPending: boolean;
-}
 
 export const EmailAvailabilityCodec = new t.Type<EmailAvailability, t.TypeOf<typeof EmailAvailablityResponse>, unknown>(
   'EmailAvailability',

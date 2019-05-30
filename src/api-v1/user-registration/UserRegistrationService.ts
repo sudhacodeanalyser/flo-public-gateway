@@ -1,11 +1,13 @@
 import { inject, injectable } from 'inversify';
 import { ApiV1Service } from '../ApiV1Service';
 import ApiV1Error from '../ApiV1Error';
-import { UserRegistrationDataCodec, UserRegistrationData, EmailAvailability, EmailAvailabilityCodec } from './models';
+import { EmailAvailabilityCodec } from './models';
+import { UserRegistrationData, EmailAvailability, UserRegistrationService } from '../../core/user/UserRegistrationService';
+
 import _ from 'lodash';
 
 @injectable()
-class UserRegistrationService extends ApiV1Service {
+class ApiV1UserRegistrationService extends ApiV1Service implements UserRegistrationService {
   constructor(
     @inject('ApiV1Url') private readonly apiV1Url: string
   ) {
@@ -75,4 +77,4 @@ class UserRegistrationService extends ApiV1Service {
   }
 }
 
-export { UserRegistrationDataCodec, UserRegistrationData, EmailAvailability, UserRegistrationService };
+export { ApiV1UserRegistrationService };

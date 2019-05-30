@@ -7,7 +7,7 @@ import { User, UserUpdateValidator, UserUpdate } from '../api';
 import { httpController, parseExpand, deleteMethod } from '../api/controllerUtils';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import Request from '../api/Request';
-import { UserRegistrationService, UserRegistrationDataCodec, UserRegistrationData, EmailAvailability } from '../../api-v1/user-registration/UserRegistrationService';
+import { UserRegistrationService, UserRegistrationDataCodec, UserRegistrationData, EmailAvailability } from './UserRegistrationService';
 
 export function UserControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
