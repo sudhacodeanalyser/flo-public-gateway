@@ -12,9 +12,21 @@ import { fromPartialRecord } from '../../database/Patch';
 @injectable()
 class LocationResolver extends Resolver<Location> {
   protected propertyResolverMap: PropertyResolverMap<Location> = {
-    devices: async (location: Location, shouldExpand = false) =>
-      this.deviceResolverFactory().getAllByLocationId(location.id),
+    devices: async (location: Location, shouldExpand = false) => {
+      const devices = await this.deviceResolverFactory().getAllByLocationId(location.id);
 
+      return devices.map(device => {
+
+        if (!shouldExpand) {
+          return {
+            id: device.id,
+            macAddress: device.macAddress
+          };
+        }
+
+        return device;
+      });
+    },
     users: async (location: Location, shouldExpand = false) => {
       const locationUserRoles = await this.getAllUserRolesByLocationId(location.id);
 
@@ -53,7 +65,10 @@ class LocationResolver extends Resolver<Location> {
 
       if (!shouldExpand) {
         return {
-          id: subscription.id
+          id: subscription.id,
+          provider: { 
+            isActive: subscription.provider.isActive
+          }
         };
       }
 

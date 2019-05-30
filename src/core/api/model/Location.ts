@@ -1,4 +1,4 @@
-import { Expandable, TimestampedModel, User, Account, Device, Subscription } from '../../api';
+import { Omit, Expandable, TimestampedModel, User, Account, Device, Subscription } from '../../api';
 import { NoYesUnsure } from '../NoYesUnsure';
 import { convertEnumtoCodec } from '../enumUtils';
 import * as t from 'io-ts';
@@ -122,10 +122,15 @@ const AddressCodec = t.type({
   timezone: t.string
 });
 
+const NicknameCodec = t.type({
+  nickname: t.union([t.string, t.undefined])
+})
+
 const LocationMutableCodec = t.intersection([
   LocationProfileWithLegacyCodec,
   LocationProfileCodec,
-  AddressCodec
+  AddressCodec,
+  NicknameCodec
 ]);
 
 const AccountId = t.strict({
@@ -134,9 +139,27 @@ const AccountId = t.strict({
   })
 })
 
-export const LocationCreateValidator = t.intersection([t.exact(LocationMutableCodec), AccountId]);
-export type LocationCreate = t.TypeOf<typeof LocationCreateValidator>;
+const {
+  locationType,
+  residenceType,
+  ...profileProps
+} = LocationProfileCodec.props
 
+export const LocationCreateValidator = t.intersection([
+  AccountId,
+  AddressCodec,
+  t.intersection([
+    t.type({
+      locationType,
+      residenceType,
+    }),
+    // Can't have more than 5 types in an intersection with the compiler complaining
+    NicknameCodec
+  ]),
+  t.partial(profileProps as Omit<typeof LocationProfileCodec.props, 'locationType' | 'residenceType'>),
+  t.partial(LocationProfileWithLegacyCodec.props)
+]);
+export type LocationCreate = t.TypeOf<typeof LocationCreateValidator>;
 // These must be explicitly flattened by index without using .map(...), otherwise the
 // resulting type will be any
 const mutableProps = {
@@ -156,13 +179,17 @@ export const LocationCodec = t.intersection([
   LocationProfileWithLegacyCodec,
   t.partial(LocationProfileCodec.props),
   AccountId,
-  t.type({
-    id: t.string,
-    users: t.array(ExpandableCodec),
-    userRoles: t.array(LocationUserRoleCodec),
-    devices: t.array(ExpandableCodec),
-    subscription: t.union([ExpandableCodec, t.undefined])
-  })
+  t.intersection([
+    // Can't have more than 5 types in an intersection with the compiler complaining
+    NicknameCodec,
+    t.type({
+      id: t.string,
+      users: t.array(ExpandableCodec),
+      userRoles: t.array(LocationUserRoleCodec),
+      devices: t.array(ExpandableCodec),
+      subscription: t.union([ExpandableCodec, t.undefined])
+    })
+  ])
 ]);
 
 export interface Location extends t.TypeOf<typeof LocationCodec>, TimestampedModel {}
