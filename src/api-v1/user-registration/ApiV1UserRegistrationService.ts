@@ -2,7 +2,7 @@ import { inject, injectable } from 'inversify';
 import { ApiV1Service } from '../ApiV1Service';
 import ApiV1Error from '../ApiV1Error';
 import { EmailAvailabilityCodec } from './models';
-import { UserRegistrationData, EmailAvailability, UserRegistrationService } from '../../core/user/UserRegistrationService';
+import { UserRegistrationData, EmailAvailability, UserRegistrationService, EmailVerification, OAuth2Response, OAuth2ResponseCodec } from '../../core/user/UserRegistrationService';
 
 import _ from 'lodash';
 
@@ -74,6 +74,26 @@ class ApiV1UserRegistrationService extends ApiV1Service implements UserRegistrat
     };
 
     await this.sendRequest(request);
+  }
+
+  public async verifyEmailAndCreateUser(emailVerification: EmailVerification): Promise<OAuth2Response> {
+    const request = {
+      method: 'POST',
+      url: `${ this.apiV1Url }/userregistration/verify/oauth2`,
+      body: {
+        client_id: emailVerification.clientId,
+        client_secret: emailVerification.clientSecret,
+        token: emailVerification.token
+      }
+    };
+    const response = await this.sendRequest(request);
+    const result = OAuth2ResponseCodec.decode(response);
+
+    if (result.isLeft()) {
+      throw new Error('Invalid response.');
+    }
+
+    return result.value;
   }
 }
 
