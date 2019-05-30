@@ -86,16 +86,17 @@ paths:
       responses:
         201:
           description: 'User created and tokens returned'
-          application/json:
-            schema:
-              type: object
-              properties:
-                access_token:
-                  type: string
-                refresh_token:
-                  type: string
-                expires_in:
-                  type: number
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                  refresh_token:
+                    type: string
+                  expires_in:
+                    type: number
         400:
           description: 'Invalid request body, invalid token, or expired token'
         401:
