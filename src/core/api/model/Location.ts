@@ -160,6 +160,7 @@ export const LocationCreateValidator = t.intersection([
   t.partial(LocationProfileWithLegacyCodec.props)
 ]);
 export type LocationCreate = t.TypeOf<typeof LocationCreateValidator>;
+
 // These must be explicitly flattened by index without using .map(...), otherwise the
 // resulting type will be any
 const mutableProps = {
