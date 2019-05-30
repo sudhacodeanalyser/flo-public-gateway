@@ -1,4 +1,68 @@
 paths:
+  /api/v2/users/register:
+    post:
+      summary: Begins registration for a new user and account. Confirms the user's acceptance of the Terms of Service and sends a verification email to complete the registration process.
+      tags:
+        - User Registration
+      produces:
+        - application/json
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRegistration'
+      responses:
+        204:
+          description: Verification email sent
+        400:
+          description: Invalid request body data
+        409:
+          description: Email already registered
+    get:
+      summary: Checks if a given email is available, already registered, or has a verification pending
+      tags:
+        - User Registration
+      produces:
+        - application/json
+      parameters:
+        - in: query
+          name: email
+          required: true
+          schema:
+            type: string
+          description: Email to check for availablity
+      responses:
+        200:
+          description: Registration status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailAvailability'
+  /api/v2/users/register/resend:
+    post:
+      summary: Resend the verification email
+      tags:
+        - User Registration
+      produces:
+        - application/json
+      requestBody:
+        requestBody: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+      responses:
+        200:
+          description: Verification email resent
+        400:
+          description: Invalid request body data
+        404:
+          description: Pending registration not found for given email
   /api/v2/users/{id}:
     parameters:
       - in: path
@@ -83,6 +147,27 @@ paths:
 
 components:
   schemas:
+    UserRegistration:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        firstName:
+          type: string
+        lastName:
+          type: string
+        password:
+          type: string
+        phone:
+          type: string
+    EmailAvailability:
+      type: object
+      properties:
+        isPending:
+          type: boolean
+        isRegistered:
+          type: boolean
     UserMutable:
       type: object
       properties:
