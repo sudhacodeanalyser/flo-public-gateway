@@ -38,6 +38,8 @@ class UserRegistrationService extends ApiV1Service {
       // Translate HTTP 400 'Email already registered.' error into a 409 for consistency
       if (err instanceof ApiV1Error && err.statusCode === 400 && /email already registered/i.test(err.message)) {
         throw new ApiV1Error(409, err.message);
+      } else {
+        throw err;
       }
     }
   }
