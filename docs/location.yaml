@@ -290,6 +290,8 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/DeviceExpandable'
+            subscription:
+              $ref: '#/components/schemas/SubscriptionExpandable'
     LocationExpandable:
       oneOf:
         - type: object
