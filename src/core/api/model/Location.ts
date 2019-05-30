@@ -169,32 +169,6 @@ const mutableProps = {
 export const LocationUpdateValidator = t.exact(t.partial(mutableProps));
 export type LocationUpdate = t.TypeOf<typeof LocationUpdateValidator>;
 
-export const LocationCreateValidator = t.intersection([
-  AccountId,
-  AddressCodec,
-  t.intersection([
-    t.type({
-      locationType,
-      residenceType,
-    }),
-    // Can't have more than 5 types in an intersection with the compiler complaining
-    NicknameCodec
-  ]),
-  t.partial(profileProps as Omit<typeof LocationProfileCodec.props, 'locationType' | 'residenceType'>),
-  t.partial(LocationProfileWithLegacyCodec.props)
-]);
-export type LocationCreate = t.TypeOf<typeof LocationCreateValidator>;
-
-// These must be explicitly flattened by index without using .map(...), otherwise the
-// resulting type will be any
-const mutableProps = {
-  ...LocationMutableCodec.types[0].props, 
-  ...LocationMutableCodec.types[1].props,
-  ...LocationMutableCodec.types[2].props
-};
-export const LocationUpdateValidator = t.exact(t.partial(mutableProps));
-    t.type({
-
 const ExpandableCodec = t.type({ 
   id: t.string
 });
