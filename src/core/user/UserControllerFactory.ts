@@ -4,9 +4,10 @@ import { inject, Container } from 'inversify';
 import UserService from './UserService';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
 import { User, UserUpdateValidator, UserUpdate } from '../api';
-import { httpController, parseExpand, deleteMethod } from '../api/controllerUtils';
+import { httpController, parseExpand, deleteMethod, createMethod, asyncMethod } from '../api/controllerUtils';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import Request from '../api/Request';
+import { UserRegistrationService, UserRegistrationDataCodec, UserRegistrationData, EmailAvailability, EmailVerification, EmailVerificationCodec, OAuth2Response } from './UserRegistrationService';
 
 export function UserControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
@@ -16,9 +17,57 @@ export function UserControllerFactory(container: Container, apiVersion: number):
   @httpController({ version: apiVersion }, '/users')
   class UserController extends BaseHttpController {
     constructor(
-      @inject('UserService') private userService: UserService
+      @inject('UserService') private userService: UserService,
+      @inject('UserRegistrationService') private userRegistrationService: UserRegistrationService
     ) {
       super();
+    }
+
+    @httpPost(
+      '/register',
+      reqValidator.create(t.type({
+        body: UserRegistrationDataCodec
+      }))
+    )
+    @createMethod
+    private async acceptTermsAndVerifyEmail(@requestBody() data: UserRegistrationData): Promise<void> {
+      return this.userRegistrationService.acceptTermsAndVerifyEmail(data);
+    }
+
+    @httpGet(
+      '/register',
+      reqValidator.create(t.type({
+        query: t.type({
+          email: t.string
+        })
+      }))
+    )
+    private async checkEmailAvailability(@queryParam('email') email: string): Promise<EmailAvailability> {
+      return this.userRegistrationService.checkEmailAvailability(email);
+    }
+
+    @httpPost(
+      '/register/resend',
+      reqValidator.create(t.type({
+        body: t.type({
+          email: t.string
+        })
+      }))
+    )
+    @asyncMethod
+    private async resendVerificationEmail(@requestBody() { email }: { email: string }): Promise<void> {
+      return this.userRegistrationService.resendVerificationEmail(email);
+    }
+
+    @httpPost(
+      '/register/verify',
+      reqValidator.create(t.type({
+        body: EmailVerificationCodec
+      }))
+    )
+    @createMethod
+    private async verifyEmailAndCreateUser(@requestBody() emailVerification: EmailVerification): Promise<OAuth2Response> {
+      return this.userRegistrationService.verifyEmailAndCreateUser(emailVerification);
     }
 
     @httpPost(
