@@ -1,4 +1,121 @@
 paths:
+  /api/v2/devices/pair/init:
+    post:
+      summary: Begins pairing process by returning device pairing data from QR code contents
+      tags:
+        - Devices
+        - Pairing
+      produces:
+        - application/json
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  oneOf: 
+                    - type: object
+                      properties:
+                        i: 
+                          type: string
+                          format: uuid
+                        e:
+                          type: string
+                          format: uuid
+                    - type: string
+      responses:
+        200:
+          description: Pairing data
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - id
+                  - ap_name
+                  - device_id
+                  - login_token
+                  - client_cert
+                  - client_key
+                  - server_cert
+                  - websocket_key
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  ap_name:
+                    type: string
+                  ap_password:
+                    type: string
+                  device_id:
+                    type: string
+                  login_token:
+                    type: string
+                  client_cert:
+                    type: string
+                  client_key:
+                    type: string
+                  server_cert:
+                    type: string
+                  websocket_cert:
+                    type: string
+                  websocket_cert_der:
+                    type: string
+                  websocket_key:
+                    type: string
+        400:
+          description: Invalid request body
+        409:
+          description: Device already paired
+  /api/v2/devices/pair/complete:
+    post:
+      summary: Completes the pairing process, adding the device to the location and putting it into forced sleep
+      tags:
+        - Devices
+        - Pairing
+      produces:
+        - application/json
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - macAddress
+                - location
+              properties:
+                macAddress:
+                  type: string
+                location:
+                  type: object
+                  required:
+                    - id
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                installationPoint:
+                  type: string
+                nickname:
+                  type: string
+                prvInstalledAfter:
+                  type: boolean
+                irrigationType:
+                  $ref: '#/components/schemas/IrrigationType'
+      responses:
+        200:
+          description: A Device with the specified MAC address or an empty object if not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Device'
+        400:
+          description: Invalid request body
+        409:
+          description: Device already paired
   /api/v2/devices:
     get:
       summary: Retrieves a Device by MAC address.
@@ -134,7 +251,12 @@ components:
           type: string
         nickname:
           type: string
-
+    IrrigationType:
+      type: string
+      enum:
+        - none
+        - sprinklers
+        - drip
     Device:
       allOf:
         - $ref: '#/components/schemas/DeviceMutable'
@@ -161,6 +283,8 @@ components:
               type: string
             fwProperties:
               type: object
+            irrigationType:
+              $ref: '#/components/schemas/IrrigationType'
     DeviceExpandable:
       oneOf:
         - type: object
