@@ -23,6 +23,10 @@ class DeviceService {
     return device === null ? {} : device;
   }
 
+  public async getByMacAddress(macAddress: string, expand?: string[]): Promise<Device | null> {
+    return this.deviceResolver.getByMacAddress(macAddress, expand);
+  }
+
   public async updatePartialDevice(id: string, deviceUpdate: DeviceUpdate): Promise<Device> {
     return this.deviceResolver.updatePartial(id, deviceUpdate);
   }
