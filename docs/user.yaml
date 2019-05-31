@@ -1,4 +1,26 @@
 paths:
+  /api/v2/users/password/request-reset:
+    post:
+      summary: Request password reset
+      tags:
+        - Password Reset
+      produces: 
+        - application/json
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+      responses:
+        202:
+          description: If user with given email exists, password reset email will be sent
+        400:
+          description: Invalid request body
   /api/v2/users/register:
     post:
       summary: Begins registration for a new user and account. Confirms the user's acceptance of the Terms of Service and sends a verification email to complete the registration process.

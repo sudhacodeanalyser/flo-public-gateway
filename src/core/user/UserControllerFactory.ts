@@ -8,6 +8,7 @@ import { httpController, parseExpand, deleteMethod, createMethod, asyncMethod } 
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import Request from '../api/Request';
 import { UserRegistrationService, UserRegistrationDataCodec, UserRegistrationData, EmailAvailability, EmailVerification, EmailVerificationCodec, OAuth2Response } from './UserRegistrationService';
+import { PasswordResetService } from './PasswordResetService';
 
 export function UserControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
@@ -18,9 +19,23 @@ export function UserControllerFactory(container: Container, apiVersion: number):
   class UserController extends BaseHttpController {
     constructor(
       @inject('UserService') private userService: UserService,
-      @inject('UserRegistrationService') private userRegistrationService: UserRegistrationService
+      @inject('UserRegistrationService') private userRegistrationService: UserRegistrationService,
+      @inject('PasswordResetService') private passwordResetService: PasswordResetService
     ) {
       super();
+    }
+
+    @httpPost(
+      '/password/request-reset',
+      reqValidator.create(t.type({
+        body: t.type({
+          email: t.string
+        })
+      }))
+    )
+    @asyncMethod
+    private async requestPasswordReset(@requestBody() { email }: { email: string }): Promise<void> {
+      return this.passwordResetService.requestReset(email);
     }
 
     @httpPost(
