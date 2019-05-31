@@ -1,7 +1,7 @@
 paths:
   /api/v2/users/password/request-reset:
     post:
-      summary: Request password resent
+      summary: Request password reset
       tags:
         - Password Reset
       produces: 
