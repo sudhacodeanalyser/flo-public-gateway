@@ -1,4 +1,32 @@
 paths:
+  /api/v2/devices:
+    get:
+      summary: Retrieves a Device by MAC address.
+      tags:
+        - Devices
+      produces:
+        - application/json
+      parameters:
+        - in: query
+          name: macAddress
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/ExpandParam'
+      responses:
+        200:
+          description: A Device with the specified MAC address or an empty object if not found.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/Device'
+                  - $ref: '#/components/schemas/Empty'
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        403:
+          $ref: '#/components/responses/ForbiddenError'
+
   /api/v2/devices/{id}:
     parameters:
       - in: path

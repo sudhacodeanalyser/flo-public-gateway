@@ -16,7 +16,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
   const authMiddlewareFactory = container.get<AuthMiddlewareFactory>('AuthMiddlewareFactory');
   const auth = authMiddlewareFactory.create();
-  const authWithId = authMiddlewareFactory.create(async ({params: {id}}: Request) => ({icd_id: id}));
+  const authWithId = authMiddlewareFactory.create(async ({ params: { id } }: Request) => ({icd_id: id}));
   const authWithLocation = authMiddlewareFactory.create(async ({ body: { location: { id } } }: Request) => ({ location_id: id }));
 
   @httpController({version: apiVersion}, '/devices')
@@ -26,6 +26,26 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       @inject('InternalDeviceService') private internalDeviceService: InternalDeviceService
     ) {
       super();
+    }
+
+    @httpGet('/',
+      authMiddlewareFactory.create(async ({ query: { macAddress } }) => ({ device_id: macAddress })),
+      reqValidator.create(t.type({
+        query: t.type({
+          macAddress: t.string,
+          expand: t.union([t.undefined, t.string])
+        })
+      }))
+    )
+    private async getDeviceByMacAdress(@queryParam('macAddress') macAddress: string, @queryParam('expand') expand?: string): Promise<Responses.DeviceResponse | {}> {
+      const expandProps = parseExpand(expand);
+      const deviceModel = await this.deviceService.getByMacAddress(macAddress, expandProps);
+
+      if (deviceModel === null) {
+        return {};
+      }
+
+      return Responses.Device.fromModel(deviceModel);
     }
 
     @httpGet('/:id',
