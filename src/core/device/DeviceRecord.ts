@@ -34,6 +34,7 @@ export interface DeviceRecordData {
   is_paired?: boolean;
   prv_installed_after?: NoYesUnsure.Numeric;
   irrigation_type?: IrrigationTypeData;
+  should_override_location_system_mode?: boolean;
 }
 
 export class DeviceRecord {
@@ -75,7 +76,8 @@ export class DeviceRecord {
       device_model: deviceModel,
       is_paired: model.isPaired,
       prv_installed_after: prvInstalledAfter,
-      irrigation_type: irrigationType
+      irrigation_type: irrigationType,
+      should_override_location_system_mode: model.shouldOverrideLocationSystemMode
     };
   }
 
@@ -128,7 +130,8 @@ export class DeviceRecord {
       isPaired: _.get(this.data, 'is_paired', false),
       additionalProps: null,
       prvInstalledAfter,
-      irrigationType
+      irrigationType,
+      shouldOverrideLocationSystemMode: this.data.should_override_location_system_mode
     };
   }
 }

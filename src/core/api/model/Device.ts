@@ -30,7 +30,8 @@ const DeviceMutableCodec = t.type({
   installationPoint: t.string,
   nickname: t.string,
   prvInstalledAfter: NoYesUnsure.Codec,
-  irrigationType: IrrigationTypeCodec
+  irrigationType: IrrigationTypeCodec,
+  shouldOverrideLocationSystemMode: t.boolean
 });
 
 const DeviceCreateCodec = t.intersection([
