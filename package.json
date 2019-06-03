@@ -34,6 +34,7 @@
     "inversify-express-utils": "^6.3.2",
     "io-ts": "^1.8.5",
     "lodash": "^4.17.11",
+    "morphism": "^1.11.1",
     "reflect-metadata": "^0.1.13",
     "stripe": "^6.31.2",
     "swagger-jsdoc": "^3.2.9",

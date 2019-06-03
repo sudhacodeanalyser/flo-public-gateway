@@ -136,6 +136,14 @@ components:
               type: string
             couponId:
               type: string
+    SubscriptionPlanExpandable:
+      oneOf:
+        - type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+        - $ref: '#/components/schemas/SubscriptionPlan'
     Subscription:
       allOf:
         - type: object
@@ -144,16 +152,37 @@ components:
               type: string
               format: uuid
             plan:
-              oneOf:
-                - type: object
-                  properties:
-                    id:
-                      type: string
-                      format: uuid
-                - $ref: '#/components/schemas/SubscriptionPlan'
+              $ref: '#/components/schemas/SubscriptionPlanExpandable'
             location:
               $ref: '#/components/schemas/LocationExpandable'
             sourceId:
               type: string
         - $ref: '#/components/schemas/Timestamped'
+    SubscriptionExpandable:
+      type: object
+      required:
+        - id
+        - provider
+      properties: 
+        id: 
+          type: string
+          format: uuid
+        sourceId: 
+          type: string
+        plan:
+          $ref: '#/components/schemas/SubscriptionPlanExpandable'
+        location:
+          $ref: '#/components/schemas/LocationExpandable'
+        provider:
+          type: object
+          required: 
+            - isActive
+          properties:
+            name: 
+              type: string
+            isActive: 
+              type: boolean
+
+
+
 

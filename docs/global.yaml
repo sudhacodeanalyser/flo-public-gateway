@@ -36,13 +36,14 @@ components:
 
     Error:
       type: object
+      required:
+        - error
+        - message
       properties:
         error:
           type: boolean
-          required: true
         message:
           type: string
-          required: true
 
   parameters:
     ExpandParam:

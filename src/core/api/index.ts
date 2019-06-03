@@ -14,4 +14,4 @@ export * from './model/Subscription';
 export type DependencyFactoryFactory = <T>(dep: string) => () => T;
 
 export type Omit<T, K> = Pick<T, Exclude<keyof T, K>>;
-export type PartialBy<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>
+export type PartialBy<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;

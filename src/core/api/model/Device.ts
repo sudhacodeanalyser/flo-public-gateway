@@ -1,5 +1,7 @@
 import * as t from 'io-ts';
+import { NoYesUnsure } from '../NoYesUnsure';
 import _ from 'lodash';
+import { convertEnumtoCodec } from '../../api/enumUtils';
 import { $enum } from 'ts-enum-util';
 import { InternalDevice } from '../../../internal-device-service/models';
 import { Expandable, Location, TimestampedModel } from '../../api';
@@ -14,47 +16,20 @@ export enum DeviceModelType {
   FLO_DEVICE_ONE_AND_QUARTER_INCH = 'flo_device_1_1/4_inch'
 }
 
-export enum NoYesUnsure {
-  NO = 'no',
-  YES = 'yes',
-  UNSURE = 'unsure'
-}
-
 export enum IrrigationType {
   NONE = 'none',
   SPRINKLERS = 'sprinklers',
   DRIP = 'drip'
 }
 
-const deviceModelTypeValues = $enum(DeviceModelType).getValues();
-const DeviceModelTypeCodec = t.keyof(
-  _.zipObject(deviceModelTypeValues, deviceModelTypeValues.map(() => null)) as {
-    [k in DeviceModelType]: null
-  }
-);
-const deviceTypeValues = $enum(DeviceType).getValues();
-const DeviceTypeCodec = t.keyof(
-  _.zipObject(deviceTypeValues, deviceTypeValues.map(() => null)) as {
-    [k in DeviceType]: null
-  }
-);
-const noYesUnsureValues = $enum(NoYesUnsure).getValues();
-const NoYesUnsureCodec = t.keyof(
-  _.zipObject(noYesUnsureValues, noYesUnsureValues.map(() => null)) as {
-    [k in NoYesUnsure]: null
-  }
-);
-const irrigationTypeValues = $enum(NoYesUnsure).getValues();
-const IrrigationTypeCodec = t.keyof(
-  _.zipObject(irrigationTypeValues, irrigationTypeValues.map(() => null)) as {
-    [k in IrrigationType]: null
-  }
-);
+const IrrigationTypeCodec = convertEnumtoCodec(IrrigationType);
+const DeviceModelTypeCodec = convertEnumtoCodec(DeviceModelType);
+const DeviceTypeCodec = convertEnumtoCodec(DeviceType);
 
 const DeviceMutableCodec = t.type({
   installationPoint: t.string,
   nickname: t.string,
-  prvInstalledAfter: NoYesUnsureCodec,
+  prvInstalledAfter: NoYesUnsure.Codec,
   irrigationType: IrrigationTypeCodec
 });
 

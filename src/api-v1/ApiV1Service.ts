@@ -5,7 +5,7 @@ import { injectable } from 'inversify';
 export interface ApiV1Request {
   method: string,
   url: string,
-  authToken: string,
+  authToken?: string,
   body: any
 };
 
@@ -18,7 +18,7 @@ class ApiV1Service {
         url: request.url,
         headers: {
           'Content-Type': 'application/json',
-          Authorization: request.authToken
+          ...(request.authToken && { Authorization: request.authToken })
         },
         data: request.body
       });
@@ -28,7 +28,7 @@ class ApiV1Service {
     } catch (err) {
       if (!err.response) {
         throw err;
-      } else if (err.response.status === 409 || err.response.status === 401 || err.response.status === 403 || err.response.status === 404) {
+      } else if (err.response.status >= 400 && err.response.status < 500) {
         throw new ApiV1Error(err.response.status, err.response.data.message);
       } else {
         throw err;
