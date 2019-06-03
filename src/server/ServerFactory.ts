@@ -2,6 +2,7 @@ import bodyParser from 'body-parser';
 import Logger from 'bunyan';
 import cors from 'cors';
 import express from 'express';
+import basicAuth from 'express-basic-auth';
 import helmet from 'helmet';
 // tslint:disable-next-line:no-implicit-dependencies
 import { HttpError } from 'http-errors';
@@ -95,7 +96,14 @@ function ServerConfigurationFactory(container: Container): (app: express.Applica
     });
 
     // Swagger Documentation
-    app.use(`/docs`, swaggerUi.serve, swaggerUi.setup(swaggerConfig, swaggerOpts));
+    const swaggerBasicAuth = basicAuth({
+      challenge: true,
+      realm: `${config.appName}-${config.env}`,
+      users: {
+        [config.docsEndpointUser]: config.docsEndpointPassword
+      }
+    });
+    app.use('/docs', swaggerBasicAuth, swaggerUi.serve, swaggerUi.setup(swaggerConfig, swaggerOpts));
   };
 }
 
