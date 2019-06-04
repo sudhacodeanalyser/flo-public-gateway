@@ -1,10 +1,8 @@
 import * as t from 'io-ts';
-import { NoYesUnsure } from '../NoYesUnsure';
-import _ from 'lodash';
-import { convertEnumtoCodec } from '../../api/enumUtils';
-import { $enum } from 'ts-enum-util';
 import { InternalDevice } from '../../../internal-device-service/models';
 import { Expandable, Location, TimestampedModel } from '../../api';
+import { convertEnumtoCodec } from '../../api/enumUtils';
+import { NoYesUnsure } from '../NoYesUnsure';
 
 export enum DeviceType {
   FLO_DEVICE = 'flo_device',
@@ -55,7 +53,7 @@ export interface Device extends DeviceUpdate, TimestampedModel {
   deviceModel: DeviceModelType,
   isPaired: boolean,
   hasSystemModeLock: boolean,
-  additionalProps: AdditionalDeviceProps | null
+  additionalProps: AdditionalDeviceProps | null | undefined
 }
 
 interface FwProperties {
@@ -63,5 +61,5 @@ interface FwProperties {
 }
 
 export interface AdditionalDeviceProps extends Pick<InternalDevice, 'isConnected' | 'lastHeardFromTime' | 'fwVersion'> {
-  fwProperties: FwProperties | null
+  fwProperties: FwProperties | null | undefined
 }
