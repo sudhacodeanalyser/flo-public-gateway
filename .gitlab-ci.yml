@@ -42,6 +42,7 @@ Compile:
   script:
     - make pull
     - make build
+    - make audit
     - make push
 
 

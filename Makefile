@@ -29,7 +29,7 @@ install: docker ## Install npm packages using docker-based npm
 	$(NPM) $(@)
 
 audit: docker ## Install npm packages using docker-based npm
-	$(NPM) $(@)
+	-$(NPM) $(@)
 
 test: docker ## Run test task using docker-based npm
 	$(NPM) run $(@)
