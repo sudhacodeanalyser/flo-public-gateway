@@ -13,7 +13,7 @@ import _ from 'lodash';
 export function PresenceControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
   const authMiddlewareFactory = container.get<AuthMiddlewareFactory>('AuthMiddlewareFactory');
-  const authWithUserId = authMiddlewareFactory.create(async ({ params: { id } }: Request) => ({ icd_id: id }));
+  const authWithId = authMiddlewareFactory.create(async ({ params: { id } }: Request) => ({ user_id: id }));
 
   @httpController({ version: apiVersion }, '/presence')
   class PresenceController implements interfaces.Controller {
@@ -22,7 +22,7 @@ export function PresenceControllerFactory(container: Container, apiVersion: numb
     ) {}
 
     @httpPost('/', 
-      authWithUserId,
+      authWithId,
       reqValidator.create(t.type({
         body: PresenceRequestValidator
       }))
