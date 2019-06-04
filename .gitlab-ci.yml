@@ -68,8 +68,8 @@ Dev:
   stage: deploy
   dependencies:
     - Compile
-  except:
-    - master
+  only:
+    - dev
   environment:
     name: dev
     url: https://flo-public-gateway.flocloud.co/ping
