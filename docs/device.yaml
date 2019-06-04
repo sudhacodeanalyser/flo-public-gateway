@@ -241,7 +241,87 @@ paths:
           $ref: '#/components/responses/UnauthorizedError'
         403:
           $ref: '#/components/responses/ForbiddenError'
-
+  /api/v2/devices/{id}/system-mode:
+    post:
+      summary: Sends directive to change device system mode
+      tags:
+        - Devices
+        - System Mode
+      produces:
+        application/json
+      requestBody:
+        required: true
+        content: 
+          application/json:
+            schema:
+              type: object
+              properties:
+                systemMode:
+                  $ref: '#/components/schemas/SystemMode'
+      responses:
+        202:
+          description: Directive sent
+          schema:
+            $ref: '#/components/schemas/Device'
+        400:
+          description: Invalid request body
+        409:
+          description: Device system mode is locked and cannot be changed
+  /api/v2/devices/{id}/system-mode/sleep:
+    post:
+      summary: Puts the device to sleep with a scheduled wake up
+      tags:
+        - Devices
+        - System Mode
+      produces: application/json
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                sleepMinutes:
+                  type: number
+                wakeUpSystemMode:
+                  $ref: '#/components/schemas/SystemMode'
+      responses:
+        202:
+          description: Directive sent and wake up scheduled
+          schema:
+            $ref: '#/components/schemas/Device'
+        400:
+          description: Invalid request body
+        409:
+          description: Device system mode is locked and cannot be changed
+  /api/v2/devices/{id}/system-mode/forced-sleep/enable:
+    post:
+      summary: Puts the device into forced sleep
+      tags:
+        - Devices
+        - System Mode
+      produces: application/json
+      responses:
+        202:
+          description: Directive sent and system mode locked
+          schema:
+            $ref: '#/components/schemas/Device'
+        400:
+          description: Invalid request body
+  /api/v2/devices/{id}/system-mode/forced-sleep/disable:
+    post:
+      summary: Removes the device from forced sleep
+      tags:
+        - Devices
+        - System Mode
+      produces: application/json
+      responses:
+        202:
+          description: System mode unlocked
+          schema:
+            $ref: '#/components/schemas/Device'
+        400:
+          description: Invalid request body
 components:
   schemas:
     DeviceMutable:
@@ -297,3 +377,9 @@ components:
               type: string
               format: uuid
         - $ref: '#/components/schemas/Device'
+    SystemMode:
+      type: string
+      enum:
+        - home
+        - away
+        - sleep
