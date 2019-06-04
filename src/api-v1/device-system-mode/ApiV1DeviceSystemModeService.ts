@@ -1,5 +1,12 @@
 import { ApiV1Service } from '../ApiV1Service';
 import { DeviceSystemModeServiceFactory, DeviceSystemModeService, SystemMode } from '../../core/device/DeviceSystemModeService';
+import { translateStringToNumericEnum } from '../../core/api/enumUtils';
+
+export enum SystemModeNumeric {
+  HOME = 2,
+  AWAY = 3,
+  SLEEP = 5
+}
 
 class ApiV1DeviceSystemModeService extends ApiV1Service implements DeviceSystemModeService {
 
@@ -16,7 +23,7 @@ class ApiV1DeviceSystemModeService extends ApiV1Service implements DeviceSystemM
       url: `${ this.formatUrl(id) }/setsystemmode`,
       authToken: this.authToken,
       body: {
-        system_mode: systemMode
+        system_mode: translateStringToNumericEnum(SystemModeNumeric, SystemMode, systemMode)
       }
     };
 
@@ -30,7 +37,7 @@ class ApiV1DeviceSystemModeService extends ApiV1Service implements DeviceSystemM
       authToken: this.authToken,
       body: {
         sleep_minutes: sleepMinutes,
-        wake_up_system_mode: wakeUpSystemMode
+        wake_up_system_mode: translateStringToNumericEnum(SystemModeNumeric, SystemMode, wakeUpSystemMode)
       }
     };
 

@@ -3,16 +3,12 @@ import Request from '../api/Request';
 import * as t from 'io-ts';
 
 export enum SystemMode {
-  HOME = 2,
-  AWAY = 3,
-  SLEEP = 5
+  HOME = 'home',
+  AWAY = 'away',
+  SLEEP = 'sleep'
 }
 
-export const SystemModeCodec = t.union([
-  t.literal(2),
-  t.literal(3),
-  t.literal(5)
-]);
+export const SystemModeCodec = convertEnumtoCodec(SystemMode);
 
 export interface DeviceSystemModeServiceFactory {
   create(req: Request): DeviceSystemModeService; 
