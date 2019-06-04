@@ -6,6 +6,7 @@ ARG NODE_ENV=development
 RUN rm -rf /var/cache/apk/* && \
     rm -rf /tmp/* && \
     apk add --no-cache \
+      bash \
       gcc \
       g++ \
       make \
