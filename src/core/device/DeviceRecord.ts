@@ -131,7 +131,8 @@ export class DeviceRecord {
       additionalProps: null,
       prvInstalledAfter,
       irrigationType,
-      shouldOverrideLocationSystemMode: this.data.should_override_location_system_mode
+      shouldOverrideLocationSystemMode: this.data.should_override_location_system_mode,
+      hasSystemModeLock: false
     };
   }
 }
