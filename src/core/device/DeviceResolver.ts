@@ -87,6 +87,7 @@ class DeviceResolver extends Resolver<Device> {
       deviceModel: DeviceModelType.FLO_DEVICE_THREE_QUARTER_INCH,
       additionalProps: null,
       isPaired,
+      hasSystemModeLock: false,
       id: uuid.v4()
     };
     const deviceRecordData = DeviceRecord.fromModel(device);
