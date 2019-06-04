@@ -17,22 +17,31 @@ class PresenceService {
             ipAddress,
             userId,
             type: 'user',
-            ttl: payload.ttl === undefined || payload.ttl < 60 ? 60 : (payload.ttl > 3600 ? 3600 : payload.ttl),
-            appName: clientId,
-            appVersion: undefined,
+            ttl: payload.ttl === undefined || payload.ttl < 60 ? 60 : (payload.ttl > 300 ? 300 : payload.ttl),
+            appName: payload.appName === undefined || payload.appName === "" ? clientId : payload.appName,
+            appVersion: payload.appVersion,
             accountId: undefined,
             deviceId: undefined,
             ..._.omitBy(payload, value => _.isEmpty(value))
         };
 
-        await this.postToKafka(presenceData);
-        this.addToRedis(presenceData);
+        // TODO: If cheap, resolve the accountId and list of devices (mac address)
+        // that this user has access to at the time of the presence call
+
+        // A client can't do anything if there is an error, log it, alert us, leave client alone
+        try
+        {
+            await this.postToKafka(presenceData);
+            this.addToRedis(presenceData);
+        }
+        catch(e) {
+            // TODO: Log Error, don't break
+        }
 
         return presenceData;
     }
 
     public postToKafka(payload: PresenceData): void {
-
         this.kafkaProducer.send(this.kafkaTopic, payload);
     }
 
