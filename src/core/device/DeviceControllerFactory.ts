@@ -180,9 +180,9 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     private async sleep(
       @request() req: Request, 
       @requestParam('id') id: string, 
-      @requestBody() { sleepMinutes, wakeUpSysteMode}: { sleepMinutes: number, wakeUpSysteMode: SystemMode }
+      @requestBody() { sleepMinutes, wakeUpSystemMode }: { sleepMinutes: number, wakeUpSystemMode: SystemMode }
     ): Promise<Responses.DeviceResponse> {
-      await this.deviceSystemModeServiceFactory.create(req).sleep(id, sleepMinutes, wakeUpSysteMode);
+      await this.deviceSystemModeServiceFactory.create(req).sleep(id, sleepMinutes, wakeUpSystemMode);
 
       const model = await this.deviceService.updatePartialDevice(id, { shouldOverrideLocationSystemMode: true });
 
