@@ -54,6 +54,7 @@ export interface Device extends DeviceUpdate, TimestampedModel {
   deviceType: DeviceType,
   deviceModel: DeviceModelType,
   isPaired: boolean,
+  hasSystemModeLock: boolean,
   additionalProps: AdditionalDeviceProps | null
 }
 
