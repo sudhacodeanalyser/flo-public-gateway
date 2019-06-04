@@ -251,6 +251,8 @@ components:
           type: string
         nickname:
           type: string
+        shouldOverrideLocationSystemMode:
+          type: boolean
     IrrigationType:
       type: string
       enum:
@@ -285,6 +287,8 @@ components:
               type: object
             irrigationType:
               $ref: '#/components/schemas/IrrigationType'
+            hasSystemModeLock:
+              type: boolean
     DeviceExpandable:
       oneOf:
         - type: object
