@@ -156,10 +156,12 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       @request() req: Request, 
       @requestParam('id') id: string, 
       @requestBody() { systemMode }: { systemMode: SystemMode }
-    ): Promise<Device> {
+    ): Promise<Responses.DeviceResponse> {
       await this.deviceSystemModeServiceFactory.create(req).setSystemMode(id, systemMode);
 
-      return this.deviceService.updatePartialDevice(id, { shouldOverrideLocationSystemMode: true });
+      const model = await this.deviceService.updatePartialDevice(id, { shouldOverrideLocationSystemMode: true });
+
+      return Responses.Device.fromModel(model);
     }
 
     @httpPost('/:id/system-mode/sleep',
@@ -179,8 +181,12 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       @request() req: Request, 
       @requestParam('id') id: string, 
       @requestBody() { sleepMinutes, wakeUpSysteMode}: { sleepMinutes: number, wakeUpSysteMode: SystemMode }
-    ): Promise<void> {
+    ): Promise<Responses.DeviceResponse> {
       await this.deviceSystemModeServiceFactory.create(req).sleep(id, sleepMinutes, wakeUpSysteMode);
+
+      const model = await this.deviceService.updatePartialDevice(id, { shouldOverrideLocationSystemMode: true });
+
+      return Responses.Device.fromModel(model);
     }
 
     @httpPost('/:id/system-mode/forced-sleep/enable',
@@ -196,8 +202,12 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       // auth is deferred to  API v1 call
       @request() req: Request, 
       @requestParam('id') id: string
-    ): Promise<void> {
+    ): Promise<Responses.DeviceResponse> {
       await this.deviceSystemModeServiceFactory.create(req).enableForcedSleep(id);
+
+      const model = await this.deviceService.updatePartialDevice(id, { shouldOverrideLocationSystemMode: true });
+
+      return Responses.Device.fromModel(model);
     }
 
     @httpPost('/:id/system-mode/forced-sleep/disable',
@@ -212,8 +222,12 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     private async disableForcedSleep(
       @request() req: Request, 
       @requestParam('id'
-    ) id: string): Promise<void> {
+    ) id: string): Promise<Responses.DeviceResponse> {
       await this.deviceSystemModeServiceFactory.create(req).disableForcedSleep(id);
+
+      const model = await this.deviceService.updatePartialDevice(id, { shouldOverrideLocationSystemMode: true });
+
+      return Responses.Device.fromModel(model);
     }
   }
 
