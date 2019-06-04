@@ -6,6 +6,7 @@ import { DependencyFactoryFactory, Device, DeviceCreate, DeviceModelType, Device
 import DeviceTable from '../device/DeviceTable';
 import { LocationResolver, PropertyResolverMap, Resolver } from '../resolver';
 import { DeviceRecord, DeviceRecordData } from './DeviceRecord';
+import DeviceForcedSystemModeTable from './DeviceForcedSystemModeTable';
 
 @injectable()
 class DeviceResolver extends Resolver<Device> {
@@ -19,6 +20,11 @@ class DeviceResolver extends Resolver<Device> {
     },
     additionalProps: async (device: Device, shouldExpand = false) => {
       return this.internalDeviceService.getDevice(device.macAddress);
+    },
+    hasSystemModeLock: async (device: Device, shouldExpand = false) => {
+      const forcedSystemMode = await this.deviceForcedSystemModeTable.getLatest(device.id);
+
+      return forcedSystemMode !== null && forcedSystemMode.system_mode !== null;
     }
   };
   private locationResolverFactory: () => LocationResolver;
@@ -26,7 +32,8 @@ class DeviceResolver extends Resolver<Device> {
   constructor(
    @inject('DeviceTable') private deviceTable: DeviceTable,
    @inject('DependencyFactoryFactory') depFactoryFactory: DependencyFactoryFactory,
-   @inject('InternalDeviceService') private internalDeviceService: InternalDeviceService
+   @inject('InternalDeviceService') private internalDeviceService: InternalDeviceService,
+   @inject('DeviceForcedSystemModeTable') private deviceForcedSystemModeTable: DeviceForcedSystemModeTable
   ) {
     super();
 
@@ -80,6 +87,7 @@ class DeviceResolver extends Resolver<Device> {
       deviceModel: DeviceModelType.FLO_DEVICE_THREE_QUARTER_INCH,
       additionalProps: null,
       isPaired,
+      hasSystemModeLock: false,
       id: uuid.v4()
     };
     const deviceRecordData = DeviceRecord.fromModel(device);

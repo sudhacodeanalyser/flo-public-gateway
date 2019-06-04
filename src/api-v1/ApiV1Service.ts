@@ -6,7 +6,7 @@ export interface ApiV1Request {
   method: string,
   url: string,
   authToken?: string,
-  body: any
+  body?: any
 };
 
 @injectable()
@@ -20,7 +20,7 @@ class ApiV1Service {
           'Content-Type': 'application/json',
           ...(request.authToken && { Authorization: request.authToken })
         },
-        data: request.body
+        ...(request.body && { data: request.body })
       });
 
       return response.data;
