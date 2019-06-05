@@ -8,6 +8,8 @@ import dynamoDbContainerModule from '../database/dynamo/containerModule';
 import authContainerModule from '../auth/containerModule';
 import subscriptionProviderModule from '../subscription/containerModule';
 import kafkaContainerModule from '../kafka/containerModule';
+import internalDeviceServiceFetcherModule from '../internal-device-service/containerModule';
+import apiV1ContainerModule from '../api-v1/containerModule';
 
 // Core container modules
 import coreContainerModules from '../core/containerModule';
@@ -23,6 +25,8 @@ export default function ContainerFactory(container: Container = new Container())
     authContainerModule,
     subscriptionProviderModule,
     kafkaContainerModule,
+    internalDeviceServiceFetcherModule,
+    apiV1ContainerModule,
     ...coreContainerModules
   );
 

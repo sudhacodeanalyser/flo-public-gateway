@@ -1,4 +1,149 @@
 paths:
+  /api/v2/devices/pair/init:
+    post:
+      summary: Begins pairing process by returning device pairing data from QR code contents
+      tags:
+        - Devices
+        - Pairing
+      produces:
+        - application/json
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  oneOf: 
+                    - type: object
+                      properties:
+                        i: 
+                          type: string
+                          format: uuid
+                        e:
+                          type: string
+                          format: uuid
+                    - type: string
+      responses:
+        200:
+          description: Pairing data
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - id
+                  - ap_name
+                  - device_id
+                  - login_token
+                  - client_cert
+                  - client_key
+                  - server_cert
+                  - websocket_key
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  ap_name:
+                    type: string
+                  ap_password:
+                    type: string
+                  device_id:
+                    type: string
+                  login_token:
+                    type: string
+                  client_cert:
+                    type: string
+                  client_key:
+                    type: string
+                  server_cert:
+                    type: string
+                  websocket_cert:
+                    type: string
+                  websocket_cert_der:
+                    type: string
+                  websocket_key:
+                    type: string
+        400:
+          description: Invalid request body
+        409:
+          description: Device already paired
+  /api/v2/devices/pair/complete:
+    post:
+      summary: Completes the pairing process, adding the device to the location and putting it into forced sleep
+      tags:
+        - Devices
+        - Pairing
+      produces:
+        - application/json
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - macAddress
+                - location
+              properties:
+                macAddress:
+                  type: string
+                location:
+                  type: object
+                  required:
+                    - id
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                installationPoint:
+                  type: string
+                nickname:
+                  type: string
+                prvInstalledAfter:
+                  type: boolean
+                irrigationType:
+                  $ref: '#/components/schemas/IrrigationType'
+      responses:
+        200:
+          description: A Device with the specified MAC address or an empty object if not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Device'
+        400:
+          description: Invalid request body
+        409:
+          description: Device already paired
+  /api/v2/devices:
+    get:
+      summary: Retrieves a Device by MAC address.
+      tags:
+        - Devices
+      produces:
+        - application/json
+      parameters:
+        - in: query
+          name: macAddress
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/ExpandParam'
+      responses:
+        200:
+          description: A Device with the specified MAC address or an empty object if not found.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/Device'
+                  - $ref: '#/components/schemas/Empty'
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        403:
+          $ref: '#/components/responses/ForbiddenError'
+
   /api/v2/devices/{id}:
     parameters:
       - in: path
@@ -76,6 +221,107 @@ paths:
           schema:
             $ref: '#/components/schemas/Error'
 
+  /api/v2/devices/{id}/fwproperties:
+    post:
+      summary: Updates Device Firmware Properties by ID.
+      tags:
+        - Devices
+      produces:
+        - application/json
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        200:
+          description: The Device Firmware Properties were successfully updated.
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        403:
+          $ref: '#/components/responses/ForbiddenError'
+  /api/v2/devices/{id}/system-mode:
+    post:
+      summary: Sends directive to change device system mode
+      tags:
+        - Devices
+        - System Mode
+      produces:
+        application/json
+      requestBody:
+        required: true
+        content: 
+          application/json:
+            schema:
+              type: object
+              properties:
+                systemMode:
+                  $ref: '#/components/schemas/SystemMode'
+      responses:
+        202:
+          description: Directive sent
+          schema:
+            $ref: '#/components/schemas/Device'
+        400:
+          description: Invalid request body
+        409:
+          description: Device system mode is locked and cannot be changed
+  /api/v2/devices/{id}/system-mode/sleep:
+    post:
+      summary: Puts the device to sleep with a scheduled wake up
+      tags:
+        - Devices
+        - System Mode
+      produces: application/json
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                sleepMinutes:
+                  type: number
+                wakeUpSystemMode:
+                  $ref: '#/components/schemas/SystemMode'
+      responses:
+        202:
+          description: Directive sent and wake up scheduled
+          schema:
+            $ref: '#/components/schemas/Device'
+        400:
+          description: Invalid request body
+        409:
+          description: Device system mode is locked and cannot be changed
+  /api/v2/devices/{id}/system-mode/forced-sleep/enable:
+    post:
+      summary: Puts the device into forced sleep
+      tags:
+        - Devices
+        - System Mode
+      produces: application/json
+      responses:
+        202:
+          description: Directive sent and system mode locked
+          schema:
+            $ref: '#/components/schemas/Device'
+        400:
+          description: Invalid request body
+  /api/v2/devices/{id}/system-mode/forced-sleep/disable:
+    post:
+      summary: Removes the device from forced sleep
+      tags:
+        - Devices
+        - System Mode
+      produces: application/json
+      responses:
+        202:
+          description: System mode unlocked
+          schema:
+            $ref: '#/components/schemas/Device'
+        400:
+          description: Invalid request body
 components:
   schemas:
     DeviceMutable:
@@ -85,7 +331,14 @@ components:
           type: string
         nickname:
           type: string
-
+        shouldOverrideLocationSystemMode:
+          type: boolean
+    IrrigationType:
+      type: string
+      enum:
+        - none
+        - sprinklers
+        - drip
     Device:
       allOf:
         - $ref: '#/components/schemas/DeviceMutable'
@@ -103,6 +356,19 @@ components:
               type: string
             deviceModel:
               type: string
+            isConnected:
+              type: boolean
+            lastHeardFromTime:
+              type: string
+              format: date-time
+            fwVersion:
+              type: string
+            fwProperties:
+              type: object
+            irrigationType:
+              $ref: '#/components/schemas/IrrigationType'
+            hasSystemModeLock:
+              type: boolean
     DeviceExpandable:
       oneOf:
         - type: object
@@ -111,3 +377,9 @@ components:
               type: string
               format: uuid
         - $ref: '#/components/schemas/Device'
+    SystemMode:
+      type: string
+      enum:
+        - home
+        - away
+        - sleep

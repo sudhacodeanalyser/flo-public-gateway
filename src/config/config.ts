@@ -14,7 +14,9 @@ function getDefaults(): { [key: string]: any } {
         enforceSSL: false,
         dynamoTablePrefix: 'dev_',
         apiVersion: 2,
-        authUrl: 'https://api-dev.flocloud.co/api/v1/accesscontrol/authorize'
+        authUrl: 'https://api-dev.flocloud.co/api/v1/accesscontrol/authorize',
+        internalDeviceServiceBaseUrl: 'https://flo-device-service.flocloud.co/v1',
+        apiV1Url: 'https://api-dev.flocloud.co/api/v1'
       };
   }
 }
@@ -31,7 +33,11 @@ const config = {
   authUrl: process.env.AUTH_URL,
   kafkaHost: process.env.KAFKA_HOST,
   kafkaTimeout: process.env.KAFKA_TIMEOUT_MS,
-  presenceKafkaTopic: 'presence-activity-v1' // Should not change across environments
+  presenceKafkaTopic: 'presence-activity-v1', // Should not change across environments
+  internalDeviceServiceBaseUrl: process.env.INTERNAL_DEVICE_SERVICE_BASE_URL,
+  apiV1Url: process.env.API_V1_URL,
+  docsEndpointUser: process.env.DOCS_ENDPOINT_USER,
+  docsEndpointPassword: process.env.DOCS_ENDPOINT_PASSWORD
 };
 
 export default {

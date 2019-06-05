@@ -1,9 +1,12 @@
 import { inject, injectable } from 'inversify';
-import { DeviceRecordData, DeviceRecord } from './DeviceRecord';
-import { Device, DependencyFactoryFactory } from '../api';
-import { Resolver, PropertyResolverMap, LocationResolver } from '../resolver';
+import uuid from 'uuid';
 import { fromPartialRecord } from '../../database/Patch';
+import { InternalDeviceService } from "../../internal-device-service/InternalDeviceService";
+import { DependencyFactoryFactory, Device, DeviceCreate, DeviceModelType, DeviceType } from '../api';
 import DeviceTable from '../device/DeviceTable';
+import { LocationResolver, PropertyResolverMap, Resolver } from '../resolver';
+import { DeviceRecord, DeviceRecordData } from './DeviceRecord';
+import DeviceForcedSystemModeTable from './DeviceForcedSystemModeTable';
 
 @injectable()
 class DeviceResolver extends Resolver<Device> {
@@ -14,13 +17,23 @@ class DeviceResolver extends Resolver<Device> {
       }
 
       return this.locationResolverFactory().get(device.location.id);
+    },
+    additionalProps: async (device: Device, shouldExpand = false) => {
+      return this.internalDeviceService.getDevice(device.macAddress);
+    },
+    hasSystemModeLock: async (device: Device, shouldExpand = false) => {
+      const forcedSystemMode = await this.deviceForcedSystemModeTable.getLatest(device.id);
+
+      return forcedSystemMode !== null && forcedSystemMode.system_mode !== null;
     }
   };
   private locationResolverFactory: () => LocationResolver;
 
   constructor(
    @inject('DeviceTable') private deviceTable: DeviceTable,
-   @inject('DependencyFactoryFactory') depFactoryFactory: DependencyFactoryFactory
+   @inject('DependencyFactoryFactory') depFactoryFactory: DependencyFactoryFactory,
+   @inject('InternalDeviceService') private internalDeviceService: InternalDeviceService,
+   @inject('DeviceForcedSystemModeTable') private deviceForcedSystemModeTable: DeviceForcedSystemModeTable
   ) {
     super();
 
@@ -29,6 +42,16 @@ class DeviceResolver extends Resolver<Device> {
 
   public async get(id: string, expandProps: string[] = []): Promise<Device | null> {
     const deviceRecordData: DeviceRecordData | null = await this.deviceTable.get({ id });
+
+    if (deviceRecordData === null) {
+      return null;
+    }
+
+    return this.toModel(deviceRecordData, expandProps);
+  }
+
+  public async getByMacAddress(macAddress: string, expandProps: string[] = []): Promise<Device | null> {
+    const deviceRecordData = await this.deviceTable.getByMacAddress(macAddress);
 
     if (deviceRecordData === null) {
       return null;
@@ -50,14 +73,30 @@ class DeviceResolver extends Resolver<Device> {
     const patch = fromPartialRecord<DeviceRecordData>(deviceRecordData);
     const updatedDeviceRecordData = await this.deviceTable.update({ id }, patch);
 
-    return new DeviceRecord(updatedDeviceRecordData).toModel();
+    return this.toModel(updatedDeviceRecordData);
   }
 
   public async remove(id: string): Promise<void> {
     return this.deviceTable.remove({ id });
   }
 
-  private async toModel(deviceRecordData: DeviceRecordData, expandProps: string[]): Promise<Device> {
+  public async createDevice(deviceCreate: DeviceCreate, isPaired: boolean = false): Promise<Device> {
+    const device = {
+      ...deviceCreate,
+      deviceType: DeviceType.FLO_DEVICE,
+      deviceModel: DeviceModelType.FLO_DEVICE_THREE_QUARTER_INCH,
+      additionalProps: null,
+      isPaired,
+      hasSystemModeLock: false,
+      id: uuid.v4()
+    };
+    const deviceRecordData = DeviceRecord.fromModel(device);
+    const createdDeviceRecordData = await this.deviceTable.put(deviceRecordData);
+
+    return new DeviceRecord(createdDeviceRecordData).toModel();
+  }
+
+  private async toModel(deviceRecordData: DeviceRecordData, expandProps: string[] = []): Promise<Device> {
     const device = new DeviceRecord(deviceRecordData).toModel();
     const expandedProps = await this.resolveProps(device, expandProps);
 

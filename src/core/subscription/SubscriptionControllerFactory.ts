@@ -7,7 +7,7 @@ import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddle
 import { Subscription, SubscriptionCreate, SubscriptionCreateValidator, SubscriptionProviderWebhookHandler } from '../api';
 import { createMethod, deleteMethod, httpController, parseExpand } from '../api/controllerUtils';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
-import { Responses, SubscriptionResponse } from '../api/response';
+import * as Responses from '../api/response';
 import SubscriptionService from './SubscriptionService';
 
 export function SubscriptionControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
@@ -35,7 +35,7 @@ export function SubscriptionControllerFactory(container: Container, apiVersion: 
       }))
     )
     @createMethod
-    private async createSubscription(@requestBody() subscription: SubscriptionCreate): Promise<SubscriptionResponse> {
+    private async createSubscription(@requestBody() subscription: SubscriptionCreate): Promise<Responses.SubscriptionResponse> {
       const createdSubscription = await this.subscriptionService.createSubscription(subscription);
 
       return this.toResponse(createdSubscription);
@@ -52,7 +52,7 @@ export function SubscriptionControllerFactory(container: Container, apiVersion: 
         })
       }))
     )
-    private async getSubscription(@requestParam('id') id: string, @queryParam('expand') expand?: string): Promise<SubscriptionResponse | {}> {
+    private async getSubscription(@requestParam('id') id: string, @queryParam('expand') expand?: string): Promise<Responses.SubscriptionResponse | {}> {
       const expandProps = parseExpand(expand);
       const subscription = await this.subscriptionService.getSubscriptionById(id, expandProps);
 
@@ -85,7 +85,7 @@ export function SubscriptionControllerFactory(container: Container, apiVersion: 
       return this.getWebhookHandler('stripe').handle(event);
     }
 
-    private toResponse(subscription: Subscription): SubscriptionResponse {
+    private toResponse(subscription: Subscription): Responses.SubscriptionResponse {
       return Responses.Subscription.fromModel(subscription as Subscription);
     }
 

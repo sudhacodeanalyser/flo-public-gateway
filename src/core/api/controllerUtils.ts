@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import { controller, interfaces, HttpResponseMessage, JsonContent } from 'inversify-express-utils';
+import { controller, interfaces, HttpResponseMessage, JsonContent, requestHeaders } from 'inversify-express-utils';
 import ResourceDoesNotExistError from './error/ResourceDoesNotExistError';
 
 export function parseExpand(expand?: string): string[] {
@@ -44,4 +44,20 @@ export function deleteMethod(target: any, propertyName: string, propertyDescript
 
     } 
   };
+}
+
+export function asyncMethod(target: any, propertyName: string, propertyDescriptor: PropertyDescriptor): void {
+  const method = propertyDescriptor.value;
+
+  propertyDescriptor.value = async function (...args: any[]): Promise<HttpResponseMessage> {
+    const result = await method.apply(this, args);
+    const response = new HttpResponseMessage(202);
+
+    response.content = new JsonContent(result);
+
+    return response;
+  };
+}
+export function authorizationHeader(): ParameterDecorator {
+  return requestHeaders('Authorization');
 }
