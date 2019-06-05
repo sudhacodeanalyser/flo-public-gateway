@@ -1,5 +1,5 @@
 import { injectable, inject } from 'inversify';
-import { PresenceRequest, PresenceData } from "../api/model/Presence";
+import { PresenceRequest, PresenceData } from '../api/model/Presence';
 import { KafkaProducer } from '../../kafka/KafkaProducer';
 import _ from 'lodash';
 
@@ -18,7 +18,7 @@ class PresenceService {
             userId,
             type: 'user',
             ttl: payload.ttl === undefined || payload.ttl < 60 ? 60 : (payload.ttl > 300 ? 300 : payload.ttl),
-            appName: payload.appName === undefined || payload.appName === "" ? clientId : payload.appName,
+            appName: payload.appName === undefined || payload.appName === '' ? clientId : payload.appName,
             appVersion: payload.appVersion,
             accountId: undefined,
             deviceId: undefined,

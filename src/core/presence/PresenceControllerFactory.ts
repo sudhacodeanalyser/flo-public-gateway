@@ -2,9 +2,9 @@ import {interfaces, controller, httpGet, httpPost, requestBody, httpDelete, requ
 import { inject, Container } from 'inversify';
 import PresenceService from './PresenceService';
 import { httpController } from '../api/controllerUtils';
-import AuthMiddlewareFactory from "../../auth/AuthMiddlewareFactory";
-import Request from "../api/Request";
-import { PresenceData, PresenceRequestValidator } from "../api/model/Presence";
+import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
+import Request from '../api/Request';
+import { PresenceData, PresenceRequestValidator } from '../api/model/Presence';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
 import * as t from 'io-ts';
 import _ from 'lodash';
