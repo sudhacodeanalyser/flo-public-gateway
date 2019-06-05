@@ -1,0 +1,28 @@
+FROM node:10-alpine
+
+ARG NODE_ENV=development
+
+RUN rm -rf /var/cache/apk/* && \
+    rm -rf /tmp/* && \
+    apk add --no-cache \
+      bash \
+      gcc \
+      g++ \
+      make \
+      python \
+      py-pip \
+      git \
+       && \
+    pip install \
+      awscli \
+      awsebcli \
+      direnv \
+      pipenv
+
+RUN mkdir -p /app
+WORKDIR /app
+COPY . /app
+
+RUN npm install
+
+CMD ["npm", "run", "watch-debug"]

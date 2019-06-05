@@ -20,6 +20,10 @@ EB_DEPLOY ?= $(COMPOSE) -f build-tools.yml run --rm eb deploy $(APP)-$(ENV) --st
 help: ## Display this help screen (default)
 	@grep -h -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
+full: ## Compile and run internally
+	$(DOCKER) build --tag flo-public-gateway:local -f Dockerfile.full .
+	$(COMPOSE) -f docker-compose-full.yml up
+
 build: install
 	$(COMPOSE) -f build-tools.yml $(@) --pull build
 	$(COMPOSE) $(@) --pull app
@@ -43,6 +47,7 @@ watch-test: docker ## Run watch-test task using docker-based npm
 
 watch-debug: docker ## Run watch-debug task using docker-based npm
 	$(RUN) $(@)
+	$(COMPOSE) -f docker-compose-full.yml down
 
 up: docker build ## Build and run application as it would be run in production (from image)
 	$(COMPOSE) $(@)
@@ -67,6 +72,7 @@ deploy:
 clean: down ## Remove build arifacts & related images
 	rm -rf node_modules
 	$(COMPOSE) kill
+	$(DOCKER) rmi -f $$($(DOCKER) images -f "dangling=true" -q)
 
 # Ensures docker is installed - does not enforce version, please use latest
 docker: docker-compose
