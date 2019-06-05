@@ -22,7 +22,7 @@ class PresenceService {
             appVersion: payload.appVersion,
             accountId: undefined,
             deviceId: undefined,
-            ..._.omitBy(payload, value => _.isEmpty(value))
+            ..._.pickBy(payload, value => !_.isEmpty(value))
         };
 
         // TODO: If cheap, resolve the accountId and list of devices (mac address)
