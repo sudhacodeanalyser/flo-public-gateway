@@ -1,6 +1,6 @@
 import { ContainerModule, interfaces } from 'inversify';
 import LocationTable from './LocationTable';
-import LocationService from './LocationService';
+import { LocationService } from '../service';
 import { LocationResolver } from '../resolver';
 
 export default new ContainerModule((bind: interfaces.Bind) => {

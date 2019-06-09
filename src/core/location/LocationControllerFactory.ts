@@ -1,14 +1,15 @@
 import _ from 'lodash';
 import express from 'express';
-import { interfaces, httpGet, httpPost, httpDelete, httpPut, queryParam, requestParam, requestBody, BaseHttpController } from 'inversify-express-utils';
+import { interfaces, httpGet, httpPost, httpDelete, httpPut, queryParam, requestParam, requestBody, request, BaseHttpController } from 'inversify-express-utils';
 import { inject, Container } from 'inversify';
-import { Location, LocationUpdateValidator, LocationUpdate, LocationUserRole, LocationCreateValidator } from '../api';
-import LocationService from './LocationService';
+import { Location, LocationUpdateValidator, LocationUpdate, LocationUserRole, LocationCreateValidator, SystemMode, SystemModeCodec } from '../api';
+import { LocationService } from '../service';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
 import * as t from 'io-ts';
-import { parseExpand, httpController, createMethod, deleteMethod } from '../api/controllerUtils';
+import { parseExpand, httpController, createMethod, deleteMethod, asyncMethod } from '../api/controllerUtils';
 import { NonEmptyArray } from '../api/validator/NonEmptyArray';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
+import { DeviceSystemModeServiceFactory } from '../device/DeviceSystemModeService';
 import Request from '../api/Request';
 
 
@@ -22,7 +23,8 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
   @httpController({ version: apiVersion }, '/locations')
   class LocationController extends BaseHttpController {
     constructor(
-      @inject('LocationService') private locationService: LocationService
+      @inject('LocationService') private locationService: LocationService,
+      @inject('DeviceSystemModeServiceFactory') private deviceSystemModeServiceFactory: DeviceSystemModeServiceFactory
     ) {
       super();
     }
@@ -69,8 +71,10 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
         body: LocationUpdateValidator
       }))
     )
-    private async updatePartialLocation(@requestParam('id') id: string, @requestBody() locationUpdate: LocationUpdate): Promise<Location> {
-      return this.locationService.updatePartialLocation(id, locationUpdate);
+    private async updatePartialLocation(@request() req: Request, @requestParam('id') id: string, @requestBody() locationUpdate: LocationUpdate): Promise<Location> {
+      const deviceSystemModeService = this.deviceSystemModeServiceFactory.create(req);
+
+      return this.locationService.updatePartialLocation(id, locationUpdate, deviceSystemModeService);
     }
 
     @httpDelete(

@@ -1,7 +1,7 @@
 import { $enum } from 'ts-enum-util';
 import _ from 'lodash';
 // These should likely go into a lookup table
-import { Device, DeviceType, DeviceModelType, IrrigationType } from '../api';
+import { Device, DeviceType, DeviceModelType, IrrigationType, DeviceSystemMode } from '../api';
 import { NoYesUnsure } from '../api/NoYesUnsure';
 import { translateNumericToStringEnum, translateStringToNumericEnum } from '../api/enumUtils';
 
@@ -34,7 +34,8 @@ export interface DeviceRecordData {
   is_paired?: boolean;
   prv_installed_after?: NoYesUnsure.Numeric;
   irrigation_type?: IrrigationTypeData;
-  should_override_location_system_mode?: boolean;
+  should_inherit_system_mode?: boolean;
+  target_system_mode?: DeviceSystemMode;
 }
 
 export class DeviceRecord {
@@ -77,7 +78,8 @@ export class DeviceRecord {
       is_paired: model.isPaired,
       prv_installed_after: prvInstalledAfter,
       irrigation_type: irrigationType,
-      should_override_location_system_mode: model.shouldOverrideLocationSystemMode
+      should_inherit_system_mode: model.systemMode && model.systemMode.shouldInherit,
+      target_system_mode: model.systemMode && model.systemMode.target
     };
   }
 
@@ -131,8 +133,11 @@ export class DeviceRecord {
       additionalProps: null,
       prvInstalledAfter,
       irrigationType,
-      shouldOverrideLocationSystemMode: this.data.should_override_location_system_mode,
-      hasSystemModeLock: false
+      systemMode: {
+        target: this.data.target_system_mode,
+        isLocked: false,
+        shouldInherit: this.data.should_inherit_system_mode === undefined ? true : this.data.should_inherit_system_mode
+      }
     };
   }
 }

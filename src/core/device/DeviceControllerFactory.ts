@@ -6,12 +6,12 @@ import { PairingData, QrData, QrDataValidator } from '../../api-v1/pairing/Pairi
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import { InternalDeviceService } from '../../internal-device-service/InternalDeviceService';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
-import { Device, DeviceCreate, DeviceCreateValidator, DeviceUpdate, DeviceUpdateValidator } from '../api';
+import { Device, DeviceSystemMode, DeviceSystemModeCodec, DeviceCreate, DeviceCreateValidator, DeviceUpdate, DeviceUpdateValidator } from '../api';
 import { authorizationHeader, createMethod, deleteMethod, asyncMethod, httpController, parseExpand } from '../api/controllerUtils';
 import Request from '../api/Request';
 import * as Responses from '../api/response';
-import DeviceService from './DeviceService';
-import { DeviceSystemModeServiceFactory, SystemMode, SystemModeCodec } from './DeviceSystemModeService';
+import { DeviceService } from '../service';
+import { DeviceSystemModeServiceFactory } from './DeviceSystemModeService';
 
 export function DeviceControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
@@ -19,6 +19,49 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
   const auth = authMiddlewareFactory.create();
   const authWithId = authMiddlewareFactory.create(async ({ params: { id } }: Request) => ({icd_id: id}));
   const authWithLocation = authMiddlewareFactory.create(async ({ body: { location: { id } } }: Request) => ({ location_id: id }));
+
+  interface SystemModeRequestBrand {
+    readonly SystemModeRequest: unique symbol;
+  }
+
+  const UnbrandedSystemModeRequestCodec = t.type({
+    target: DeviceSystemModeCodec,
+    isLocked: t.union([t.undefined, t.boolean]),
+    revertMinutes: t.union([t.undefined, t.Int]),
+    revertMode: t.union([t.undefined, DeviceSystemModeCodec])
+  });
+
+  type UnbrandedSystemModeRequest = t.TypeOf<typeof UnbrandedSystemModeRequestCodec>;
+
+  const SystemModeRequestCodec = t.brand(
+    UnbrandedSystemModeRequestCodec,
+    (body): body is t.Branded<UnbrandedSystemModeRequest, SystemModeRequestBrand> => {
+      const {
+        target,
+        isLocked,
+        revertMinutes,
+        revertMode
+      } = body;
+
+      // System mode can only be locked to sleep, i.e. "forced sleep"
+      if (isLocked !== undefined && target !== DeviceSystemMode.SLEEP) {
+        return false;
+      // Revert minutes & revert mode must both be specified and
+      // can only apply to sleep mode
+      } else if (
+        (revertMinutes !== undefined && revertMode === undefined) ||
+        (revertMode !== undefined && revertMinutes === undefined) ||
+        (revertMinutes !== undefined && revertMode !== undefined && target !== DeviceSystemMode.SLEEP) 
+      ) {
+        return false;
+      } else {
+        return true;
+      }
+    },
+    'SystemModeRequest'
+  );
+
+  type SystemModeRequest = t.TypeOf<typeof SystemModeRequestCodec>;
 
   @httpController({version: apiVersion}, '/devices')
   class DeviceController extends BaseHttpController {
@@ -146,87 +189,40 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
         params: t.type({
           id: t.string
         }),
-        body: t.type({
-          systemMode: SystemModeCodec
-        })
+        body: SystemModeRequestCodec
       }))
     )
     @asyncMethod
     private async setDeviceSystemMode(
       @request() req: Request, 
       @requestParam('id') id: string, 
-      @requestBody() { systemMode }: { systemMode: SystemMode }
+      @requestBody() { 
+        target, 
+        isLocked, 
+        revertMinutes, 
+        revertMode 
+      }: SystemModeRequest
     ): Promise<Responses.DeviceResponse> {
-      await this.deviceSystemModeServiceFactory.create(req).setSystemMode(id, systemMode);
+      const deviceSystemModeService = this.deviceSystemModeServiceFactory.create(req);
 
-      const model = await this.deviceService.updatePartialDevice(id, { shouldOverrideLocationSystemMode: true });
+      if (target !== DeviceSystemMode.SLEEP) {
+       await deviceSystemModeService.setSystemMode(id, target);
+      } else if (isLocked === undefined && revertMinutes !== undefined && revertMode !== undefined) {      
+        await deviceSystemModeService.sleep(id, revertMinutes, revertMode);
+      } else if (isLocked) {
+        await deviceSystemModeService.enableForcedSleep(id);
+      } else {
+        await deviceSystemModeService.disableForcedSleep(id);
+      }
 
-      return Responses.Device.fromModel(model);
-    }
-
-    @httpPost('/:id/system-mode/sleep',
-      // auth is deferred to  API v1 call
-      reqValidator.create(t.type({
-        params: t.type({
-          id: t.string
-        }),
-        body: t.type({
-          sleepMinutes: t.Int,
-          wakeUpSystemMode: SystemModeCodec
-        })
-      }))
-    )
-    @asyncMethod
-    private async sleep(
-      @request() req: Request, 
-      @requestParam('id') id: string, 
-      @requestBody() { sleepMinutes, wakeUpSystemMode }: { sleepMinutes: number, wakeUpSystemMode: SystemMode }
-    ): Promise<Responses.DeviceResponse> {
-      await this.deviceSystemModeServiceFactory.create(req).sleep(id, sleepMinutes, wakeUpSystemMode);
-
-      const model = await this.deviceService.updatePartialDevice(id, { shouldOverrideLocationSystemMode: true });
-
-      return Responses.Device.fromModel(model);
-    }
-
-    @httpPost('/:id/system-mode/forced-sleep/enable',
-      // auth is deferred to  API v1 call
-      reqValidator.create(t.type({
-        params: t.type({
-          id: t.string
-        })
-      }))
-    )
-    @asyncMethod
-    private async enableForcedSleep(
-      // auth is deferred to  API v1 call
-      @request() req: Request, 
-      @requestParam('id') id: string
-    ): Promise<Responses.DeviceResponse> {
-      await this.deviceSystemModeServiceFactory.create(req).enableForcedSleep(id);
-
-      const model = await this.deviceService.updatePartialDevice(id, { shouldOverrideLocationSystemMode: true });
-
-      return Responses.Device.fromModel(model);
-    }
-
-    @httpPost('/:id/system-mode/forced-sleep/disable',
-      // auth is deferred to  API v1 call
-      reqValidator.create(t.type({
-        params: t.type({
-          id: t.string
-        })
-      }))
-    )
-    @asyncMethod
-    private async disableForcedSleep(
-      @request() req: Request, 
-      @requestParam('id'
-    ) id: string): Promise<Responses.DeviceResponse> {
-      await this.deviceSystemModeServiceFactory.create(req).disableForcedSleep(id);
-
-      const model = await this.deviceService.updatePartialDevice(id, { shouldOverrideLocationSystemMode: true });
-
+      // API v1 call needs to be made first to make sure we have permission to modify the 
+      // device record
+      const model = await this.deviceService.updatePartialDevice(id, { 
+        systemMode: {
+          shouldInherit: false,
+          target
+        } 
+      });
       return Responses.Device.fromModel(model);
     }
   }

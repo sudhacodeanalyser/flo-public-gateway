@@ -8,7 +8,7 @@ import { Subscription, SubscriptionCreate, SubscriptionCreateValidator, Subscrip
 import { createMethod, deleteMethod, httpController, parseExpand } from '../api/controllerUtils';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import * as Responses from '../api/response';
-import SubscriptionService from './SubscriptionService';
+import { SubscriptionService } from '../service';
 
 export function SubscriptionControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');

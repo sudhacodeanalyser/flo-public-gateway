@@ -2,7 +2,7 @@ import { inject, injectable } from 'inversify';
 import uuid from 'uuid';
 import { LocationRecordData, LocationRecord } from './LocationRecord';
 import { UserLocationRoleRecord } from '../user/UserLocationRoleRecord';
-import { Location, LocationUserRole, DependencyFactoryFactory } from '../api';
+import { Location, LocationUserRole, DependencyFactoryFactory, Device, SystemMode, DeviceSystemMode } from '../api';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import { Resolver, PropertyResolverMap, DeviceResolver, UserResolver, AccountResolver, SubscriptionResolver } from '../resolver';
 import LocationTable from '../location/LocationTable';
@@ -73,6 +73,36 @@ class LocationResolver extends Resolver<Location> {
       }
 
       return subscription;
+    },
+    systemMode: async (location: Location, shouldExpand = false) => {
+
+      if (location.systemMode !== undefined) {
+        return location.systemMode;
+      }
+
+      const devices = await this.deviceResolverFactory().getAllByLocationId(location.id);
+      const device: Device | undefined = devices
+        .filter((d: Device) => 
+          !d.systemMode.isLocked && 
+          (d.systemMode.lastKnown || d.systemMode.target) 
+        )
+        .sort((deviceA: Device, deviceB: Device) => {
+          if (deviceA.systemMode.target && !deviceB.systemMode.target) {
+            return -1;
+          } else if (!deviceA.systemMode.target && deviceB.systemMode.target) {
+            return 1;
+          } else {
+            return 0;
+          }
+        })[0];
+
+      if (
+        (device.systemMode.target || device.systemMode.lastKnown) === DeviceSystemMode.AWAY
+      ) {
+        return SystemMode.AWAY;
+      } else {
+        return SystemMode.HOME;
+      }
     }
   };
 

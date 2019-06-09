@@ -1,5 +1,5 @@
 import { ContainerModule, interfaces } from 'inversify';
-import DeviceService from './DeviceService';
+import { DeviceService } from '../service';
 import DeviceTable from './DeviceTable';
 import DeviceForcedSystemModeTable from './DeviceForcedSystemModeTable';
 import { DeviceResolver } from '../resolver';
