@@ -1,8 +1,8 @@
 import _ from 'lodash';
 import { injectable, inject } from 'inversify';
-import { Device, DeviceUpdate, DeviceCreate, Location } from '../api';
+import { DependencyFactoryFactory, Device, DeviceUpdate, DeviceCreate, Location } from '../api';
 import { DeviceResolver } from '../resolver';
-import LocationService from '../location/LocationService';
+import { LocationService } from '../service';
 import { PairingService, PairingData, QrData } from '../../api-v1/pairing/PairingService';
 import ConflictError from '../api/error/ConflictError';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
@@ -10,12 +10,16 @@ import Logger from 'bunyan';
 
 @injectable()
 class DeviceService {
+  private locationServiceFactory: () => LocationService;
+
   constructor(
     @inject('DeviceResolver') private deviceResolver: DeviceResolver,
-    @inject('LocationService') private locationService: LocationService,
     @inject('PairingService') private apiV1PairingService: PairingService,
-    @inject('Logger') private readonly logger: Logger
-  ) {}
+    @inject('Logger') private readonly logger: Logger,
+    @inject('DependencyFactoryFactory') depFactoryFactory: DependencyFactoryFactory
+  ) {
+    this.locationServiceFactory = depFactoryFactory<LocationService>('LocationService');
+  }
 
   public async getDeviceById(id: string, expand?: string[]): Promise<Device | {}> {
     const device: Device | null = await this.deviceResolver.get(id, expand);
@@ -43,7 +47,7 @@ class DeviceService {
   public async pairDevice(authToken: string, deviceCreate: DeviceCreate): Promise<Device> {
     const [device, location] = await Promise.all([
       this.deviceResolver.getByMacAddress(deviceCreate.macAddress),
-      this.locationService.getLocation(deviceCreate.location.id)
+      this.locationServiceFactory().getLocation(deviceCreate.location.id)
     ]);
 
     if (device !== null && !_.isEmpty(device) && !device.isPaired) {
@@ -69,6 +73,10 @@ class DeviceService {
 
     return createdDevice;
   }
+
+  public async getAllByLocationId(locationId: string, expand?: string[]): Promise<Device[]> {
+    return this.deviceResolver.getAllByLocationId(locationId, expand);
+  }
 }
 
-export default DeviceService;
+export { DeviceService };

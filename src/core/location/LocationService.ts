@@ -1,12 +1,19 @@
 import { inject, injectable } from 'inversify';
 import { LocationResolver } from '../resolver';
-import { Location, LocationUpdate, LocationUserRole } from '../api';
+import { DependencyFactoryFactory, Location, LocationUpdate, LocationUserRole, SystemMode as LocationSystemMode, DeviceSystemMode } from '../api';
+import { DeviceSystemModeService } from '../device/DeviceSystemModeService';
+import { DeviceService } from '../service';
 
 @injectable()
 class LocationService {
+  private deviceServiceFactory: () => DeviceService;
+
   constructor(
-    @inject('LocationResolver') private locationResolver: LocationResolver
-  ) {}
+    @inject('LocationResolver') private locationResolver: LocationResolver,
+    @inject('DependencyFactoryFactory') depFactoryFactory: DependencyFactoryFactory
+  ) {
+    this.deviceServiceFactory = depFactoryFactory<DeviceService>('DeviceService');
+  }
 
   public async createLocation(location: Location): Promise<Location | {}> {
     const createdLocation: Location | null = await this.locationResolver.createLocation(location);
@@ -20,8 +27,33 @@ class LocationService {
     return location === null ? {} : location;
   }
 
-  public async updatePartialLocation(id: string, locationUpdate: LocationUpdate): Promise<Location> {
-    return this.locationResolver.updatePartialLocation(id, locationUpdate);
+  public async updatePartialLocation(id: string, locationUpdate: LocationUpdate, deviceSystemModeService: DeviceSystemModeService): Promise<Location> {
+    const updatedLocation = await this.locationResolver.updatePartialLocation(id, locationUpdate);
+
+    if (locationUpdate.systemMode) {
+      const deviceSystemMode = locationUpdate.systemMode === LocationSystemMode.HOME ?
+        DeviceSystemMode.HOME :
+        DeviceSystemMode.AWAY;
+      const deviceService = this.deviceServiceFactory();
+      const devices = await deviceService.getAllByLocationId(id);
+
+      await Promise.all(
+        devices
+          .map(device => 
+            Promise.all([
+              deviceSystemModeService.setSystemMode(device.id, deviceSystemMode),
+              deviceService.updatePartialDevice(device.id, {
+                systemMode: {
+                  target: deviceSystemMode,
+                  shouldInherit: true
+                }
+              })
+            ])
+          )
+      );
+    }
+
+    return updatedLocation;
   }
 
   public async removeLocation(id: string): Promise<void> {
@@ -39,6 +71,7 @@ class LocationService {
   public async removeLocationUserRole(locationId: string, userId: string): Promise<void> {
     return this.locationResolver.removeLocationUserRole(locationId, userId);
   }
+
 }
 
-export default LocationService;
+export { LocationService };

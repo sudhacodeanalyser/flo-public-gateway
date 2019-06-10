@@ -12,7 +12,8 @@ import {
   IndoorAmenity,
   OutdoorAmenity,
   PlumbingAppliance,
-  LocationSize
+  LocationSize,
+  SystemMode
 } from '../api';
 import { NoYesUnsure } from '../api/NoYesUnsure';
 import { morphism, StrictSchema } from 'morphism';
@@ -173,7 +174,8 @@ export interface LocationRecordData extends Partial<LegacyLocationProfile>, Time
   is_profile_complete?: boolean,
   is_using_away_schedule?: boolean,
   profile?: LocationProfile,
-  location_name?: string
+  location_name?: string,
+  system_mode?: SystemMode
 }
 
 const RecordToModelSchema: StrictSchema<Location, LocationRecordData> = {
@@ -203,6 +205,7 @@ const RecordToModelSchema: StrictSchema<Location, LocationRecordData> = {
   showerBathCount: 'profile.shower_bath_count',
   toiletCount: 'profile.toilet_count',
   nickname: 'location_name',
+  systemMode: 'system_mode',
   locationType: (input: LocationRecordData) => {
     if (input.profile !== undefined && input.profile.location_type !== undefined) {
       return translateNumericToStringEnum(
@@ -412,6 +415,7 @@ const ModelToRecordSchema: StrictSchema<LocationRecordData, Location> = {
   created_at: 'createdAt',
   updated_at: 'updatedAt',
   location_name: 'nickname',
+  system_mode: 'systemMode',
   profile: (input: Partial<Location>) => {
     return {
       location_type: translateStringToNumericEnum(
@@ -504,6 +508,7 @@ const PartialModelToPartialRecordSchema: StrictSchema<PartialLocationRecordData,
   created_at: 'createdAt',
   updated_at: 'updatedAt',
   location_name: 'nickname',
+  system_mode: 'systemMode',
   profile: (input: Partial<Location>) => {
     return {
       location_type: translateStringToNumericEnum(

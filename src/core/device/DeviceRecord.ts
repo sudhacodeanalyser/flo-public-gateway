@@ -1,9 +1,10 @@
 import { $enum } from 'ts-enum-util';
 import _ from 'lodash';
 // These should likely go into a lookup table
-import { Device, DeviceType, DeviceModelType, IrrigationType } from '../api';
+import { Device, DeviceType, DeviceModelType, IrrigationType, DeviceSystemMode } from '../api';
 import { NoYesUnsure } from '../api/NoYesUnsure';
 import { translateNumericToStringEnum, translateStringToNumericEnum } from '../api/enumUtils';
+import { morphism, StrictSchema } from 'morphism';
 
 export enum DeviceTypeData {
   FLO_DEVICE = 1,
@@ -34,55 +35,141 @@ export interface DeviceRecordData {
   is_paired?: boolean;
   prv_installed_after?: NoYesUnsure.Numeric;
   irrigation_type?: IrrigationTypeData;
-  should_override_location_system_mode?: boolean;
+  should_inherit_system_mode?: boolean;
+  target_system_mode?: DeviceSystemMode;
 }
+
+const RecordToModelSchema: StrictSchema<Device, DeviceRecordData>  = {
+  id: 'id',
+  macAddress: 'device_id',
+  nickname: 'nickname',
+  installationPoint: 'installation_point',
+  location: {
+    id: 'location_id'
+  },
+  createdAt: 'created_at',
+  updatedAt: 'updated_at',
+  isPaired: (input: DeviceRecordData) => _.get(input, 'is_paired', false),
+  additionalProps: () => null,
+  deviceModel: (input: DeviceRecordData) => 
+    translateNumericToStringEnum(
+      DeviceModelType,
+      DeviceModelTypeData,
+      input.device_model,
+      'FLO_DEVICE_THREE_QUARTER_INCH'
+    ) || DeviceModelType.FLO_DEVICE_THREE_QUARTER_INCH,
+  deviceType: (input: DeviceRecordData) => 
+   translateNumericToStringEnum(
+        DeviceType,
+        DeviceTypeData,
+        input.device_type,
+        'FLO_DEVICE'
+      ) || DeviceType.FLO_DEVICE,
+  irrigationType: (input: DeviceRecordData) =>
+    translateNumericToStringEnum(
+      IrrigationType, 
+      IrrigationTypeData, 
+      input.irrigation_type
+    ),
+  prvInstalledAfter: (input: DeviceRecordData) =>
+    translateNumericToStringEnum(
+      NoYesUnsure.String, 
+      NoYesUnsure.Numeric, 
+      input.prv_installed_after, 
+      'UNSURE'
+    ),
+  systemMode: (input: DeviceRecordData) => ({
+    target: input.target_system_mode,
+    isLocked: false,
+    shouldInherit: _.get(input, 'should_inherit_system_mode', true)
+  })
+};
+
+const ModelToRecordSchema: StrictSchema<DeviceRecordData, Device> = {
+  id: 'id',
+  location_id: 'location.id',
+  device_id: 'macAddress',
+  nickname: 'nickname',
+  installation_point: 'installationPoint',
+  is_paired: 'isPaired',
+  created_at: 'createdAt',
+  updated_at: 'updatedAt',
+  should_inherit_system_mode: 'systemMode.shouldInherit',
+  target_system_mode: 'systemMode.target',
+  device_type: (input: Device) => 
+    translateStringToNumericEnum(
+      DeviceTypeData,
+      DeviceType,
+      input.deviceType,
+      'FLO_DEVICE'
+    ) || DeviceTypeData.FLO_DEVICE,
+  device_model: (input: Device) =>
+    translateStringToNumericEnum(
+      DeviceModelTypeData,
+      DeviceModelType,
+      input.deviceModel,
+      'FLO_DEVICE_THREE_QUARTER_INCH'
+    ) || DeviceModelTypeData.FLO_DEVICE_THREE_QUARTER_INCH,
+  prv_installed_after: (input: Device) => 
+    translateStringToNumericEnum(
+      NoYesUnsure.Numeric, 
+      NoYesUnsure.String, 
+      input.prvInstalledAfter, 
+      'UNSURE'
+    ),
+  irrigation_type: (input: Device) =>
+    translateStringToNumericEnum(
+      IrrigationTypeData, 
+      IrrigationType, 
+      input.irrigationType
+    )
+};
+
+const PartialModelToRecordSchema: StrictSchema<Partial<DeviceRecordData>, Partial<Device>> = {
+  id: 'id',
+  location_id: 'location.id',
+  device_id: 'macAddress',
+  nickname: 'nickname',
+  installation_point: 'installationPoint',
+  is_paired: 'isPaired',
+  created_at: 'createdAt',
+  updated_at: 'updatedAt',
+  should_inherit_system_mode: 'systemMode.shouldInherit',
+  target_system_mode: 'systemMode.target',
+  device_type: (input: Partial<Device>) => 
+    input.deviceType && translateStringToNumericEnum(
+      DeviceTypeData,
+      DeviceType,
+      input.deviceType
+    ),
+  device_model: (input: Partial<Device>) =>
+    input.deviceModel && translateStringToNumericEnum(
+      DeviceModelTypeData,
+      DeviceModelType,
+      input.deviceModel
+    ),
+  prv_installed_after: (input: Partial<Device>) => 
+    input.prvInstalledAfter && translateStringToNumericEnum(
+      NoYesUnsure.Numeric, 
+      NoYesUnsure.String, 
+      input.prvInstalledAfter
+    ),
+  irrigation_type: (input: Partial<Device>) =>
+    input.irrigationType && translateStringToNumericEnum(
+      IrrigationTypeData, 
+      IrrigationType, 
+      input.irrigationType
+    )
+};
 
 export class DeviceRecord {
 
   public static fromPartialModel(model: Partial<Device>): Partial<DeviceRecordData> {
-    const deviceType = translateStringToNumericEnum(
-      DeviceTypeData,
-      DeviceType,
-      model.deviceType,
-      'FLO_DEVICE'
-    ) || DeviceTypeData.FLO_DEVICE;
-    const deviceModel = translateStringToNumericEnum(
-      DeviceModelTypeData,
-      DeviceModelType,
-      model.deviceModel,
-      'FLO_DEVICE_THREE_QUARTER_INCH'
-    ) || DeviceModelTypeData.FLO_DEVICE_THREE_QUARTER_INCH;
-    const prvInstalledAfter = translateStringToNumericEnum(
-      NoYesUnsure.Numeric, 
-      NoYesUnsure.String, 
-      model.prvInstalledAfter, 
-      'UNSURE'
-    );
-    const irrigationType = translateStringToNumericEnum(
-      IrrigationTypeData, 
-      IrrigationType, 
-      model.irrigationType
-    );
-
-    return {
-      id: model.id,
-      device_id: model.macAddress,
-      nickname: model.nickname,
-      installation_point: model.installationPoint,
-      location_id: model.location && model.location.id,
-      created_at: model.createdAt,
-      updated_at: model.updatedAt,
-      device_type: deviceType,
-      device_model: deviceModel,
-      is_paired: model.isPaired,
-      prv_installed_after: prvInstalledAfter,
-      irrigation_type: irrigationType,
-      should_override_location_system_mode: model.shouldOverrideLocationSystemMode
-    };
+    return morphism(PartialModelToRecordSchema, model);
   }
 
   public static fromModel(model: Device): DeviceRecordData {
-    return DeviceRecord.fromPartialModel(model) as DeviceRecordData;
+    return morphism(ModelToRecordSchema, model);
   }
 
   constructor(
@@ -90,49 +177,6 @@ export class DeviceRecord {
   ) {}
 
   public toModel(): Device {
-    // TODO: Check defaults.
-    const deviceType = translateNumericToStringEnum(
-      DeviceType,
-      DeviceTypeData,
-      this.data.device_type,
-      'FLO_DEVICE'
-    ) || DeviceType.FLO_DEVICE;
-    const deviceModel = translateNumericToStringEnum(
-      DeviceModelType,
-      DeviceModelTypeData,
-      this.data.device_model,
-      'FLO_DEVICE_THREE_QUARTER_INCH'
-    ) || DeviceModelType.FLO_DEVICE_THREE_QUARTER_INCH;
-    const irrigationType = translateNumericToStringEnum(
-      IrrigationType, 
-      IrrigationTypeData, 
-      this.data.irrigation_type
-    );
-    const prvInstalledAfter = translateNumericToStringEnum(
-      NoYesUnsure.String, 
-      NoYesUnsure.Numeric, 
-      this.data.prv_installed_after, 
-      'UNSURE'
-    );
-
-    return {
-      id: this.data.id,
-      macAddress: this.data.device_id,
-      nickname: this.data.nickname,
-      installationPoint: this.data.installation_point,
-      location: {
-        id: this.data.location_id
-      },
-      createdAt: this.data.created_at,
-      updatedAt: this.data.updated_at,
-      deviceType,
-      deviceModel,
-      isPaired: _.get(this.data, 'is_paired', false),
-      additionalProps: null,
-      prvInstalledAfter,
-      irrigationType,
-      shouldOverrideLocationSystemMode: this.data.should_override_location_system_mode,
-      hasSystemModeLock: false
-    };
+    return morphism(RecordToModelSchema, this.data);
   }
 }

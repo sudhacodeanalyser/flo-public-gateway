@@ -1,7 +1,7 @@
 import * as t from 'io-ts';
 import { interfaces, httpGet, httpPost, httpDelete, queryParam, requestParam, requestBody, BaseHttpController } from 'inversify-express-utils';
 import { inject, Container } from 'inversify';
-import UserService from './UserService';
+import { UserService } from '../service';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
 import { User, UserUpdateValidator, UserUpdate } from '../api';
 import { httpController, parseExpand, deleteMethod, createMethod, asyncMethod } from '../api/controllerUtils';

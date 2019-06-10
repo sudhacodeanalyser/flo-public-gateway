@@ -2,7 +2,7 @@ import { inject, injectable } from 'inversify';
 import _ from 'lodash';
 import Stripe from 'stripe';
 import { Subscription, SubscriptionProviderWebhookHandler } from '../../core/api';
-import SubscriptionService from '../../core/subscription/SubscriptionService';
+import { SubscriptionService } from '../../core/service';
 import { isSubscriptionActive } from './StripeUtils';
 
 @injectable()

@@ -122,15 +122,23 @@ const AddressCodec = t.type({
   timezone: t.string
 });
 
-const NicknameCodec = t.type({
-  nickname: t.union([t.string, t.undefined])
+export enum SystemMode {
+  HOME = 'home',
+  AWAY = 'away'
+}
+
+export const SystemModeCodec = convertEnumtoCodec(SystemMode);
+
+const AdditionalPropsCodec = t.type({
+  nickname: t.union([t.string, t.undefined]),
+  systemMode: t.union([t.undefined, SystemModeCodec])
 })
 
 const LocationMutableCodec = t.intersection([
   LocationProfileWithLegacyCodec,
   LocationProfileCodec,
   AddressCodec,
-  NicknameCodec
+  AdditionalPropsCodec
 ]);
 
 const AccountId = t.strict({
@@ -143,7 +151,8 @@ const {
   locationType,
   residenceType,
   ...profileProps
-} = LocationProfileCodec.props
+} = LocationProfileCodec.props;
+
 
 export const LocationCreateValidator = t.intersection([
   AccountId,
@@ -154,7 +163,7 @@ export const LocationCreateValidator = t.intersection([
       residenceType,
     }),
     // Can't have more than 5 types in an intersection with the compiler complaining
-    NicknameCodec
+    AdditionalPropsCodec
   ]),
   t.partial(profileProps as Omit<typeof LocationProfileCodec.props, 'locationType' | 'residenceType'>),
   t.partial(LocationProfileWithLegacyCodec.props)
@@ -166,7 +175,8 @@ export type LocationCreate = t.TypeOf<typeof LocationCreateValidator>;
 const mutableProps = {
   ...LocationMutableCodec.types[0].props, 
   ...LocationMutableCodec.types[1].props,
-  ...LocationMutableCodec.types[2].props
+  ...LocationMutableCodec.types[2].props,
+  ...LocationMutableCodec.types[3].props
 };
 export const LocationUpdateValidator = t.exact(t.partial(mutableProps));
 export type LocationUpdate = t.TypeOf<typeof LocationUpdateValidator>;
@@ -175,6 +185,7 @@ const ExpandableCodec = t.type({
   id: t.string
 });
 
+
 export const LocationCodec = t.intersection([
   AddressCodec,
   LocationProfileWithLegacyCodec,
@@ -182,7 +193,7 @@ export const LocationCodec = t.intersection([
   AccountId,
   t.intersection([
     // Can't have more than 5 types in an intersection with the compiler complaining
-    NicknameCodec,
+    AdditionalPropsCodec,
     t.type({
       id: t.string,
       users: t.array(ExpandableCodec),

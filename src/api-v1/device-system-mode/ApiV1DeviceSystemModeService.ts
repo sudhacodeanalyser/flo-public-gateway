@@ -1,12 +1,7 @@
 import { ApiV1Service } from '../ApiV1Service';
-import { DeviceSystemModeServiceFactory, DeviceSystemModeService, SystemMode } from '../../core/device/DeviceSystemModeService';
+import { DeviceSystemModeServiceFactory, DeviceSystemModeService } from '../../core/device/DeviceSystemModeService';
+import { DeviceSystemMode, DeviceSystemModeNumeric } from '../../core/api';
 import { translateStringToNumericEnum } from '../../core/api/enumUtils';
-
-export enum SystemModeNumeric {
-  HOME = 2,
-  AWAY = 3,
-  SLEEP = 5
-}
 
 class ApiV1DeviceSystemModeService extends ApiV1Service implements DeviceSystemModeService {
 
@@ -17,27 +12,27 @@ class ApiV1DeviceSystemModeService extends ApiV1Service implements DeviceSystemM
     super();
   }
 
-  public async setSystemMode(id: string, systemMode: SystemMode): Promise<void> {
+  public async setSystemMode(id: string, systemMode: DeviceSystemMode): Promise<void> {
     const request = {
       method: 'POST',
       url: `${ this.formatUrl(id) }/setsystemmode`,
       authToken: this.authToken,
       body: {
-        system_mode: translateStringToNumericEnum(SystemModeNumeric, SystemMode, systemMode)
+        system_mode: translateStringToNumericEnum(DeviceSystemModeNumeric, DeviceSystemMode, systemMode)
       }
     };
 
     await this.sendRequest(request);
   }
 
-  public async sleep(id: string, sleepMinutes: number, wakeUpSystemMode: SystemMode): Promise<void> {
+  public async sleep(id: string, sleepMinutes: number, wakeUpSystemMode: DeviceSystemMode): Promise<void> {
     const request = {
       method: 'POST',
       url: `${ this.formatUrl(id) }/sleep`,
       authToken: this.authToken,
       body: {
         sleep_minutes: sleepMinutes,
-        wake_up_system_mode: translateStringToNumericEnum(SystemModeNumeric, SystemMode, wakeUpSystemMode)
+        wake_up_system_mode: translateStringToNumericEnum(DeviceSystemModeNumeric, DeviceSystemMode, wakeUpSystemMode)
       }
     };
 

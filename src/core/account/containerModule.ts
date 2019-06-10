@@ -1,5 +1,5 @@
 import { ContainerModule, interfaces } from 'inversify';
-import AccountService from './AccountService';
+import { AccountService } from '../service';
 import AccountTable from './AccountTable';
 import { AccountResolver } from '../resolver';
 
