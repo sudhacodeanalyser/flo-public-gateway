@@ -82,14 +82,15 @@ class LocationResolver extends Resolver<Location> {
 
       const devices = await this.deviceResolverFactory().getAllByLocationId(location.id);
       const device: Device | undefined = devices
-        .filter((d: Device) => 
+        .filter((d: Device) =>
+          d.systemMode &&
           !d.systemMode.isLocked && 
           (d.systemMode.lastKnown || d.systemMode.target) 
         )
         .sort((deviceA: Device, deviceB: Device) => {
-          if (deviceA.systemMode.target && !deviceB.systemMode.target) {
+          if (deviceA.systemMode && deviceA.systemMode.target && (!deviceB.systemMode || !deviceB.systemMode.target)) {
             return -1;
-          } else if (!deviceA.systemMode.target && deviceB.systemMode.target) {
+          } else if ((!deviceA.systemMode || !deviceA.systemMode.target) && deviceB.systemMode && deviceB.systemMode.target) {
             return 1;
           } else {
             return 0;
@@ -97,7 +98,7 @@ class LocationResolver extends Resolver<Location> {
         })[0];
 
       if (
-        (device.systemMode.target || device.systemMode.lastKnown) === DeviceSystemMode.AWAY
+        device.systemMode && (device.systemMode.target || device.systemMode.lastKnown) === DeviceSystemMode.AWAY
       ) {
         return SystemMode.AWAY;
       } else {
