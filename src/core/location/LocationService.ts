@@ -34,13 +34,15 @@ class LocationService {
       const deviceSystemMode = locationUpdate.systemMode === LocationSystemMode.HOME ?
         DeviceSystemMode.HOME :
         DeviceSystemMode.AWAY;
+      const deviceService = this.deviceServiceFactory();
+      const devices = await deviceService.getAllByLocationId(id);
 
       await Promise.all(
-        updatedLocation.devices
+        devices
           .map(device => 
             Promise.all([
               deviceSystemModeService.setSystemMode(device.id, deviceSystemMode),
-              this.deviceServiceFactory().updatePartialDevice(device.id, {
+              deviceService.updatePartialDevice(device.id, {
                 systemMode: {
                   target: deviceSystemMode,
                   shouldInherit: true

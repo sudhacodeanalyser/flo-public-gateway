@@ -73,6 +73,10 @@ class DeviceService {
 
     return createdDevice;
   }
+
+  public async getAllByLocationId(locationId: string, expand?: string[]): Promise<Device[]> {
+    return this.deviceResolver.getAllByLocationId(locationId, expand);
+  }
 }
 
 export { DeviceService };
