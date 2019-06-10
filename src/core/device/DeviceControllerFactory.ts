@@ -196,23 +196,18 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     private async setDeviceSystemMode(
       @request() req: Request, 
       @requestParam('id') id: string, 
-      @requestBody() { 
-        target, 
-        isLocked, 
-        revertMinutes, 
-        revertMode 
-      }: SystemModeRequest
+      @requestBody() data: SystemModeRequest
     ): Promise<Responses.DeviceResponse> {
       const deviceSystemModeService = this.deviceSystemModeServiceFactory.create(req);
 
-      if (target !== DeviceSystemMode.SLEEP) {
-       await deviceSystemModeService.setSystemMode(id, target);
-      } else if (isLocked === undefined && revertMinutes !== undefined && revertMode !== undefined) {      
-        await deviceSystemModeService.sleep(id, revertMinutes, revertMode);
-      } else if (isLocked) {
+      if (this.isSleep(data)) {
+        await deviceSystemModeService.sleep(id, SystemModeRequestCodec.encode(data).revertMinutes as number, data.revertMode as DeviceSystemMode);
+      } else if (this.isForcedSleepEnable(data)) {
         await deviceSystemModeService.enableForcedSleep(id);
-      } else {
+      } else if (this.isForcedSleepDisable(data)) {
         await deviceSystemModeService.disableForcedSleep(id);
+      } else {
+        await deviceSystemModeService.setSystemMode(id, data.target)
       }
 
       // API v1 call needs to be made first to make sure we have permission to modify the 
@@ -220,10 +215,22 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       const model = await this.deviceService.updatePartialDevice(id, { 
         systemMode: {
           shouldInherit: false,
-          target
+          target: data.target
         } 
       });
       return Responses.Device.fromModel(model);
+    }
+
+    private isSleep({ target, revertMinutes, revertMode }: SystemModeRequest): boolean {
+      return revertMinutes !== undefined && revertMode !== undefined && target === DeviceSystemMode.SLEEP;
+    }
+
+    private isForcedSleepEnable({ target, isLocked }: SystemModeRequest): boolean {
+      return isLocked === true && target === DeviceSystemMode.SLEEP;
+    }
+
+    private isForcedSleepDisable({ target, isLocked }: SystemModeRequest): boolean {
+      return isLocked === false && target === DeviceSystemMode.SLEEP;
     }
   }
 
