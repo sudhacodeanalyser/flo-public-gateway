@@ -199,8 +199,10 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       @requestBody() data: SystemModeRequest
     ): Promise<Responses.DeviceResponse> {
       const deviceSystemModeService = this.deviceSystemModeServiceFactory.create(req);
+      const isSleep = this.isSleep(data);
+      const now = isSleep ? new Date().toISOString() : 'undefined';
 
-      if (this.isSleep(data)) {
+      if (isSleep) {
         await deviceSystemModeService.sleep(id, SystemModeRequestCodec.encode(data).revertMinutes as number, data.revertMode as DeviceSystemMode);
       } else if (this.isForcedSleepEnable(data)) {
         await deviceSystemModeService.enableForcedSleep(id);
@@ -215,7 +217,12 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       const model = await this.deviceService.updatePartialDevice(id, { 
         systemMode: {
           shouldInherit: false,
-          target: data.target
+          target: data.target,
+          ...(!isSleep ? {} : {
+            revertMode: data.revertMode,
+            revertMinutes: data.revertMinutes,
+            revertScheduledAt: now
+          })
         } 
       });
       return Responses.Device.fromModel(model);

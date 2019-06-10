@@ -85,7 +85,10 @@ class DeviceResolver extends Resolver<Device> {
   }
 
   public async updatePartial(id: string, deviceUpdate: DeviceUpdate): Promise<Device> {
+    // tslint:disable
+    console.log(JSON.stringify(deviceUpdate, null, 4));
     const deviceRecordData = DeviceRecord.fromPartialModel(deviceUpdate);
+    console.log(JSON.stringify(deviceRecordData, null, 4));
     const patch = fromPartialRecord<DeviceRecordData>(deviceRecordData);
     const updatedDeviceRecordData = await this.deviceTable.update({ id }, patch);
 
@@ -106,7 +109,12 @@ class DeviceResolver extends Resolver<Device> {
       id: uuid.v4(),
       systemMode: {
         isLocked: false,
-        shouldInherit: true
+        shouldInherit: true,
+        revertMinutes: undefined,
+        revertMode: undefined,
+        revertScheduledAt: undefined,
+        target: undefined,
+        lastKnown: undefined
       }
     };
     const deviceRecordData = DeviceRecord.fromModel(device);

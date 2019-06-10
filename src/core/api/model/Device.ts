@@ -47,7 +47,10 @@ const DeviceMutableCodec = t.type({
 
 const MutableSystemModeCodec = t.type({
   shouldInherit: t.boolean,
-  target: t.union([t.undefined, DeviceSystemModeCodec])
+  target: t.union([t.undefined, DeviceSystemModeCodec]),
+  revertScheduledAt: t.union([t.undefined, t.string]),
+  revertMode: t.union([t.undefined, t.string]),
+  revertMinutes: t.union([t.undefined, t.number])
 });
 
 const SystemModeCodec = t.intersection([
@@ -57,6 +60,8 @@ const SystemModeCodec = t.intersection([
     isLocked: t.boolean
   })
 ]);
+
+type SystemModeData = t.TypeOf<typeof SystemModeCodec>;
 
 const DeviceCreateCodec = t.intersection([
   t.partial(DeviceMutableCodec.props),
@@ -85,13 +90,8 @@ export interface Device extends DeviceUpdate, TimestampedModel {
   deviceType: DeviceType,
   deviceModel: DeviceModelType,
   isPaired: boolean,
-  additionalProps: AdditionalDeviceProps | null | undefined
-  systemMode: {
-    lastKnown?: DeviceSystemMode,
-    target?: DeviceSystemMode,
-    shouldInherit: boolean,
-    isLocked: boolean
-  }
+  additionalProps: AdditionalDeviceProps | null | undefined,
+  systemMode: SystemModeData
 }
 
 interface FwProperties {
