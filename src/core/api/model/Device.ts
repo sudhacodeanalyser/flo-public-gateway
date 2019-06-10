@@ -78,10 +78,14 @@ export type DeviceCreate = t.TypeOf<typeof DeviceCreateValidator>;
 export const DeviceUpdateValidator = t.exact(t.intersection([
   t.partial(DeviceMutableCodec.props),
   t.partial({
-    systemMode: t.partial(MutableSystemModeCodec.props)
+    systemMode: t.partial({
+      shouldInherit: MutableSystemModeCodec.props.shouldInherit
+    })
   })
 ]));
-export type DeviceUpdate = t.TypeOf<typeof DeviceUpdateValidator>;
+export interface DeviceUpdate extends t.TypeOf<typeof DeviceUpdateValidator> {
+  systemMode?: Partial<SystemModeData>;
+};
 
 export interface Device extends DeviceUpdate, TimestampedModel {
   id: string,
@@ -90,8 +94,7 @@ export interface Device extends DeviceUpdate, TimestampedModel {
   deviceType: DeviceType,
   deviceModel: DeviceModelType,
   isPaired: boolean,
-  additionalProps: AdditionalDeviceProps | null | undefined,
-  systemMode: SystemModeData
+  additionalProps: AdditionalDeviceProps | null | undefined
 }
 
 interface FwProperties {

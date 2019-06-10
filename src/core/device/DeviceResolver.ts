@@ -109,12 +109,7 @@ class DeviceResolver extends Resolver<Device> {
       id: uuid.v4(),
       systemMode: {
         isLocked: false,
-        shouldInherit: true,
-        revertMinutes: undefined,
-        revertMode: undefined,
-        revertScheduledAt: undefined,
-        target: undefined,
-        lastKnown: undefined
+        shouldInherit: true
       }
     };
     const deviceRecordData = DeviceRecord.fromModel(device);
