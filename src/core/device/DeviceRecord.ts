@@ -5,6 +5,7 @@ import { Device, DeviceType, DeviceModelType, IrrigationType, DeviceSystemMode }
 import { NoYesUnsure } from '../api/NoYesUnsure';
 import { translateNumericToStringEnum, translateStringToNumericEnum } from '../api/enumUtils';
 import { morphism, StrictSchema } from 'morphism';
+import * as t from 'io-ts';
 
 export enum DeviceTypeData {
   FLO_DEVICE = 1,
@@ -37,6 +38,9 @@ export interface DeviceRecordData {
   irrigation_type?: IrrigationTypeData;
   should_inherit_system_mode?: boolean;
   target_system_mode?: DeviceSystemMode;
+  revert_scheduled_at?: string;
+  revert_mode: DeviceSystemMode;
+  revert_minutes?: number;
 }
 
 const RecordToModelSchema: StrictSchema<Device, DeviceRecordData>  = {
@@ -81,7 +85,11 @@ const RecordToModelSchema: StrictSchema<Device, DeviceRecordData>  = {
   systemMode: (input: DeviceRecordData) => ({
     target: input.target_system_mode,
     isLocked: false,
-    shouldInherit: _.get(input, 'should_inherit_system_mode', true)
+    shouldInherit: _.get(input, 'should_inherit_system_mode', true),
+    revertScheduledAt: input.revert_scheduled_at,
+    revertMode: input.revert_mode,
+    revertMinutes: input.revert_minutes,
+    lastKnown: undefined
   })
 };
 
@@ -95,6 +103,9 @@ const ModelToRecordSchema: StrictSchema<DeviceRecordData, Device> = {
   created_at: 'createdAt',
   updated_at: 'updatedAt',
   should_inherit_system_mode: 'systemMode.shouldInherit',
+  revert_scheduled_at: 'systemMode.revertScheduledAt',
+  revert_mode: 'systemMode.revertMode',
+  revert_minutes: 'systemMode.revertMinutes',
   target_system_mode: 'systemMode.target',
   device_type: (input: Device) => 
     translateStringToNumericEnum(
@@ -135,6 +146,9 @@ const PartialModelToRecordSchema: StrictSchema<Partial<DeviceRecordData>, Partia
   created_at: 'createdAt',
   updated_at: 'updatedAt',
   should_inherit_system_mode: 'systemMode.shouldInherit',
+  revert_scheduled_at: 'systemMode.revertScheduledAt',
+  revert_mode: 'systemMode.revertMode',
+  revert_minutes: 'systemMode.revertMinutes',
   target_system_mode: 'systemMode.target',
   device_type: (input: Partial<Device>) => 
     input.deviceType && translateStringToNumericEnum(
