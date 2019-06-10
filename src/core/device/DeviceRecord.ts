@@ -1,7 +1,7 @@
 import { $enum } from 'ts-enum-util';
 import _ from 'lodash';
 // These should likely go into a lookup table
-import { Device, DeviceType, DeviceModelType, IrrigationType, DeviceSystemMode } from '../api';
+import { Device, DeviceType, DeviceModelType, IrrigationType, DeviceSystemMode, ValveState } from '../api';
 import { NoYesUnsure } from '../api/NoYesUnsure';
 import { translateNumericToStringEnum, translateStringToNumericEnum } from '../api/enumUtils';
 import { morphism, StrictSchema } from 'morphism';
@@ -41,6 +41,7 @@ export interface DeviceRecordData {
   revert_scheduled_at?: string;
   revert_mode: DeviceSystemMode;
   revert_minutes?: number;
+  target_valve_state: ValveState;
 }
 
 const RecordToModelSchema: StrictSchema<Device, DeviceRecordData>  = {
@@ -90,6 +91,9 @@ const RecordToModelSchema: StrictSchema<Device, DeviceRecordData>  = {
     revertMode: input.revert_mode,
     revertMinutes: input.revert_minutes,
     lastKnown: undefined
+  }),
+  valve: (input: DeviceRecordData) => ({
+    target: input.target_valve_state
   })
 };
 
@@ -107,6 +111,7 @@ const ModelToRecordSchema: StrictSchema<DeviceRecordData, Device> = {
   revert_mode: 'systemMode.revertMode',
   revert_minutes: 'systemMode.revertMinutes',
   target_system_mode: 'systemMode.target',
+  target_valve_state: 'valve.target',
   device_type: (input: Device) => 
     translateStringToNumericEnum(
       DeviceTypeData,
@@ -150,6 +155,7 @@ const PartialModelToRecordSchema: StrictSchema<Partial<DeviceRecordData>, Partia
   revert_mode: 'systemMode.revertMode',
   revert_minutes: 'systemMode.revertMinutes',
   target_system_mode: 'systemMode.target',
+  target_valve_state: 'valve.target',
   device_type: (input: Partial<Device>) => 
     input.deviceType && translateStringToNumericEnum(
       DeviceTypeData,

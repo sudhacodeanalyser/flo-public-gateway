@@ -2,7 +2,7 @@ import { inject, injectable } from 'inversify';
 import uuid from 'uuid';
 import { fromPartialRecord } from '../../database/Patch';
 import { InternalDeviceService } from "../../internal-device-service/InternalDeviceService";
-import { DependencyFactoryFactory, Device, DeviceCreate, DeviceUpdate, DeviceModelType, DeviceType, DeviceSystemMode, DeviceSystemModeNumeric } from '../api';
+import { DependencyFactoryFactory, Device, DeviceCreate, DeviceUpdate, DeviceModelType, DeviceType, DeviceSystemMode, DeviceSystemModeNumeric, ValveState, ValveStateNumeric } from '../api';
 import DeviceTable from '../device/DeviceTable';
 import { LocationResolver, PropertyResolverMap, Resolver } from '../resolver';
 import { DeviceRecord, DeviceRecordData } from './DeviceRecord';
@@ -41,6 +41,18 @@ class DeviceResolver extends Resolver<Device> {
           _.get(additionalProperties, 'fwProperties.system_mode')
         )
       };
+    },
+    valve: async (device: Device, shouldExpand = false) => {
+      const additionalProperts = await this.internalDeviceService.getDevice(device.macAddress);
+
+      return {
+        ...device.valve,
+        lastKnown: translateNumericToStringEnum(
+          ValveState,
+          ValveStateNumeric,
+          _.get(additionalProperts, 'fwProperties.valve_state')
+        )
+      }
     }
   };
   private locationResolverFactory: () => LocationResolver;
@@ -85,10 +97,7 @@ class DeviceResolver extends Resolver<Device> {
   }
 
   public async updatePartial(id: string, deviceUpdate: DeviceUpdate): Promise<Device> {
-    // tslint:disable
-    console.log(JSON.stringify(deviceUpdate, null, 4));
     const deviceRecordData = DeviceRecord.fromPartialModel(deviceUpdate);
-    console.log(JSON.stringify(deviceRecordData, null, 4));
     const patch = fromPartialRecord<DeviceRecordData>(deviceRecordData);
     const updatedDeviceRecordData = await this.deviceTable.update({ id }, patch);
 
