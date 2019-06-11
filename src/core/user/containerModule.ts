@@ -3,7 +3,7 @@ import UserAccountRoleTable from './UserAccountRoleTable';
 import UserDetailTable from './UserDetailTable';
 import UserLocationRoleTable from './UserLocationRoleTable';
 import { UserResolver } from './UserResolver';
-import UserService from './UserService';
+import { UserService } from '../service';
 import UserTable from './UserTable';
 
 export default new ContainerModule((bind: interfaces.Bind) => {

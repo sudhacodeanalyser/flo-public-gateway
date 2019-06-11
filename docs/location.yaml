@@ -250,6 +250,11 @@ components:
             - gt_10k_usd_lte_50k_usd
             - gt_50k_usd_lte_100k_usd
             - gt_100K_usd
+        systemMode: 
+          type: string
+          enum:
+            - home
+            - away
     LocationCreate:
       allOf:
         - type: object

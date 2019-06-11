@@ -5,6 +5,7 @@ import apiContainerModule from './api/containerModule';
 import locationContainerModule from './location/containerModule';
 import userContainerModule from './user/containerModule';
 import subscriptionContainerModule from './subscription/containerModule';
+import presenceContainerModule from './presence/containerModule';
 
 export default [
   pingContainerModule,
@@ -13,5 +14,6 @@ export default [
   apiContainerModule,
   locationContainerModule,
   userContainerModule,
-  subscriptionContainerModule
+  subscriptionContainerModule,
+  presenceContainerModule
 ];

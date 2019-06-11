@@ -1,5 +1,5 @@
 import { ContainerModule, interfaces } from 'inversify';
-import PingService from './PingService';
+import { PingService } from '../service';
 
 export default new ContainerModule((bind: interfaces.Bind) => {
 

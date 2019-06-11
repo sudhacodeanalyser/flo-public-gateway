@@ -2,7 +2,7 @@ import _ from 'lodash';
 import { injectable, inject } from 'inversify';
 import { User, UserUpdate } from '../api';
 import { UserResolver } from '../resolver';
-import AccountService from '../account/AccountService';
+import { AccountService } from '../service';
 import ValidationError from '../api/error/ValidationError';
 
 @injectable()
@@ -36,4 +36,4 @@ class UserService {
   }
 }
 
-export default UserService;
+export { UserService };
