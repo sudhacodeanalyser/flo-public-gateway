@@ -99,7 +99,7 @@ class LocationResolver extends Resolver<Location> {
         })[0];
 
       if (
-        device.systemMode && (device.systemMode.target || device.systemMode.lastKnown) === DeviceSystemMode.AWAY
+         (_.get(device, 'systemMode.target') || _.get(device, 'systemMode.lastKnown')) === DeviceSystemMode.AWAY
       ) {
         return SystemMode.AWAY;
       } else {
