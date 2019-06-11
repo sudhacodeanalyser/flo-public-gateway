@@ -8,6 +8,7 @@ import { Resolver, PropertyResolverMap, DeviceResolver, UserResolver, AccountRes
 import LocationTable from '../location/LocationTable';
 import UserLocationRoleTable from '../user/UserLocationRoleTable';
 import { fromPartialRecord } from '../../database/Patch';
+import _ from 'lodash';
 
 @injectable()
 class LocationResolver extends Resolver<Location> {
@@ -88,9 +89,9 @@ class LocationResolver extends Resolver<Location> {
           (d.systemMode.lastKnown || d.systemMode.target) 
         )
         .sort((deviceA: Device, deviceB: Device) => {
-          if (deviceA.systemMode && deviceA.systemMode.target && (!deviceB.systemMode || !deviceB.systemMode.target)) {
+          if (_.get(deviceA, 'systemMode.target') && !_.get(deviceB, 'systemMode.target')) {
             return -1;
-          } else if ((!deviceA.systemMode || !deviceA.systemMode.target) && deviceB.systemMode && deviceB.systemMode.target) {
+          } else if (_.get(deviceB, 'systemMode.target') && !_.get(deviceA, 'systemMode.target')) {
             return 1;
           } else {
             return 0;
