@@ -1,12 +1,13 @@
 import _ from 'lodash';
 import { injectable, inject } from 'inversify';
-import { DependencyFactoryFactory, Device, DeviceUpdate, DeviceCreate, Location } from '../api';
+import { DependencyFactoryFactory, Device, DeviceUpdate, DeviceCreate, Location, ValveState } from '../api';
 import { DeviceResolver } from '../resolver';
 import { LocationService } from '../service';
 import { PairingService, PairingData, QrData } from '../../api-v1/pairing/PairingService';
 import ConflictError from '../api/error/ConflictError';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import Logger from 'bunyan';
+import { DirectiveService } from './DirectiveService';
 
 @injectable()
 class DeviceService {
@@ -31,8 +32,18 @@ class DeviceService {
     return this.deviceResolver.getByMacAddress(macAddress, expand);
   }
 
-  public async updatePartialDevice(id: string, deviceUpdate: DeviceUpdate): Promise<Device> {
-    return this.deviceResolver.updatePartial(id, deviceUpdate);
+  public async updatePartialDevice(id: string, deviceUpdate: DeviceUpdate, directiveService?: DirectiveService): Promise<Device> {
+    const updatedDevice = await this.deviceResolver.updatePartial(id, deviceUpdate);
+ 
+    if (directiveService && deviceUpdate.valve) {
+      if (deviceUpdate.valve.target === ValveState.OPEN) {
+        await directiveService.openValve(id);
+      } else if (deviceUpdate.valve.target === ValveState.CLOSED) {
+        await directiveService.closeValve(id);
+      }
+    }
+
+    return updatedDevice;
   }
 
   public async removeDevice(id: string): Promise<void> {

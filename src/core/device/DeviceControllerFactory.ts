@@ -12,6 +12,7 @@ import Request from '../api/Request';
 import * as Responses from '../api/response';
 import { DeviceService } from '../service';
 import { DeviceSystemModeServiceFactory } from './DeviceSystemModeService';
+import { DirectiveServiceFactory } from './DirectiveService';
 
 export function DeviceControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
@@ -68,7 +69,8 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     constructor(
       @inject('DeviceService') private deviceService: DeviceService,
       @inject('InternalDeviceService') private internalDeviceService: InternalDeviceService,
-      @inject('DeviceSystemModeServiceFactory') private deviceSystemModeServiceFactory: DeviceSystemModeServiceFactory
+      @inject('DeviceSystemModeServiceFactory') private deviceSystemModeServiceFactory: DeviceSystemModeServiceFactory,
+      @inject('DirectiveServiceFactory') private directiveServiceFactory: DirectiveServiceFactory
     ) {
       super();
     }
@@ -126,9 +128,10 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
         body: DeviceUpdateValidator
       }))
     )
-    private async updatePartialDevice(@requestParam('id') id: string, @requestBody() deviceUpdate: DeviceUpdate): Promise<Responses.DeviceResponse> {
+    private async updatePartialDevice(@request() req: Request, @requestParam('id') id: string, @requestBody() deviceUpdate: DeviceUpdate): Promise<Responses.DeviceResponse> {
+      const directiveService = this.directiveServiceFactory.create(req);
 
-      return Responses.Device.fromModel(await this.deviceService.updatePartialDevice(id, deviceUpdate));
+      return Responses.Device.fromModel(await this.deviceService.updatePartialDevice(id, deviceUpdate, directiveService));
     }
 
     @httpPost('/:id/fwproperties',

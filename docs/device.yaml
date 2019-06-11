@@ -284,6 +284,14 @@ components:
           type: string
         nickname:
           type: string
+        valve:
+          type: object
+          properties:
+            target:
+              type: string
+              enum: 
+                - open
+                - closed
     IrrigationType:
       type: string
       enum:
@@ -332,6 +340,20 @@ components:
                 revertScheduledAt:
                   type: string
                   format: date-time
+            valve:
+              type: object
+              properties:
+                target:
+                  type: string
+                  enum: 
+                    - open
+                    - closed
+                lastKnown:
+                  type: string
+                  enum: 
+                    - open
+                    - closed
+                    - in_transition
     DeviceExpandable:
       oneOf:
         - type: object
