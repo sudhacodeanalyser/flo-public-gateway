@@ -34,11 +34,13 @@ class DeviceService {
 
   public async updatePartialDevice(id: string, deviceUpdate: DeviceUpdate, directiveService?: DirectiveService): Promise<Device> {
     const updatedDevice = await this.deviceResolver.updatePartial(id, deviceUpdate);
-
-    if (directiveService && deviceUpdate.valve && deviceUpdate.valve.target === ValveState.OPEN) {
-      await directiveService.openValve(id);
-    } else if (directiveService && deviceUpdate.valve && deviceUpdate.valve.target === ValveState.CLOSED) {
-      await directiveService.closeValve(id);
+ 
+    if (directiveService && deviceUpdate.valve) {
+      if (deviceUpdate.valve.target === ValveState.OPEN) {
+        await directiveService.openValve(id);
+      } else if (deviceUpdate.valve.target === ValveState.CLOSED) {
+        await directiveService.closeValve(id);
+      }
     }
 
     return updatedDevice;
