@@ -86,16 +86,16 @@ interface ValveData {
   lastKnown?: ValveState
 }
 
-const DeviceCreateCodec = t.intersection([
-  t.partial(DeviceMutableCodec.props),
-  t.type({
-    macAddress: t.string,
-    location: t.strict({ id: t.string })
-  })
-]);
-
+const DeviceCreateCodec = t.type({
+  macAddress: t.string,
+  nickname: t.string,
+  location: t.strict({ id: t.string }),
+  deviceType: t.string,
+  deviceModel: t.string
+});
 export const DeviceCreateValidator = t.exact(DeviceCreateCodec);
 export type DeviceCreate = t.TypeOf<typeof DeviceCreateValidator>;
+
 export const DeviceUpdateValidator = t.exact(t.intersection([
   t.partial(DeviceMutableCodec.props),
   t.partial({
