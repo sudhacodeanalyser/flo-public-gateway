@@ -1,4 +1,3 @@
-# This image is used as a build environment to run nodejs tools, like npm
 FROM node:10-alpine
 
 ARG NODE_ENV=development
@@ -20,4 +19,10 @@ RUN rm -rf /var/cache/apk/* && \
       direnv \
       pipenv
 
+RUN mkdir -p /app
 WORKDIR /app
+COPY . /app
+
+RUN npm install
+
+CMD ["npm", "run", "watch-debug"]

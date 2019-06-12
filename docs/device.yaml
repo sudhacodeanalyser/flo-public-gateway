@@ -86,8 +86,12 @@ paths:
               required:
                 - macAddress
                 - location
+                - deviceType
+                - deviceModel
               properties:
                 macAddress:
+                  type: string
+                nickname:
                   type: string
                 location:
                   type: object
@@ -97,14 +101,10 @@ paths:
                     id:
                       type: string
                       format: uuid
-                installationPoint:
+                deviceType:
                   type: string
-                nickname:
+                deviceModel:
                   type: string
-                prvInstalledAfter:
-                  type: boolean
-                irrigationType:
-                  $ref: '#/components/schemas/IrrigationType'
       responses:
         200:
           description: A Device with the specified MAC address or an empty object if not found.
@@ -241,16 +241,61 @@ paths:
           $ref: '#/components/responses/UnauthorizedError'
         403:
           $ref: '#/components/responses/ForbiddenError'
-
+  /api/v2/devices/{id}/system-mode:
+    post:
+      summary: Sends directive to change device system mode
+      tags:
+        - Devices
+        - System Mode
+      produces:
+        application/json
+      requestBody:
+        required: true
+        content: 
+          application/json:
+            schema:
+              type: object
+              required:
+                - target
+              properties:
+                target:
+                  $ref: '#/components/schemas/SystemMode'
+                isLocked:
+                  type: boolean
+                revertMode:
+                  $ref: '#/components/schemas/SystemMode'
+                revertMinutes:
+                  type: number
+      responses:
+        202:
+          description: Directive sent
+          schema:
+            $ref: '#/components/schemas/Device'
+        400:
+          description: Invalid request body
+        409:
+          description: Device system mode is locked and cannot be changed
 components:
   schemas:
     DeviceMutable:
       type: object
       properties:
+        prvInstalledAfter:
+          type: boolean
+        irrigationType:
+          $ref: '#/components/schemas/IrrigationType'
         installationPoint:
           type: string
         nickname:
           type: string
+        valve:
+          type: object
+          properties:
+            target:
+              type: string
+              enum: 
+                - open
+                - closed
     IrrigationType:
       type: string
       enum:
@@ -285,6 +330,34 @@ components:
               type: object
             irrigationType:
               $ref: '#/components/schemas/IrrigationType'
+            systemMode:
+              type: object
+              properties:
+                target:
+                  $ref: '#/components/schemas/SystemMode'
+                shouldInhert:
+                  type: boolean
+                revertMinutes:
+                  type: number
+                revertMode:
+                  $ref: '#/components/schemas/SystemMode'
+                revertScheduledAt:
+                  type: string
+                  format: date-time
+            valve:
+              type: object
+              properties:
+                target:
+                  type: string
+                  enum: 
+                    - open
+                    - closed
+                lastKnown:
+                  type: string
+                  enum: 
+                    - open
+                    - closed
+                    - in_transition
     DeviceExpandable:
       oneOf:
         - type: object
@@ -293,3 +366,9 @@ components:
               type: string
               format: uuid
         - $ref: '#/components/schemas/Device'
+    SystemMode:
+      type: string
+      enum:
+        - home
+        - away
+        - sleep

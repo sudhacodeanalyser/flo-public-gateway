@@ -1,14 +1,14 @@
 version: '3'
 
 services:
-  app: &app
-    image: "${CI_REGISTRY_IMAGE:-registry.gitlab.com/flotechnologies/app}:latest"
+  app:
+    image: "flo-public-gateway:local"
     environment:
       NODE_ENV: "${NODE_ENV:-development}"
       DYNAMO_TABLE_PREFIX: "${DYNAMO_TABLE_PREFIX}"
       STRIPE_SECRET_KEY: "${STRIPE_SECRET_KEY}"
       STRIPE_WEBHOOK_SECRET: "${STRIPE_WEBHOOK_SECRET}"
-      API_VERSION: "${API_VERSION}"
+      API_VERSION: "2"
       AUTH_URL: "${AUTH_URL}"
       AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID-empty}"
       AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY-empty}"
@@ -17,13 +17,3 @@ services:
     ports:
       - 3000:3000
       - 9229:9229
-    build:
-      context: .
-      dockerfile: Dockerfile.run
-
-  # This is used to automatically tag the image with CI_PIPELINE_ID
-  app-tag:
-    entrypoint: "true"
-    image: "${CI_REGISTRY_IMAGE:-registry.gitlab.com/flotechnologies/app}:${CI_PIPELINE_ID:-latest}"
-    ports: []
-    <<: *app

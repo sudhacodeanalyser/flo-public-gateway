@@ -3,9 +3,8 @@ import _ from 'lodash';
 import { Location, PartialBy, Subscription, SubscriptionCreate, SubscriptionProvider, User } from '../api';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import ValidationError from '../api/error/ValidationError';
-import LocationService from '../location/LocationService';
+import { LocationService, UserService } from '../service';
 import { SubscriptionResolver } from '../resolver';
-import UserService from '../user/UserService';
 
 @injectable()
 class SubscriptionService {
@@ -143,4 +142,4 @@ class SubscriptionService {
   }
 }
 
-export default SubscriptionService;
+export { SubscriptionService };

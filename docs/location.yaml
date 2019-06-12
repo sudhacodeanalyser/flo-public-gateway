@@ -85,7 +85,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/LocationMutable'
+              $ref: '#/components/schemas/LocationUpdate'
       responses:
         200:
           description: The Location was successfully updated.
@@ -239,6 +239,8 @@ components:
           enum:
             - copper
             - galvanized
+        waterUtility:
+          type: string
         homeownersInsurance:
           type: string
         hasPastWaterDamage:
@@ -250,9 +252,30 @@ components:
             - gt_10k_usd_lte_50k_usd
             - gt_50k_usd_lte_100k_usd
             - gt_100K_usd
+    LocationUpdate:
+      allOf:
+        - $ref: '#/components/schemas/LocationMutable'
+        - type: object
+          properties:
+            systemMode: 
+              type: string
+              enum:
+                - home
+                - away
     LocationCreate:
+      required:
+        - address
+        - city
+        - state
+        - country
+        - timezone
+        - locationType
+        - residenceType
+        - account
       allOf:
         - type: object
+          required: 
+            - id
           properties:
             account:
               type: object
@@ -263,7 +286,7 @@ components:
         - $ref: '#/components/schemas/LocationMutable'
     Location:
       allOf:
-        - $ref: '#/components/schemas/LocationMutable'
+        - $ref: '#/components/schemas/LocationUpdate'
         - $ref: '#/components/schemas/Timestamped'
         - type: object
           properties:

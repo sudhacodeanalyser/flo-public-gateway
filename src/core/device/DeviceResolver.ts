@@ -2,10 +2,13 @@ import { inject, injectable } from 'inversify';
 import uuid from 'uuid';
 import { fromPartialRecord } from '../../database/Patch';
 import { InternalDeviceService } from "../../internal-device-service/InternalDeviceService";
-import { DependencyFactoryFactory, Device, DeviceCreate, DeviceModelType, DeviceType } from '../api';
+import { DependencyFactoryFactory, Device, DeviceCreate, DeviceUpdate, DeviceModelType, DeviceType, DeviceSystemMode, DeviceSystemModeNumeric, ValveState, ValveStateNumeric } from '../api';
 import DeviceTable from '../device/DeviceTable';
 import { LocationResolver, PropertyResolverMap, Resolver } from '../resolver';
 import { DeviceRecord, DeviceRecordData } from './DeviceRecord';
+import DeviceForcedSystemModeTable from './DeviceForcedSystemModeTable';
+import { translateNumericToStringEnum } from '../api/enumUtils';
+import _ from 'lodash';
 
 @injectable()
 class DeviceResolver extends Resolver<Device> {
@@ -19,6 +22,37 @@ class DeviceResolver extends Resolver<Device> {
     },
     additionalProps: async (device: Device, shouldExpand = false) => {
       return this.internalDeviceService.getDevice(device.macAddress);
+    },
+    systemMode: async (device: Device, shouldExpand = false) => {
+      const [
+        forcedSystemMode,
+        additionalProperties
+      ] = await Promise.all([
+        this.deviceForcedSystemModeTable.getLatest(device.id),
+        this.internalDeviceService.getDevice(device.macAddress)
+      ]);
+
+      return {
+        ...device.systemMode,
+        isLocked: forcedSystemMode !== null && forcedSystemMode.system_mode !== null,
+        lastKnown: translateNumericToStringEnum(
+          DeviceSystemMode, 
+          DeviceSystemModeNumeric, 
+          _.get(additionalProperties, 'fwProperties.system_mode')
+        )
+      };
+    },
+    valve: async (device: Device, shouldExpand = false) => {
+      const additionalProperts = await this.internalDeviceService.getDevice(device.macAddress);
+
+      return {
+        ...device.valve,
+        lastKnown: translateNumericToStringEnum(
+          ValveState,
+          ValveStateNumeric,
+          _.get(additionalProperts, 'fwProperties.valve_state')
+        )
+      }
     }
   };
   private locationResolverFactory: () => LocationResolver;
@@ -26,7 +60,8 @@ class DeviceResolver extends Resolver<Device> {
   constructor(
    @inject('DeviceTable') private deviceTable: DeviceTable,
    @inject('DependencyFactoryFactory') depFactoryFactory: DependencyFactoryFactory,
-   @inject('InternalDeviceService') private internalDeviceService: InternalDeviceService
+   @inject('InternalDeviceService') private internalDeviceService: InternalDeviceService,
+   @inject('DeviceForcedSystemModeTable') private deviceForcedSystemModeTable: DeviceForcedSystemModeTable
   ) {
     super();
 
@@ -61,8 +96,8 @@ class DeviceResolver extends Resolver<Device> {
     );
   }
 
-  public async updatePartial(id: string, partialDevice: Partial<Device>): Promise<Device> {
-    const deviceRecordData = DeviceRecord.fromPartialModel(partialDevice);
+  public async updatePartial(id: string, deviceUpdate: DeviceUpdate): Promise<Device> {
+    const deviceRecordData = DeviceRecord.fromPartialModel(deviceUpdate);
     const patch = fromPartialRecord<DeviceRecordData>(deviceRecordData);
     const updatedDeviceRecordData = await this.deviceTable.update({ id }, patch);
 
@@ -80,7 +115,11 @@ class DeviceResolver extends Resolver<Device> {
       deviceModel: DeviceModelType.FLO_DEVICE_THREE_QUARTER_INCH,
       additionalProps: null,
       isPaired,
-      id: uuid.v4()
+      id: uuid.v4(),
+      systemMode: {
+        isLocked: false,
+        shouldInherit: true
+      }
     };
     const deviceRecordData = DeviceRecord.fromModel(device);
     const createdDeviceRecordData = await this.deviceTable.put(deviceRecordData);

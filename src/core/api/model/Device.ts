@@ -1,8 +1,37 @@
 import * as t from 'io-ts';
 import { InternalDevice } from '../../../internal-device-service/models';
-import { Expandable, Location, TimestampedModel } from '../../api';
+import { Omit, Expandable, Location, TimestampedModel } from '../../api';
 import { convertEnumtoCodec } from '../../api/enumUtils';
 import { NoYesUnsure } from '../NoYesUnsure';
+import _ from 'lodash';
+
+export enum ValveState {
+  OPEN = 'open',
+  CLOSED = 'closed',
+  IN_TRANSITION = 'in_transition'
+}
+
+export enum ValveStateNumeric {
+  CLOSED = 0,
+  OPEN = 1,
+  IN_TRANSITION = 2
+}
+
+export const ValveStateCodec = convertEnumtoCodec(ValveState);
+
+export enum DeviceSystemMode {
+  HOME = 'home',
+  AWAY = 'away',
+  SLEEP = 'sleep'
+}
+
+export enum DeviceSystemModeNumeric {
+  HOME = 2,
+  AWAY = 3,
+  SLEEP = 5
+}
+
+export const DeviceSystemModeCodec = convertEnumtoCodec(DeviceSystemMode);
 
 export enum DeviceType {
   FLO_DEVICE = 'flo_device',
@@ -28,30 +57,66 @@ const DeviceMutableCodec = t.type({
   installationPoint: t.string,
   nickname: t.string,
   prvInstalledAfter: NoYesUnsure.Codec,
-  irrigationType: IrrigationTypeCodec
+  irrigationType: IrrigationTypeCodec,
+  valve: t.partial({
+    target: t.keyof(_.pick(ValveStateCodec.keys, ['open', 'closed']))
+  })
 });
 
-const DeviceCreateCodec = t.intersection([
-  t.partial(DeviceMutableCodec.props),
+const MutableSystemModeCodec = t.type({
+  shouldInherit: t.boolean,
+  target: t.union([t.undefined, DeviceSystemModeCodec]),
+  revertScheduledAt: t.union([t.undefined, t.string]),
+  revertMode: t.union([t.undefined, t.string]),
+  revertMinutes: t.union([t.undefined, t.number])
+});
+
+const SystemModeCodec = t.intersection([
+  MutableSystemModeCodec,
   t.type({
-    macAddress: t.string,
-    location: t.strict({ id: t.string })
+    lastKnown: t.union([t.undefined, DeviceSystemModeCodec]),
+    isLocked: t.boolean
   })
 ]);
 
+type SystemModeData = t.TypeOf<typeof SystemModeCodec>;
+
+interface ValveData {
+  target?: ValveState,
+  lastKnown?: ValveState
+}
+
+const DeviceCreateCodec = t.type({
+  macAddress: t.string,
+  nickname: t.string,
+  location: t.strict({ id: t.string }),
+  deviceType: t.string,
+  deviceModel: t.string
+});
 export const DeviceCreateValidator = t.exact(DeviceCreateCodec);
 export type DeviceCreate = t.TypeOf<typeof DeviceCreateValidator>;
-export const DeviceUpdateValidator = t.exact(t.partial(DeviceMutableCodec.props));
-export type DeviceUpdate = t.TypeOf<typeof DeviceUpdateValidator>;
 
-export interface Device extends DeviceUpdate, TimestampedModel {
+export const DeviceUpdateValidator = t.exact(t.intersection([
+  t.partial(DeviceMutableCodec.props),
+  t.partial({
+    systemMode: t.partial({
+      shouldInherit: MutableSystemModeCodec.props.shouldInherit
+    })
+  })
+]));
+export interface DeviceUpdate extends t.TypeOf<typeof DeviceUpdateValidator> {
+  systemMode?: Partial<SystemModeData>;
+};
+
+export interface Device extends Omit<DeviceUpdate, 'valve'>, TimestampedModel {
   id: string,
   macAddress: string,
   location: Expandable<Location>,
   deviceType: DeviceType,
   deviceModel: DeviceModelType,
   isPaired: boolean,
-  additionalProps: AdditionalDeviceProps | null | undefined
+  additionalProps: AdditionalDeviceProps | null | undefined,
+  valve?: ValveData
 }
 
 interface FwProperties {

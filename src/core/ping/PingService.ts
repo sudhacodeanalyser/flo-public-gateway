@@ -12,4 +12,4 @@ class PingService {
   }
 }
 
-export default PingService;
+export { PingService };
