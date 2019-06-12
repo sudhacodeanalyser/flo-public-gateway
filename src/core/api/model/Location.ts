@@ -109,7 +109,8 @@ const LocationProfileCodec = t.type({
   plumbingType: t.union([PlumbingTypeCodec, t.undefined]),
   homeownersInsurance: t.union([t.string, t.undefined]),
   hasPastWaterDamage: t.boolean,
-  pastWaterDamageClaimAmount: t.union([WaterDamageClaimCodec, t.undefined])
+  pastWaterDamageClaimAmount: t.union([WaterDamageClaimCodec, t.undefined]),
+  waterUtility: t.union([t.undefined, t.string])
 });
 
 const AddressCodec = t.type({
@@ -157,14 +158,11 @@ const {
 export const LocationCreateValidator = t.intersection([
   AccountId,
   AddressCodec,
-  t.intersection([
-    t.type({
-      locationType,
-      residenceType,
-    }),
-    // Can't have more than 5 types in an intersection with the compiler complaining
-    AdditionalPropsCodec
-  ]),
+  t.type({
+    locationType,
+    residenceType,
+    nickname: AdditionalPropsCodec.props.nickname
+  }),
   t.partial(profileProps as Omit<typeof LocationProfileCodec.props, 'locationType' | 'residenceType'>),
   t.partial(LocationProfileWithLegacyCodec.props)
 ]);
