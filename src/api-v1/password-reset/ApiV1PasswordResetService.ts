@@ -1,6 +1,6 @@
-import { inject, injectable } from 'inversify';
-import { ApiV1Service } from '../ApiV1Service';
+import { inject } from 'inversify';
 import { PasswordResetService } from '../../core/user/PasswordResetService';
+import { ApiV1Service } from '../ApiV1Service';
 
 class ApiV1PasswordResetService extends ApiV1Service implements PasswordResetService {
 
@@ -21,6 +21,22 @@ class ApiV1PasswordResetService extends ApiV1Service implements PasswordResetSer
 
     await this.sendRequest(request);
   }
+
+  public async resetPassword(authToken: string, userId: string, oldPassword: string, newPassword: string): Promise<void> {
+    const request = {
+      method: 'POST',
+      url: `${ this.apiV1Url }/users/${ userId }/resetpassword`,
+      authToken,
+      body: {
+        old_pass: oldPassword,
+        new_pass: newPassword,
+        new_pass_conf: newPassword
+      }
+    };
+
+    await this.sendRequest(request);
+  }
 }
 
 export { ApiV1PasswordResetService };
+
