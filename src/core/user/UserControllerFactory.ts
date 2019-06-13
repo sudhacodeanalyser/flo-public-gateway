@@ -39,6 +39,7 @@ export function UserControllerFactory(container: Container, apiVersion: number):
     }
 
     @httpPost(
+      // auth is deferred to  API V1 call
       '/:id/password',
       reqValidator.create(t.type({
         body: t.type({
@@ -47,7 +48,6 @@ export function UserControllerFactory(container: Container, apiVersion: number):
         })
       }))
     )
-    @asyncMethod
     private async passwordReset(@authorizationHeader() authToken: string,
                                 @requestParam('id') id: string,
                                 @requestBody() { oldPassword, newPassword }: { oldPassword: string, newPassword: string }): Promise<void> {
