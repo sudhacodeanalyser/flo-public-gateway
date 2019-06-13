@@ -4,7 +4,7 @@ paths:
       summary: Request password reset
       tags:
         - Password Reset
-      produces: 
+      produces:
         - application/json
       requestBody:
         required: true
@@ -19,6 +19,37 @@ paths:
       responses:
         202:
           description: If user with given email exists, password reset email will be sent
+        400:
+          description: Invalid request body
+  /api/v2/users/{id}/password:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: User ID
+    post:
+      summary: Change User's password by ID
+      tags:
+        - Password Reset
+      produces:
+        - application/json
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                oldPassword:
+                  type: string
+                newPassword:
+                  type: string
+      responses:
+        200:
+          description: Password was successfully changed
         400:
           description: Invalid request body
   /api/v2/users/register:
