@@ -1,14 +1,14 @@
+import { Container, inject } from 'inversify';
+import { BaseHttpController, httpDelete, httpGet, httpPost, interfaces, queryParam, requestBody, requestParam } from 'inversify-express-utils';
 import * as t from 'io-ts';
-import { interfaces, httpGet, httpPost, httpDelete, queryParam, requestParam, requestBody, BaseHttpController } from 'inversify-express-utils';
-import { inject, Container } from 'inversify';
-import { UserService } from '../service';
-import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
-import { User, UserUpdateValidator, UserUpdate } from '../api';
-import { httpController, parseExpand, deleteMethod, createMethod, asyncMethod } from '../api/controllerUtils';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
+import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
+import { User, UserUpdate, UserUpdateValidator } from '../api';
+import { asyncMethod, authorizationHeader, createMethod, deleteMethod, httpController, parseExpand } from '../api/controllerUtils';
 import Request from '../api/Request';
-import { UserRegistrationService, UserRegistrationDataCodec, UserRegistrationData, EmailAvailability, EmailVerification, EmailVerificationCodec, OAuth2Response } from './UserRegistrationService';
+import { UserService } from '../service';
 import { PasswordResetService } from './PasswordResetService';
+import { EmailAvailability, EmailVerification, EmailVerificationCodec, OAuth2Response, UserRegistrationData, UserRegistrationDataCodec, UserRegistrationService } from './UserRegistrationService';
 
 export function UserControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
@@ -36,6 +36,22 @@ export function UserControllerFactory(container: Container, apiVersion: number):
     @asyncMethod
     private async requestPasswordReset(@requestBody() { email }: { email: string }): Promise<void> {
       return this.passwordResetService.requestReset(email);
+    }
+
+    @httpPost(
+      // auth is deferred to  API V1 call
+      '/:id/password',
+      reqValidator.create(t.type({
+        body: t.type({
+          oldPassword: t.string,
+          newPassword: t.string
+        })
+      }))
+    )
+    private async passwordReset(@authorizationHeader() authToken: string,
+                                @requestParam('id') id: string,
+                                @requestBody() { oldPassword, newPassword }: { oldPassword: string, newPassword: string }): Promise<void> {
+      return this.passwordResetService.resetPassword(authToken, id, oldPassword, newPassword);
     }
 
     @httpPost(

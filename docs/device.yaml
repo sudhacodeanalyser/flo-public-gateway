@@ -86,8 +86,12 @@ paths:
               required:
                 - macAddress
                 - location
+                - deviceType
+                - deviceModel
               properties:
                 macAddress:
+                  type: string
+                nickname:
                   type: string
                 location:
                   type: object
@@ -97,14 +101,10 @@ paths:
                     id:
                       type: string
                       format: uuid
-                installationPoint:
+                deviceType:
                   type: string
-                nickname:
+                deviceModel:
                   type: string
-                prvInstalledAfter:
-                  type: boolean
-                irrigationType:
-                  $ref: '#/components/schemas/IrrigationType'
       responses:
         200:
           description: A Device with the specified MAC address or an empty object if not found.
@@ -280,6 +280,10 @@ components:
     DeviceMutable:
       type: object
       properties:
+        prvInstalledAfter:
+          type: boolean
+        irrigationType:
+          $ref: '#/components/schemas/IrrigationType'
         installationPoint:
           type: string
         nickname:
