@@ -9,11 +9,10 @@ import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddle
 import * as t from 'io-ts';
 import _ from 'lodash';
 
-
 export function PresenceControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
   const authMiddlewareFactory = container.get<AuthMiddlewareFactory>('AuthMiddlewareFactory');
-  const authWithId = authMiddlewareFactory.create(async ({ params: { id } }: Request) => ({ user_id: id }));
+  const auth = authMiddlewareFactory.create();
 
   @httpController({ version: apiVersion }, '/presence')
   class PresenceController implements interfaces.Controller {
@@ -21,8 +20,8 @@ export function PresenceControllerFactory(container: Container, apiVersion: numb
       @inject('PresenceService') private presenceService: PresenceService
     ) {}
 
-    @httpPost('/', 
-      authWithId,
+    @httpPost('/me', 
+      auth,
       reqValidator.create(t.type({
         body: PresenceRequestValidator
       }))
