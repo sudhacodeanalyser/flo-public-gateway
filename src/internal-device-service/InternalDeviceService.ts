@@ -1,7 +1,7 @@
-import { inject, injectable } from 'inversify';
+import {inject, injectable} from 'inversify';
 import InternalDeviceServiceError from "./internalDeviceServiceError";
-import { InternalDeviceServiceHandler } from "./internalDeviceServiceHandler";
-import { InternalDevice, InternalDeviceCodec } from './models';
+import {InternalDeviceServiceHandler} from "./internalDeviceServiceHandler";
+import {InternalDevice, InternalDeviceCodec} from './models';
 
 @injectable()
 class InternalDeviceService extends InternalDeviceServiceHandler {
@@ -33,7 +33,6 @@ class InternalDeviceService extends InternalDeviceServiceHandler {
   }
 
   public async setDeviceFwProperties(deviceId: string, data: { [prop: string]: any }): Promise<void> {
-
     const request = {
       method: 'post',
       url: `${this.internalDeviceServiceBaseUrl}/devices/${deviceId}/fwproperties`,
@@ -44,5 +43,4 @@ class InternalDeviceService extends InternalDeviceServiceHandler {
   }
 }
 
-export { InternalDeviceService };
-
+export {InternalDeviceService};
