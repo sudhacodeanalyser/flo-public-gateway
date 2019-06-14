@@ -18,6 +18,8 @@ RUN rm -rf /var/cache/apk/* && \
       awscli \
       awsebcli \
       direnv \
-      pipenv
+      pipenv \
+    && \
+    pip install PyYAML==3.12
 
 WORKDIR /app
