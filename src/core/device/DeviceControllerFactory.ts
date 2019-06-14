@@ -135,9 +135,15 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       return Responses.Device.fromModel(await this.deviceService.updatePartialDevice(id, deviceUpdate, directiveService));
     }
 
-    // TODO: introduce the reqValidator back once the generic body validation is being figured out
     @httpPost('/:id/fwproperties',
-      authWithId
+      authWithId,
+      reqValidator.create(t.type({
+        params: t.type({
+          id: t.string
+        }),
+        // TODO Do not allow empty
+        body: t.record(t.string, t.any)
+      }))
     )
     private async setDeviceFwProperties(@requestParam('id') id: string, @requestBody() fwProperties: any): Promise<void> {
 
