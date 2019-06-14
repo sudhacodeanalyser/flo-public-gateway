@@ -13,6 +13,7 @@ import * as Responses from '../api/response';
 import { DeviceService } from '../service';
 import { DeviceSystemModeServiceFactory } from './DeviceSystemModeService';
 import { DirectiveServiceFactory } from './DirectiveService';
+import ResourceDoesNotExistError from "../api/error/ResourceDoesNotExistError";
 
 export function DeviceControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
@@ -245,12 +246,12 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     }
 
     private async mapIcdToMacAddress(icd: string): Promise<string> {
-      const device = await this.deviceService.getDeviceById(icd, []);
+
+      const device = await this.deviceService.getDeviceById(icd);
       if (_.isEmpty(device)) {
-        return ''
+        throw new ResourceDoesNotExistError('Device does not exist.');
       }
-      const {macAddress} = device as Device;
-      return macAddress
+      return (device as Device).macAddress;
     }
 
   }
