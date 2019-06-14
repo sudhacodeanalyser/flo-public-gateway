@@ -135,19 +135,13 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       return Responses.Device.fromModel(await this.deviceService.updatePartialDevice(id, deviceUpdate, directiveService));
     }
 
-    @httpPost('/:icd/fwproperties',
-      authWithId,
-      reqValidator.create(t.type({
-        params: t.type({
-          id: t.string
-        }),
-        // TODO Do not allow empty
-        body: t.record(t.string, t.any)
-      }))
+    // TODO: introduce the reqValidator back once the generic body validation is being figured out
+    @httpPost('/:id/fwproperties',
+      authWithId
     )
-    private async setDeviceFwProperties(@requestParam('icd') icd: string, @requestBody() fwProperties: any): Promise<void> {
+    private async setDeviceFwProperties(@requestParam('id') id: string, @requestBody() fwProperties: any): Promise<void> {
 
-      const deviceId = await this.mapIcdToMacAddress(icd);
+      const deviceId = await this.mapIcdToMacAddress(id);
       return this.internalDeviceService.setDeviceFwProperties(deviceId, fwProperties);
     }
 
