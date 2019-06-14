@@ -134,7 +134,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       return Responses.Device.fromModel(await this.deviceService.updatePartialDevice(id, deviceUpdate, directiveService));
     }
 
-    @httpPost('/:id/fwproperties',
+    @httpPost('/:icd/fwproperties',
       authWithId,
       reqValidator.create(t.type({
         params: t.type({
@@ -144,9 +144,10 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
         body: t.record(t.string, t.any)
       }))
     )
-    private async setDeviceFwProperties(@requestParam('id') id: string, @requestBody() fwProperties: any): Promise<void> {
+    private async setDeviceFwProperties(@requestParam('icd') icd: string, @requestBody() fwProperties: any): Promise<void> {
 
-      return this.internalDeviceService.setDeviceFwProperties(id, fwProperties);
+      const deviceId = await this.mapIcdToMacAddress(icd);
+      return this.internalDeviceService.setDeviceFwProperties(deviceId, fwProperties);
     }
 
     @httpDelete('/:id',
@@ -242,6 +243,16 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     private isForcedSleepDisable({ target, isLocked }: SystemModeRequest): boolean {
       return isLocked === false && target === DeviceSystemMode.SLEEP;
     }
+
+    private async mapIcdToMacAddress(icd: string): Promise<string> {
+      const device = await this.deviceService.getDeviceById(icd, []);
+      if (_.isEmpty(device)) {
+        return ''
+      }
+      const {macAddress} = device as Device;
+      return macAddress
+    }
+
   }
 
   return DeviceController;
