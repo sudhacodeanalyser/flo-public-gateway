@@ -8,6 +8,7 @@ import { LocationControllerFactory } from './location/LocationControllerFactory'
 import { UserControllerFactory } from './user/UserControllerFactory';
 import { SubscriptionControllerFactory } from './subscription/SubscriptionControllerFactory';
 import { PresenceControllerFactory } from './presence/PresenceControllerFactory';
+import { NotificationControllerFactory } from './notification/NotificationControllerFactory';
 
 export default function ControllerFactory(container: Container, apiVersion: number = 2): interfaces.Controller[] {
   return [
@@ -17,7 +18,8 @@ export default function ControllerFactory(container: Container, apiVersion: numb
     LocationControllerFactory,
     UserControllerFactory,
     SubscriptionControllerFactory,
-    PresenceControllerFactory
+    PresenceControllerFactory,
+    NotificationControllerFactory
   ]
   .map(controllerFactory => controllerFactory(container, apiVersion));
 }
