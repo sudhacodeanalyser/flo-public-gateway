@@ -26,11 +26,13 @@ function getProps(validator: any): t.Props {
   } else {
     return {};
   }
-
-  return validator.props || (validator.type ? getProps(validator.type) : {});
 }
 
 function getUnexpectedProps(data: any, validator?: t.TypeC<any>): string[] {
+
+  if (validator instanceof t.DictionaryType) {
+    return [];
+  }
 
   return _.differenceWith(
     _.keys(data),
