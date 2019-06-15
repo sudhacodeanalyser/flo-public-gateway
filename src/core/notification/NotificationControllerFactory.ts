@@ -1,18 +1,30 @@
-import { Container, inject, multiInject } from 'inversify';
-import { BaseHttpController, httpDelete, httpGet, httpPost, interfaces, queryParam, requestBody, requestParam } from 'inversify-express-utils';
-import * as t from 'io-ts';
-import _ from 'lodash';
+import { Container, inject } from 'inversify';
+import {
+  BaseHttpController,
+  httpDelete,
+  httpGet,
+  httpPost,
+  httpPut,
+  interfaces,
+  queryParam, request,
+  requestBody,
+  requestParam
+} from 'inversify-express-utils';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
-import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
-import { Subscription, SubscriptionCreate, SubscriptionCreateValidator, SubscriptionProviderWebhookHandler } from '../api';
-import { createMethod, deleteMethod, httpController, parseExpand } from '../api/controllerUtils';
-import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
-import * as Responses from '../api/response';
+import {
+  ActionsSupportResponse,
+  AlertEvent, AlertSettings, ClearAlertResponse, PaginatedResult
+} from '../api';
+import { httpController } from '../api/controllerUtils';
 import { NotificationService } from '../service';
+import Request from "../api/Request";
 
 export function NotificationControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const authMiddlewareFactory = container.get<AuthMiddlewareFactory>('AuthMiddlewareFactory');
-  const auth = authMiddlewareFactory.create(undefined, 'ALL/api/v2/notifications');
+  const auth = authMiddlewareFactory.create();
+  const authWithIcd = authMiddlewareFactory.create(async ({ body: { icdId } }) => ({icd_id: icdId}));
+  const authWithLocation = authMiddlewareFactory.create(async ({ body: { locationId } }: Request) => ({ location_id: locationId }));
+  const authWithUser = authMiddlewareFactory.create(async ({ params: { userId } }) => ({user_id: userId}));
 
   @httpController({ version: apiVersion }, '/notifications')
   class NotificationController extends BaseHttpController {
@@ -29,111 +41,77 @@ export function NotificationControllerFactory(container: Container, apiVersion: 
       return this.notificationService.getDocs();
     }
 
-    @httpPost('/event/:id',
+    @httpPost('/events',
       auth // TODO: I need to check that is admin, this will not be used by customers apps
     )
     private async sendAlert(@requestBody() alertInfo: any): Promise<string> {
       return this.notificationService.sendAlert(alertInfo);
     }
 
-    @httpGet('/event/:id',
+    @httpGet('/events/:id',
       auth // TODO: I need to check that is admin, this will not be used by customers apps
     )
-    private async getAlertEvent(id: string): Promise<AlertEvent> {
+    private async getAlertEvent(@requestParam('id') id: string): Promise<AlertEvent> {
       return this.notificationService.getAlertEvent(id);
     }
 
-    @httpDelete('/event/:id',
+    @httpDelete('/events/:id',
       auth // TODO: I need to check that is admin, this will not be used by customers apps
     )
     private async deleteAlertEvent(@requestParam('id') id: string): Promise<void> {
       return this.notificationService.deleteAlertEvent(id);
     }
 
-    @httpGet('/docs',
-      auth // TODO: I need to check that is admin, this will not be used by mobile apps
+    @httpGet('/events',
+      authMiddlewareFactory.create(async ({ query: { icdId } }) => ({icd_id: icdId}))
+      // TODO: icdId is optional, how I can ask for admin role if is not present or customer role if has icdId
     )
-    private async getAlertEventsByFilter(filters: string): Promise<PaginatedResult<AlertEvent>> {
+    private async getAlertEventsByFilter(@request() req: Request): Promise<PaginatedResult<AlertEvent>> {
+      const filters = req.url.split('?')[1] || '';
+
       return this.notificationService.getAlertEventsByFilter(filters);
     }
 
-    private async clearAlarm(alarmId: number, data: any): Promise<ClearAlertResponse> {
+    @httpPut('/alarm/:alarmId/clear',
+      authWithIcd
+    )
+    private async clearAlarm(@requestParam() alarmId: number, @requestBody() data: any): Promise<ClearAlertResponse> {
       return this.notificationService.clearAlarm(alarmId, data)
     }
 
-    private async clearAlarms(data: any): Promise<ClearAlertResponse> {
+    @httpPut('/alarm/clear',
+      authWithLocation
+    )
+    private async clearAlarms(@requestBody() data: any): Promise<ClearAlertResponse> {
       return this.notificationService.clearAlarms(data);
     }
 
-    private async getAlarmSettings(userId: string, icdId?: string): Promise<AlertSettings> {
+    @httpGet('/settings/:userId',
+      authWithUser
+    )
+    private async getAlarmSettings(@requestParam() userId: string, @queryParam() icdId?: string): Promise<AlertSettings> {
       return this.notificationService.getAlarmSettings(userId, icdId);
     }
 
-    private async updateAlarmSettings(userId: string, data: any): Promise<void> {
+    @httpPost('/settings/:userId',
+      authWithUser
+    )
+    private async updateAlarmSettings(@requestParam() userId: string, @requestBody() data: any): Promise<void> {
       return this.notificationService.updateAlarmSettings(userId, data);
     }
 
-    private async generateRandomEvents(data: any): Promise<void> {
+    @httpPost('/events/sample',
+      authWithIcd
+    )
+    private async generateRandomEvents(@requestBody() data: any): Promise<void> {
       return this.notificationService.generateRandomEvents(data);
     }
 
-    private async getActions(data: any): Promise<ActionsSupportResponse> {
-      return this.notificationService.getActions(data);
-    }
-
-
-    @httpPost(
-      '/',
+    @httpGet('/actions',
       auth
     )
-    private async createSubscription(@requestBody() subscription: SubscriptionCreate): Promise<Responses.SubscriptionResponse> {
-      const createdSubscription = await this.notificationService.createSubscription(subscription);
-
-      return this.toResponse(createdSubscription);
-    }
-
-    @httpGet('/:id',
-      auth,
-      reqValidator.create(t.type({
-        params: t.type({
-          id: t.string
-        }),
-        query: t.partial({
-          expand: t.string
-        })
-      }))
-    )
-    private async getSubscription(@requestParam('id') id: string, @queryParam('expand') expand?: string): Promise<Responses.SubscriptionResponse | {}> {
-      const expandProps = parseExpand(expand);
-      const subscription = await this.notificationService.getSubscriptionById(id, expandProps);
-
-      if (_.isEmpty(subscription)) {
-        return subscription;
-      }
-
-      return this.toResponse(subscription as Subscription);
-    }
-
-    @httpDelete(
-      '/:id',
-      auth,
-      reqValidator.create(t.type({
-        params: t.type({
-          id: t.string
-        })
-      }))
-    )
-    @deleteMethod
-    private async removeSubscription(@requestParam('id') id: string): Promise<void> {
-      return this.notificationService.removeSubscription(id);
-    }
-
-    @httpPost(
-      '/webhooks/stripe',
-      'StripeWebhookAuthMiddleware'
-    )
-    private async handleStripeWebhook(@requestBody() event: { [key: string]: any }): Promise<void> {
-      return this.getWebhookHandler('stripe').handle(event);
+    private async getActions(@requestBody() data: any): Promise<ActionsSupportResponse> {
+      return this.notificationService.getActions(data);
     }
   }
 
