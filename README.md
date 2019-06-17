@@ -77,3 +77,8 @@ Its rules are configured in `prettier.config.js`
 
 ### Makefile
 As the avid reader might have noticed, we are using `Makefile`. Run `make help` (or just `make`) to get a list of all the available targets.
+
+### Base URLs
+DEV: https://api-gw-dev.flocloud.co
+
+PROD: https://api-gw.meetflo.com

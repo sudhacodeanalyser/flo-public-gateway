@@ -13,6 +13,7 @@ import * as Responses from '../api/response';
 import { DeviceService } from '../service';
 import { DeviceSystemModeServiceFactory } from './DeviceSystemModeService';
 import { DirectiveServiceFactory } from './DirectiveService';
+import ResourceDoesNotExistError from "../api/error/ResourceDoesNotExistError";
 
 export function DeviceControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
@@ -146,7 +147,8 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     )
     private async setDeviceFwProperties(@requestParam('id') id: string, @requestBody() fwProperties: any): Promise<void> {
 
-      return this.internalDeviceService.setDeviceFwProperties(id, fwProperties);
+      const deviceId = await this.mapIcdToMacAddress(id);
+      return this.internalDeviceService.setDeviceFwProperties(deviceId, fwProperties);
     }
 
     @httpDelete('/:id',
@@ -242,6 +244,16 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     private isForcedSleepDisable({ target, isLocked }: SystemModeRequest): boolean {
       return isLocked === false && target === DeviceSystemMode.SLEEP;
     }
+
+    private async mapIcdToMacAddress(icd: string): Promise<string> {
+
+      const device = await this.deviceService.getDeviceById(icd);
+      if (_.isEmpty(device)) {
+        throw new ResourceDoesNotExistError('Device does not exist.');
+      }
+      return (device as Device).macAddress;
+    }
+
   }
 
   return DeviceController;
