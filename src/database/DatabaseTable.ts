@@ -1,16 +1,15 @@
 import { injectable, unmanaged } from 'inversify';
 import DatabaseClient, { KeyMap } from './DatabaseClient';
 import { Patch } from './Patch';
+import { DatabaseReadTable } from './DatabaseReadTable';
 
 @injectable()
-class DatabaseTable<T> {
+class DatabaseTable<T> extends DatabaseReadTable<T> {
   constructor(
     @unmanaged() protected dbClient: DatabaseClient,
     @unmanaged() public tableName: string
-  ) {}
-
-  public async get(key: KeyMap): Promise<T | null> {
-    return this.dbClient.get<T>(this.tableName, key);
+  ) {
+    super(dbClient, tableName);
   }
 
   public async put(item: T): Promise<T> {
@@ -25,9 +24,6 @@ class DatabaseTable<T> {
     return this.dbClient.remove(this.tableName, key);
   }
 
-  public async query<Q>(queryOptions: Q): Promise<T[]> {
-    return this.dbClient.query<Q, T>(this.tableName, queryOptions);
-  }
 }
 
 export default DatabaseTable;
