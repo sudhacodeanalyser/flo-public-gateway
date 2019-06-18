@@ -5,7 +5,7 @@ import squel from 'squel';
 import { LookupItemState, LookupItemRecord } from './LookupItemRecord';
 
 @injectable()
-class ListTable extends PostgresTable<LookupItemRecord> {
+class LookupTable extends PostgresTable<LookupItemRecord> {
   constructor(
     @inject('PostgresDbClient') databaseClient: DatabaseReadClient
   ) {
@@ -25,4 +25,4 @@ class ListTable extends PostgresTable<LookupItemRecord> {
 
 }
 
-export { ListTable };
+export { LookupTable };

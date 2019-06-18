@@ -1,13 +1,13 @@
 import { inject, injectable } from 'inversify';
-import { ListTable } from './ListTable';
+import { LookupTable } from './LookupTable';
 import { LookupItemRecord, fromRecord } from './LookupItemRecord';
 import { Lookup } from '../api';
 import _ from 'lodash';
 
 @injectable()
-class ListService {
+class LookupService {
   constructor(
-    @inject('ListTable') private listTable: ListTable 
+    @inject('LookupTable') private listTable: LookupTable 
   ) {}
 
   public async getByIds(ids: string[]): Promise<Lookup> {
@@ -15,9 +15,9 @@ class ListService {
 
     return _.chain(result)
       .groupBy('list_id')
-      .mapValues((LookupItemRecords: LookupItemRecord[]) => LookupItemRecords.map(fromRecord))
+      .mapValues((lookupItemRecords: LookupItemRecord[]) => lookupItemRecords.map(fromRecord))
       .value();
   }
 }
 
-export { ListService };
+export { LookupService };
