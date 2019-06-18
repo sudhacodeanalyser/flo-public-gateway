@@ -7,11 +7,11 @@ import _ from 'lodash';
 @injectable()
 class LookupService {
   constructor(
-    @inject('LookupTable') private listTable: LookupTable 
+    @inject('LookupTable') private lookupTable: LookupTable 
   ) {}
 
   public async getByIds(ids: string[]): Promise<Lookup> {
-    const result = await this.listTable.getLookups(ids);
+    const result = await this.lookupTable.getLookups(ids);
 
     return _.chain(result)
       .groupBy('list_id')
