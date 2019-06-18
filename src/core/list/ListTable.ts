@@ -2,21 +2,21 @@ import { inject, injectable } from 'inversify';
 import { PostgresTable } from '../../database/pg/PostgresTable';
 import { DatabaseReadClient } from '../../database/DatabaseClient';
 import squel from 'squel';
-import { ListItemState, ListItemRecord } from './ListItemRecord';
+import { LookupItemState, LookupItemRecord } from './LookupItemRecord';
 
 @injectable()
-class ListTable extends PostgresTable<ListItemRecord> {
+class ListTable extends PostgresTable<LookupItemRecord> {
   constructor(
     @inject('PostgresDbClient') databaseClient: DatabaseReadClient
   ) {
     super(databaseClient, 'list');
   }
 
-  public async getLists(ids: string[]): Promise<ListItemRecord[]> {
+  public async getLookups(ids: string[]): Promise<LookupItemRecord[]> {
     const query = squel.useFlavour('postgres')
       .select()
       .where('list_id IN ?', ids)
-      .where('"state" = ?', ListItemState.ENABLED)
+      .where('"state" = ?', LookupItemState.ENABLED)
       .order('list_id')
       .order('"order"');
 

@@ -9,7 +9,7 @@ export * from './model/User';
 export * from './model/Location';
 export * from './model/Device';
 export * from './model/Subscription';
-export * from './model/List';
+export * from './model/Lookup';
 
 // Utils
 export type DependencyFactoryFactory = <T>(dep: string) => () => T;

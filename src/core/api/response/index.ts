@@ -1,3 +1,3 @@
 export * from './Subscription';
 export * from './Device';
-export * from './List';
+export * from './Lookup';

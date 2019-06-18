@@ -7,7 +7,7 @@ import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddle
 import * as t from 'io-ts';
 import { httpController } from '../api/controllerUtils';
 import Request from '../api/Request';
-import { ListResponse, MultiListResponse, List } from '../api/response';
+import { LookupResponse, MultiLookupResponse, Lookup } from '../api/response';
 
 
 export function ListControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
@@ -31,11 +31,11 @@ export function ListControllerFactory(container: Container, apiVersion: number):
         })
       }))
     )
-    private async getByIds(@queryParam('id') idString: string): Promise<MultiListResponse> {
+    private async getByIds(@queryParam('id') idString: string): Promise<MultiLookupResponse> {
       const ids = idString.split(',');
-      const lists = await this.listService.getByIds(ids);
+      const lookups = await this.listService.getByIds(ids);
 
-      return List.fromModelToMulti(lists);
+      return Lookup.fromModelToMulti(lookups);
     }
 
     @httpGet(
@@ -46,10 +46,10 @@ export function ListControllerFactory(container: Container, apiVersion: number):
         })
       }))
     )
-    private async getById(@requestParam('id') id: string): Promise<ListResponse> {
-      const list = await this.listService.getByIds([id]);
+    private async getById(@requestParam('id') id: string): Promise<LookupResponse> {
+      const lookup = await this.listService.getByIds([id]);
 
-      return List.fromModel(list);
+      return Lookup.fromModel(lookup);
     }
   }
 
