@@ -33,31 +33,19 @@ export enum DeviceSystemModeNumeric {
 
 export const DeviceSystemModeCodec = convertEnumtoCodec(DeviceSystemMode);
 
-export enum DeviceType {
-  FLO_DEVICE = 'flo_device',
-  PUCK = 'puck'
-}
-
 export enum DeviceModelType {
-  FLO_DEVICE_THREE_QUARTER_INCH = 'flo_device_3/4_inch',
-  FLO_DEVICE_ONE_AND_QUARTER_INCH = 'flo_device_1_1/4_inch'
+  FLO_0_75 = 'flo_device_075_v2' // Defined for defaults
 }
 
-export enum IrrigationType {
-  NONE = 'none',
-  SPRINKLERS = 'sprinklers',
-  DRIP = 'drip'
+export enum DeviceType {
+  FLO_DEVICE_V2 = 'flo_device_v2' // Defined for defaults
 }
-
-const IrrigationTypeCodec = convertEnumtoCodec(IrrigationType);
-const DeviceModelTypeCodec = convertEnumtoCodec(DeviceModelType);
-const DeviceTypeCodec = convertEnumtoCodec(DeviceType);
 
 const DeviceMutableCodec = t.type({
   installationPoint: t.string,
   nickname: t.string,
   prvInstalledAfter: NoYesUnsure.Codec,
-  irrigationType: IrrigationTypeCodec,
+  irrigationType: t.string,
   valve: t.partial({
     target: t.keyof(_.pick(ValveStateCodec.keys, ['open', 'closed']))
   })
@@ -112,8 +100,8 @@ export interface Device extends Omit<DeviceUpdate, 'valve'>, TimestampedModel {
   id: string,
   macAddress: string,
   location: Expandable<Location>,
-  deviceType: DeviceType,
-  deviceModel: DeviceModelType,
+  deviceType: string,
+  deviceModel: string,
   isPaired: boolean,
   additionalProps: AdditionalDeviceProps | null | undefined,
   valve?: ValveData
