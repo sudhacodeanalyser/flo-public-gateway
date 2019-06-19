@@ -1,4 +1,4 @@
-import ExtendableError from '../api/error/ExtendableError';
+import ExtendableError from './core/api/error/ExtendableError';
 
 export default class ExternalApiError extends ExtendableError {
   

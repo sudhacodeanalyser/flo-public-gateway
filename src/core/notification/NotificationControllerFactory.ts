@@ -15,9 +15,9 @@ import {
   ActionsSupportResponse,
   AlertEvent, AlertSettings, ClearAlertResponse, PaginatedResult
 } from '../api';
-import { httpController } from '../api/controllerUtils';
-import { NotificationService } from '../service';
+import {asyncMethod, httpController} from '../api/controllerUtils';
 import Request from "../api/Request";
+import { NotificationServiceFactory } from './NotificationService';
 
 export function NotificationControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const authMiddlewareFactory = container.get<AuthMiddlewareFactory>('AuthMiddlewareFactory');
@@ -29,69 +29,113 @@ export function NotificationControllerFactory(container: Container, apiVersion: 
   @httpController({ version: apiVersion }, '/notifications')
   class NotificationController extends BaseHttpController {
     constructor(
-      @inject('NotificationService') private notificationService: NotificationService
+      @inject('NotificationServiceFactory') private notificationServiceFactory: NotificationServiceFactory
     ) {
       super();
     }
 
     @httpGet('/docs', auth)
-    private async getDocs(): Promise<string> {
-      return this.notificationService.getDocs();
+    @asyncMethod
+    private async getDocs(@request() req: Request): Promise<string> {
+      return this
+        .notificationServiceFactory
+        .create(req)
+        .getDocs();
     }
 
     @httpPost('/events', auth)
-    private async sendAlert(@requestBody() alertInfo: any): Promise<string> {
-      return this.notificationService.sendAlert(alertInfo);
+    @asyncMethod
+    private async sendAlert(@request() req: Request, @requestBody() alertInfo: any): Promise<string> {
+      return this
+        .notificationServiceFactory
+        .create(req)
+        .sendAlert(alertInfo);
     }
 
     @httpGet('/events/:id', auth)
-    private async getAlertEvent(@requestParam('id') id: string): Promise<AlertEvent> {
-      return this.notificationService.getAlertEvent(id);
+    @asyncMethod
+    private async getAlertEvent(@request() req: Request, @requestParam('id') id: string): Promise<AlertEvent> {
+      return this
+        .notificationServiceFactory
+        .create(req)
+        .getAlertEvent(id);
     }
 
     @httpDelete('/events/:id', auth)
-    private async deleteAlertEvent(@requestParam('id') id: string): Promise<void> {
-      return this.notificationService.deleteAlertEvent(id);
+    @asyncMethod
+    private async deleteAlertEvent(@request() req: Request, @requestParam('id') id: string): Promise<void> {
+      return this
+        .notificationServiceFactory
+        .create(req)
+        .deleteAlertEvent(id);
     }
 
     @httpGet('/events',
       authMiddlewareFactory.create(async ({ query: { icdId } }) => ({icd_id: icdId}))
       // TODO: icdId is optional, how I can ask for admin role if is not present or customer role if has icdId
     )
+    @asyncMethod
     private async getAlertEventsByFilter(@request() req: Request): Promise<PaginatedResult<AlertEvent>> {
       const filters = req.url.split('?')[1] || '';
 
-      return this.notificationService.getAlertEventsByFilter(filters);
+      return this
+        .notificationServiceFactory
+        .create(req)
+        .getAlertEventsByFilter(filters);
     }
 
     @httpPut('/alarm/:alarmId/clear', authWithIcd)
-    private async clearAlarm(@requestParam('alarmId') alarmId: string, @requestBody() data: any): Promise<ClearAlertResponse> {
-      return this.notificationService.clearAlarm(alarmId, data)
+    @asyncMethod
+    private async clearAlarm(@request() req: Request, @requestParam('alarmId') alarmId: string, @requestBody() data: any): Promise<ClearAlertResponse> {
+      return this
+        .notificationServiceFactory
+        .create(req)
+        .clearAlarm(alarmId, data)
     }
 
     @httpPut('/alarm/clear', authWithLocation)
-    private async clearAlarms(@requestBody() data: any): Promise<ClearAlertResponse> {
-      return this.notificationService.clearAlarms(data);
+    @asyncMethod
+    private async clearAlarms(@request() req: Request, @requestBody() data: any): Promise<ClearAlertResponse> {
+      return this
+        .notificationServiceFactory
+        .create(req)
+        .clearAlarms(data);
     }
 
     @httpGet('/settings/:userId', authWithUser)
-    private async getAlarmSettings(@requestParam('userId') userId: string, @queryParam('icdId') icdId?: string): Promise<AlertSettings> {
-      return this.notificationService.getAlarmSettings(userId, icdId);
+    @asyncMethod
+    private async getAlarmSettings(@request() req: Request, @requestParam('userId') userId: string, @queryParam('icdId') icdId?: string): Promise<AlertSettings> {
+      return this
+        .notificationServiceFactory
+        .create(req)
+        .getAlarmSettings(userId, icdId);
     }
 
     @httpPost('/settings/:userId', authWithUser)
-    private async updateAlarmSettings(@requestParam('userId') userId: string, @requestBody() data: any): Promise<void> {
-      return this.notificationService.updateAlarmSettings(userId, data);
+    @asyncMethod
+    private async updateAlarmSettings(@request() req: Request, @requestParam('userId') userId: string, @requestBody() data: any): Promise<void> {
+      return this
+        .notificationServiceFactory
+        .create(req)
+        .updateAlarmSettings(userId, data);
     }
 
     @httpPost('/events/sample', authWithIcd)
-    private async generateRandomEvents(@requestBody() data: any): Promise<void> {
-      return this.notificationService.generateRandomEvents(data);
+    @asyncMethod
+    private async generateRandomEvents(@request() req: Request, @requestBody() data: any): Promise<void> {
+      return this
+        .notificationServiceFactory
+        .create(req)
+        .generateRandomEvents(data);
     }
 
     @httpGet('/actions', auth)
-    private async getActions(@requestBody() data: any): Promise<ActionsSupportResponse> {
-      return this.notificationService.getActions(data);
+    @asyncMethod
+    private async getActions(@request() req: Request, @requestBody() data: any): Promise<ActionsSupportResponse> {
+      return this
+        .notificationServiceFactory
+        .create(req)
+        .getActions(data);
     }
   }
 

@@ -4,12 +4,14 @@ import ExternalApiError from './ExternalApiError';
 export interface ApiRequest {
   method: string,
   url: string,
-  authToken?: string,
   body?: any
 };
 
 class ApiService {
-  constructor(private baseUrl: string) {}
+  constructor(
+    private readonly baseUrl: string,
+    private readonly authToken?: string
+  ) {}
 
   public async sendRequest(request: ApiRequest): Promise<any> {
     try {
@@ -18,7 +20,7 @@ class ApiService {
         url: `${this.baseUrl}${request.url}`,
         headers: {
           'Content-Type': 'application/json',
-          ...(request.authToken && { Authorization: request.authToken })
+          ...(this.authToken && { Authorization: this.authToken })
         },
         ...(request.body && { data: request.body })
       });
