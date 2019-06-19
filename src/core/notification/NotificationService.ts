@@ -44,7 +44,7 @@ class NotificationService {
     });
   }
 
-  public async clearAlarm(alarmId: number, data: any): Promise<ClearAlertResponse> {
+  public async clearAlarm(alarmId: string | number, data: any): Promise<ClearAlertResponse> {
     return this.notificationApi.sendRequest({
       method: 'put',
       url: `/alarms/${alarmId}/clear`,
@@ -61,9 +61,11 @@ class NotificationService {
   }
 
   public async getAlarmSettings(userId: string, icdId?: string): Promise<AlertSettings> {
+    const query = icdId ? `?icdId=${icdId}` : '';
+
     return this.notificationApi.sendRequest({
       method: 'get',
-      url: `/settings/${userId}?icdId=${icdId}`
+      url: `/settings/${userId}${query}`
     });
   }
 
@@ -78,15 +80,15 @@ class NotificationService {
   public async generateRandomEvents(data: any): Promise<void> {
     return this.notificationApi.sendRequest({
       method: 'post',
-      url: `/events/random`,
+      url: '/events/random',
       body: data
     });
   }
 
   public async getActions(data: any): Promise<ActionsSupportResponse> {
     return this.notificationApi.sendRequest({
-      method: 'post',
-      url: `/events/random`,
+      method: 'get',
+      url: '/actions',
       body: data
     });
   }

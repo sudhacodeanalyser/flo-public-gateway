@@ -34,30 +34,22 @@ export function NotificationControllerFactory(container: Container, apiVersion: 
       super();
     }
 
-    @httpGet('/docs',
-      auth // TODO: Do we need auth on docs endpoint
-    )
+    @httpGet('/docs', auth)
     private async getDocs(): Promise<string> {
       return this.notificationService.getDocs();
     }
 
-    @httpPost('/events',
-      auth // TODO: I need to check that is admin, this will not be used by customers apps
-    )
+    @httpPost('/events', auth)
     private async sendAlert(@requestBody() alertInfo: any): Promise<string> {
       return this.notificationService.sendAlert(alertInfo);
     }
 
-    @httpGet('/events/:id',
-      auth // TODO: I need to check that is admin, this will not be used by customers apps
-    )
+    @httpGet('/events/:id', auth)
     private async getAlertEvent(@requestParam('id') id: string): Promise<AlertEvent> {
       return this.notificationService.getAlertEvent(id);
     }
 
-    @httpDelete('/events/:id',
-      auth // TODO: I need to check that is admin, this will not be used by customers apps
-    )
+    @httpDelete('/events/:id', auth)
     private async deleteAlertEvent(@requestParam('id') id: string): Promise<void> {
       return this.notificationService.deleteAlertEvent(id);
     }
@@ -72,44 +64,32 @@ export function NotificationControllerFactory(container: Container, apiVersion: 
       return this.notificationService.getAlertEventsByFilter(filters);
     }
 
-    @httpPut('/alarm/:alarmId/clear',
-      authWithIcd
-    )
-    private async clearAlarm(@requestParam() alarmId: number, @requestBody() data: any): Promise<ClearAlertResponse> {
+    @httpPut('/alarm/:alarmId/clear', authWithIcd)
+    private async clearAlarm(@requestParam('alarmId') alarmId: string, @requestBody() data: any): Promise<ClearAlertResponse> {
       return this.notificationService.clearAlarm(alarmId, data)
     }
 
-    @httpPut('/alarm/clear',
-      authWithLocation
-    )
+    @httpPut('/alarm/clear', authWithLocation)
     private async clearAlarms(@requestBody() data: any): Promise<ClearAlertResponse> {
       return this.notificationService.clearAlarms(data);
     }
 
-    @httpGet('/settings/:userId',
-      authWithUser
-    )
-    private async getAlarmSettings(@requestParam() userId: string, @queryParam() icdId?: string): Promise<AlertSettings> {
+    @httpGet('/settings/:userId', authWithUser)
+    private async getAlarmSettings(@requestParam('userId') userId: string, @queryParam('icdId') icdId?: string): Promise<AlertSettings> {
       return this.notificationService.getAlarmSettings(userId, icdId);
     }
 
-    @httpPost('/settings/:userId',
-      authWithUser
-    )
-    private async updateAlarmSettings(@requestParam() userId: string, @requestBody() data: any): Promise<void> {
+    @httpPost('/settings/:userId', authWithUser)
+    private async updateAlarmSettings(@requestParam('userId') userId: string, @requestBody() data: any): Promise<void> {
       return this.notificationService.updateAlarmSettings(userId, data);
     }
 
-    @httpPost('/events/sample',
-      authWithIcd
-    )
+    @httpPost('/events/sample', authWithIcd)
     private async generateRandomEvents(@requestBody() data: any): Promise<void> {
       return this.notificationService.generateRandomEvents(data);
     }
 
-    @httpGet('/actions',
-      auth
-    )
+    @httpGet('/actions', auth)
     private async getActions(@requestBody() data: any): Promise<ActionsSupportResponse> {
       return this.notificationService.getActions(data);
     }
