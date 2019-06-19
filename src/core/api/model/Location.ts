@@ -90,9 +90,9 @@ export const WaterDamageClaimCodec = convertEnumtoCodec(WaterDamageClaim);
 // These properties have corresponding legacy properties
 const LocationProfileWithLegacyCodec = t.type({
   waterShutoffKnown: NoYesUnsure.Codec,
-  indoorAmenities: t.array(IndoorAmenityCodec),
-  outdoorAmenities: t.array(OutdoorAmenityCodec),
-  plumbingAppliances: t.array(PlumbingApplicanceCodec),
+  indoorAmenities: t.array(t.string),
+  outdoorAmenities: t.array(t.string),
+  plumbingAppliances: t.array(t.string),
   gallonsPerDayGoal: t.number,
   occupants: t.union([t.Int, t.undefined]),
   stories: t.union([t.Int, t.undefined]),
@@ -100,16 +100,16 @@ const LocationProfileWithLegacyCodec = t.type({
 });
 
 const LocationProfileCodec = t.type({
-  locationType: LocationTypeCodec,
-  residenceType: ResidenceTypeCodec,
-  waterSource: WaterSourceCodec,
-  locationSize: LocationSizeCodec,
+  locationType: t.string,
+  residenceType: t.string,
+  waterSource: t.string,
+  locationSize: t.string,
   showerBathCount: t.Int,
   toiletCount: t.Int,
-  plumbingType: t.union([PlumbingTypeCodec, t.undefined]),
+  plumbingType: t.union([t.string, t.undefined]),
   homeownersInsurance: t.union([t.string, t.undefined]),
   hasPastWaterDamage: t.boolean,
-  pastWaterDamageClaimAmount: t.union([WaterDamageClaimCodec, t.undefined]),
+  pastWaterDamageClaimAmount: t.union([t.string, t.undefined]),
   waterUtility: t.union([t.undefined, t.string])
 });
 

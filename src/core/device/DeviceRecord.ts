@@ -1,41 +1,25 @@
 import { $enum } from 'ts-enum-util';
 import _ from 'lodash';
 // These should likely go into a lookup table
-import { Device, DeviceType, DeviceModelType, IrrigationType, DeviceSystemMode, ValveState } from '../api';
+import { Device, DeviceSystemMode, ValveState, DeviceType, DeviceModelType } from '../api';
 import { NoYesUnsure } from '../api/NoYesUnsure';
 import { translateNumericToStringEnum, translateStringToNumericEnum } from '../api/enumUtils';
 import { morphism, StrictSchema } from 'morphism';
 import * as t from 'io-ts';
 
-export enum DeviceTypeData {
-  FLO_DEVICE = 1,
-  PUCK
-}
-
-export enum DeviceModelTypeData {
-  FLO_DEVICE_THREE_QUARTER_INCH = 1,
-  FLO_DEVICE_ONE_AND_QUARTER_INCH
-}
-
-export enum IrrigationTypeData {
-  NONE = 0,
-  SPRINKLERS = 1,
-  DRIP = 2
-}
-
 export interface DeviceRecordData {
   id: string;
   location_id: string;
   device_id: string;
-  device_type?: DeviceTypeData;
-  device_model?: DeviceModelTypeData;
+  device_type?: string;
+  device_model?: string;
   installation_point?: string;
   nickname?: string;
   created_at?: string;
   updated_at?: string;
   is_paired?: boolean;
   prv_installed_after?: NoYesUnsure.Numeric;
-  irrigation_type?: IrrigationTypeData;
+  irrigation_type?: string;
   should_inherit_system_mode?: boolean;
   target_system_mode?: DeviceSystemMode;
   revert_scheduled_at?: string;
@@ -56,33 +40,10 @@ const RecordToModelSchema: StrictSchema<Device, DeviceRecordData>  = {
   updatedAt: 'updated_at',
   isPaired: (input: DeviceRecordData) => _.get(input, 'is_paired', false),
   additionalProps: () => null,
-  deviceModel: (input: DeviceRecordData) => 
-    translateNumericToStringEnum(
-      DeviceModelType,
-      DeviceModelTypeData,
-      input.device_model,
-      'FLO_DEVICE_THREE_QUARTER_INCH'
-    ) || DeviceModelType.FLO_DEVICE_THREE_QUARTER_INCH,
-  deviceType: (input: DeviceRecordData) => 
-   translateNumericToStringEnum(
-        DeviceType,
-        DeviceTypeData,
-        input.device_type,
-        'FLO_DEVICE'
-      ) || DeviceType.FLO_DEVICE,
-  irrigationType: (input: DeviceRecordData) =>
-    translateNumericToStringEnum(
-      IrrigationType, 
-      IrrigationTypeData, 
-      input.irrigation_type
-    ),
-  prvInstalledAfter: (input: DeviceRecordData) =>
-    translateNumericToStringEnum(
-      NoYesUnsure.String, 
-      NoYesUnsure.Numeric, 
-      input.prv_installed_after, 
-      'UNSURE'
-    ),
+  deviceModel: (input: DeviceRecordData) => _.get(input, 'device_model', DeviceType.FLO_DEVICE_V2),
+  deviceType: (input: DeviceRecordData) => _.get(input, 'device_type', DeviceModelType.FLO_0_75),
+  irrigationType: 'irrigation_type',
+  prvInstalledAfter: 'prv_installed_after',
   systemMode: (input: DeviceRecordData) => ({
     target: input.target_system_mode,
     isLocked: false,
@@ -112,33 +73,10 @@ const ModelToRecordSchema: StrictSchema<DeviceRecordData, Device> = {
   revert_minutes: 'systemMode.revertMinutes',
   target_system_mode: 'systemMode.target',
   target_valve_state: 'valve.target',
-  device_type: (input: Device) => 
-    translateStringToNumericEnum(
-      DeviceTypeData,
-      DeviceType,
-      input.deviceType,
-      'FLO_DEVICE'
-    ) || DeviceTypeData.FLO_DEVICE,
-  device_model: (input: Device) =>
-    translateStringToNumericEnum(
-      DeviceModelTypeData,
-      DeviceModelType,
-      input.deviceModel,
-      'FLO_DEVICE_THREE_QUARTER_INCH'
-    ) || DeviceModelTypeData.FLO_DEVICE_THREE_QUARTER_INCH,
-  prv_installed_after: (input: Device) => 
-    translateStringToNumericEnum(
-      NoYesUnsure.Numeric, 
-      NoYesUnsure.String, 
-      input.prvInstalledAfter, 
-      'UNSURE'
-    ),
-  irrigation_type: (input: Device) =>
-    translateStringToNumericEnum(
-      IrrigationTypeData, 
-      IrrigationType, 
-      input.irrigationType
-    )
+  device_type: 'deviceType',
+  device_model: 'deviceModel',
+  prv_installed_after: 'prvInstalledAfter',
+  irrigation_type: 'irrigationType'
 };
 
 const PartialModelToRecordSchema: StrictSchema<Partial<DeviceRecordData>, Partial<Device>> = {
@@ -156,30 +94,10 @@ const PartialModelToRecordSchema: StrictSchema<Partial<DeviceRecordData>, Partia
   revert_minutes: 'systemMode.revertMinutes',
   target_system_mode: 'systemMode.target',
   target_valve_state: 'valve.target',
-  device_type: (input: Partial<Device>) => 
-    input.deviceType && translateStringToNumericEnum(
-      DeviceTypeData,
-      DeviceType,
-      input.deviceType
-    ),
-  device_model: (input: Partial<Device>) =>
-    input.deviceModel && translateStringToNumericEnum(
-      DeviceModelTypeData,
-      DeviceModelType,
-      input.deviceModel
-    ),
-  prv_installed_after: (input: Partial<Device>) => 
-    input.prvInstalledAfter && translateStringToNumericEnum(
-      NoYesUnsure.Numeric, 
-      NoYesUnsure.String, 
-      input.prvInstalledAfter
-    ),
-  irrigation_type: (input: Partial<Device>) =>
-    input.irrigationType && translateStringToNumericEnum(
-      IrrigationTypeData, 
-      IrrigationType, 
-      input.irrigationType
-    )
+  device_type: 'deviceType',
+  device_model: 'deviceModel',
+  prv_installed_after: 'prvInstalledAfter',
+  irrigation_type: 'irrigationType'
 };
 
 export class DeviceRecord {

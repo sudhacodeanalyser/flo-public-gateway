@@ -111,8 +111,8 @@ class DeviceResolver extends Resolver<Device> {
   public async createDevice(deviceCreate: DeviceCreate, isPaired: boolean = false): Promise<Device> {
     const device = {
       ...deviceCreate,
-      deviceType: DeviceType.FLO_DEVICE,
-      deviceModel: DeviceModelType.FLO_DEVICE_THREE_QUARTER_INCH,
+      deviceType: DeviceType.FLO_DEVICE_V2,
+      deviceModel: DeviceModelType.FLO_0_75,
       additionalProps: null,
       isPaired,
       id: uuid.v4(),

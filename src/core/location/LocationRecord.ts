@@ -139,20 +139,20 @@ enum WaterDamageClaimData {
 }
 
 export interface LocationProfile {
-  location_type?: LocationTypeData,
-  residence_type?: ResidenceTypeData,
-  water_source?: WaterSourceData,
-  location_size?: LocationSizeData,
+  location_type?: string,
+  residence_type?: string,
+  water_source?: string,
+  location_size?: string,
   shower_bath_count?: number,
   toilet_count?: number,
   water_shutoff_known: NoYesUnsure.Numeric,
-  plumbing_type?: PlumbingTypeData,
-  indoor_amenities: IndoorAmenityData[],
-  outdoor_amenities: OutdoorAmenityData[],
-  plumbing_applicances: PlumbingApplicanceData[],
+  plumbing_type?: string,
+  indoor_amenities: string[],
+  outdoor_amenities: string[],
+  plumbing_applicances: string[],
   home_owners_insurance?: string,
   has_past_water_damage: boolean,
-  past_water_damage_claim_amount?: WaterDamageClaimData
+  past_water_damage_claim_amount?: string
 }
 
 // This will need to be enforced as a runtime validation
@@ -208,11 +208,7 @@ const RecordToModelSchema: StrictSchema<Location, LocationRecordData> = {
   systemMode: 'system_mode',
   locationType: (input: LocationRecordData) => {
     if (input.profile !== undefined && input.profile.location_type !== undefined) {
-      return translateNumericToStringEnum(
-        LocationType,
-        LocationTypeData,
-        input.profile.location_type
-      );
+      return input.profile.location_type;
     }
 
     switch (input.location_type) {
@@ -226,30 +222,11 @@ const RecordToModelSchema: StrictSchema<Location, LocationRecordData> = {
         return undefined;
     }
   },
-  residenceType: (input: LocationRecordData) => {
-    return input.profile && input.profile.residence_type !== undefined ? 
-      translateNumericToStringEnum(
-        ResidenceType,
-        ResidenceTypeData,
-        input.profile.residence_type
-      ) :
-      undefined;
-  },
-  waterSource: (input: LocationRecordData) => {
-    return input.profile && input.profile.water_source &&
-      translateNumericToStringEnum(
-        WaterSource, 
-        WaterSourceData, 
-        input.profile.water_source
-      );
-  },
+  residenceType: 'profile.residence_type',
+  waterSource: 'profile.water_source',
   locationSize: (input: LocationRecordData) => {
     if (input.profile && input.profile.location_size) {
-      return translateNumericToStringEnum(
-        LocationSize,
-        LocationSizeData,
-        input.profile.location_size
-      );
+      return input.profile.location_size;
     }
 
     switch (input.location_size_category) {
@@ -276,11 +253,7 @@ const RecordToModelSchema: StrictSchema<Location, LocationRecordData> = {
   },
   plumbingType: (input: LocationRecordData) => {
    if (input.profile !== undefined && input.profile.plumbing_type !== undefined) {
-      return translateNumericToStringEnum(
-        PlumbingType, 
-        PlumbingTypeData, 
-        input.profile.plumbing_type
-       );
+      return input.profile.plumbing_type;
     } else if (input.galvanized_plumbing === NoYesUnsure.Numeric.YES) {
       return PlumbingType.GALVANIZED;
     } else if (input.galvanized_plumbing === NoYesUnsure.Numeric.NO) {
@@ -291,15 +264,7 @@ const RecordToModelSchema: StrictSchema<Location, LocationRecordData> = {
   },
   indoorAmenities: (input: LocationRecordData) => {
     if (input.profile !== undefined && !_.isEmpty(input.profile.indoor_amenities)) {
-      return input.profile.indoor_amenities
-        .map(indoorAmenity => 
-          translateNumericToStringEnum(
-            IndoorAmenity, 
-            IndoorAmenityData, 
-            indoorAmenity
-          )
-        )
-        .filter(indoorAmenity => indoorAmenity !== undefined) as IndoorAmenity[];
+      return input.profile.indoor_amenities;
     } 
 
     const kitchenAmenities = (input.kitchen_amenities || [])
@@ -334,15 +299,7 @@ const RecordToModelSchema: StrictSchema<Location, LocationRecordData> = {
   },
   outdoorAmenities: (input: LocationRecordData) => {
     if (input.profile !== undefined && !_.isEmpty(input.profile.outdoor_amenities)) {
-      return (input.profile.outdoor_amenities || [])
-        .map(outdoorAmenity => 
-          translateNumericToStringEnum(
-            OutdoorAmenity, 
-            OutdoorAmenityData, 
-            outdoorAmenity
-          )
-        )
-        .filter(outdoorAmenity => outdoorAmenity !== undefined) as OutdoorAmenity[];
+      return input.profile.outdoor_amenities;
     }
 
     return (input.outdoor_amenities || [])
@@ -363,15 +320,7 @@ const RecordToModelSchema: StrictSchema<Location, LocationRecordData> = {
   },
   plumbingAppliances: (input: LocationRecordData) => {
     if (input.profile !== undefined && !_.isEmpty(input.profile.plumbing_applicances)) {
-      return (input.profile.plumbing_applicances || [])
-        .map(plumbingAppliance => 
-          translateNumericToStringEnum(
-            PlumbingAppliance,
-            PlumbingApplicanceData,
-            plumbingAppliance
-          )
-        )
-        .filter(plumbingAppliance => plumbingAppliance !== undefined) as PlumbingAppliance[];
+      return input.profile.plumbing_applicances;
     }
 
     return [
@@ -388,14 +337,7 @@ const RecordToModelSchema: StrictSchema<Location, LocationRecordData> = {
     ]
     .filter(plumbingAppliance => plumbingAppliance) as PlumbingAppliance[];
   },
-  pastWaterDamageClaimAmount: (input: LocationRecordData) => {
-    return input.profile && input.profile.past_water_damage_claim_amount && 
-      translateNumericToStringEnum(
-        WaterDamageClaim, 
-        WaterDamageClaimData, 
-        input.profile.past_water_damage_claim_amount
-      );
-  }
+  pastWaterDamageClaimAmount: 'profile.past_water_damage_claim_amount'
 };
 
 const ModelToRecordSchema: StrictSchema<LocationRecordData, Location> = {
@@ -418,26 +360,10 @@ const ModelToRecordSchema: StrictSchema<LocationRecordData, Location> = {
   system_mode: 'systemMode',
   profile: (input: Partial<Location>) => {
     return {
-      location_type: translateStringToNumericEnum(
-        LocationTypeData,
-        LocationType,
-        input.locationType
-      ),
-      residence_type: translateStringToNumericEnum(
-        ResidenceTypeData,
-        ResidenceType,
-        input.residenceType
-      ),
-      water_source: translateStringToNumericEnum(
-        WaterSourceData,
-        WaterSource,
-        input.waterSource
-      ),
-      location_size: translateStringToNumericEnum(
-        LocationSizeData,
-        LocationSize,
-        input.locationSize
-      ),
+      location_type: input.locationType,
+      residence_type: input.residenceType,
+      water_source: input.waterSource,
+      location_size: input.locationSize,
       shower_bath_count: input.showerBathCount,
       toilet_count: input.toiletCount,
       water_shutoff_known: translateStringToNumericEnum(
@@ -446,45 +372,13 @@ const ModelToRecordSchema: StrictSchema<LocationRecordData, Location> = {
         input.waterShutoffKnown,
         'UNSURE'
       ) || NoYesUnsure.Numeric.UNSURE,
-      plumbing_type: translateStringToNumericEnum(
-        PlumbingTypeData,
-        PlumbingType,
-        input.plumbingType
-      ),
-      indoor_amenities: (input.indoorAmenities || [])
-        .map(indoorAmenity => 
-          translateStringToNumericEnum(
-            IndoorAmenityData,
-            IndoorAmenity,
-            indoorAmenity
-          )
-        )
-        .filter(indoorAmenity => indoorAmenity !== undefined) as IndoorAmenityData[],
-      outdoor_amenities: (input.outdoorAmenities || [])
-        .map(outdoorAmenity => 
-          translateStringToNumericEnum(
-            OutdoorAmenityData,
-            OutdoorAmenity,
-            outdoorAmenity
-          )
-        )
-        .filter(outdoorAmenity => outdoorAmenity !== undefined) as OutdoorAmenityData[],
-      plumbing_applicances: (input.plumbingAppliances || [])
-        .map(plumbingAppliance => 
-          translateStringToNumericEnum(
-            PlumbingApplicanceData,
-            PlumbingAppliance,
-            plumbingAppliance
-          )
-        )
-        .filter(plumbingAppliance => plumbingAppliance !== undefined) as PlumbingApplicanceData[],
+      plumbing_type: input.plumbingType,
+      indoor_amenities: (input.indoorAmenities || []),
+      outdoor_amenities: (input.outdoorAmenities || []),
+      plumbing_applicances: (input.plumbingAppliances || []),
       home_owners_insurance: input.homeownersInsurance,
       has_past_water_damage: input.hasPastWaterDamage || false,
-      past_water_damage_claim_amount: translateStringToNumericEnum(
-        WaterDamageClaimData,
-        WaterDamageClaim,
-        input.pastWaterDamageClaimAmount
-      ) 
+      past_water_damage_claim_amount: input.pastWaterDamageClaimAmount 
     };
   }
 };
@@ -511,72 +405,25 @@ const PartialModelToPartialRecordSchema: StrictSchema<PartialLocationRecordData,
   system_mode: 'systemMode',
   profile: (input: Partial<Location>) => {
     return {
-      location_type: translateStringToNumericEnum(
-        LocationTypeData,
-        LocationType,
-        input.locationType
-      ),
-      residence_type: translateStringToNumericEnum(
-        ResidenceTypeData,
-        ResidenceType,
-        input.residenceType
-      ),
-      water_source: translateStringToNumericEnum(
-        WaterSourceData,
-        WaterSource,
-        input.waterSource
-      ),
-      location_size: translateStringToNumericEnum(
-        LocationSizeData,
-        LocationSize,
-        input.locationSize
-      ),
+      location_type: input.locationType,
+      residence_type: input.residenceType,
+      water_source: input.waterSource,
+      location_size: input.locationSize,
       shower_bath_count: input.showerBathCount,
       toilet_count: input.toiletCount,
       water_shutoff_known: translateStringToNumericEnum(
         NoYesUnsure.Numeric,
         NoYesUnsure.String,
-        input.waterShutoffKnown
-      ),
-      plumbing_type: translateStringToNumericEnum(
-        PlumbingTypeData,
-        PlumbingType,
-        input.plumbingType
-      ),
-      indoor_amenities: input.indoorAmenities && input.indoorAmenities
-        .map(indoorAmenity => 
-          translateStringToNumericEnum(
-            IndoorAmenityData,
-            IndoorAmenity,
-            indoorAmenity
-          )
-        )
-        .filter(indoorAmenity => indoorAmenity !== undefined) as IndoorAmenityData[],
-      outdoor_amenities: input.outdoorAmenities && input.outdoorAmenities
-        .map(outdoorAmenity => 
-          translateStringToNumericEnum(
-            OutdoorAmenityData,
-            OutdoorAmenity,
-            outdoorAmenity
-          )
-        )
-        .filter(outdoorAmenity => outdoorAmenity !== undefined) as OutdoorAmenityData[],
-      plumbing_applicances: input.plumbingAppliances && input.plumbingAppliances
-        .map(plumbingAppliance => 
-          translateStringToNumericEnum(
-            PlumbingApplicanceData,
-            PlumbingAppliance,
-            plumbingAppliance
-          )
-        )
-        .filter(plumbingAppliance => plumbingAppliance !== undefined) as PlumbingApplicanceData[],
+        input.waterShutoffKnown,
+        'UNSURE'
+      ) || NoYesUnsure.Numeric.UNSURE,
+      plumbing_type: input.plumbingType,
+      indoor_amenities: input.indoorAmenities && input.indoorAmenities,
+      outdoor_amenities: input.outdoorAmenities && input.outdoorAmenities,
+      plumbing_applicances: input.plumbingAppliances && input.plumbingAppliances,
       home_owners_insurance: input.homeownersInsurance,
       has_past_water_damage: input.hasPastWaterDamage,
-      past_water_damage_claim_amount: translateStringToNumericEnum(
-        WaterDamageClaimData,
-        WaterDamageClaim,
-        input.pastWaterDamageClaimAmount
-      ) 
+      past_water_damage_claim_amount: input.pastWaterDamageClaimAmount
     };
   }
 };
