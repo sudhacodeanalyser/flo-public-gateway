@@ -1,0 +1,70 @@
+paths:
+  /api/v2/lists/{id}:
+    get:
+      summary: Retrieves a list by ID.
+      tags:
+        - Lists
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: List ID
+      responses:
+        200:
+          description: Specified list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/List'
+  /api/v2/lists:
+    get:
+      summary: Retrieves many lists
+      tags:
+        - Lists
+      produces:
+        - application/json
+      parameters:
+        - in: query
+          name: id
+          required: true
+          schema:
+            type: string
+          description: A comma-separated list of List IDs
+      responses:
+        200:
+          description: Specified lists
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      additionalProperties:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/List'
+        400:
+          description: Invalid query string
+components:
+  schemas:
+    List:
+      type: object
+      properties:
+        key:
+          type: string
+        shortDisplay:
+          type: string
+        longDisplay:
+          type: string
