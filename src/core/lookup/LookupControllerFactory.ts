@@ -15,7 +15,7 @@ export function LookupControllerFactory(container: Container, apiVersion: number
 
   // Every call to a method in this controller will checkout a connection from Postgres connection pool
   // and release it upon sending the response
-  @httpController({ version: apiVersion }, '/lookups', 'PostgresConnectionMiddleware')
+  @httpController({ version: apiVersion }, '/lists', 'PostgresConnectionMiddleware')
   class LookupController extends BaseHttpController {
     constructor(
       @inject('LookupService') private lookupService: LookupService,
