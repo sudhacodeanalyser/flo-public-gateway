@@ -15,8 +15,12 @@ class LocationService {
     this.deviceServiceFactory = depFactoryFactory<DeviceService>('DeviceService');
   }
 
-  public async createLocation(location: Location): Promise<Location | {}> {
+  public async createLocation(location: Location, userId?: string): Promise<Location | {}> {
     const createdLocation: Location | null = await this.locationResolver.createLocation(location);
+
+    if (userId !== undefined && createdLocation !== null) {
+      return this.locationResolver.addLocationUserRole(createdLocation.id, userId, ['owner']);
+    }
 
     return createdLocation === null ? {} : createdLocation;
   }
