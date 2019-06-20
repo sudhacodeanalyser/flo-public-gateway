@@ -18,7 +18,7 @@ export interface DeviceRecordData {
   created_at?: string;
   updated_at?: string;
   is_paired?: boolean;
-  prv_installed_after?: NoYesUnsure.Numeric;
+  prv_installed_after?: NoYesUnsure.String;
   irrigation_type?: string;
   should_inherit_system_mode?: boolean;
   target_system_mode?: DeviceSystemMode;
