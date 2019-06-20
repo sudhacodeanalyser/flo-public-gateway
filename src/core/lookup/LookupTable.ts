@@ -19,8 +19,8 @@ class LookupTable extends PostgresTable<LookupItemRecord> {
       .where('"state" = ?', LookupItemState.ENABLED)
       .order('list_id')
       .order('"order"')
-      .order('"short_display"')
-      .order('"key_id"');
+      .order('short_display')
+      .order('key_id');
 
     return this.query({ query });
   }
