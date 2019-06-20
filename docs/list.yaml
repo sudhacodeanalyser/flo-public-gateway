@@ -12,7 +12,7 @@ paths:
           required: true
           schema:
             type: string
-          description: List ID
+          description: List ID - use 'list_id' to get available lists
       responses:
         200:
           description: Specified list
