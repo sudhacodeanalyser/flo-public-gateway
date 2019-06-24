@@ -72,9 +72,8 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
       }))
     )
     private async updatePartialLocation(@request() req: Request, @requestParam('id') id: string, @requestBody() locationUpdate: LocationUpdate): Promise<Location> {
-      const deviceSystemModeService = this.deviceSystemModeServiceFactory.create(req);
 
-      return this.locationService.updatePartialLocation(id, locationUpdate, deviceSystemModeService);
+      return this.locationService.updatePartialLocation(id, locationUpdate);
     }
 
     @httpDelete(
@@ -122,6 +121,15 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
     @deleteMethod
     private async removeLocationUserRole(@requestParam('locationId') locationId: string, @requestParam('userId') userId: string): Promise<void> {
       return this.locationService.removeLocationUserRole(locationId, userId);
+    }
+
+    @httpPost(
+      '/:id/systemMode'
+    )
+    private async setSystemMode(@request() req: Request, @requestParam('id') id: string, @requestBody() data: { target: SystemMode, revertMinutes?: number, revertMode?: SystemMode }): Promise<void> {
+      const deviceSystemModeService = this.deviceSystemModeServiceFactory.create(req);
+
+      return this.locationService.setSystemMode(id, deviceSystemModeService, data);
     }
   }
 

@@ -6,7 +6,7 @@ import { PairingData, QrData, QrDataValidator } from '../../api-v1/pairing/Pairi
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import { InternalDeviceService } from '../../internal-device-service/InternalDeviceService';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
-import { Device, DeviceSystemMode, DeviceSystemModeCodec, DeviceCreate, DeviceCreateValidator, DeviceUpdate, DeviceUpdateValidator } from '../api';
+import { Device, SystemMode as DeviceSystemMode, SystemModeCodec as DeviceSystemModeCodec, DeviceCreate, DeviceCreateValidator, DeviceUpdate, DeviceUpdateValidator } from '../api';
 import { authorizationHeader, createMethod, deleteMethod, asyncMethod, httpController, parseExpand } from '../api/controllerUtils';
 import Request from '../api/Request';
 import * as Responses from '../api/response';
@@ -30,7 +30,8 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     target: DeviceSystemModeCodec,
     isLocked: t.union([t.undefined, t.boolean]),
     revertMinutes: t.union([t.undefined, t.Int]),
-    revertMode: t.union([t.undefined, DeviceSystemModeCodec])
+    revertMode: t.union([t.undefined, DeviceSystemModeCodec]),
+    shouldInherit: t.union([t.undefined, t.boolean])
   });
 
   type UnbrandedSystemModeRequest = t.TypeOf<typeof UnbrandedSystemModeRequestCodec>;
@@ -221,7 +222,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       // device record
       const model = await this.deviceService.updatePartialDevice(id, { 
         systemMode: {
-          shouldInherit: false,
+          shouldInherit: data.isLocked || data.shouldInherit === undefined ? false : data.shouldInherit,
           target: data.target,
           ...(!isSleep ? {} : {
             revertMode: data.revertMode,

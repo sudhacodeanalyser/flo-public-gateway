@@ -1,7 +1,7 @@
 import { $enum } from 'ts-enum-util';
 import _ from 'lodash';
 // These should likely go into a lookup table
-import { Device, DeviceSystemMode, ValveState, DeviceType, DeviceModelType } from '../api';
+import { Device, SystemMode as DeviceSystemMode, ValveState, DeviceType, DeviceModelType } from '../api';
 import { NoYesUnsure } from '../api/NoYesUnsure';
 import { translateNumericToStringEnum, translateStringToNumericEnum } from '../api/enumUtils';
 import { morphism, StrictSchema } from 'morphism';

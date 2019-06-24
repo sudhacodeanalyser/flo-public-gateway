@@ -1,6 +1,6 @@
 import * as t from 'io-ts';
 import { InternalDevice } from '../../../internal-device-service/models';
-import { Omit, Expandable, Location, TimestampedModel } from '../../api';
+import { Omit, Expandable, Location, TimestampedModel, SystemMode as DeviceSystemMode, SystemModeCodec as DeviceSystemModeCodec } from '../../api';
 import { convertEnumtoCodec } from '../../api/enumUtils';
 import { NoYesUnsure } from '../NoYesUnsure';
 import _ from 'lodash';
@@ -19,19 +19,11 @@ export enum ValveStateNumeric {
 
 export const ValveStateCodec = convertEnumtoCodec(ValveState);
 
-export enum DeviceSystemMode {
-  HOME = 'home',
-  AWAY = 'away',
-  SLEEP = 'sleep'
-}
-
 export enum DeviceSystemModeNumeric {
   HOME = 2,
   AWAY = 3,
   SLEEP = 5
 }
-
-export const DeviceSystemModeCodec = convertEnumtoCodec(DeviceSystemMode);
 
 export enum DeviceModelType {
   FLO_0_75 = 'flo_device_075_v2' // Defined for defaults

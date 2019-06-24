@@ -125,15 +125,24 @@ const AddressCodec = t.type({
 
 export enum SystemMode {
   HOME = 'home',
-  AWAY = 'away'
+  AWAY = 'away',
+  SLEEP = 'sleep'
 }
 
 export const SystemModeCodec = convertEnumtoCodec(SystemMode);
 
 const AdditionalPropsCodec = t.type({
-  nickname: t.union([t.string, t.undefined]),
-  systemMode: t.union([t.undefined, SystemModeCodec])
-})
+  nickname: t.union([t.string, t.undefined])
+});
+
+const SystemModeProps = t.type({
+  systemMode: t.union([t.undefined, t.partial({
+    target: SystemModeCodec,
+    revertMinutes: t.number,
+    revertMode: SystemModeCodec,
+    revertScheduledAt: t.string
+  })])
+});
 
 const LocationMutableCodec = t.intersection([
   LocationProfileWithLegacyCodec,
@@ -192,6 +201,7 @@ export const LocationCodec = t.intersection([
   t.intersection([
     // Can't have more than 5 types in an intersection with the compiler complaining
     AdditionalPropsCodec,
+    SystemModeProps,
     t.type({
       id: t.string,
       users: t.array(ExpandableCodec),

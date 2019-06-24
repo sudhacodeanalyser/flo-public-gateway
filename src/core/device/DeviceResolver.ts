@@ -2,13 +2,14 @@ import { inject, injectable } from 'inversify';
 import uuid from 'uuid';
 import { fromPartialRecord } from '../../database/Patch';
 import { InternalDeviceService } from "../../internal-device-service/InternalDeviceService";
-import { DependencyFactoryFactory, Device, DeviceCreate, DeviceUpdate, DeviceModelType, DeviceType, DeviceSystemMode, DeviceSystemModeNumeric, ValveState, ValveStateNumeric } from '../api';
+import { DependencyFactoryFactory, Device, DeviceCreate, DeviceUpdate, DeviceModelType, DeviceType, SystemMode, DeviceSystemModeNumeric, ValveState, ValveStateNumeric } from '../api';
 import DeviceTable from '../device/DeviceTable';
 import { LocationResolver, PropertyResolverMap, Resolver } from '../resolver';
 import { DeviceRecord, DeviceRecordData } from './DeviceRecord';
 import DeviceForcedSystemModeTable from './DeviceForcedSystemModeTable';
 import { translateNumericToStringEnum } from '../api/enumUtils';
 import _ from 'lodash';
+import Logger from 'bunyan';
 
 @injectable()
 class DeviceResolver extends Resolver<Device> {
@@ -21,37 +22,52 @@ class DeviceResolver extends Resolver<Device> {
       return this.locationResolverFactory().get(device.location.id);
     },
     additionalProps: async (device: Device, shouldExpand = false) => {
-      return this.internalDeviceService.getDevice(device.macAddress);
+      try {
+        return this.internalDeviceService.getDevice(device.macAddress);
+      } catch (err) {
+        this.logger.error({ err });
+        return null;
+      }
     },
     systemMode: async (device: Device, shouldExpand = false) => {
-      const [
-        forcedSystemMode,
-        additionalProperties
-      ] = await Promise.all([
-        this.deviceForcedSystemModeTable.getLatest(device.id),
-        this.internalDeviceService.getDevice(device.macAddress)
-      ]);
+      try {
+        const [
+          forcedSystemMode,
+          additionalProperties
+        ] = await Promise.all([
+          this.deviceForcedSystemModeTable.getLatest(device.id),
+          this.internalDeviceService.getDevice(device.macAddress)
+        ]);
 
-      return {
-        ...device.systemMode,
-        isLocked: forcedSystemMode !== null && forcedSystemMode.system_mode !== null,
-        lastKnown: translateNumericToStringEnum(
-          DeviceSystemMode, 
-          DeviceSystemModeNumeric, 
-          _.get(additionalProperties, 'fwProperties.system_mode')
-        )
-      };
+        return {
+          ...device.systemMode,
+          isLocked: forcedSystemMode !== null && forcedSystemMode.system_mode !== null,
+          lastKnown: translateNumericToStringEnum(
+            SystemMode, 
+            DeviceSystemModeNumeric, 
+            _.get(additionalProperties, 'fwProperties.system_mode')
+          )
+        };
+      } catch (err) {
+        this.logger.error({ err });
+        return null;
+      }
     },
     valve: async (device: Device, shouldExpand = false) => {
+      try {
       const additionalProperts = await this.internalDeviceService.getDevice(device.macAddress);
 
-      return {
-        ...device.valve,
-        lastKnown: translateNumericToStringEnum(
-          ValveState,
-          ValveStateNumeric,
-          _.get(additionalProperts, 'fwProperties.valve_state')
-        )
+        return {
+          ...device.valve,
+          lastKnown: translateNumericToStringEnum(
+            ValveState,
+            ValveStateNumeric,
+            _.get(additionalProperts, 'fwProperties.valve_state')
+          )
+        };
+      } catch (err) {
+        this.logger.error({ err });
+        return null;
       }
     }
   };
@@ -61,7 +77,8 @@ class DeviceResolver extends Resolver<Device> {
    @inject('DeviceTable') private deviceTable: DeviceTable,
    @inject('DependencyFactoryFactory') depFactoryFactory: DependencyFactoryFactory,
    @inject('InternalDeviceService') private internalDeviceService: InternalDeviceService,
-   @inject('DeviceForcedSystemModeTable') private deviceForcedSystemModeTable: DeviceForcedSystemModeTable
+   @inject('DeviceForcedSystemModeTable') private deviceForcedSystemModeTable: DeviceForcedSystemModeTable,
+   @inject('Logger') private readonly logger: Logger
   ) {
     super();
 
