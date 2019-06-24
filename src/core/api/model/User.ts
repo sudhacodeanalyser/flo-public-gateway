@@ -1,5 +1,5 @@
 import * as t from 'io-ts';
-import { Expandable, TimestampedModel, Location, Account } from '../../api';
+import { Account, Expandable, Location, TimestampedModel } from '../../api';
 
 export interface UserLocationRole {
   locationId: string;
@@ -28,7 +28,8 @@ const UserMutableCodec = t.type({
   prefixName: t.string,
   suffixName: t.string,
   unitSystem: UnitSystemCodec,
-  phoneMobile: t.string
+  phoneMobile: t.string,
+  locale: t.string
 });
 
 export const UserUpdateValidator = t.exact(t.partial(UserMutableCodec.props));
