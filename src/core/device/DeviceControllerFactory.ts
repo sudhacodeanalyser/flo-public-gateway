@@ -189,7 +189,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       return this.deviceService.pairDevice(authToken, deviceCreate);
     }
 
-    @httpPost('/:id/system-mode',
+    @httpPost('/:id/systemMode',
       // auth is deferred to  API v1 call
       reqValidator.create(t.type({
         params: t.type({
