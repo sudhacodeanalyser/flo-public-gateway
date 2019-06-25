@@ -358,6 +358,26 @@ components:
                     - open
                     - closed
                     - in_transition
+            irrigationSchedule:
+              type: object
+              properties:
+                computed:
+                  type: object
+                  properties:
+                    status:
+                      type: string
+                    times:
+                      type: array
+                      items:
+                        type: array
+                        items:
+                          type: string
+                          pattern: '^\d{2}:\d{2}:\d{2}$'
+                isEnabled:
+                  type: boolean
+                updatedAt:
+                  type: string
+                  format: date-time
     DeviceExpandable:
       oneOf:
         - type: object
