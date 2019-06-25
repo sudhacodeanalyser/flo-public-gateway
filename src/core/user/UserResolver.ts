@@ -1,16 +1,16 @@
 import { inject, injectable } from 'inversify';
-import { DependencyFactoryFactory, User } from '../api';
-import { Resolver, PropertyResolverMap, LocationResolver, AccountResolver } from '../resolver';
 import { fromPartialRecord } from '../../database/Patch';
-import { UserRecord } from './UserRecord';
+import { DependencyFactoryFactory, User } from '../api';
+import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
+import { AccountResolver, LocationResolver, PropertyResolverMap, Resolver } from '../resolver';
+import { UserAccountRoleRecord } from './UserAccountRoleRecord';
+import UserAccountRoleTable from './UserAccountRoleTable';
 import { UserDetailRecord } from './UserDetailRecord';
 import UserDetailTable from './UserDetailTable';
-import UserTable from './UserTable';
+import { UserLocationRoleRecord, UserLocationRoleRecordData } from './UserLocationRoleRecord';
 import UserLocationRoleTable from './UserLocationRoleTable';
-import UserAccountRoleTable from './UserAccountRoleTable';
-import { UserAccountRoleRecord } from './UserAccountRoleRecord';
-import { UserLocationRoleRecordData, UserLocationRoleRecord } from './UserLocationRoleRecord';
-import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
+import { UserRecord } from './UserRecord';
+import UserTable from './UserTable';
 
 @injectable()
 class UserResolver extends Resolver<User> {
@@ -71,7 +71,8 @@ class UserResolver extends Resolver<User> {
     @inject('UserDetailTable') private userDetailTable: UserDetailTable,
     @inject('UserLocationRoleTable') private userLocationRoleTable: UserLocationRoleTable,
     @inject('UserAccountRoleTable') private userAccountRoleTable: UserAccountRoleTable,
-    @inject('DependencyFactoryFactory') depFactoryFactory: DependencyFactoryFactory
+    @inject('DependencyFactoryFactory') depFactoryFactory: DependencyFactoryFactory,
+    @inject('DefaultUserLocale') private defaultUserLocale: string
   ) {
     super();
 
@@ -80,7 +81,7 @@ class UserResolver extends Resolver<User> {
   }
 
   public async updatePartialUser(id: string, partialUser: Partial<User>): Promise<User> {
-    const userDetailRecord = this.fromModelToUserDetailRecord(partialUser);
+    const userDetailRecord = UserDetailRecord.fromModel(partialUser);
     const patch = fromPartialRecord(userDetailRecord);
 
     const updatedUserDetailRecord = await this.userDetailTable.update({ user_id: id }, patch);
@@ -91,7 +92,7 @@ class UserResolver extends Resolver<User> {
       throw new ResourceDoesNotExistError();
     }
 
-    return this.toModel(userRecord, updatedUserDetailRecord);
+    return new UserRecord({ ...userRecord, ...updatedUserDetailRecord }).toModel();
   }
 
   public async getUserById(id: string, expandProps: string[] = []): Promise<User | null> {
@@ -104,7 +105,17 @@ class UserResolver extends Resolver<User> {
       return null;
     }
 
-    return this.toModel(userRecord, userDetailRecord, expandProps);
+    const user = new UserRecord({
+      ...userRecord,
+      ...userDetailRecord,
+      locale: userDetailRecord.locale || this.defaultUserLocale
+    }).toModel();
+    const expandedProps = await this.resolveProps(user, expandProps);
+
+    return {
+      ...user,
+      ...expandedProps
+    };
   }
 
   public async removeUser(id: string): Promise<void> {
@@ -126,49 +137,7 @@ class UserResolver extends Resolver<User> {
       this.userTable.remove({ id })
     ]);
   }
-
-  // TODO: Refactor these methods to use translate (from Location).
-  private fromModelToUserDetailRecord(user: Partial<User>): Partial<UserDetailRecord> {
-    return {
-      firstname: user.firstName,
-      middlename: user.middleName,
-      lastname: user.lastName,
-      prefixname: user.prefixName,
-      suffixname: user.suffixName,
-      unit_system: user.unitSystem,
-      phone_mobile: user.phoneMobile
-    };
-  }
-
-  private async toModel(userRecord: UserRecord, userDetailRecord: UserDetailRecord, expandProps: string[] = []): Promise<User> {
-    const user: User = {
-      id: userRecord.id,
-      email: userRecord.email,
-      isActive: userRecord.is_active,
-      firstName: userDetailRecord.firstname,
-      middleName: userDetailRecord.middlename,
-      lastName: userDetailRecord.lastname,
-      prefixName: userDetailRecord.prefixname,
-      suffixName: userDetailRecord.suffixname,
-      unitSystem: userDetailRecord.unit_system,
-      phoneMobile: userDetailRecord.phone_mobile,
-      locations: [],
-      locationRoles: [],
-      accountRole: {
-        accountId: '',
-        roles: []
-      },
-      account: {
-        id: ''
-      }
-    }
-    const expandedProps = await this.resolveProps(user, expandProps);
-
-    return {
-      ...user,
-      ...expandedProps
-    };
-  }
 }
 
 export { UserResolver };
+

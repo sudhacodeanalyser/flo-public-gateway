@@ -287,6 +287,8 @@ components:
           type: string
         phoneMobile:
           type: string
+        locale:
+          type: string
 
     User:
       allOf:
