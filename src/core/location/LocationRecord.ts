@@ -175,7 +175,11 @@ export interface LocationRecordData extends Partial<LegacyLocationProfile>, Time
   is_using_away_schedule?: boolean,
   profile?: LocationProfile,
   location_name?: string,
-  system_mode?: SystemMode
+  target_system_mode?: SystemMode;
+  revert_scheduled_at?: string;
+  revert_mode?: SystemMode;
+  revert_minutes?: number;
+  is_irrigation_schedule_enabled?: boolean;
 }
 
 const RecordToModelSchema: StrictSchema<Location, LocationRecordData> = {
@@ -205,7 +209,17 @@ const RecordToModelSchema: StrictSchema<Location, LocationRecordData> = {
   showerBathCount: 'profile.shower_bath_count',
   toiletCount: 'profile.toilet_count',
   nickname: 'location_name',
-  systemMode: 'system_mode',
+  irrigationSchedule: (input: LocationRecordData) => 
+    input.is_irrigation_schedule_enabled === undefined ? 
+      undefined :({
+        isEnabled: input.is_irrigation_schedule_enabled
+      }),
+  systemMode: (input: LocationRecordData) => ({
+    target: input.target_system_mode,
+    revertMinutes: input.revert_minutes,
+    revertMode: input.revert_mode,
+    revertScheduledAt: input.revert_scheduled_at
+  }),
   locationType: (input: LocationRecordData) => {
     if (input.profile !== undefined && input.profile.location_type !== undefined) {
       return input.profile.location_type;
@@ -357,7 +371,11 @@ const ModelToRecordSchema: StrictSchema<LocationRecordData, Location> = {
   created_at: 'createdAt',
   updated_at: 'updatedAt',
   location_name: 'nickname',
-  system_mode: 'systemMode',
+  target_system_mode: 'systemMode.target',
+  revert_minutes: 'systemMode.revertMinutes',
+  revert_mode: 'systemMode.revertMode',
+  revert_scheduled_at: 'systemMode.revertScheduledAt',
+  is_irrigation_schedule_enabled: 'irrigationSchedule.isEnabled',
   profile: (input: Partial<Location>) => {
     return {
       location_type: input.locationType,
@@ -402,7 +420,11 @@ const PartialModelToPartialRecordSchema: StrictSchema<PartialLocationRecordData,
   created_at: 'createdAt',
   updated_at: 'updatedAt',
   location_name: 'nickname',
-  system_mode: 'systemMode',
+  target_system_mode: 'systemMode.target',
+  revert_minutes: 'systemMode.revertMinutes',
+  revert_mode: 'systemMode.revertMode',
+  revert_scheduled_at: 'systemMode.revertScheduledAt',  
+  is_irrigation_schedule_enabled: 'irrigationSchedule.isEnabled',
   profile: (input: Partial<Location>) => {
     return {
       location_type: input.locationType,

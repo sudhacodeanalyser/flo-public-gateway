@@ -1,9 +1,10 @@
 import * as t from 'io-ts';
 import { InternalDevice } from '../../../internal-device-service/models';
-import { Omit, Expandable, Location, TimestampedModel } from '../../api';
+import { Omit, Expandable, Location, TimestampedModel, SystemMode as DeviceSystemMode, SystemModeCodec as DeviceSystemModeCodec } from '../../api';
 import { convertEnumtoCodec } from '../../api/enumUtils';
 import { NoYesUnsure } from '../NoYesUnsure';
 import _ from 'lodash';
+import { ComputedIrrigationSchedule } from '../../device/IrrigationScheduleService';
 
 export enum ValveState {
   OPEN = 'open',
@@ -19,19 +20,11 @@ export enum ValveStateNumeric {
 
 export const ValveStateCodec = convertEnumtoCodec(ValveState);
 
-export enum DeviceSystemMode {
-  HOME = 'home',
-  AWAY = 'away',
-  SLEEP = 'sleep'
-}
-
 export enum DeviceSystemModeNumeric {
   HOME = 2,
   AWAY = 3,
   SLEEP = 5
 }
-
-export const DeviceSystemModeCodec = convertEnumtoCodec(DeviceSystemMode);
 
 export enum DeviceModelType {
   FLO_0_75 = 'flo_device_075_v2' // Defined for defaults
@@ -69,11 +62,6 @@ const SystemModeCodec = t.intersection([
 
 type SystemModeData = t.TypeOf<typeof SystemModeCodec>;
 
-interface ValveData {
-  target?: ValveState,
-  lastKnown?: ValveState
-}
-
 const DeviceCreateCodec = t.type({
   macAddress: t.string,
   nickname: t.string,
@@ -104,7 +92,15 @@ export interface Device extends Omit<DeviceUpdate, 'valve'>, TimestampedModel {
   deviceModel: string,
   isPaired: boolean,
   additionalProps: AdditionalDeviceProps | null | undefined,
-  valve?: ValveData
+  valve?: {
+    target?: ValveState,
+    lastKnown?: ValveState
+  },
+  irrigationSchedule?: {
+    isEnabled: boolean,
+    computed?: Omit<ComputedIrrigationSchedule, 'macAddress'>,
+    updatedAt?: string
+  }
 }
 
 interface FwProperties {
