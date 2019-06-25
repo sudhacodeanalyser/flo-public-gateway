@@ -3,16 +3,26 @@ import { LocationResolver } from '../resolver';
 import { DependencyFactoryFactory, Location, LocationUpdate, LocationUserRole, SystemMode } from '../api';
 import { DeviceSystemModeService } from '../device/DeviceSystemModeService';
 import { DeviceService } from '../service';
+import { IrrigationScheduleService, IrrigationScheduleServiceFactory } from '../device/IrrigationScheduleService';
+import { injectHttpContext, interfaces } from 'inversify-express-utils';
+import _ from 'lodash';
 
 @injectable()
 class LocationService {
   private deviceServiceFactory: () => DeviceService;
+  private irrigationScheduleService: IrrigationScheduleService;
 
   constructor(
     @inject('LocationResolver') private locationResolver: LocationResolver,
-    @inject('DependencyFactoryFactory') depFactoryFactory: DependencyFactoryFactory
+    @inject('DependencyFactoryFactory') depFactoryFactory: DependencyFactoryFactory,
+    @inject('IrrigationScheduleServiceFactory') irrigationScheduleServiceFactory: IrrigationScheduleServiceFactory,
+    @injectHttpContext private readonly httpContext: interfaces.HttpContext
   ) {
     this.deviceServiceFactory = depFactoryFactory<DeviceService>('DeviceService');
+
+    if (!_.isEmpty(this.httpContext)) {
+      this.irrigationScheduleService = irrigationScheduleServiceFactory.create(this.httpContext.request);
+    }
   }
 
   public async createLocation(location: Location): Promise<Location | {}> {
@@ -29,6 +39,38 @@ class LocationService {
 
   public async updatePartialLocation(id: string, locationUpdate: LocationUpdate): Promise<Location> {
     const updatedLocation = await this.locationResolver.updatePartialLocation(id, locationUpdate);
+
+    if (!_.isEmpty(locationUpdate.irrigationSchedule) && !_.isEmpty(this.irrigationScheduleService)) {
+      const deviceService = this.deviceServiceFactory();
+
+      if (_.get(locationUpdate, 'irrigationSchedule.isEnabled', false)) {
+         const devices = await deviceService.getAllByLocationId(id, ['irrigationSchedule']);
+         const promises = devices
+           .map(async (device) => {
+             if  (
+               device.irrigationSchedule === undefined || 
+               device.irrigationSchedule.computed === undefined || 
+               device.irrigationSchedule.computed.times === undefined
+            ) {
+              return Promise.resolve();
+            }
+
+            const times = device.irrigationSchedule.computed.times;
+
+            return this.irrigationScheduleService.enableDeviceIrrigationAllowedInAwayMode(device.id, times);
+          });
+
+        await Promise.all(promises);
+      } else {
+        const devices = await deviceService.getAllByLocationId(id);
+        const promises = devices
+          .map(async (device) => 
+            this.irrigationScheduleService.disableDeviceIrrigationAllowedInAwayMode(device.id)
+          );
+
+        await Promise.all(promises);
+      }
+    }
 
     return updatedLocation;
   }

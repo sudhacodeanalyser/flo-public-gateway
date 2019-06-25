@@ -101,6 +101,19 @@ class LocationResolver extends Resolver<Location> {
       return {
         target: _.get(device, 'systemMode.target') || _.get(device, 'systemMode.lastKnown') || SystemMode.HOME 
       };
+    },
+    irrigationSchedule: async (location: Location, shouldExpand = false) => {
+      
+      if (location.irrigationSchedule !== undefined) {
+        return location.irrigationSchedule;
+      }
+
+      const devices = (await this.deviceResolverFactory().getAllByLocationId(location.id, ['irrigationSchedule']))
+        .filter(device => device.irrigationSchedule !== undefined);
+
+      return {
+        isEnabled: _.get(devices[0], 'irrigationSchedule.isEnabled', false)
+      };
     }
   };
 

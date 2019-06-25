@@ -132,7 +132,10 @@ export enum SystemMode {
 export const SystemModeCodec = convertEnumtoCodec(SystemMode);
 
 const AdditionalPropsCodec = t.type({
-  nickname: t.union([t.string, t.undefined])
+  nickname: t.union([t.string, t.undefined]),
+  irrigationSchedule: t.union([t.undefined, t.type({
+    isEnabled: t.boolean
+  })])
 });
 
 const SystemModeProps = t.type({

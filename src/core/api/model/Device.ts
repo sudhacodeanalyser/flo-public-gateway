@@ -4,6 +4,7 @@ import { Omit, Expandable, Location, TimestampedModel, SystemMode as DeviceSyste
 import { convertEnumtoCodec } from '../../api/enumUtils';
 import { NoYesUnsure } from '../NoYesUnsure';
 import _ from 'lodash';
+import { ComputedIrrigationSchedule } from '../../device/IrrigationScheduleService';
 
 export enum ValveState {
   OPEN = 'open',
@@ -61,11 +62,6 @@ const SystemModeCodec = t.intersection([
 
 type SystemModeData = t.TypeOf<typeof SystemModeCodec>;
 
-interface ValveData {
-  target?: ValveState,
-  lastKnown?: ValveState
-}
-
 const DeviceCreateCodec = t.type({
   macAddress: t.string,
   nickname: t.string,
@@ -96,7 +92,15 @@ export interface Device extends Omit<DeviceUpdate, 'valve'>, TimestampedModel {
   deviceModel: string,
   isPaired: boolean,
   additionalProps: AdditionalDeviceProps | null | undefined,
-  valve?: ValveData
+  valve?: {
+    target?: ValveState,
+    lastKnown?: ValveState
+  },
+  irrigationSchedule?: {
+    isEnabled: boolean,
+    computed?: Omit<ComputedIrrigationSchedule, 'macAddress'>,
+    updatedAt?: string
+  }
 }
 
 interface FwProperties {

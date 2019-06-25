@@ -55,7 +55,8 @@ const RecordToModelSchema: StrictSchema<Device, DeviceRecordData>  = {
   }),
   valve: (input: DeviceRecordData) => ({
     target: input.target_valve_state
-  })
+  }),
+  irrigationSchedule: () => undefined
 };
 
 const ModelToRecordSchema: StrictSchema<DeviceRecordData, Device> = {

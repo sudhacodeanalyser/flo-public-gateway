@@ -10,6 +10,8 @@ import DeviceForcedSystemModeTable from './DeviceForcedSystemModeTable';
 import { translateNumericToStringEnum } from '../api/enumUtils';
 import _ from 'lodash';
 import Logger from 'bunyan';
+import { IrrigationScheduleService, IrrigationScheduleServiceFactory } from './IrrigationScheduleService';
+import { injectHttpContext, interfaces } from 'inversify-express-utils';
 
 @injectable()
 class DeviceResolver extends Resolver<Device> {
@@ -55,7 +57,7 @@ class DeviceResolver extends Resolver<Device> {
     },
     valve: async (device: Device, shouldExpand = false) => {
       try {
-      const additionalProperts = await this.internalDeviceService.getDevice(device.macAddress);
+        const additionalProperts = await this.internalDeviceService.getDevice(device.macAddress);
 
         return {
           ...device.valve,
@@ -69,20 +71,52 @@ class DeviceResolver extends Resolver<Device> {
         this.logger.error({ err });
         return null;
       }
+    },
+    irrigationSchedule: async (device: Device, shouldExpand = false) => {
+      try {
+        if (!shouldExpand || _.isEmpty(this.irrigationScheduleService)) {
+          return null;
+        }
+
+        const [
+          computedIrrigationSchedule, 
+          irrigationAllowedState
+        ] = await Promise.all([
+          this.irrigationScheduleService.getDeviceComputedIrrigationSchedule(device.id),
+          this.irrigationScheduleService.getDeviceIrrigationAllowedState(device.id)
+        ]);
+        const { macAddress, ...computed } = computedIrrigationSchedule;
+
+        return {
+          computed,
+          isEnabled: irrigationAllowedState.isEnabled || false,
+          updatedAt: irrigationAllowedState.updatedAt
+        };
+      } catch (err) {
+        this.logger.error({ err });
+        return null;
+      }
     }
   };
   private locationResolverFactory: () => LocationResolver;
+  private irrigationScheduleService: IrrigationScheduleService;
 
   constructor(
    @inject('DeviceTable') private deviceTable: DeviceTable,
    @inject('DependencyFactoryFactory') depFactoryFactory: DependencyFactoryFactory,
    @inject('InternalDeviceService') private internalDeviceService: InternalDeviceService,
    @inject('DeviceForcedSystemModeTable') private deviceForcedSystemModeTable: DeviceForcedSystemModeTable,
-   @inject('Logger') private readonly logger: Logger
+   @inject('Logger') private readonly logger: Logger,
+   @inject('IrrigationScheduleServiceFactory') irrigationScheduleServiceFactory: IrrigationScheduleServiceFactory,
+   @injectHttpContext private readonly httpContext: interfaces.HttpContext
   ) {
     super();
 
     this.locationResolverFactory = depFactoryFactory<LocationResolver>('LocationResolver');
+
+    if (!_.isEmpty(this.httpContext)) {
+      this.irrigationScheduleService = irrigationScheduleServiceFactory.create(this.httpContext.request);
+    }
   }
 
   public async get(id: string, expandProps: string[] = []): Promise<Device | null> {
