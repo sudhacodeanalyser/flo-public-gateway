@@ -1,6 +1,6 @@
 import { ApiV1Service } from '../ApiV1Service';
 import { IrrigationScheduleService, ComputedIrrigationSchedule, DeviceIrrigationAllowedState } from '../../core/device/IrrigationScheduleService';
-import { ComputedIrrigationScheduleCodec, DeviceIrrigationAllowedStateCodec } from './models';
+import { ResponseToComputedIrrigationSchedule, ResponseToDeviceIrrigationAllowedState } from './models';
 
 class ApiV1IrrigationScheduleService extends ApiV1Service implements IrrigationScheduleService {
   constructor(
@@ -17,7 +17,7 @@ class ApiV1IrrigationScheduleService extends ApiV1Service implements IrrigationS
       authToken: this.authToken
     };
     const response = await this.sendRequest(request);
-    const result = ComputedIrrigationScheduleCodec.decode(response);
+    const result = ResponseToComputedIrrigationSchedule.decode(response);
 
     if (result.isLeft()) {
       throw new Error('Invalid response.')
@@ -56,7 +56,7 @@ class ApiV1IrrigationScheduleService extends ApiV1Service implements IrrigationS
       authToken: this.authToken
     };
     const response = await this.sendRequest(request);
-    const result = DeviceIrrigationAllowedStateCodec.decode(response);
+    const result = ResponseToDeviceIrrigationAllowedState.decode(response);
 
     if (result.isLeft()) {
       throw new Error('Invalid response.');

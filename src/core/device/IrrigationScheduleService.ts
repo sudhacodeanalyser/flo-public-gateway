@@ -12,18 +12,23 @@ export enum ComputationStatus {
 
 export const ComputationStatusCodec = convertEnumtoCodec(ComputationStatus);
 
-export interface ComputedIrrigationSchedule {
-  status: ComputationStatus;
-  times?: string[][];
-  macAddress: string;
-}
+export const ComputedIrrigationScheduleCodec = t.type({
+  status: ComputationStatusCodec,
+  times: t.union([t.undefined, t.array(t.array(t.string))]),
+  macAddress: t.string
+})
 
-export interface DeviceIrrigationAllowedState {
-  id: string;
-  updatedAt: string;
-  isEnabled: boolean;
-  times?: string[][];
-}
+export type ComputedIrrigationSchedule = t.TypeOf<typeof ComputedIrrigationScheduleCodec>;
+
+export const DeviceIrrigationAllowedStateCodec = t.type({
+  id: t.string,
+  updatedAt: t.string,
+  isEnabled: t.boolean,
+  times: t.union([t.undefined, t.array(t.array(t.string))])
+});
+
+export type DeviceIrrigationAllowedState = t.TypeOf<typeof DeviceIrrigationAllowedStateCodec>;
+
 
 export interface IrrigationScheduleService {
   getDeviceComputedIrrigationSchedule(id: string): Promise<ComputedIrrigationSchedule>;
