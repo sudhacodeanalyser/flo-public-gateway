@@ -1,20 +1,21 @@
 import * as t from 'io-ts';
-import { ComputedIrrigationSchedule, DeviceIrrigationAllowedState, ComputationStatusCodec, ComputationStatus } from '../../core/device/IrrigationScheduleService';
+import { ComputedIrrigationSchedule, ComputedIrrigationScheduleCodec, DeviceIrrigationAllowedState, DeviceIrrigationAllowedStateCodec, ComputationStatusCodec, ComputationStatus } from '../../core/device/IrrigationScheduleService';
+import _ from 'lodash';
 
 const ComputedIrrigationScheduleResponseCodec = t.type({
   device_id: t.string,
   status: ComputationStatusCodec,
-  times: t.union([t.undefined, t.array(t.array(t.string))])
+  times: t.union([t.undefined, t.null, t.array(t.array(t.string))])
 });
 
-export const ComputedIrrigationScheduleCodec = new t.Type<ComputedIrrigationSchedule, t.TypeOf<typeof ComputedIrrigationScheduleResponseCodec>, unknown>(
+export const ResponseToComputedIrrigationSchedule = new t.Type<ComputedIrrigationSchedule, t.TypeOf<typeof ComputedIrrigationScheduleResponseCodec>, unknown>(
   'ComputedIrrigationSchedule',
-  (u: unknown): u is ComputedIrrigationSchedule => true,
+  (u: unknown): u is ComputedIrrigationSchedule => ComputedIrrigationScheduleCodec.is(u),
   (u: unknown, context: t.Context) => {
     return ComputedIrrigationScheduleResponseCodec.validate(u, context)
       .map(computedIrrigationScheduleResponse => ({
         status: computedIrrigationScheduleResponse.status,
-        times: computedIrrigationScheduleResponse.times,
+        times: computedIrrigationScheduleResponse.times || undefined,
         macAddress: computedIrrigationScheduleResponse.device_id
       }))
   },
@@ -27,12 +28,12 @@ export const ComputedIrrigationScheduleCodec = new t.Type<ComputedIrrigationSche
 
 const DeviceIrrigationAllowedStateResponse = t.type({
   icd_id: t.string,
-  created_at: t.union([t.undefined, t.string]),
+  created_at: t.union([t.undefined, t.null, t.string]),
   is_enabled: t.boolean,
-  times: t.union([t.undefined, t.array(t.array(t.string))])
+  times: t.union([t.undefined, t.null, t.array(t.array(t.string))])
 });
 
-export const DeviceIrrigationAllowedStateCodec = new t.Type<DeviceIrrigationAllowedState, t.TypeOf<typeof DeviceIrrigationAllowedStateResponse>, unknown>(
+export const ResponseToDeviceIrrigationAllowedState = new t.Type<DeviceIrrigationAllowedState, t.TypeOf<typeof DeviceIrrigationAllowedStateResponse>, unknown>(
   'DeviceIrrigationAllowedState',
   (u: unknown): u is DeviceIrrigationAllowedState => true,
   (u: unknown, context: t.Context) => {
@@ -41,7 +42,7 @@ export const DeviceIrrigationAllowedStateCodec = new t.Type<DeviceIrrigationAllo
         id: deviceIrrigationAllowedStateResponse.icd_id,
         updatedAt: deviceIrrigationAllowedStateResponse.created_at || new Date().toISOString(),
         isEnabled: deviceIrrigationAllowedStateResponse.is_enabled,
-        times: deviceIrrigationAllowedStateResponse.times
+        times: deviceIrrigationAllowedStateResponse.times || undefined
       }))
   },
   (a: DeviceIrrigationAllowedState) => ({
