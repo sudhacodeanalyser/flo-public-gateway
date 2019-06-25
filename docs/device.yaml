@@ -241,7 +241,7 @@ paths:
           $ref: '#/components/responses/UnauthorizedError'
         403:
           $ref: '#/components/responses/ForbiddenError'
-  /api/v2/devices/{id}/system-mode:
+  /api/v2/devices/{id}/systemMode:
     post:
       summary: Sends directive to change device system mode
       tags:
@@ -358,6 +358,26 @@ components:
                     - open
                     - closed
                     - in_transition
+            irrigationSchedule:
+              type: object
+              properties:
+                computed:
+                  type: object
+                  properties:
+                    status:
+                      type: string
+                    times:
+                      type: array
+                      items:
+                        type: array
+                        items:
+                          type: string
+                          pattern: '^\d{2}:\d{2}:\d{2}$'
+                isEnabled:
+                  type: boolean
+                updatedAt:
+                  type: string
+                  format: date-time
     DeviceExpandable:
       oneOf:
         - type: object

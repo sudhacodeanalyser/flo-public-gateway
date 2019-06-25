@@ -151,7 +151,50 @@ paths:
           $ref: '#/components/responses/UnauthorizedError'
         403:
           $ref: '#/components/responses/ForbiddenError'
-
+  /api/v2/locations/{id}/systemMode:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Location ID
+    post:
+      summary: Set system mode
+      tags:
+        - Locations
+        - System Mode
+      produces:
+        - application/json
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                target:
+                  type: string
+                  enum:
+                    - home
+                    - sleep
+                    - away
+                revertMinutes:
+                  type: number
+                revertMode:
+                  type: string
+                  enum:
+                    - home
+                    - away
+                    - sleep
+      responses: 
+        200:
+          description: System mode will be changed
+          schema:
+            $ref: '#/components/schemas/Location'
+        400:
+          description: Invalid request body
 components:
   schemas:
     LocationUserRole:
@@ -252,16 +295,14 @@ components:
             - gt_10k_usd_lte_50k_usd
             - gt_50k_usd_lte_100k_usd
             - gt_100K_usd
-    LocationUpdate:
-      allOf:
-        - $ref: '#/components/schemas/LocationMutable'
-        - type: object
+        irrigationSchedule:
+          type: object
           properties:
-            systemMode: 
-              type: string
-              enum:
-                - home
-                - away
+            isEnabled:
+              type: boolean
+    LocationUpdate:
+      $ref: '#/components/schemas/LocationMutable'
+ 
     LocationCreate:
       required:
         - address
@@ -315,6 +356,26 @@ components:
                 $ref: '#/components/schemas/DeviceExpandable'
             subscription:
               $ref: '#/components/schemas/SubscriptionExpandable'
+            systemMode:
+              type: object
+              properties:
+                target:
+                  type: string
+                  enum:
+                    - home
+                    - away
+                    - sleep
+                revertMinutes: 
+                  type: number
+                revertMode:
+                  type: string
+                  enum:
+                    - home
+                    - away
+                    - sleep
+                revertScheduledAt:
+                  type: string
+                  format: date-time
     LocationExpandable:
       oneOf:
         - type: object

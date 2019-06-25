@@ -2,7 +2,7 @@ import { inject, injectable } from 'inversify';
 import uuid from 'uuid';
 import { LocationRecordData, LocationRecord } from './LocationRecord';
 import { UserLocationRoleRecord } from '../user/UserLocationRoleRecord';
-import { Location, LocationUserRole, DependencyFactoryFactory, Device, SystemMode, DeviceSystemMode } from '../api';
+import { Location, LocationUserRole, DependencyFactoryFactory, Device, SystemMode } from '../api';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import { Resolver, PropertyResolverMap, DeviceResolver, UserResolver, AccountResolver, SubscriptionResolver } from '../resolver';
 import LocationTable from '../location/LocationTable';
@@ -98,13 +98,22 @@ class LocationResolver extends Resolver<Location> {
           }
         })[0];
 
-      if (
-         (_.get(device, 'systemMode.target') || _.get(device, 'systemMode.lastKnown')) === DeviceSystemMode.AWAY
-      ) {
-        return SystemMode.AWAY;
-      } else {
-        return SystemMode.HOME;
+      return {
+        target: _.get(device, 'systemMode.target') || _.get(device, 'systemMode.lastKnown') || SystemMode.HOME 
+      };
+    },
+    irrigationSchedule: async (location: Location, shouldExpand = false) => {
+      
+      if (location.irrigationSchedule !== undefined) {
+        return location.irrigationSchedule;
       }
+
+      const devices = (await this.deviceResolverFactory().getAllByLocationId(location.id, ['irrigationSchedule']))
+        .filter(device => device.irrigationSchedule !== undefined);
+
+      return {
+        isEnabled: _.get(devices[0], 'irrigationSchedule.isEnabled', false)
+      };
     }
   };
 
