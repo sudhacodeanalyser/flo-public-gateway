@@ -17,9 +17,6 @@ class ApiV1IrrigationScheduleService extends ApiV1Service implements IrrigationS
       authToken: this.authToken
     };
     const response = await this.sendRequest(request);
-
-    // tslint:disable
-    console.log(response);
     const result = ComputedIrrigationScheduleCodec.decode(response);
 
     if (result.isLeft()) {
@@ -59,7 +56,6 @@ class ApiV1IrrigationScheduleService extends ApiV1Service implements IrrigationS
       authToken: this.authToken
     };
     const response = await this.sendRequest(request);
-        console.log(response);
     const result = DeviceIrrigationAllowedStateCodec.decode(response);
 
     if (result.isLeft()) {
