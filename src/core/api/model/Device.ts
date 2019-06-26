@@ -1,10 +1,10 @@
 import * as t from 'io-ts';
-import { InternalDevice } from '../../../internal-device-service/models';
-import { Omit, Expandable, Location, TimestampedModel, SystemMode as DeviceSystemMode, SystemModeCodec as DeviceSystemModeCodec } from '../../api';
-import { convertEnumtoCodec } from '../../api/enumUtils';
-import { NoYesUnsure } from '../NoYesUnsure';
 import _ from 'lodash';
+import { InternalDevice } from '../../../internal-device-service/models';
+import { Expandable, Location, Omit, SystemModeCodec as DeviceSystemModeCodec, TimestampedModel } from '../../api';
+import { convertEnumtoCodec } from '../../api/enumUtils';
 import { ComputedIrrigationSchedule } from '../../device/IrrigationScheduleService';
+import { NoYesUnsure } from '../NoYesUnsure';
 
 export enum ValveState {
   OPEN = 'open',
@@ -100,13 +100,14 @@ export interface Device extends Omit<DeviceUpdate, 'valve'>, TimestampedModel {
     isEnabled: boolean,
     computed?: Omit<ComputedIrrigationSchedule, 'macAddress'>,
     updatedAt?: string
-  }
+  },
+  isInstalled?: boolean
 }
 
 interface FwProperties {
-  [prop: string]: any
+  [prop: string]: any;
 }
 
 export interface AdditionalDeviceProps extends Pick<InternalDevice, 'isConnected' | 'lastHeardFromTime' | 'fwVersion'> {
-  fwProperties: FwProperties | null | undefined
+  fwProperties: FwProperties | null | undefined;
 }

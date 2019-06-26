@@ -1,5 +1,5 @@
-import _ from 'lodash';
 import { injectable } from 'inversify';
+import _ from 'lodash';
 
 export type PropertyResolverFn<T, R> = ((model: T, shouldExpand?: boolean) => Promise<R | null>);
 export type PropertyResolverMap<T> = {
@@ -37,9 +37,11 @@ class Resolver<T extends {}> {
   }
 };
 
-export { Resolver };
+export * from './account/AccountResolver';
 export * from './device/DeviceResolver';
 export * from './location/LocationResolver';
-export * from './user/UserResolver';
-export * from './account/AccountResolver';
+export * from './onboarding-log/OnboardingLogResolver';
 export * from './subscription/SubscriptionResolver';
+export * from './user/UserResolver';
+export { Resolver };
+

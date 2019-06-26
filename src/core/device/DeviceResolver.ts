@@ -1,17 +1,17 @@
+import Logger from 'bunyan';
 import { inject, injectable } from 'inversify';
+import { injectHttpContext, interfaces } from 'inversify-express-utils';
+import _ from 'lodash';
 import uuid from 'uuid';
 import { fromPartialRecord } from '../../database/Patch';
 import { InternalDeviceService } from "../../internal-device-service/InternalDeviceService";
-import { DependencyFactoryFactory, Device, DeviceCreate, DeviceUpdate, DeviceModelType, DeviceType, SystemMode, DeviceSystemModeNumeric, ValveState, ValveStateNumeric } from '../api';
-import DeviceTable from '../device/DeviceTable';
-import { LocationResolver, PropertyResolverMap, Resolver } from '../resolver';
-import { DeviceRecord, DeviceRecordData } from './DeviceRecord';
-import DeviceForcedSystemModeTable from './DeviceForcedSystemModeTable';
+import { DependencyFactoryFactory, Device, DeviceCreate, DeviceModelType, DeviceSystemModeNumeric, DeviceType, DeviceUpdate, SystemMode, ValveState, ValveStateNumeric } from '../api';
 import { translateNumericToStringEnum } from '../api/enumUtils';
-import _ from 'lodash';
-import Logger from 'bunyan';
+import DeviceTable from '../device/DeviceTable';
+import { LocationResolver, OnboardingLogResolver, PropertyResolverMap, Resolver } from '../resolver';
+import DeviceForcedSystemModeTable from './DeviceForcedSystemModeTable';
+import { DeviceRecord, DeviceRecordData } from './DeviceRecord';
 import { IrrigationScheduleService, IrrigationScheduleServiceFactory } from './IrrigationScheduleService';
-import { injectHttpContext, interfaces } from 'inversify-express-utils';
 
 @injectable()
 class DeviceResolver extends Resolver<Device> {
@@ -45,8 +45,8 @@ class DeviceResolver extends Resolver<Device> {
           ...device.systemMode,
           isLocked: forcedSystemMode !== null && forcedSystemMode.system_mode !== null,
           lastKnown: translateNumericToStringEnum(
-            SystemMode, 
-            DeviceSystemModeNumeric, 
+            SystemMode,
+            DeviceSystemModeNumeric,
             _.get(additionalProperties, 'fwProperties.system_mode')
           )
         };
@@ -79,7 +79,7 @@ class DeviceResolver extends Resolver<Device> {
         }
 
         const [
-          computedIrrigationSchedule, 
+          computedIrrigationSchedule,
           irrigationAllowedState
         ] = await Promise.all([
           this.irrigationScheduleService.getDeviceComputedIrrigationSchedule(device.id),
@@ -96,10 +96,14 @@ class DeviceResolver extends Resolver<Device> {
         this.logger.error({ err });
         return null;
       }
+    },
+    isInstalled: async (device: Device, shouldExpand = false) => {
+      return this.onboardingLogResolverFactory().isDeviceInstalled(device.id);
     }
   };
   private locationResolverFactory: () => LocationResolver;
   private irrigationScheduleService: IrrigationScheduleService;
+  private onboardingLogResolverFactory: () => OnboardingLogResolver;
 
   constructor(
    @inject('DeviceTable') private deviceTable: DeviceTable,
@@ -117,6 +121,7 @@ class DeviceResolver extends Resolver<Device> {
     if (!_.isEmpty(this.httpContext)) {
       this.irrigationScheduleService = irrigationScheduleServiceFactory.create(this.httpContext.request);
     }
+    this.onboardingLogResolverFactory = depFactoryFactory<OnboardingLogResolver>('OnboardingLogResolver');
   }
 
   public async get(id: string, expandProps: string[] = []): Promise<Device | null> {
@@ -190,3 +195,4 @@ class DeviceResolver extends Resolver<Device> {
 }
 
 export { DeviceResolver };
+
