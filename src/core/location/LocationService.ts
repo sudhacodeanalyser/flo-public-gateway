@@ -1,8 +1,8 @@
 import { inject, injectable } from 'inversify';
 import { LocationResolver } from '../resolver';
-import { DependencyFactoryFactory, Location, LocationUpdate, LocationUserRole, SystemMode } from '../api';
+import { DependencyFactoryFactory, Location, LocationUpdate, LocationUserRole, SystemMode, Account } from '../api';
 import { DeviceSystemModeService } from '../device/DeviceSystemModeService';
-import { DeviceService } from '../service';
+import { DeviceService, AccountService } from '../service';
 import { IrrigationScheduleService, IrrigationScheduleServiceFactory } from '../device/IrrigationScheduleService';
 import { injectHttpContext, interfaces } from 'inversify-express-utils';
 import _ from 'lodash';
@@ -10,6 +10,7 @@ import _ from 'lodash';
 @injectable()
 class LocationService {
   private deviceServiceFactory: () => DeviceService;
+  private accountServiceFactory: () => AccountService;
   private irrigationScheduleService: IrrigationScheduleService;
 
   constructor(
@@ -19,17 +20,21 @@ class LocationService {
     @injectHttpContext private readonly httpContext: interfaces.HttpContext
   ) {
     this.deviceServiceFactory = depFactoryFactory<DeviceService>('DeviceService');
+    this.accountServiceFactory = depFactoryFactory<AccountService>('AccountService');
 
     if (!_.isEmpty(this.httpContext)) {
       this.irrigationScheduleService = irrigationScheduleServiceFactory.create(this.httpContext.request);
     }
   }
 
-  public async createLocation(location: Location, userId?: string): Promise<Location | {}> {
+  public async createLocation(location: Location): Promise<Location | {}> {
     const createdLocation: Location | null = await this.locationResolver.createLocation(location);
+    const accountId = location.account.id;
+    const account = await this.accountServiceFactory().getAccountById(accountId);
 
-    if (userId !== undefined && createdLocation !== null) {
-      return this.locationResolver.addLocationUserRole(createdLocation.id, userId, ['owner']);
+    if (!_.isEmpty(account) && createdLocation !== null) {
+      const ownerUserId = (account as Account).owner.id;
+      await this.locationResolver.addLocationUserRole(createdLocation.id, ownerUserId, ['owner']);
     }
 
     return createdLocation === null ? {} : createdLocation;

@@ -76,9 +76,8 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
     )
     @createMethod
     private async createLocation(@request() req: Request, @requestBody() location: Location): Promise<Location | {}> {
-      const userId = req.token !== undefined ? req.token.user_id : undefined; 
       
-      return this.locationService.createLocation(location, userId);
+      return this.locationService.createLocation(location);
     }
 
     @httpGet(
