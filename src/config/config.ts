@@ -16,7 +16,8 @@ function getDefaults(): { [key: string]: any } {
         apiVersion: 2,
         authUrl: 'https://api-dev.flocloud.co/api/v1/accesscontrol/authorize',
         internalDeviceServiceBaseUrl: 'https://flo-device-service.flocloud.co/v1',
-        apiV1Url: 'https://api-dev.flocloud.co/api/v1'
+        apiV1Url: 'https://api-dev.flocloud.co/api/v1',
+        defaultUserLocale: 'en-US'
       };
   }
 }
@@ -42,7 +43,8 @@ const config = {
   postgresHost: process.env.POSTGRES_HOST,
   postgresPassword: process.env.POSTGRES_PASSWORD,
   postgresDatabase: process.env.POSTGRES_DATABASE,
-  postgresPort: process.env.POSTGRES_PORT
+  postgresPort: process.env.POSTGRES_PORT,
+  defaultUserLocale: process.env.DEFAULT_USER_LOCALE
 };
 
 export default {
