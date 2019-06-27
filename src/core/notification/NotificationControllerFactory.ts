@@ -18,8 +18,23 @@ import {
 import {asyncMethod, httpController} from '../api/controllerUtils';
 import Request from "../api/Request";
 import { NotificationServiceFactory } from './NotificationService';
+import basicAuth from 'express-basic-auth';
 
 export function NotificationControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
+  const appName = container.get<string>('appName');
+  const env = container.get<string>('env');
+  const docsEndpointUser = container.get<string>('docsEndpointUser');
+  const docsEndpointPassword = container.get<string>('docsEndpointPassword');
+
+  // Swagger Documentation
+  const swaggerBasicAuth = basicAuth({
+    challenge: true,
+    realm: `${appName}-${env}`,
+    users: {
+      [docsEndpointUser]: docsEndpointPassword
+    }
+  });
+
   const authMiddlewareFactory = container.get<AuthMiddlewareFactory>('AuthMiddlewareFactory');
   const auth = authMiddlewareFactory.create();
   const authWithIcd = authMiddlewareFactory.create(async ({ body: { icdId } }) => ({icd_id: icdId}));
@@ -34,7 +49,7 @@ export function NotificationControllerFactory(container: Container, apiVersion: 
       super();
     }
 
-    @httpGet('/docs', auth)
+    @httpGet('/docs', swaggerBasicAuth)
     @asyncMethod
     private async getDocs(@request() req: Request): Promise<string> {
       return this
@@ -73,6 +88,7 @@ export function NotificationControllerFactory(container: Container, apiVersion: 
     @httpGet('/events',
       authMiddlewareFactory.create(async ({ query: { icdId } }) => ({icd_id: icdId}))
       // TODO: icdId is optional, how I can ask for admin role if is not present or customer role if has icdId
+      // TODO: Is not possible to do right now with the auth system, we may need to split this in 2 endpoints
     )
     @asyncMethod
     private async getAlertEventsByFilter(@request() req: Request): Promise<PaginatedResult<AlertEvent>> {
