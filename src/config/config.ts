@@ -39,6 +39,8 @@ const config = {
   apiV1Url: process.env.API_V1_URL,
   docsEndpointUser: process.env.DOCS_ENDPOINT_USER,
   docsEndpointPassword: process.env.DOCS_ENDPOINT_PASSWORD,
+  externalDocsEndpointUser: process.env.EXTERNAL_DOCS_ENDPOINT_USER,
+  externalDocsEndpointPassword: process.env.EXTERNAL_DOCS_ENDPOINT_PASSWORD,
   postgresUser: process.env.POSTGRES_USER,
   postgresHost: process.env.POSTGRES_HOST,
   postgresPassword: process.env.POSTGRES_PASSWORD,
