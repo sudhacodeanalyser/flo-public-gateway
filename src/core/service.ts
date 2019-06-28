@@ -6,3 +6,4 @@ export * from './subscription/SubscriptionService';
 export * from './ping/PingService';
 export * from './lookup/LookupService';
 export * from './localization/LocalizationService';
+export * from './notification/NotificationService';

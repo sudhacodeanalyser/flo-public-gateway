@@ -15,7 +15,7 @@ import uuid from 'uuid';
 import Config from '../config/config';
 import ExtendableError from '../core/api/error/ExtendableError';
 import Request from '../core/api/Request';
-import swaggerConfig, { swaggerOpts } from '../docs/swagger';
+import { internalSwaggerJsDoc, legacySwaggerJsDoc, swaggerOpts, thirdPartiesSwaggerJsDoc } from '../docs/swagger';
 import LoggerFactory from '../logging/LoggerFactory';
 
 
@@ -96,14 +96,22 @@ function ServerConfigurationFactory(container: Container): (app: express.Applica
     });
 
     // Swagger Documentation
-    const swaggerBasicAuth = basicAuth({
+    const swaggerBasicAuth = (user: string, password: string) => basicAuth({
       challenge: true,
       realm: `${config.appName}-${config.env}`,
       users: {
-        [config.docsEndpointUser]: config.docsEndpointPassword
+        [user]: password
       }
     });
-    app.use('/docs', swaggerBasicAuth, swaggerUi.serve, swaggerUi.setup(swaggerConfig, swaggerOpts));
+    const internalSwaggerBasicAuth = swaggerBasicAuth(config.docsEndpointUser, config.docsEndpointPassword);
+    const externalSwaggerBasicAuth = swaggerBasicAuth(config.externalDocsEndpointUser, config.externalDocsEndpointPassword);
+
+    const setupSwaggerUi = (swaggerJsDoc: {[key: string]: any}, opts: {[key: string]: any}) =>
+      (req: Request, res: express.Response, next: express.NextFunction) => swaggerUi.setup(swaggerJsDoc, opts)(req, res, next);
+
+    app.use('/docs', internalSwaggerBasicAuth, swaggerUi.serve, setupSwaggerUi(internalSwaggerJsDoc, swaggerOpts));
+    app.use('/legacy', internalSwaggerBasicAuth, swaggerUi.serve, setupSwaggerUi(legacySwaggerJsDoc, swaggerOpts));
+    app.use('/swagger', externalSwaggerBasicAuth, swaggerUi.serve, setupSwaggerUi(thirdPartiesSwaggerJsDoc, swaggerOpts));
   };
 }
 
