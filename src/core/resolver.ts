@@ -40,7 +40,6 @@ class Resolver<T extends {}> {
 export * from './account/AccountResolver';
 export * from './device/DeviceResolver';
 export * from './location/LocationResolver';
-export * from './onboarding-log/OnboardingLogResolver';
 export * from './subscription/SubscriptionResolver';
 export * from './user/UserResolver';
 export { Resolver };

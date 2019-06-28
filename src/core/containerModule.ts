@@ -3,7 +3,6 @@ import apiContainerModule from './api/containerModule';
 import deviceContainerModule from './device/containerModule';
 import locationContainerModule from './location/containerModule';
 import lookupContainerModule from './lookup/containerModule';
-import onboardingLogContainerModule from './onboarding-log/containerModule';
 import pingContainerModule from './ping/containerModule';
 import presenceContainerModule from './presence/containerModule';
 import subscriptionContainerModule from './subscription/containerModule';
@@ -18,6 +17,5 @@ export default [
   userContainerModule,
   subscriptionContainerModule,
   presenceContainerModule,
-  lookupContainerModule,
-  onboardingLogContainerModule
+  lookupContainerModule
 ];

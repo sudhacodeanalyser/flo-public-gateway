@@ -54,7 +54,9 @@ const RecordToModelSchema: StrictSchema<Device, DeviceRecordData>  = {
     target: input.target_valve_state
   }),
   irrigationSchedule: () => undefined,
-  isInstalled: () => false
+  installStatus: () => ({
+    isInstalled: false
+  })
 };
 
 const ModelToRecordSchema: StrictSchema<DeviceRecordData, Device> = {

@@ -14,12 +14,16 @@ class OnboardingLogTable extends DatabaseTable<OnboardingLogRecord> {
   public async getCurrentState(icdId: string): Promise<OnboardingLogRecord | null> {
     const onboardingLogs = await this.query<DynamoDbQuery>({
       IndexName: 'EventIndex',
-      KeyConditionExpression: 'icd_id = :icd_id',
-  		ExpressionAttributeValues: {
-  			':icd_id': icdId
-  		},
-	 	  ScanIndexForward: false,
-	 	  Limit: 1
+      KeyConditionExpression: '#icd_id = :icd_id AND #event >= :installed',
+      ExpressionAttributeNames: {
+        '#icd_id': 'icd_id',
+        '#event': 'event'
+      },
+      ExpressionAttributeValues: {
+        ':icd_id': icdId,
+        ':installed': 2
+      },
+      Limit: 1
     });
 
     return _.isEmpty(onboardingLogs) ? null : onboardingLogs[0];

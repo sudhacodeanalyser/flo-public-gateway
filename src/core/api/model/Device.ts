@@ -86,22 +86,25 @@ export interface DeviceUpdate extends t.TypeOf<typeof DeviceUpdateValidator> {
 
 export interface Device extends Omit<DeviceUpdate, 'valve'>, TimestampedModel {
   id: string,
-  macAddress: string,
-  location: Expandable<Location>,
-  deviceType: string,
-  deviceModel: string,
-  isPaired: boolean,
-  additionalProps: AdditionalDeviceProps | null | undefined,
+  macAddress: string;
+  location: Expandable<Location>;
+  deviceType: string;
+  deviceModel: string;
+  isPaired: boolean;
+  additionalProps: AdditionalDeviceProps | null | undefined;
   valve?: {
     target?: ValveState,
     lastKnown?: ValveState
-  },
+  };
   irrigationSchedule?: {
     isEnabled: boolean,
     computed?: Omit<ComputedIrrigationSchedule, 'macAddress'>,
     updatedAt?: string
-  },
-  isInstalled?: boolean
+  };
+  installStatus?: {
+    isInstalled: boolean,
+    installedAt?: string
+  };
 }
 
 interface FwProperties {

@@ -8,10 +8,11 @@ import { InternalDeviceService } from "../../internal-device-service/InternalDev
 import { DependencyFactoryFactory, Device, DeviceCreate, DeviceModelType, DeviceSystemModeNumeric, DeviceType, DeviceUpdate, SystemMode, ValveState, ValveStateNumeric } from '../api';
 import { translateNumericToStringEnum } from '../api/enumUtils';
 import DeviceTable from '../device/DeviceTable';
-import { LocationResolver, OnboardingLogResolver, PropertyResolverMap, Resolver } from '../resolver';
+import { LocationResolver, PropertyResolverMap, Resolver } from '../resolver';
 import DeviceForcedSystemModeTable from './DeviceForcedSystemModeTable';
 import { DeviceRecord, DeviceRecordData } from './DeviceRecord';
 import { IrrigationScheduleService, IrrigationScheduleServiceFactory } from './IrrigationScheduleService';
+import OnboardingLogTable from './OnboardingLogTable';
 
 @injectable()
 class DeviceResolver extends Resolver<Device> {
@@ -97,19 +98,26 @@ class DeviceResolver extends Resolver<Device> {
         return null;
       }
     },
-    isInstalled: async (device: Device, shouldExpand = false) => {
-      return this.onboardingLogResolverFactory().isDeviceInstalled(device.id);
+    installStatus: async (device: Device, shouldExpand = false) => {
+      const onboardingLog = await this.onboardingLogTable.getCurrentState(device.id);
+      if (onboardingLog === null) {
+        return null;
+      }
+      return {
+        isInstalled: true,
+        installedAt: onboardingLog.created_at
+      };
     }
   };
   private locationResolverFactory: () => LocationResolver;
   private irrigationScheduleService: IrrigationScheduleService;
-  private onboardingLogResolverFactory: () => OnboardingLogResolver;
 
   constructor(
    @inject('DeviceTable') private deviceTable: DeviceTable,
    @inject('DependencyFactoryFactory') depFactoryFactory: DependencyFactoryFactory,
    @inject('InternalDeviceService') private internalDeviceService: InternalDeviceService,
    @inject('DeviceForcedSystemModeTable') private deviceForcedSystemModeTable: DeviceForcedSystemModeTable,
+   @inject('OnboardingLogTable') private onboardingLogTable: OnboardingLogTable,
    @inject('Logger') private readonly logger: Logger,
    @inject('IrrigationScheduleServiceFactory') irrigationScheduleServiceFactory: IrrigationScheduleServiceFactory,
    @injectHttpContext private readonly httpContext: interfaces.HttpContext
@@ -121,7 +129,6 @@ class DeviceResolver extends Resolver<Device> {
     if (!_.isEmpty(this.httpContext)) {
       this.irrigationScheduleService = irrigationScheduleServiceFactory.create(this.httpContext.request);
     }
-    this.onboardingLogResolverFactory = depFactoryFactory<OnboardingLogResolver>('OnboardingLogResolver');
   }
 
   public async get(id: string, expandProps: string[] = []): Promise<Device | null> {
