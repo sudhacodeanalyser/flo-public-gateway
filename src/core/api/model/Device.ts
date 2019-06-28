@@ -101,7 +101,7 @@ export interface Device extends Omit<DeviceUpdate, 'valve'>, TimestampedModel {
     computed?: Omit<ComputedIrrigationSchedule, 'macAddress'>,
     updatedAt?: string
   };
-  installStatus?: {
+  installStatus: {
     isInstalled: boolean,
     installedAt?: string
   };

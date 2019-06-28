@@ -182,12 +182,15 @@ class DeviceResolver extends Resolver<Device> {
       systemMode: {
         isLocked: false,
         shouldInherit: true
+      },
+      installStatus: {
+        isInstalled: false
       }
     };
     const deviceRecordData = DeviceRecord.fromModel(device);
     const createdDeviceRecordData = await this.deviceTable.put(deviceRecordData);
 
-    return new DeviceRecord(createdDeviceRecordData).toModel();
+    return this.toModel(createdDeviceRecordData);
   }
 
   private async toModel(deviceRecordData: DeviceRecordData, expandProps: string[] = []): Promise<Device> {
