@@ -3,6 +3,7 @@ import { LocalizationService } from "../core/service";
 import { AssetsResponse, LocalesResponse, LocalizedResponse } from "../core/api/response/Localization";
 import { Asset, AssetFilter, LocaleFilter, Locale, LocalizedFilter } from "../core/api/model/Localization";
 import { inject } from "inversify";
+import _ from "lodash";
 
 class LocalizationApiService extends HttpService implements LocalizationService {
 
@@ -120,8 +121,8 @@ class LocalizationApiService extends HttpService implements LocalizationService 
     return this.sendRequest(request);
   }
 
-  public async getLocalizedValue(filter: LocalizedFilter, caching: string): Promise<LocalizedResponse> {
-    const args = Object.assign({}, ...Object.keys(filter.args).map(key => ({ [`args.${key}`]: filter.args[key] })));
+  public async getLocalizedValue(filter: LocalizedFilter, caching?: string): Promise<LocalizedResponse> {
+    const args = _.mapKeys(filter.args, (value, key) => `args.${ key }`);
     delete filter.args;
     const request = {
       method: 'GET',

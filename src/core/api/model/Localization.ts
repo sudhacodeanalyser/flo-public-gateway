@@ -13,17 +13,17 @@ export interface Asset {
 export interface AssetFilter {
   locale?: string,
   name?: string,
-  released?: boolean,
+  released?: string,
   type?: string,
-  offset?: number,
-  limit?: number
+  offset?: string,
+  limit?: string
 }
 
 export interface LocaleFilter {
   fallback?: string,
-  released?: boolean,
-  offset?: number,
-  limit?: number
+  released?: string,
+  offset?: string,
+  limit?: string
 }
 
 export interface Locale {
@@ -35,8 +35,8 @@ export interface Locale {
 }
 
 export interface LocalizedFilter {
-  name: string,
-  type: string,
-  locale: string,
-  args: {[key: string]: string}
+  name?: string,
+  type?: string,
+  locale?: string,
+  args?: {[key: string]: string}
 }

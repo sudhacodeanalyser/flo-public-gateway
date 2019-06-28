@@ -22,12 +22,12 @@ export function LocalizationControllerFactory(container: Container, apiVersion: 
     }
 
     @httpGet('/assets', auth)
-    private async getAssets(@queryParam('name') name: string,
-                            @queryParam('type') type: string,
-                            @queryParam('locale') locale: string,
-                            @queryParam('released') released: boolean,
-                            @queryParam('offset') offset: number,
-                            @queryParam('limit') limit: number): Promise<AssetsResponse> {
+    private async getAssets(@queryParam('name') name?: string,
+                            @queryParam('type') type?: string,
+                            @queryParam('locale') locale?: string,
+                            @queryParam('released') released?: string,
+                            @queryParam('offset') offset?: string,
+                            @queryParam('limit') limit?: string): Promise<AssetsResponse> {
       return this.localizationService.getAssets({name, type, locale, released, offset, limit});
     }
 
@@ -52,10 +52,10 @@ export function LocalizationControllerFactory(container: Container, apiVersion: 
     }
 
     @httpGet('/locales', auth)
-    private async getLocales( @queryParam('fallback') fallback: string,
-                              @queryParam('released') released: boolean,
-                              @queryParam('offset') offset: number,
-                              @queryParam('limit') limit: number): Promise<LocalesResponse> {
+    private async getLocales( @queryParam('fallback') fallback?: string,
+                              @queryParam('released') released?: string,
+                              @queryParam('offset') offset?: string,
+                              @queryParam('limit') limit?: string): Promise<LocalesResponse> {
       return this.localizationService.getLocales({fallback, released, offset, limit});
     }
 
@@ -81,10 +81,10 @@ export function LocalizationControllerFactory(container: Container, apiVersion: 
 
     @httpGet('/localized', auth)
     private async getLocalizedValue(@request() req: Request,
-                                    @queryParam('name') name: string,
-                                    @queryParam('type') type: string,
-                                    @queryParam('locale') locale: string,
-                                    @queryParam('caching') caching: string): Promise<LocalizedResponse> {
+                                    @queryParam('name') name?: string,
+                                    @queryParam('type') type?: string,
+                                    @queryParam('locale') locale?: string,
+                                    @queryParam('caching') caching?: string): Promise<LocalizedResponse> {
 
       const { query } = req;
       const args = _.chain(query).pickBy((value, key) => key.startsWith('args.')).mapKeys((value, key) => key.split('.')[1]).value();

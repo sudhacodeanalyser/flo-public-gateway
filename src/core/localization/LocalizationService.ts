@@ -12,6 +12,6 @@ export interface LocalizationService {
   getLocaleById(id: string): Promise<Locale>
   updateLocale(id: string, locale: Locale): Promise<void>
   deleteLocale(id: string): Promise<void>
-  getLocalizedValue(filter: LocalizedFilter, caching: string): Promise<LocalizedResponse>
+  getLocalizedValue(filter: LocalizedFilter, caching?: string): Promise<LocalizedResponse>
   getLocalizedValues(filter: { items: LocalizedFilter[] }, caching: string): Promise<LocalizedResponse>
 }
