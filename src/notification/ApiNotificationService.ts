@@ -73,10 +73,10 @@ class ApiNotificationService {
     });
   }
 
-  public async generateRandomEvents(data: any): Promise<void> {
+  public async generateEventsSample(data: any): Promise<void> {
     return this.notificationApi.sendRequest({
       method: 'post',
-      url: '/events/random',
+      url: '/events/sample',
       body: data
     });
   }

@@ -38,7 +38,7 @@ export function NotificationControllerFactory(container: Container, apiVersion: 
   const authMiddlewareFactory = container.get<AuthMiddlewareFactory>('AuthMiddlewareFactory');
   const auth = authMiddlewareFactory.create();
   const authWithIcd = authMiddlewareFactory.create(async ({ body: { icdId } }) => ({icd_id: icdId}));
-  const authWithLocation = authMiddlewareFactory.create(async ({ body: { locationId } }: Request) => ({ location_id: locationId }));
+  const authWithLocation = authMiddlewareFactory.create(async ({ body: { locationId } }) => ({ location_id: locationId }));
   const authWithUser = authMiddlewareFactory.create(async ({ params: { userId } }) => ({user_id: userId}));
 
   @httpController({ version: apiVersion }, '/notifications')
@@ -100,7 +100,7 @@ export function NotificationControllerFactory(container: Container, apiVersion: 
         .getAlertEventsByFilter(filters);
     }
 
-    @httpPut('/alarm/:alarmId/clear', authWithIcd)
+    @httpPut('/alarms/:alarmId/clear', authWithIcd)
     @asyncMethod
     private async clearAlarm(@request() req: Request, @requestParam('alarmId') alarmId: string, @requestBody() data: any): Promise<ClearAlertResponse> {
       return this
@@ -109,7 +109,7 @@ export function NotificationControllerFactory(container: Container, apiVersion: 
         .clearAlarm(alarmId, data)
     }
 
-    @httpPut('/alarm/clear', authWithLocation)
+    @httpPut('/alarms/clear', authWithLocation)
     @asyncMethod
     private async clearAlarms(@request() req: Request, @requestBody() data: any): Promise<ClearAlertResponse> {
       return this
@@ -142,7 +142,7 @@ export function NotificationControllerFactory(container: Container, apiVersion: 
       return this
         .notificationServiceFactory
         .create(req)
-        .generateRandomEvents(data);
+        .generateEventsSample(data);
     }
 
     @httpGet('/actions', auth)

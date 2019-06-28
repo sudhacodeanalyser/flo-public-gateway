@@ -16,7 +16,8 @@ function getDefaults(): { [key: string]: any } {
         apiVersion: 2,
         authUrl: 'https://api-dev.flocloud.co/api/v1/accesscontrol/authorize',
         internalDeviceServiceBaseUrl: 'https://flo-device-service.flocloud.co/v1',
-        apiV1Url: 'https://api-dev.flocloud.co/api/v1'
+        apiV1Url: 'https://api-dev.flocloud.co/api/v1',
+        notificationApiUrl: 'https://flo-notification-api-dev.et89cag4sw.us-west-2.elasticbeanstalk.com'
       };
   }
 }
@@ -37,7 +38,8 @@ const config = {
   internalDeviceServiceBaseUrl: process.env.INTERNAL_DEVICE_SERVICE_BASE_URL,
   apiV1Url: process.env.API_V1_URL,
   docsEndpointUser: process.env.DOCS_ENDPOINT_USER,
-  docsEndpointPassword: process.env.DOCS_ENDPOINT_PASSWORD
+  docsEndpointPassword: process.env.DOCS_ENDPOINT_PASSWORD,
+  notificationApiUrl: process.env.NOTIFICATION_API_URL
 };
 
 export default {

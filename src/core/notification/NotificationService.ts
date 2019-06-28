@@ -15,6 +15,6 @@ export interface NotificationService {
   clearAlarms(data: any): Promise<ClearAlertResponse>;
   getAlarmSettings(userId: string, icdId?: string): Promise<AlertSettings>;
   updateAlarmSettings(userId: string, data: any): Promise<void>;
-  generateRandomEvents(data: any): Promise<void>;
+  generateEventsSample(data: any): Promise<void>;
   getActions(data: any): Promise<ActionsSupportResponse>;
 }
