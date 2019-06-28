@@ -4,6 +4,6 @@ import { LocalizationApiService } from './LocalizationApiService';
 import config from '../config/config';
 
 export default new ContainerModule((bind: interfaces.Bind) => {
-  bind<string>('LocalizationApiV1Url').toConstantValue(config.localizationApiV1Url);
+  bind<string>('LocalizationApiUrl').toConstantValue(config.localizationApiUrl);
   bind<LocalizationService>('LocalizationService').to(LocalizationApiService);
 });

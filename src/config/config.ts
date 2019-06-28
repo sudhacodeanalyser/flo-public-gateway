@@ -18,7 +18,7 @@ function getDefaults(): { [key: string]: any } {
         internalDeviceServiceBaseUrl: 'https://flo-device-service.flocloud.co/v1',
         apiV1Url: 'https://api-dev.flocloud.co/api/v1',
         defaultUserLocale: 'en-US',
-        localizationApiV1Url: 'https://flo-localization-service-dev.flocloud.co/v1'
+        localizationApiUrl: 'https://flo-localization-service-dev.flocloud.co/v1'
       };
   }
 }
@@ -46,7 +46,7 @@ const config = {
   postgresDatabase: process.env.POSTGRES_DATABASE,
   postgresPort: process.env.POSTGRES_PORT,
   defaultUserLocale: process.env.DEFAULT_USER_LOCALE,
-  localizationApiV1Url: process.env.LOCALIZATION_API_V1_URL,
+  localizationApiUrl: process.env.LOCALIZATION_API_URL,
 };
 
 export default {

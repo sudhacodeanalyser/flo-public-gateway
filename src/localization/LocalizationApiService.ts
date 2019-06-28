@@ -6,14 +6,14 @@ import { inject } from "inversify";
 
 class LocalizationApiService extends HttpService implements LocalizationService {
 
-  constructor(@inject('LocalizationApiV1Url') private readonly localizationApiV1Url: string) {
+  constructor(@inject('LocalizationApiUrl') private readonly localizationApiUrl: string) {
     super();
   }
 
   public async getAssets(filter: AssetFilter): Promise<AssetsResponse> {
     const request = {
       method: 'GET',
-      url: `${ this.localizationApiV1Url }/assets`,
+      url: `${ this.localizationApiUrl }/assets`,
       params: {
         ...filter
       }
@@ -25,7 +25,7 @@ class LocalizationApiService extends HttpService implements LocalizationService 
   public async createAsset(asset: Asset): Promise<void> {
     const request = {
       method: 'POST',
-      url: `${ this.localizationApiV1Url }/assets`,
+      url: `${ this.localizationApiUrl }/assets`,
       body: {
         ...asset
       }
@@ -37,7 +37,7 @@ class LocalizationApiService extends HttpService implements LocalizationService 
   public async getAssetById(id: string): Promise<Asset> {
     const request = {
       method: 'GET',
-      url: `${ this.localizationApiV1Url }/assets/${id}`,
+      url: `${ this.localizationApiUrl }/assets/${id}`,
     };
 
     return this.sendRequest(request);
@@ -46,7 +46,7 @@ class LocalizationApiService extends HttpService implements LocalizationService 
   public async updateAsset(id: string, asset: Asset): Promise<void> {
     const request = {
       method: 'POST',
-      url: `${ this.localizationApiV1Url }/assets/${id}`,
+      url: `${ this.localizationApiUrl }/assets/${id}`,
       body: {
         ...asset,
         id
@@ -59,7 +59,7 @@ class LocalizationApiService extends HttpService implements LocalizationService 
   public async deleteAsset(id: string): Promise<void> {
     const request = {
       method: 'DELETE',
-      url: `${ this.localizationApiV1Url }/assets/${id}`,
+      url: `${ this.localizationApiUrl }/assets/${id}`,
     };
 
     return this.sendRequest(request);
@@ -68,7 +68,7 @@ class LocalizationApiService extends HttpService implements LocalizationService 
   public async getLocales(filter: LocaleFilter): Promise<LocalesResponse> {
     const request = {
       method: 'GET',
-      url: `${ this.localizationApiV1Url }/locales`,
+      url: `${ this.localizationApiUrl }/locales`,
       params: {
         ...filter
       }
@@ -80,7 +80,7 @@ class LocalizationApiService extends HttpService implements LocalizationService 
   public async createLocale(locale: Locale): Promise<void> {
     const request = {
       method: 'POST',
-      url: `${ this.localizationApiV1Url }/locales`,
+      url: `${ this.localizationApiUrl }/locales`,
       body: {
         ...locale
       }
@@ -92,7 +92,7 @@ class LocalizationApiService extends HttpService implements LocalizationService 
   public async getLocaleById(id: string): Promise<Locale> {
     const request = {
       method: 'GET',
-      url: `${ this.localizationApiV1Url }/locales/${id}`,
+      url: `${ this.localizationApiUrl }/locales/${id}`,
     };
 
     return this.sendRequest(request);
@@ -101,7 +101,7 @@ class LocalizationApiService extends HttpService implements LocalizationService 
   public async updateLocale(id: string, locale: Locale): Promise<void> {
     const request = {
       method: 'POST',
-      url: `${ this.localizationApiV1Url }/locales/${id}`,
+      url: `${ this.localizationApiUrl }/locales/${id}`,
       body: {
         ...locale,
         id
@@ -114,7 +114,7 @@ class LocalizationApiService extends HttpService implements LocalizationService 
   public async deleteLocale(id: string): Promise<void> {
     const request = {
       method: 'DELETE',
-      url: `${ this.localizationApiV1Url }/locales/${id}`,
+      url: `${ this.localizationApiUrl }/locales/${id}`,
     };
 
     return this.sendRequest(request);
@@ -125,7 +125,7 @@ class LocalizationApiService extends HttpService implements LocalizationService 
     delete filter.args;
     const request = {
       method: 'GET',
-      url: `${ this.localizationApiV1Url }/localized`,
+      url: `${ this.localizationApiUrl }/localized`,
       params: {
         ...filter,
         ...args,
@@ -139,7 +139,7 @@ class LocalizationApiService extends HttpService implements LocalizationService 
   public async getLocalizedValues(filter: { items: LocalizedFilter[] }, caching: string): Promise<LocalizedResponse> {
     const request = {
       method: 'POST',
-      url: `${ this.localizationApiV1Url }/localized`,
+      url: `${ this.localizationApiUrl }/localized`,
       params: {
         caching
       },
