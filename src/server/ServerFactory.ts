@@ -15,7 +15,7 @@ import uuid from 'uuid';
 import Config from '../config/config';
 import ExtendableError from '../core/api/error/ExtendableError';
 import Request from '../core/api/Request';
-import swaggerConfig, { swaggerOpts } from '../docs/swagger';
+import { internalSwaggerJsDoc, legacySwaggerJsDoc, swaggerOpts, thirdPartiesSwaggerJsDoc } from '../docs/swagger';
 import LoggerFactory from '../logging/LoggerFactory';
 
 
@@ -103,7 +103,12 @@ function ServerConfigurationFactory(container: Container): (app: express.Applica
         [config.docsEndpointUser]: config.docsEndpointPassword
       }
     });
-    app.use('/docs', swaggerBasicAuth, swaggerUi.serve, swaggerUi.setup(swaggerConfig, swaggerOpts));
+    const setupSwaggerUi = (swaggerJsDoc: {[key: string]: any}, opts: {[key: string]: any}) =>
+      (req: Request, res: express.Response, next: express.NextFunction) => swaggerUi.setup(swaggerJsDoc, opts)(req, res, next);
+
+    app.use('/docs', swaggerBasicAuth, swaggerUi.serve, setupSwaggerUi(internalSwaggerJsDoc, swaggerOpts));
+    app.use('/swagger', swaggerBasicAuth, swaggerUi.serve, setupSwaggerUi(thirdPartiesSwaggerJsDoc, swaggerOpts));
+    app.use('/legacy', swaggerBasicAuth, swaggerUi.serve, setupSwaggerUi(legacySwaggerJsDoc, swaggerOpts));
   };
 }
 

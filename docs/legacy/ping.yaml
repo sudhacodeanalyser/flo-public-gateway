@@ -1,0 +1,24 @@
+paths:
+  /api/v2/ping:
+    get:
+      summary: Ping Api v2 System
+      tags:
+        - System Ops
+      security: [] # No Security
+      produces:
+        - application/json
+      responses:
+        200:
+          description: Responds with 200 OK if system is up
+
+  /api/v1/ping:
+    get:
+      summary: Ping Api v1 System
+      tags:
+        - System Ops
+      security: [] # No Security
+      produces:
+        - application/json
+      responses:
+        200:
+          description: Responds with 200 OK if system is up

@@ -7,7 +7,7 @@
     "url": "https://gitlab.com/flotechnologies/flo-public-gateway"
   },
   "scripts": {
-    "copy-docs": "shx rm -f dist/docs/*.yaml && copyfiles docs/*.yaml dist",
+    "copy-docs": "shx rm -rf dist/docs/*.yaml dist/docs/*/ && copyfiles docs/**/*.yaml dist",
     "build": "npm run build-ts && npm run tslint && npm run copy-docs",
     "build-ts": "tsc",
     "debug": "npm run build && node --inspect=0.0.0.0 dist/app.js",
