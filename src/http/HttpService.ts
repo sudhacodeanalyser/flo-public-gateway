@@ -1,17 +1,18 @@
 import axios from 'axios';
-import ApiV1Error from './ApiV1Error';
+import HttpError from './HttpError';
 import { injectable } from 'inversify';
 
-export interface ApiV1Request {
+export interface HttpRequest {
   method: string,
   url: string,
   authToken?: string,
-  body?: any
+  body?: any,
+  params?: any
 };
 
 @injectable()
-class ApiV1Service {
-  protected async sendRequest(request: ApiV1Request): Promise<any> {
+class HttpService {
+  protected async sendRequest(request: HttpRequest): Promise<any> {
     try {
       const response = await axios({
         method: request.method,
@@ -20,7 +21,8 @@ class ApiV1Service {
           'Content-Type': 'application/json',
           ...(request.authToken && { Authorization: request.authToken })
         },
-        ...(request.body && { data: request.body })
+        ...(request.body && { data: request.body }),
+        ...(request.params && { params: request.params })
       });
 
       return response.data;
@@ -29,7 +31,7 @@ class ApiV1Service {
       if (!err.response) {
         throw err;
       } else if (err.response.status >= 400 && err.response.status < 500) {
-        throw new ApiV1Error(err.response.status, err.response.data.message);
+        throw new HttpError(err.response.status, err.response.data.message);
       } else {
         throw err;
       }
@@ -37,4 +39,4 @@ class ApiV1Service {
   }
 }
 
-export { ApiV1Service, ApiV1Error };
+export { HttpService, HttpError };
