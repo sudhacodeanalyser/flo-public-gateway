@@ -10,6 +10,7 @@ export * from './model/Location';
 export * from './model/Device';
 export * from './model/Subscription';
 export * from './model/Lookup';
+export * from './model/Notification';
 
 // Utils
 export type DependencyFactoryFactory = <T>(dep: string) => () => T;

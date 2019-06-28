@@ -7,6 +7,7 @@ import userContainerModule from './user/containerModule';
 import subscriptionContainerModule from './subscription/containerModule';
 import presenceContainerModule from './presence/containerModule';
 import lookupContainerModule from './lookup/containerModule';
+import notificationContainerModule from './notification/containerModule';
 
 export default [
   pingContainerModule,
@@ -17,5 +18,6 @@ export default [
   userContainerModule,
   subscriptionContainerModule,
   presenceContainerModule,
-  lookupContainerModule
+  lookupContainerModule,
+  notificationContainerModule
 ];

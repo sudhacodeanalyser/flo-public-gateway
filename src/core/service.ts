@@ -5,3 +5,4 @@ export * from './account/AccountService';
 export * from './subscription/SubscriptionService';
 export * from './ping/PingService';
 export * from './lookup/LookupService';
+export * from './notification/NotificationService'
