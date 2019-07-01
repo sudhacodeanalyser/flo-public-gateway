@@ -1,12 +1,13 @@
-import pingContainerModule from './ping/containerModule';
 import accountContainerModule from './account/containerModule';
-import deviceContainerModule from './device/containerModule';
 import apiContainerModule from './api/containerModule';
+import deviceContainerModule from './device/containerModule';
 import locationContainerModule from './location/containerModule';
-import userContainerModule from './user/containerModule';
-import subscriptionContainerModule from './subscription/containerModule';
-import presenceContainerModule from './presence/containerModule';
 import lookupContainerModule from './lookup/containerModule';
+import pingContainerModule from './ping/containerModule';
+import presenceContainerModule from './presence/containerModule';
+import subscriptionContainerModule from './subscription/containerModule';
+import userContainerModule from './user/containerModule';
+import notificationContainerModule from './notification/containerModule';
 
 export default [
   pingContainerModule,
@@ -17,5 +18,6 @@ export default [
   userContainerModule,
   subscriptionContainerModule,
   presenceContainerModule,
-  lookupContainerModule
+  lookupContainerModule,
+  notificationContainerModule
 ];

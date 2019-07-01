@@ -1,17 +1,18 @@
+import Logger from 'bunyan';
 import { inject, injectable } from 'inversify';
+import { injectHttpContext, interfaces } from 'inversify-express-utils';
+import _ from 'lodash';
 import uuid from 'uuid';
 import { fromPartialRecord } from '../../database/Patch';
 import { InternalDeviceService } from "../../internal-device-service/InternalDeviceService";
-import { DependencyFactoryFactory, Device, DeviceCreate, DeviceUpdate, DeviceModelType, DeviceType, SystemMode, DeviceSystemModeNumeric, ValveState, ValveStateNumeric } from '../api';
+import { DependencyFactoryFactory, Device, DeviceCreate, DeviceModelType, DeviceSystemModeNumeric, DeviceType, DeviceUpdate, SystemMode, ValveState, ValveStateNumeric } from '../api';
+import { translateNumericToStringEnum } from '../api/enumUtils';
 import DeviceTable from '../device/DeviceTable';
 import { LocationResolver, PropertyResolverMap, Resolver } from '../resolver';
-import { DeviceRecord, DeviceRecordData } from './DeviceRecord';
 import DeviceForcedSystemModeTable from './DeviceForcedSystemModeTable';
-import { translateNumericToStringEnum } from '../api/enumUtils';
-import _ from 'lodash';
-import Logger from 'bunyan';
+import { DeviceRecord, DeviceRecordData } from './DeviceRecord';
 import { IrrigationScheduleService, IrrigationScheduleServiceFactory } from './IrrigationScheduleService';
-import { injectHttpContext, interfaces } from 'inversify-express-utils';
+import OnboardingLogTable from './OnboardingLogTable';
 
 @injectable()
 class DeviceResolver extends Resolver<Device> {
@@ -45,8 +46,8 @@ class DeviceResolver extends Resolver<Device> {
           ...device.systemMode,
           isLocked: forcedSystemMode !== null && forcedSystemMode.system_mode !== null,
           lastKnown: translateNumericToStringEnum(
-            SystemMode, 
-            DeviceSystemModeNumeric, 
+            SystemMode,
+            DeviceSystemModeNumeric,
             _.get(additionalProperties, 'fwProperties.system_mode')
           )
         };
@@ -79,7 +80,7 @@ class DeviceResolver extends Resolver<Device> {
         }
 
         const [
-          computedIrrigationSchedule, 
+          computedIrrigationSchedule,
           irrigationAllowedState
         ] = await Promise.all([
           this.irrigationScheduleService.getDeviceComputedIrrigationSchedule(device.id),
@@ -96,6 +97,12 @@ class DeviceResolver extends Resolver<Device> {
         this.logger.error({ err });
         return null;
       }
+    },
+    installStatus: async (device: Device, shouldExpand = false) => {
+      const onboardingLog = await this.onboardingLogTable.getCurrentState(device.id);
+      return {
+        isInstalled: onboardingLog !== null
+      }
     }
   };
   private locationResolverFactory: () => LocationResolver;
@@ -106,6 +113,7 @@ class DeviceResolver extends Resolver<Device> {
    @inject('DependencyFactoryFactory') depFactoryFactory: DependencyFactoryFactory,
    @inject('InternalDeviceService') private internalDeviceService: InternalDeviceService,
    @inject('DeviceForcedSystemModeTable') private deviceForcedSystemModeTable: DeviceForcedSystemModeTable,
+   @inject('OnboardingLogTable') private onboardingLogTable: OnboardingLogTable,
    @inject('Logger') private readonly logger: Logger,
    @inject('IrrigationScheduleServiceFactory') irrigationScheduleServiceFactory: IrrigationScheduleServiceFactory,
    @injectHttpContext private readonly httpContext: interfaces.HttpContext
@@ -170,12 +178,15 @@ class DeviceResolver extends Resolver<Device> {
       systemMode: {
         isLocked: false,
         shouldInherit: true
+      },
+      installStatus: {
+        isInstalled: false
       }
     };
     const deviceRecordData = DeviceRecord.fromModel(device);
     const createdDeviceRecordData = await this.deviceTable.put(deviceRecordData);
 
-    return new DeviceRecord(createdDeviceRecordData).toModel();
+    return this.toModel(createdDeviceRecordData);
   }
 
   private async toModel(deviceRecordData: DeviceRecordData, expandProps: string[] = []): Promise<Device> {
@@ -190,3 +201,4 @@ class DeviceResolver extends Resolver<Device> {
 }
 
 export { DeviceResolver };
+
