@@ -1,9 +1,9 @@
 import { inject, injectable } from 'inversify';
-import { ApiV1Service } from '../ApiV1Service';
+import { HttpService } from '../../http/HttpService';
 import { QrData, PairingData, CompletePairingData, PairingDataCodec, QrDataValidator } from './models';
 
 @injectable()
-class PairingService extends ApiV1Service {
+class PairingService extends HttpService {
   constructor(
     @inject('ApiV1Url') private readonly apiV1Url: string
   ) {

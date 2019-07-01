@@ -1,8 +1,8 @@
 import { inject } from 'inversify';
 import { PasswordResetService } from '../../core/user/PasswordResetService';
-import { ApiV1Service } from '../ApiV1Service';
+import { HttpService } from '../../http/HttpService';
 
-class ApiV1PasswordResetService extends ApiV1Service implements PasswordResetService {
+class ApiV1PasswordResetService extends HttpService implements PasswordResetService {
 
   constructor(
     @inject('ApiV1Url') private readonly apiV1Url: string

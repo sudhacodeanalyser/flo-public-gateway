@@ -1,8 +1,8 @@
-import { ApiV1Service } from '../ApiV1Service';
+import { HttpService } from '../../http/HttpService';
 import { IrrigationScheduleService, ComputedIrrigationSchedule, DeviceIrrigationAllowedState } from '../../core/device/IrrigationScheduleService';
 import { ResponseToComputedIrrigationSchedule, ResponseToDeviceIrrigationAllowedState } from './models';
 
-class ApiV1IrrigationScheduleService extends ApiV1Service implements IrrigationScheduleService {
+class ApiV1IrrigationScheduleService extends HttpService implements IrrigationScheduleService {
   constructor(
     private readonly apiV1Url: string,
     private readonly authToken: string

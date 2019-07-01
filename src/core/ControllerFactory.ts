@@ -5,6 +5,7 @@ import { AccountControllerFactory } from './account/AccountControllerFactory';
 import { DeviceControllerFactory } from './device/DeviceControllerFactory';
 import { LocationControllerFactory } from './location/LocationControllerFactory';
 import { LookupControllerFactory } from './lookup/LookupControllerFactory';
+import { LocalizationControllerFactory } from './localization/LocalizationControllerFactory';
 import { NotificationControllerFactory } from './notification/NotificationControllerFactory';
 import { PingControllerFactory } from './ping/PingControllerFactory';
 import { PresenceControllerFactory } from './presence/PresenceControllerFactory';
@@ -21,7 +22,8 @@ export default function ControllerFactory(container: Container, apiVersion: numb
     SubscriptionControllerFactory,
     PresenceControllerFactory,
     LookupControllerFactory,
-    NotificationControllerFactory
+    LocalizationControllerFactory,
+    NotificationControllerFactory,
   ]
   .map(controllerFactory => controllerFactory(container, apiVersion));
 }

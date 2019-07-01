@@ -1,7 +1,7 @@
-import { ApiV1Service } from '../ApiV1Service';
+import { HttpService } from '../../http/HttpService';
 import { DirectiveService } from '../../core/device/DirectiveService';
 
-export class ApiV1DirectiveService extends ApiV1Service implements DirectiveService {
+export class ApiV1DirectiveService extends HttpService implements DirectiveService {
     constructor(
     private readonly apiV1Url: string,
     private readonly authToken: string
