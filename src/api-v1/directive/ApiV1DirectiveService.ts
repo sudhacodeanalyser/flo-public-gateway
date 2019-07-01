@@ -1,5 +1,5 @@
-import { HttpService } from '../../http/HttpService';
 import { DirectiveService } from '../../core/device/DirectiveService';
+import { HttpService } from '../../http/HttpService';
 
 export class ApiV1DirectiveService extends HttpService implements DirectiveService {
     constructor(
@@ -25,6 +25,16 @@ export class ApiV1DirectiveService extends HttpService implements DirectiveServi
       url: `${ this.apiV1Url }/directives/icd/${ id }/closevalve`,
       authToken: this.authToken
     };
+
+    await this.sendRequest(request);
+  }
+
+  public async reboot(id: string): Promise<void> {
+    const request = {
+      method: 'POST',
+      url: `${ this.apiV1Url }/directives/icd/${ id }/powerreset`,
+      authToken: this.authToken
+    }
 
     await this.sendRequest(request);
   }
