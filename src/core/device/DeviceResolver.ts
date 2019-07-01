@@ -100,12 +100,9 @@ class DeviceResolver extends Resolver<Device> {
     },
     installStatus: async (device: Device, shouldExpand = false) => {
       const onboardingLog = await this.onboardingLogTable.getCurrentState(device.id);
-      if (onboardingLog === null) {
-        return null;
-      }
       return {
-        isInstalled: true
-      };
+        isInstalled: onboardingLog !== null
+      }
     }
   };
   private locationResolverFactory: () => LocationResolver;
