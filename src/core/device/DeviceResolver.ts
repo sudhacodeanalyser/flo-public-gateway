@@ -104,8 +104,7 @@ class DeviceResolver extends Resolver<Device> {
         return null;
       }
       return {
-        isInstalled: true,
-        installedAt: onboardingLog.created_at
+        isInstalled: true
       };
     }
   };

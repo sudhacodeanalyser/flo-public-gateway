@@ -102,8 +102,7 @@ export interface Device extends Omit<DeviceUpdate, 'valve'>, TimestampedModel {
     updatedAt?: string
   };
   installStatus: {
-    isInstalled: boolean,
-    installedAt?: string
+    isInstalled: boolean
   };
 }
 

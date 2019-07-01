@@ -13,8 +13,8 @@ class OnboardingLogTable extends DatabaseTable<OnboardingLogRecord> {
 
   public async getCurrentState(icdId: string): Promise<OnboardingLogRecord | null> {
     const onboardingLogs = await this.query<DynamoDbQuery>({
-      KeyConditionExpression: '#icd_id = :icd_id',
-      FilterExpression: '#event >= :installed',
+      IndexName: 'EventIndex',
+      KeyConditionExpression: '#icd_id = :icd_id AND #event >= :installed',
       ExpressionAttributeNames: {
         '#icd_id': 'icd_id',
         '#event': 'event'
@@ -22,7 +22,8 @@ class OnboardingLogTable extends DatabaseTable<OnboardingLogRecord> {
       ExpressionAttributeValues: {
         ':icd_id': icdId,
         ':installed': 2
-      }
+      },
+      Limit: 1
     });
 
     return _.first(onboardingLogs) || null;
