@@ -1,19 +1,19 @@
 import { Container, inject } from 'inversify';
-import { BaseHttpController, httpDelete, httpGet, httpPost, interfaces, queryParam, requestBody, requestParam, request } from 'inversify-express-utils';
+import { BaseHttpController, httpDelete, httpGet, httpPost, interfaces, queryParam, request, requestBody, requestParam } from 'inversify-express-utils';
 import * as t from 'io-ts';
 import _ from 'lodash';
 import { PairingData, QrData, QrDataValidator } from '../../api-v1/pairing/PairingService';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import { InternalDeviceService } from '../../internal-device-service/InternalDeviceService';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
-import { Device, SystemMode as DeviceSystemMode, SystemModeCodec as DeviceSystemModeCodec, DeviceCreate, DeviceCreateValidator, DeviceUpdate, DeviceUpdateValidator } from '../api';
-import { authorizationHeader, createMethod, deleteMethod, asyncMethod, httpController, parseExpand } from '../api/controllerUtils';
+import { Device, DeviceCreate, DeviceCreateValidator, DeviceUpdate, DeviceUpdateValidator, SystemMode as DeviceSystemMode, SystemModeCodec as DeviceSystemModeCodec } from '../api';
+import { asyncMethod, authorizationHeader, createMethod, deleteMethod, httpController, parseExpand } from '../api/controllerUtils';
+import ResourceDoesNotExistError from "../api/error/ResourceDoesNotExistError";
 import Request from '../api/Request';
 import * as Responses from '../api/response';
 import { DeviceService } from '../service';
 import { DeviceSystemModeServiceFactory } from './DeviceSystemModeService';
 import { DirectiveServiceFactory } from './DirectiveService';
-import ResourceDoesNotExistError from "../api/error/ResourceDoesNotExistError";
 
 export function DeviceControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
@@ -54,7 +54,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       } else if (
         (revertMinutes !== undefined && revertMode === undefined) ||
         (revertMode !== undefined && revertMinutes === undefined) ||
-        (revertMinutes !== undefined && revertMode !== undefined && target !== DeviceSystemMode.SLEEP) 
+        (revertMinutes !== undefined && revertMode !== undefined && target !== DeviceSystemMode.SLEEP)
       ) {
         return false;
       } else {
@@ -200,8 +200,8 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     )
     @asyncMethod
     private async setDeviceSystemMode(
-      @request() req: Request, 
-      @requestParam('id') id: string, 
+      @request() req: Request,
+      @requestParam('id') id: string,
       @requestBody() data: SystemModeRequest
     ): Promise<Responses.DeviceResponse> {
       const deviceSystemModeService = this.deviceSystemModeServiceFactory.create(req);
@@ -218,9 +218,9 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
         await deviceSystemModeService.setSystemMode(id, data.target)
       }
 
-      // API v1 call needs to be made first to make sure we have permission to modify the 
+      // API v1 call needs to be made first to make sure we have permission to modify the
       // device record
-      const model = await this.deviceService.updatePartialDevice(id, { 
+      const model = await this.deviceService.updatePartialDevice(id, {
         systemMode: {
           shouldInherit: data.isLocked || data.shouldInherit === undefined ? false : data.shouldInherit,
           target: data.target,
@@ -229,7 +229,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
             revertMinutes: data.revertMinutes,
             revertScheduledAt: now
           })
-        } 
+        }
       });
       return Responses.Device.fromModel(model);
     }

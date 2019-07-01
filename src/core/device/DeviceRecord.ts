@@ -1,11 +1,8 @@
-import { $enum } from 'ts-enum-util';
 import _ from 'lodash';
-// These should likely go into a lookup table
-import { Device, SystemMode as DeviceSystemMode, ValveState, DeviceType, DeviceModelType } from '../api';
-import { NoYesUnsure } from '../api/NoYesUnsure';
-import { translateNumericToStringEnum, translateStringToNumericEnum } from '../api/enumUtils';
 import { morphism, StrictSchema } from 'morphism';
-import * as t from 'io-ts';
+// These should likely go into a lookup table
+import { Device, DeviceModelType, DeviceType, SystemMode as DeviceSystemMode, ValveState } from '../api';
+import { NoYesUnsure } from '../api/NoYesUnsure';
 
 export interface DeviceRecordData {
   id: string;
@@ -56,7 +53,10 @@ const RecordToModelSchema: StrictSchema<Device, DeviceRecordData>  = {
   valve: (input: DeviceRecordData) => ({
     target: input.target_valve_state
   }),
-  irrigationSchedule: () => undefined
+  irrigationSchedule: () => undefined,
+  installStatus: () => ({
+    isInstalled: false
+  })
 };
 
 const ModelToRecordSchema: StrictSchema<DeviceRecordData, Device> = {
