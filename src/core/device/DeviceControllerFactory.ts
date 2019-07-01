@@ -234,6 +234,23 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       return Responses.Device.fromModel(model);
     }
 
+    @httpPost('/:id/reset',
+      authWithId,
+      reqValidator.create(t.type({
+        params: t.type({
+          id: t.string
+        }),
+        body: t.type({
+          target: t.literal('power')
+        })
+      }))
+    )
+    @asyncMethod
+    private async rebootDevice(@request() req: Request, @requestParam('id') id: string): Promise<void> {
+      const directiveService = this.directiveServiceFactory.create(req);
+      return directiveService.reboot(id);
+    }
+
     private isSleep({ target, revertMinutes, revertMode }: SystemModeRequest): boolean {
       return revertMinutes !== undefined && revertMode !== undefined && target === DeviceSystemMode.SLEEP;
     }
