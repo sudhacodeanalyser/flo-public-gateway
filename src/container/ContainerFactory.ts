@@ -11,6 +11,7 @@ import kafkaContainerModule from '../kafka/containerModule';
 import internalDeviceServiceFetcherModule from '../internal-device-service/containerModule';
 import apiV1ContainerModule from '../api-v1/containerModule';
 import postgresContainerModule from '../database/pg/containerModule';
+import localizationContainerModule from '../localization/containerModule';
 
 // Core container modules
 import coreContainerModules from '../core/containerModule';
@@ -28,6 +29,7 @@ export default function ContainerFactory(container: Container = new Container())
     kafkaContainerModule,
     internalDeviceServiceFetcherModule,
     apiV1ContainerModule,
+    localizationContainerModule,
     postgresContainerModule,
     ...coreContainerModules
   );
