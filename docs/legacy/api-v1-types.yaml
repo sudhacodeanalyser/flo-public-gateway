@@ -1,0 +1,3827 @@
+components:
+  schemas:
+    DeviceId:
+      type: string
+      description: Physical ID of the device
+      example: ffffffffffff
+    OauthToken:
+      type: object
+      properties:
+        access_token:
+          type: string
+          format: JWT
+          description: |
+            JWT
+        token_type:
+          type: string
+          default: Bearer
+        refresh_token:
+          type: string
+          description: |
+            JWT
+        expires_in:
+          type: integer
+          description: |
+            Used to be 1d or 30d
+        expires_at:
+          type: string
+          format: date-time
+          description: |
+            ISO 8601
+        issued_at:
+          type: string
+          format: date-time
+          description: |
+            ISO 8601
+        user_id:
+          type: string
+          example: ffffffff-ffff-4fff-8fff-ffffffffffff
+          format: uuid
+      example:
+        access_token: >-
+          eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJmZmZmZmZmZi1mZmZmLTRmZmYtOGZmZi1mZmZmZmZmZmZmZmYiLCJ1c2VyX2lkIjoiZmZmZmZmZmYtZmZmZi00ZmZmLThmZmYtZmZmZmZmZmZmZmZmIiwiaWF0IjoxNTQ4NzQ0ODg2LCJleHAiOjE1NDg4MzEyODYsImp0aSI6ImZmZmZmZmZmLWZmZmYtNGZmZi04ZmZmLWZmZmZmZmZmZmZmZiJ9.Xh7tDNBCHUZBr_oqolwYUJVkSBm3BGiXli76qjldZD8
+        token_type: Bearer
+        refresh_token: >-
+          eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJmZmZmZmZmZi1mZmZmLTRmZmYtOGZmZi1mZmZmZmZmZmZmZmYiLCJ1c2VyX2lkIjoiZmZmZmZmZmYtZmZmZi00ZmZmLThmZmYtZmZmZmZmZmZmZmZmIiwiaWF0IjoxNTQ4NzQ0ODg2LCJleHAiOjE1NDg4MzEyODYsImp0aSI6ImZmZmZmZmZmLWZmZmYtNGZmZi04ZmZmLWZmZmZmZmZmZmZmZiJ9.Xh7tDNBCHUZBr_oqolwYUJVkSBm3BGiXli76qjldZD8
+        expires_in: 86400
+        expires_at: '2019-01-01T16:58:51.639Z'
+        issued_at: '2019-01-01T16:58:51.639Z'
+        user_id: ffffffff-ffff-4fff-8fff-ffffffffffff
+    OauthPayload:
+      description: Oauth payload
+      type: object
+      properties:
+        client_id:
+          type: string
+          example: ffffffff-ffff-4fff-8fff-ffffffffffff
+          format: uuid
+        client_secret:
+          type: string
+        grant_type:
+          type: string
+          default: password
+        username:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+      required:
+        - client_id
+        - client_secret
+        - grant_type
+        - username
+        - password
+      example:
+        client_id: ffffffff-ffff-4fff-8fff-ffffffffffff
+        client_secret: ffffffff-ffff-4fff-8fff-ffffffffffff
+        grant_type: password
+        username: user@example.com
+        password: ffffffff
+    VerifyOauthToken:
+      type: object
+      properties:
+        token:
+          type: string
+          description: Registration token
+        client_id:
+          type: string
+          example: ffffffff-ffff-4fff-8fff-ffffffffffff
+          format: uuid
+          description: ID of the client application
+        client_secret:
+          type: string
+          description: >-
+            Secret to authenticate the client application, only required if the
+            client has been issued a secret. If the client is public (i.e.
+            non-confidential), such as a mobile app, then repeat the client_id
+            as the client_secret
+      example:
+        client_id: ffffffff-ffff-4fff-8fff-ffffffffffff
+        client_secret: ffffffff-ffff-4fff-8fff-ffffffffffff
+        token: ffffffffffff
+    Irrigation:
+      description: Irrigation Schedule
+      type: object
+      properties:
+        created_at:
+          type: string
+          format: date-time
+          description: Time at which the state was changed
+        is_enabled:
+          type: boolean
+          description: >-
+            Whether the device is using irrigation schedule during away mode or
+            not
+        device_id:
+          $ref: '#/components/schemas/DeviceId'
+        times:
+          type: array
+          items:
+            type: array
+            items:
+              type: integer
+          description: >
+            `Optional<List<List<HourMinuteSeconds>>>
+            (Optional<List<List<<String>>>)``
+
+            A list of paired start and end times of irrigation events. May be
+            null, undefined, or empty.
+          example:
+            - - '0:48:19'
+              - '1:49:20'
+            - - '11:08:09'
+              - '11:35:12'
+        status:
+          type: string
+          description: |
+            ComputationStatus (String)
+            Status of the irrigation schedule computation.
+          enum:
+            - schedule_found
+            - schedule_not_found
+            - no_irrigation_in_home
+            - learning
+            - internal_error
+      required:
+        - times
+      example:
+        device_id: ffffffffffff
+        times:
+          - - '0:48:19'
+            - '1:49:20'
+          - - '11:08:09'
+            - '11:35:12'
+        status: schedule_found
+    Certificates:
+      description: |
+        The same data as scanning a QR code for an already paired device
+      type: object
+      properties:
+        id:
+          type: string
+          example: ffffffff-ffff-4fff-8fff-ffffffffffff
+          format: uuid
+          description: StockICD table ID
+        ap_name:
+          type: string
+          description: Device access point SSID
+          example: Flo-0000
+        ap_password:
+          type: string
+          description: Device access point password
+          example: ffffffff
+        device_id:
+          $ref: '#/components/schemas/DeviceId'
+        login_token:
+          type: string
+          description: Device login token
+          example: >-
+            eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJmZmZmZmZmZi1mZmZmLTRmZmYtOGZmZi1mZmZmZmZmZmZmZmYiLCJ1c2VyX2lkIjoiZmZmZmZmZmYtZmZmZi00ZmZmLThmZmYtZmZmZmZmZmZmZmZmIiwiaWF0IjoxNTQ4NzQ0ODg2LCJleHAiOjE1NDg4MzEyODYsImp0aSI6ImZmZmZmZmZmLWZmZmYtNGZmZi04ZmZmLWZmZmZmZmZmZmZmZiJ9.Xh7tDNBCHUZBr_oqolwYUJVkSBm3BGiXli76qjldZD8
+        client_cert:
+          type: string
+          description: MQTT client certificate
+          example: >-
+            LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUVYRENDQTBTZ0F3SUJBZ0lFT0dPNVpqQU5CZ2txaGtpRzl3MEJBUVVGQURDQnRERVVNQklHQTFVRUNoTUwKUlc1MGNuVnpkQzV1WlhReFFEQStCZ05WQkFzVU4zZDNkeTVsYm5SeWRYTjBMbTVsZEM5RFVGTmZNakEwT0NCcApibU52Y25BdUlHSjVJSEpsWmk0Z0tHeHBiV2wwY3lCc2FXRmlMaWt4SlRBakJnTlZCQXNUSENoaktTQXhPVGs1CklFVnVkSEoxYzNRdWJtVjBJRXhwYldsMFpXUXhNekF4QmdOVkJBTVRLa1Z1ZEhKMWMzUXVibVYwSUVObGNuUnAKWm1sallYUnBiMjRnUVhWMGFHOXlhWFI1SUNneU1EUTRLVEFlRncwNU9URXlNalF4TnpVd05URmFGdzB4T1RFeQpNalF4T0RJd05URmFNSUcwTVJRd0VnWURWUVFLRXd0RmJuUnlkWE4wTG01bGRERkFNRDRHQTFVRUN4UTNkM2QzCkxtVnVkSEoxYzNRdWJtVjBMME5RVTE4eU1EUTRJR2x1WTI5eWNDNGdZbmtnY21WbUxpQW9iR2x0YVhSeklHeHAKWVdJdUtURWxNQ01HQTFVRUN4TWNLR01wSURFNU9Ua2dSVzUwY25WemRDNXVaWFFnVEdsdGFYUmxaREV6TURFRwpBMVVFQXhNcVJXNTBjblZ6ZEM1dVpYUWdRMlZ5ZEdsbWFXTmhkR2x2YmlCQmRYUm9iM0pwZEhrZ0tESXdORGdwCk1JSUJJakFOQmdrcWhraUc5dzBCQVFFRkFBT0NBUThBTUlJQkNnS0NBUUVBclUxTHFSS0dzdXFqSUFjVkZtUXEKSzB2UnZ3dEtUWTd0Z0hhbFo3ZDRRTUJ6UXNob3dOdFRLOTFldUhhWU5aT0xHcDE4RXpvT0gxdTNIcy9sSkJRZQpzWUdwalgyNHpHdExBL0VDRE55cnBVQWtBSDkwbEtHZENDbXppQXYxaDNlZFZjM2t3MzdYYW1TcmhSU0dsVnVYCk1sQnZQY2k2Wmd6ai9MMjRTY0YyaVVrWi9jQ292WW1qWnkvR243eHhHV0M0TGVrc3laQjJabnVVNHE5NDFtVlQKWFR6V25MTFBLUVA1TDZSUXN0Ukl6Z1V5VllyOXNtUk1EdVNZQjNYYmY5KzVDRlZnaFRBcCtYdElwR21HNHpVLwpIb1pkZW5vVnZlOEFqaFVpVkJjQWtDYVR2QTVKYUpHLytFZlRuWlZDd1E1TjMyOG16OE1ZSVdKbVEzRFcxY0FICjRRSURBUUFCbzNRd2NqQVJCZ2xnaGtnQmh2aENBUUVFQkFNQ0FBY3dId1lEVlIwakJCZ3dGb0FVVmVTQjBSR0EKdnRpSnVRaWpNZm1oSkFrV3VYQXdIUVlEVlIwT0JCWUVGRlhrZ2RFUmdMN1lpYmtJb3pINW9TUUpGcmx3TUIwRwpDU3FHU0liMmZRZEJBQVFRTUE0YkNGWTFMakE2TkM0d0F3SUVrREFOQmdrcWhraUc5dzBCQVFVRkFBT0NBUUVBCldVZXNJWVNLRjhtY2lWTWV1b0NGR3NZOFRqNnhuTFo4eHBKZEdHUUM0OU1HQ0JGaGZHUGpLNTB4QTNCMjBxTW8Kb1BTN21tTno3VzNsS3R2dEZLa3J4allSMEN2ckI0dWwycDVjR1oxV0V2VlVLY2dGN2JJU0tvMzBBeHYvNTVJUQpoN0E2dGNPZEJUY1NvOGYwRmJuVnBEa1dtMU02STVIeHFJS2lhb2hvd1hrQ0lyeXFwdGF1MzdBVVg3aUgwTjE4CmYzdi9yeHpQNXRzSHJWN2JoWjNRS3cwejJ3VFI1a2xBRXl0Mit6N3BuSWtQRmM0WXNJVjRJVTlyVHc3Nk5tZk4KQi9ML0NORGkzdG0vS3ErNGg0WWhQQVRLdDVSb2Y4ODg2WmpYT1Avc3dObFE4QzVMV0s1R2I5QXV3MkRhY2xWeQp2VXhGbm1HNnY0U0JrZ1BSMG1sOHhRPT0KLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=
+        client_key:
+          type: string
+          description: MQTT client key
+          example: >-
+            LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQpNSUlDV3dJQkFBS0JnUURNeGIvUHZSQVc5YkJ0TzA0M2JXMFpMRWNCZS93bWJEbG52bm4rR1dENkpRdVpjN3pWCldGN0FTSXkvb3BZY2lxS1FXOEp6cmwvZnVoWm1EaHZ6ZFpRMlViTEtKUnFEbFRQdFptdDFvWnNjL0F0WVBzWXYKZVp6OWpxcmNEK1E3dXNZYnpqTnV1UW9qR24vQXg1K3QyUmNjb3QzZFFuVFJtcGpVTDY4bXdzeVord0lEQVFBQgpBb0dBUmc3cC94TDZMRURHcWJoK25Dd09CV3pHcGxWYkFYSkplWnNMZGNvTkNjZ2UzZE5oS2NUZ05mMGNXbnd2CnkzZ0xBa1RDbEgxMlE3OFE1cjJ4Qm15VjFocXlFYjlscklxQWxTUzVHam5UV1doeXpzcGNqS1pXUjVQQWpPWW8KTGx4TnBDZWdXRWpPVXBENEx3Zjl5akV1K3hyREdWbXNMRjBQUFJrQU0zMnFoOUVDUVFEMXZ6eUZyL2hTbjdSaAo2SUZGYkxBVmtJdnN5KzFDYTd0RjYvN2J5SENkd3FTNW9VS2FZKzlEQXIwVEUrYnI4N04ySXpVQ1U1WDdDdjc0Cm0rWWlxaEJsQWtFQTFWRGZwcThwdXlJcTJGNkZ0eDB4cFlNdjZYS2h1UnlBemlUL0R6SUJkRlZlT01JZ1V1azAKN0U0VzBOL2dEbVVtRVFGbDNIWXpVZmRaclRVS3pqenEzd0pBWmZsc0tPR0RmdTJza1hCRXJFVlVzQzRpRWlueApFejNYSVVXenBRb0F5VVlxeXFqREZZUGdsZ0w5Nkh1NnVEQ1JTTFdGV3FqS3RMaTBZdjkyT080dkRRSkFTdUFrCllRSERDQ2lxR1dDMFZ0NHNld2hkWFBnYnhEbzVEQ0w0VklFYytaU3RpZ2E2Q2VCSjcxaEpzZStqV2VvdlBuRGIKTEZOaEdEaFdoZkhFWlRnRXlRSkFYTnV5cERTNWw3M0xQdmMreWR1UFppTkV0d2FlOUtiV2FaVXdDNjgzYTgxcwpta1Q3dXJvTll5SzlwdFpyei9MTUpKb3RrcUNqaWdYYUEza3V6dU5VQ1E9PQotLS0tLUVORCBSU0EgUFJJVkFURSBLRVktLS0tLQo
+        server_cert:
+          type: string
+          description: MQTT CA file
+          example: >-
+            LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUVYRENDQTBTZ0F3SUJBZ0lFT0dPNVpqQU5CZ2txaGtpRzl3MEJBUVVGQURDQnRERVVNQklHQTFVRUNoTUwKUlc1MGNuVnpkQzV1WlhReFFEQStCZ05WQkFzVU4zZDNkeTVsYm5SeWRYTjBMbTVsZEM5RFVGTmZNakEwT0NCcApibU52Y25BdUlHSjVJSEpsWmk0Z0tHeHBiV2wwY3lCc2FXRmlMaWt4SlRBakJnTlZCQXNUSENoaktTQXhPVGs1CklFVnVkSEoxYzNRdWJtVjBJRXhwYldsMFpXUXhNekF4QmdOVkJBTVRLa1Z1ZEhKMWMzUXVibVYwSUVObGNuUnAKWm1sallYUnBiMjRnUVhWMGFHOXlhWFI1SUNneU1EUTRLVEFlRncwNU9URXlNalF4TnpVd05URmFGdzB4T1RFeQpNalF4T0RJd05URmFNSUcwTVJRd0VnWURWUVFLRXd0RmJuUnlkWE4wTG01bGRERkFNRDRHQTFVRUN4UTNkM2QzCkxtVnVkSEoxYzNRdWJtVjBMME5RVTE4eU1EUTRJR2x1WTI5eWNDNGdZbmtnY21WbUxpQW9iR2x0YVhSeklHeHAKWVdJdUtURWxNQ01HQTFVRUN4TWNLR01wSURFNU9Ua2dSVzUwY25WemRDNXVaWFFnVEdsdGFYUmxaREV6TURFRwpBMVVFQXhNcVJXNTBjblZ6ZEM1dVpYUWdRMlZ5ZEdsbWFXTmhkR2x2YmlCQmRYUm9iM0pwZEhrZ0tESXdORGdwCk1JSUJJakFOQmdrcWhraUc5dzBCQVFFRkFBT0NBUThBTUlJQkNnS0NBUUVBclUxTHFSS0dzdXFqSUFjVkZtUXEKSzB2UnZ3dEtUWTd0Z0hhbFo3ZDRRTUJ6UXNob3dOdFRLOTFldUhhWU5aT0xHcDE4RXpvT0gxdTNIcy9sSkJRZQpzWUdwalgyNHpHdExBL0VDRE55cnBVQWtBSDkwbEtHZENDbXppQXYxaDNlZFZjM2t3MzdYYW1TcmhSU0dsVnVYCk1sQnZQY2k2Wmd6ai9MMjRTY0YyaVVrWi9jQ292WW1qWnkvR243eHhHV0M0TGVrc3laQjJabnVVNHE5NDFtVlQKWFR6V25MTFBLUVA1TDZSUXN0Ukl6Z1V5VllyOXNtUk1EdVNZQjNYYmY5KzVDRlZnaFRBcCtYdElwR21HNHpVLwpIb1pkZW5vVnZlOEFqaFVpVkJjQWtDYVR2QTVKYUpHLytFZlRuWlZDd1E1TjMyOG16OE1ZSVdKbVEzRFcxY0FICjRRSURBUUFCbzNRd2NqQVJCZ2xnaGtnQmh2aENBUUVFQkFNQ0FBY3dId1lEVlIwakJCZ3dGb0FVVmVTQjBSR0EKdnRpSnVRaWpNZm1oSkFrV3VYQXdIUVlEVlIwT0JCWUVGRlhrZ2RFUmdMN1lpYmtJb3pINW9TUUpGcmx3TUIwRwpDU3FHU0liMmZRZEJBQVFRTUE0YkNGWTFMakE2TkM0d0F3SUVrREFOQmdrcWhraUc5dzBCQVFVRkFBT0NBUUVBCldVZXNJWVNLRjhtY2lWTWV1b0NGR3NZOFRqNnhuTFo4eHBKZEdHUUM0OU1HQ0JGaGZHUGpLNTB4QTNCMjBxTW8Kb1BTN21tTno3VzNsS3R2dEZLa3J4allSMEN2ckI0dWwycDVjR1oxV0V2VlVLY2dGN2JJU0tvMzBBeHYvNTVJUQpoN0E2dGNPZEJUY1NvOGYwRmJuVnBEa1dtMU02STVIeHFJS2lhb2hvd1hrQ0lyeXFwdGF1MzdBVVg3aUgwTjE4CmYzdi9yeHpQNXRzSHJWN2JoWjNRS3cwejJ3VFI1a2xBRXl0Mit6N3BuSWtQRmM0WXNJVjRJVTlyVHc3Nk5tZk4KQi9ML0NORGkzdG0vS3ErNGg0WWhQQVRLdDVSb2Y4ODg2WmpYT1Avc3dObFE4QzVMV0s1R2I5QXV3MkRhY2xWeQp2VXhGbm1HNnY0U0JrZ1BSMG1sOHhRPT0KLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=
+        websocket_cert:
+          type: string
+          description: Websocket certificate
+          example: >-
+            LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUVYRENDQTBTZ0F3SUJBZ0lFT0dPNVpqQU5CZ2txaGtpRzl3MEJBUVVGQURDQnRERVVNQklHQTFVRUNoTUwKUlc1MGNuVnpkQzV1WlhReFFEQStCZ05WQkFzVU4zZDNkeTVsYm5SeWRYTjBMbTVsZEM5RFVGTmZNakEwT0NCcApibU52Y25BdUlHSjVJSEpsWmk0Z0tHeHBiV2wwY3lCc2FXRmlMaWt4SlRBakJnTlZCQXNUSENoaktTQXhPVGs1CklFVnVkSEoxYzNRdWJtVjBJRXhwYldsMFpXUXhNekF4QmdOVkJBTVRLa1Z1ZEhKMWMzUXVibVYwSUVObGNuUnAKWm1sallYUnBiMjRnUVhWMGFHOXlhWFI1SUNneU1EUTRLVEFlRncwNU9URXlNalF4TnpVd05URmFGdzB4T1RFeQpNalF4T0RJd05URmFNSUcwTVJRd0VnWURWUVFLRXd0RmJuUnlkWE4wTG01bGRERkFNRDRHQTFVRUN4UTNkM2QzCkxtVnVkSEoxYzNRdWJtVjBMME5RVTE4eU1EUTRJR2x1WTI5eWNDNGdZbmtnY21WbUxpQW9iR2x0YVhSeklHeHAKWVdJdUtURWxNQ01HQTFVRUN4TWNLR01wSURFNU9Ua2dSVzUwY25WemRDNXVaWFFnVEdsdGFYUmxaREV6TURFRwpBMVVFQXhNcVJXNTBjblZ6ZEM1dVpYUWdRMlZ5ZEdsbWFXTmhkR2x2YmlCQmRYUm9iM0pwZEhrZ0tESXdORGdwCk1JSUJJakFOQmdrcWhraUc5dzBCQVFFRkFBT0NBUThBTUlJQkNnS0NBUUVBclUxTHFSS0dzdXFqSUFjVkZtUXEKSzB2UnZ3dEtUWTd0Z0hhbFo3ZDRRTUJ6UXNob3dOdFRLOTFldUhhWU5aT0xHcDE4RXpvT0gxdTNIcy9sSkJRZQpzWUdwalgyNHpHdExBL0VDRE55cnBVQWtBSDkwbEtHZENDbXppQXYxaDNlZFZjM2t3MzdYYW1TcmhSU0dsVnVYCk1sQnZQY2k2Wmd6ai9MMjRTY0YyaVVrWi9jQ292WW1qWnkvR243eHhHV0M0TGVrc3laQjJabnVVNHE5NDFtVlQKWFR6V25MTFBLUVA1TDZSUXN0Ukl6Z1V5VllyOXNtUk1EdVNZQjNYYmY5KzVDRlZnaFRBcCtYdElwR21HNHpVLwpIb1pkZW5vVnZlOEFqaFVpVkJjQWtDYVR2QTVKYUpHLytFZlRuWlZDd1E1TjMyOG16OE1ZSVdKbVEzRFcxY0FICjRRSURBUUFCbzNRd2NqQVJCZ2xnaGtnQmh2aENBUUVFQkFNQ0FBY3dId1lEVlIwakJCZ3dGb0FVVmVTQjBSR0EKdnRpSnVRaWpNZm1oSkFrV3VYQXdIUVlEVlIwT0JCWUVGRlhrZ2RFUmdMN1lpYmtJb3pINW9TUUpGcmx3TUIwRwpDU3FHU0liMmZRZEJBQVFRTUE0YkNGWTFMakE2TkM0d0F3SUVrREFOQmdrcWhraUc5dzBCQVFVRkFBT0NBUUVBCldVZXNJWVNLRjhtY2lWTWV1b0NGR3NZOFRqNnhuTFo4eHBKZEdHUUM0OU1HQ0JGaGZHUGpLNTB4QTNCMjBxTW8Kb1BTN21tTno3VzNsS3R2dEZLa3J4allSMEN2ckI0dWwycDVjR1oxV0V2VlVLY2dGN2JJU0tvMzBBeHYvNTVJUQpoN0E2dGNPZEJUY1NvOGYwRmJuVnBEa1dtMU02STVIeHFJS2lhb2hvd1hrQ0lyeXFwdGF1MzdBVVg3aUgwTjE4CmYzdi9yeHpQNXRzSHJWN2JoWjNRS3cwejJ3VFI1a2xBRXl0Mit6N3BuSWtQRmM0WXNJVjRJVTlyVHc3Nk5tZk4KQi9ML0NORGkzdG0vS3ErNGg0WWhQQVRLdDVSb2Y4ODg2WmpYT1Avc3dObFE4QzVMV0s1R2I5QXV3MkRhY2xWeQp2VXhGbm1HNnY0U0JrZ1BSMG1sOHhRPT0KLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=
+        websocket_cert_der:
+          type: string
+          description: Websocket certificate in DER format
+          example: >-
+            MIIEXDCCA0SgAwIBAgIEOGO5ZjANBgkqhkiG9w0BAQUFADCBtDEUMBIGA1UEChMLRW50cnVzdC5uZXQxQDA+BgNVBAsUN3d3dy5lbnRydXN0Lm5ldC9DUFNfMjA0OCBpbmNvcnAuIGJ5IHJlZi4gKGxpbWl0cyBsaWFiLikxJTAjBgNVBAsTHChjKSAxOTk5IEVudHJ1c3QubmV0IExpbWl0ZWQxMzAxBgNVBAMTKkVudHJ1c3QubmV0IENlcnRpZmljYXRpb24gQXV0aG9yaXR5ICgyMDQ4KTAeFw05OTEyMjQxNzUwNTFaFw0xOTEyMjQxODIwNTFaMIG0MRQwEgYDVQQKEwtFbnRydXN0Lm5ldDFAMD4GA1UECxQ3d3d3LmVudHJ1c3QubmV0L0NQU18yMDQ4IGluY29ycC4gYnkgcmVmLiAobGltaXRzIGxpYWIuKTElMCMGA1UECxMcKGMpIDE5OTkgRW50cnVzdC5uZXQgTGltaXRlZDEzMDEGA1UEAxMqRW50cnVzdC5uZXQgQ2VydGlmaWNhdGlvbiBBdXRob3JpdHkgKDIwNDgpMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEArU1LqRKGsuqjIAcVFmQqK0vRvwtKTY7tgHalZ7d4QMBzQshowNtTK91euHaYNZOLGp18EzoOH1u3Hs/lJBQesYGpjX24zGtLA/ECDNyrpUAkAH90lKGdCCmziAv1h3edVc3kw37XamSrhRSGlVuXMlBvPci6Zgzj/L24ScF2iUkZ/cCovYmjZy/Gn7xxGWC4LeksyZB2ZnuU4q941mVTXTzWnLLPKQP5L6RQstRIzgUyVYr9smRMDuSYB3Xbf9+5CFVghTAp+XtIpGmG4zU/HoZdenoVve8AjhUiVBcAkCaTvA5JaJG/+EfTnZVCwQ5N328mz8MYIWJmQ3DW1cAH4QIDAQABo3QwcjARBglghkgBhvhCAQEEBAMCAAcwHwYDVR0jBBgwFoAUVeSB0RGAvtiJuQijMfmhJAkWuXAwHQYDVR0OBBYEFFXkgdERgL7YibkIozH5oSQJFrlwMB0GCSqGSIb2fQdBAAQQMA4bCFY1LjA6NC4wAwIEkDANBgkqhkiG9w0BAQUFAAOCAQEAWUesIYSKF8mciVMeuoCFGsY8Tj6xnLZ8xpJdGGQC49MGCBFhfGPjK50xA3B20qMooPS7mmNz7W3lKtvtFKkrxjYR0CvrB4ul2p5cGZ1WEvVUKcgF7bISKo30Axv/55IQh7A6tcOdBTcSo8f0FbnVpDkWm1M6I5HxqIKiaohowXkCIryqptau37AUX7iH0N18f3v/rxzP5tsHrV7bhZ3QKw0z2wTR5klAEyt2+z7pnIkPFc4YsIV4IU9rTw76NmfNB/L/CNDi3tm/Kq+4h4YhPATKt5Rof8886ZjXOP/swNlQ8C5LWK5Gb9Auw2DaclVyvUxFnmG6v4SBkgPR0ml8xQ==
+        websocket_key:
+          type: string
+          description: Websocket key
+          example: >-
+            LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQpNSUlDV3dJQkFBS0JnUURNeGIvUHZSQVc5YkJ0TzA0M2JXMFpMRWNCZS93bWJEbG52bm4rR1dENkpRdVpjN3pWCldGN0FTSXkvb3BZY2lxS1FXOEp6cmwvZnVoWm1EaHZ6ZFpRMlViTEtKUnFEbFRQdFptdDFvWnNjL0F0WVBzWXYKZVp6OWpxcmNEK1E3dXNZYnpqTnV1UW9qR24vQXg1K3QyUmNjb3QzZFFuVFJtcGpVTDY4bXdzeVord0lEQVFBQgpBb0dBUmc3cC94TDZMRURHcWJoK25Dd09CV3pHcGxWYkFYSkplWnNMZGNvTkNjZ2UzZE5oS2NUZ05mMGNXbnd2CnkzZ0xBa1RDbEgxMlE3OFE1cjJ4Qm15VjFocXlFYjlscklxQWxTUzVHam5UV1doeXpzcGNqS1pXUjVQQWpPWW8KTGx4TnBDZWdXRWpPVXBENEx3Zjl5akV1K3hyREdWbXNMRjBQUFJrQU0zMnFoOUVDUVFEMXZ6eUZyL2hTbjdSaAo2SUZGYkxBVmtJdnN5KzFDYTd0RjYvN2J5SENkd3FTNW9VS2FZKzlEQXIwVEUrYnI4N04ySXpVQ1U1WDdDdjc0Cm0rWWlxaEJsQWtFQTFWRGZwcThwdXlJcTJGNkZ0eDB4cFlNdjZYS2h1UnlBemlUL0R6SUJkRlZlT01JZ1V1azAKN0U0VzBOL2dEbVVtRVFGbDNIWXpVZmRaclRVS3pqenEzd0pBWmZsc0tPR0RmdTJza1hCRXJFVlVzQzRpRWlueApFejNYSVVXenBRb0F5VVlxeXFqREZZUGdsZ0w5Nkh1NnVEQ1JTTFdGV3FqS3RMaTBZdjkyT080dkRRSkFTdUFrCllRSERDQ2lxR1dDMFZ0NHNld2hkWFBnYnhEbzVEQ0w0VklFYytaU3RpZ2E2Q2VCSjcxaEpzZStqV2VvdlBuRGIKTEZOaEdEaFdoZkhFWlRnRXlRSkFYTnV5cERTNWw3M0xQdmMreWR1UFppTkV0d2FlOUtiV2FaVXdDNjgzYTgxcwpta1Q3dXJvTll5SzlwdFpyei9MTUpKb3RrcUNqaWdYYUEza3V6dU5VQ1E9PQotLS0tLUVORCBSU0EgUFJJVkFURSBLRVktLS0tLQo
+    Error:
+      description: Error descriptor.
+      type: object
+      properties:
+        error:
+          description: Description of the error.
+          type: string
+        message:
+          description: Request ID (same as in X-MEN-RequestID header).
+          type: string
+      example:
+        error: true
+        message: >-
+          Sorry, there was a problem processing your request. Please try again
+          later or call support.
+    Region:
+      description: Region
+      type: object
+      properties:
+        name:
+          type: string
+          description: Full name of the region
+        abbrev:
+          type: string
+          description: Abbrevation of the name of the region
+        timezones:
+          $ref: '#/components/schemas/TimeZones'
+      required:
+        - name
+        - abbrev
+        - timezones
+      example:
+        name: Australian Capital Territory
+        abbrev: ACT
+        timezones:
+          - tz: Australia/ACT
+            display: 'UTC+10:00 AEST (ACT)'
+    TimeZone:
+      description: TimeZone
+      type: object
+      properties:
+        tz:
+          type: string
+          description: The IANA identifier for a timezone
+        display:
+          type: string
+          description: The description of the timezone
+      required:
+        - tz
+      example:
+        tz: Australia/ACT
+        display: 'UTC+10:00 AEST (ACT)'
+    Locale:
+      description: Locale
+      type: object
+      properties:
+        name:
+          type: string
+          description: Displayable name of locale
+        locale:
+          type: string
+          description: ID of locale
+        regions:
+          type: array
+          description: Array of Region
+          items:
+            $ref: '#/components/schemas/Region'
+        timezones:
+          type: array
+          description: Array of TimeZone
+          items:
+            $ref: '#/components/schemas/TimeZone'
+      required:
+        - name
+        - locale
+      example:
+        name: United States
+        locale: us
+    Locales:
+      description: Locales
+      type: object
+      properties:
+        locales:
+          type: array
+          items:
+            $ref: '#/components/schemas/Locale'
+      example:
+        locales:
+          - name: United Kingdom
+            locale: uk
+          - name: Switzerland
+            locale: ch
+          - name: United States
+            locale: us
+          - name: Germany
+            locale: de
+          - name: Australia
+            locale: au
+    Regions:
+      description: Regions
+      type: array
+      items:
+        $ref: '#/components/schemas/Region'
+      example:
+        - name: Australian Capital Territory
+          timezones:
+            - tz: Australia/ACT
+              display: 'UTC+10:00 AEST (ACT)'
+          abbrev: ACT
+        - name: New South Wales
+          timezones:
+            - tz: Australia/NSW
+              display: 'UTC+10:00 AEST (NSW)'
+          abbrev: NSW
+        - name: Northern Territory
+          timezones:
+            - tz: Australia/North
+              display: 'UTC+09:30 ACST (North)'
+          abbrev: NT
+        - name: Queensland
+          timezones:
+            - tz: Australia/Queensland
+              display: 'UTC+10:00 AEST (Queensland)'
+          abbrev: QLD
+        - name: South Australia
+          timezones:
+            - tz: Australia/South
+              display: 'UTC+09:30 ACST (South)'
+          abbrev: SA
+        - name: Tasmania
+          timezones:
+            - tz: Australia/Tasmania
+              display: 'UTC+10:00 AEST (Tasmania)'
+          abbrev: TAS
+        - name: Victoria
+          timezones:
+            - tz: Australia/Victoria
+              display: 'UTC+10:00 AEST (Victoria)'
+          abbrev: VIC
+        - name: Western Australia
+          timezones:
+            - tz: Australia/West
+              display: 'UTC+08:00 AWST (West)'
+              abbrev: WA
+    TimeZones:
+      description: TimeZones
+      type: array
+      items:
+        $ref: '#/components/schemas/TimeZone'
+      example:
+        - tz: Australia/NSW
+          display: 'UTC+10:00 AEST (NSW)'
+        - tz: Australia/Queensland
+          display: 'UTC+10:00 AEST (Queensland)'
+        - tz: Australia/South
+          display: 'UTC+09:30 ACST (South)'
+        - tz: Australia/Tasmania
+          display: 'UTC+10:00 AEST (Tasmania)'
+        - tz: Australia/Victoria
+          display: 'UTC+10:00 AEST (Victoria)'
+        - tz: Australia/West
+          display: 'UTC+08:00 AWST (West)'
+        - tz: Australia/ACT
+          display: 'UTC+10:00 AEST (ACT)'
+        - tz: Australia/North
+          display: 'UTC+09:30 ACST (North)'
+    Unit:
+      description: Unit
+      type: object
+      properties:
+        abbrev:
+          description: Abbrevation
+          type: string
+          example: F
+        name:
+          description: Name
+          type: string
+          example: Fahrenheit
+      required:
+        - name
+      example:
+        name: Fahrenheit
+        abbrev: F
+    LocaleUnit:
+      description: Map of measurement to units
+      type: object
+      properties:
+        temperature:
+          description: Identifier of the system. Pass this to User Details.
+          $ref: '#/components/schemas/Unit'
+          example:
+            name: Fahrenheit
+            abbrev: F
+        pressure:
+          description: Display name of the system
+          $ref: '#/components/schemas/Unit'
+          example:
+            name: PSI
+            abbrev: psi
+        volume:
+          description: Map of measurement to units
+          $ref: '#/components/schemas/Unit'
+          example:
+            name: Gallon
+            abbrev: gal
+      required:
+        - temperature
+        - pressure
+        - volume
+      example:
+        temperature:
+          name: Fahrenheit
+          abbrev: F
+        pressure:
+          name: PSI
+          abbrev: psi
+        volume:
+          name: Gallon
+          abbrev: gal
+    LocaleUnitSystem:
+      description: LocaleUnitSystem
+      type: object
+      properties:
+        id:
+          description: Identifier of the system. Pass this to User Details.
+          type: string
+          example: imperial_us
+        name:
+          description: Display name of the system
+          type: string
+          example: Imperial
+        units:
+          description: Map of measurement to units
+          $ref: '#/components/schemas/LocaleUnit'
+      required:
+        - id
+        - name
+        - units
+      example:
+        id: imperial_us
+        name: Imperial
+        units:
+          temperature:
+            name: Fahrenheit
+            abbrev: F
+          pressure:
+            name: PSI
+            abbrev: psi
+          volume:
+            name: Gallon
+            abbrev: gal
+    LocaleUnitSystems:
+      description: LocaleUnitSystems
+      type: object
+      properties:
+        systems:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocaleUnitSystem'
+      example:
+        systems:
+          - id: imperial_us
+            name: Imperial
+            units:
+              pressure:
+                name: PSI
+                abbrev: psi
+              volume:
+                name: Gallon
+                abbrev: gal
+              temperature:
+                name: Fahrenheit
+                abbrev: F
+          - id: metric_kpa
+            name: Metric
+            units:
+              pressure:
+                name: kPa
+                abbrev: kPa
+              volume:
+                name: Liter
+                abbrev: L
+              temperature:
+                name: Celsius
+                abbrev: C
+          - id: metric_bar
+            name: Metric
+            units:
+              pressure:
+                name: Bar
+                abbrev: bar
+              volume:
+                name: Liter
+                abbrev: L
+              temperature:
+                name: Celsius
+                abbrev: C
+    PendingAlert:
+      description: PendingAlert
+      type: object
+      properties:
+        severity:
+          type: integer
+          format: int32
+          example: 2
+        total:
+          type: integer
+          format: int32
+          example: 26
+        alarm_ids:
+          type: array
+          items:
+            type: object
+            properties:
+              alarm_id:
+                type: integer
+                format: int32
+                example: 15
+              total:
+                type: integer
+                format: int32
+                example: 26
+              system_modes:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    system_mode:
+                      type: integer
+                      format: int32
+                      example: 3
+                    total:
+                      type: integer
+                      format: int32
+                      example: 26
+                    alerts:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/Alert'
+      example:
+        severity: 2
+        total: 2
+        alarm_ids:
+          - alarm_id: 15
+            total: 1
+            system_modes:
+              - system_mode: 3
+                total: 1
+                alerts:
+                  - is_cleared: false
+                    severity: 2
+                    updated_at: '2019-01-31t07:07:17.510Z'
+                    incident_id: ffffffff-ffff-4fff-8fff-ffffffffffff
+                    alarm_id: 33
+                    alarm_id_system_mode: '33_2'
+                    icd_id: ffffffff-ffff-4fff-8fff-ffffffffffff
+                    incident_time: '2019-01-31t07:07:16.704Z'
+                    status: 3
+                    system_mode: 2
+                    telemetry_data:
+                      pmax: -1
+                      tmax: -1
+                      f: -1
+                      tmin: -1
+                      sw1: 1
+                      ft: -1
+                      pefl: -1
+                      wf: -1
+                      sw2: 0
+                      fdl: -1
+                      p: -1
+                      pef: -1
+                      mafr: -1
+                      t: -1
+                      v: 1
+                      pmin: -1
+                      fd: -1
+                      ftl: -1
+                    friendly_name: Device Offline
+                    self_resolved: 0
+                    friendly_description: >-
+                      On January 30 11:07 pm, your Flo by Moen device went
+                      offline. This could be due to a power or internet outage.
+                    acknowledged_by_user: 0
+                    default_delivery_media:
+                      - 2
+                      - 3
+                    user_actions:
+                      support_options:
+                        - action_path: user.meetflo.com/support/alarms/33
+                          sort: 1
+                          text: Learn More
+                          id: 1
+                          action_type: 0
+                      title: Clear this alert
+                      prompt: Do you want to ignore this alert if it happens again?
+                      actions:
+                        - success_message: >-
+                            You will not be alerted about this alert again for 2
+                            hours.
+                          display: 'Yes, for 2 hours'
+                          sort: 1
+                          failure_message: >-
+                            Sorry, there was a problem processing your request.
+                            Please try again later or call support.
+                          id: 1
+                          option: Ignore For 2 hours
+                          display_when:
+                            alarm_notification_delivery_filter:
+                              status: 3
+                        - success_message: >-
+                            You will not be alerted about this alert again for
+                            24 hours.
+                          display: 'Yes, for 24 hours'
+                          sort: 2
+                          failure_message: >-
+                            Sorry, there was a problem processing your request.
+                            Please try again later or call support.
+                          id: 6
+                          option: Ignore For 24 hours
+                          display_when:
+                            alarm_notification_delivery_filter:
+                              status: 3
+                        - success_message: You will be alerted the next time this issue occurs.
+                          display: 'No, send me alerts'
+                          sort: 4
+                          failure_message: >-
+                            Sorry, there was a problem processing your request.
+                            Please try again later or call support.
+                          id: 4
+                          option: Do not ignore this alert
+                          display_when:
+                            alarm_notification_delivery_filter:
+                              status: 3
+                    onboarding:
+                      event: 3
+                      created_at: '2019-01-25T09:54:48.979Z'
+                    geo_location:
+                      postal_code: '00000'
+                      state_or_province: CA
+                      country: us
+                      location_id: ffffffff-ffff-4fff-8fff-ffffffffffff
+                      timezone: US/Pacific
+                    account:
+                      account_id: ffffffff-ffff-4fff-8fff-ffffffffffff
+                      group_id: ffffffff-ffff-4fff-8fff-ffffffffffff
+          - alarm_id: 10
+            total: 1
+            system_modes:
+              - system_mode: 2
+                total: 1
+                alerts:
+                  - is_cleared: false
+                    severity: 2
+                    updated_at: '2019-01-31t07:07:17.510Z'
+                    incident_id: ffffffff-ffff-4fff-8fff-ffffffffffff
+                    alarm_id: 33
+                    alarm_id_system_mode: '33_2'
+                    icd_id: ffffffff-ffff-4fff-8fff-ffffffffffff
+                    incident_time: '2019-01-31t07:07:16.704Z'
+                    status: 3
+                    system_mode: 2
+                    telemetry_data:
+                      pmax: -1
+                      tmax: -1
+                      f: -1
+                      tmin: -1
+                      sw1: 1
+                      ft: -1
+                      pefl: -1
+                      wf: -1
+                      sw2: 0
+                      fdl: -1
+                      p: -1
+                      pef: -1
+                      mafr: -1
+                      t: -1
+                      v: 1
+                      pmin: -1
+                      fd: -1
+                      ftl: -1
+                    friendly_name: Device Offline
+                    self_resolved: 0
+                    friendly_description: >-
+                      On January 30 11:07 pm, your Flo by Moen device went
+                      offline. This could be due to a power or internet outage.
+                    acknowledged_by_user: 0
+                    default_delivery_media:
+                      - 2
+                      - 3
+                    user_actions:
+                      support_options:
+                        - action_path: user.meetflo.com/support/alarms/33
+                          sort: 1
+                          text: Learn More
+                          id: 1
+                          action_type: 0
+                      title: Clear this alert
+                      prompt: Do you want to ignore this alert if it happens again?
+                      actions:
+                        - success_message: >-
+                            You will not be alerted about this alert again for 2
+                            hours.
+                          display: 'Yes, for 2 hours'
+                          sort: 1
+                          failure_message: >-
+                            Sorry, there was a problem processing your request.
+                            Please try again later or call support.
+                          id: 1
+                          option: Ignore For 2 hours
+                          display_when:
+                            alarm_notification_delivery_filter:
+                              status: 3
+                        - success_message: >-
+                            You will not be alerted about this alert again for
+                            24 hours.
+                          display: 'Yes, for 24 hours'
+                          sort: 2
+                          failure_message: >-
+                            Sorry, there was a problem processing your request.
+                            Please try again later or call support.
+                          id: 6
+                          option: Ignore For 24 hours
+                          display_when:
+                            alarm_notification_delivery_filter:
+                              status: 3
+                        - success_message: You will be alerted the next time this issue occurs.
+                          display: 'No, send me alerts'
+                          sort: 4
+                          failure_message: >-
+                            Sorry, there was a problem processing your request.
+                            Please try again later or call support.
+                          id: 4
+                          option: Do not ignore this alert
+                          display_when:
+                            alarm_notification_delivery_filter:
+                              status: 3
+                    onboarding:
+                      event: 3
+                      created_at: '2019-01-25T09:54:48.979Z'
+                    geo_location:
+                      postal_code: '00000'
+                      state_or_province: CA
+                      country: us
+                      location_id: ffffffff-ffff-4fff-8fff-ffffffffffff
+                      timezone: US/Pacific
+                    account:
+                      account_id: ffffffff-ffff-4fff-8fff-ffffffffffff
+                      group_id: ffffffff-ffff-4fff-8fff-ffffffffffff
+    PendingAlerts:
+      description: PendingAlerts
+      type: object
+      properties:
+        total:
+          type: integer
+          description: |
+            Total number of matching records.
+          format: int32
+          example: 26
+        aggregations:
+          type: array
+          description: |
+            Aggregation of alerts by severity in ascending order of severity
+          items:
+            $ref: '#/components/schemas/PendingAlert'
+      example:
+        total: 1
+        aggregations:
+          - severity: 2
+            total: 2
+            alarm_ids:
+              - alarm_id: 15
+                total: 1
+                system_modes:
+                  - system_mode: 3
+                    total: 1
+                    alerts:
+                      - is_cleared: false
+                        severity: 2
+                        updated_at: '2019-01-31t07:07:17.510Z'
+                        incident_id: ffffffff-ffff-4fff-8fff-ffffffffffff
+                        alarm_id: 33
+                        alarm_id_system_mode: '33_2'
+                        icd_id: ffffffff-ffff-4fff-8fff-ffffffffffff
+                        incident_time: '2019-01-31t07:07:16.704Z'
+                        status: 3
+                        system_mode: 2
+                        telemetry_data:
+                          pmax: -1
+                          tmax: -1
+                          f: -1
+                          tmin: -1
+                          sw1: 1
+                          ft: -1
+                          pefl: -1
+                          wf: -1
+                          sw2: 0
+                          fdl: -1
+                          p: -1
+                          pef: -1
+                          mafr: -1
+                          t: -1
+                          v: 1
+                          pmin: -1
+                          fd: -1
+                          ftl: -1
+                        friendly_name: Device Offline
+                        self_resolved: 0
+                        friendly_description: >-
+                          On January 30 11:07 pm, your Flo by Moen device went
+                          offline. This could be due to a power or internet
+                          outage.
+                        acknowledged_by_user: 0
+                        default_delivery_media:
+                          - 2
+                          - 3
+                        user_actions:
+                          support_options:
+                            - action_path: user.meetflo.com/support/alarms/33
+                              sort: 1
+                              text: Learn More
+                              id: 1
+                              action_type: 0
+                          title: Clear this alert
+                          prompt: >-
+                            Do you want to ignore this alert if it happens
+                            again?
+                          actions:
+                            - success_message: >-
+                                You will not be alerted about this alert again
+                                for 2 hours.
+                              display: 'Yes, for 2 hours'
+                              sort: 1
+                              failure_message: >-
+                                Sorry, there was a problem processing your
+                                request. Please try again later or call support.
+                              id: 1
+                              option: Ignore For 2 hours
+                              display_when:
+                                alarm_notification_delivery_filter:
+                                  status: 3
+                            - success_message: >-
+                                You will not be alerted about this alert again
+                                for 24 hours.
+                              display: 'Yes, for 24 hours'
+                              sort: 2
+                              failure_message: >-
+                                Sorry, there was a problem processing your
+                                request. Please try again later or call support.
+                              id: 6
+                              option: Ignore For 24 hours
+                              display_when:
+                                alarm_notification_delivery_filter:
+                                  status: 3
+                            - success_message: >-
+                                You will be alerted the next time this issue
+                                occurs.
+                              display: 'No, send me alerts'
+                              sort: 4
+                              failure_message: >-
+                                Sorry, there was a problem processing your
+                                request. Please try again later or call support.
+                              id: 4
+                              option: Do not ignore this alert
+                              display_when:
+                                alarm_notification_delivery_filter:
+                                  status: 3
+                        onboarding:
+                          event: 3
+                          created_at: '2019-01-25T09:54:48.979Z'
+                        geo_location:
+                          postal_code: '00000'
+                          state_or_province: CA
+                          country: us
+                          location_id: ffffffff-ffff-4fff-8fff-ffffffffffff
+                          timezone: US/Pacific
+                        account:
+                          account_id: ffffffff-ffff-4fff-8fff-ffffffffffff
+                          group_id: ffffffff-ffff-4fff-8fff-ffffffffffff
+              - alarm_id: 10
+                total: 1
+                system_modes:
+                  - system_mode: 2
+                    total: 1
+                    alerts:
+                      - is_cleared: false
+                        severity: 2
+                        updated_at: '2019-01-31t07:07:17.510Z'
+                        incident_id: ffffffff-ffff-4fff-8fff-ffffffffffff
+                        alarm_id: 33
+                        alarm_id_system_mode: '33_2'
+                        icd_id: ffffffff-ffff-4fff-8fff-ffffffffffff
+                        incident_time: '2019-01-31t07:07:16.704Z'
+                        status: 3
+                        system_mode: 2
+                        telemetry_data:
+                          pmax: -1
+                          tmax: -1
+                          f: -1
+                          tmin: -1
+                          sw1: 1
+                          ft: -1
+                          pefl: -1
+                          wf: -1
+                          sw2: 0
+                          fdl: -1
+                          p: -1
+                          pef: -1
+                          mafr: -1
+                          t: -1
+                          v: 1
+                          pmin: -1
+                          fd: -1
+                          ftl: -1
+                        friendly_name: Device Offline
+                        self_resolved: 0
+                        friendly_description: >-
+                          On January 30 11:07 pm, your Flo by Moen device went
+                          offline. This could be due to a power or internet
+                          outage.
+                        acknowledged_by_user: 0
+                        default_delivery_media:
+                          - 2
+                          - 3
+                        user_actions:
+                          support_options:
+                            - action_path: user.meetflo.com/support/alarms/33
+                              sort: 1
+                              text: Learn More
+                              id: 1
+                              action_type: 0
+                          title: Clear this alert
+                          prompt: >-
+                            Do you want to ignore this alert if it happens
+                            again?
+                          actions:
+                            - success_message: >-
+                                You will not be alerted about this alert again
+                                for 2 hours.
+                              display: 'Yes, for 2 hours'
+                              sort: 1
+                              failure_message: >-
+                                Sorry, there was a problem processing your
+                                request. Please try again later or call support.
+                              id: 1
+                              option: Ignore For 2 hours
+                              display_when:
+                                alarm_notification_delivery_filter:
+                                  status: 3
+                            - success_message: >-
+                                You will not be alerted about this alert again
+                                for 24 hours.
+                              display: 'Yes, for 24 hours'
+                              sort: 2
+                              failure_message: >-
+                                Sorry, there was a problem processing your
+                                request. Please try again later or call support.
+                              id: 6
+                              option: Ignore For 24 hours
+                              display_when:
+                                alarm_notification_delivery_filter:
+                                  status: 3
+                            - success_message: >-
+                                You will be alerted the next time this issue
+                                occurs.
+                              display: 'No, send me alerts'
+                              sort: 4
+                              failure_message: >-
+                                Sorry, there was a problem processing your
+                                request. Please try again later or call support.
+                              id: 4
+                              option: Do not ignore this alert
+                              display_when:
+                                alarm_notification_delivery_filter:
+                                  status: 3
+                        onboarding:
+                          event: 3
+                          created_at: '2019-01-25T09:54:48.979Z'
+                        geo_location:
+                          postal_code: '00000'
+                          state_or_province: CA
+                          country: us
+                          location_id: ffffffff-ffff-4fff-8fff-ffffffffffff
+                          timezone: US/Pacific
+                        account:
+                          account_id: ffffffff-ffff-4fff-8fff-ffffffffffff
+                          group_id: ffffffff-ffff-4fff-8fff-ffffffffffff
+    ClearedAlert:
+      description: Cleared Alert
+      type: object
+      properties:
+        alarm_id:
+          type: integer
+          example: 33
+        system_mode:
+          type: integer
+          example: 2
+      example:
+        alarm_id: 33
+        system_mode: 2
+    ClearedAlerts:
+      description: Cleared Alerts
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ClearedAlert'
+      example:
+        data:
+          - alarm_id: 33
+            system_mode: 2
+    Alert:
+      description: Alert
+      type: object
+      properties:
+        is_cleared:
+          type: boolean
+          example: true
+        severity:
+          type: integer
+          format: int32
+          example: 3
+        updated_at:
+          type: string
+          format: date-time
+          example: '2019-02-01T11:50:07.080Z'
+        incident_id:
+          type: string
+          example: ffffffff-ffff-4fff-8fff-ffffffffffff
+        alarm_id:
+          type: integer
+          format: int32
+          example: 4
+        alarm_id_system_mode:
+          type: string
+          format: <alarm_id>_<system_mode>
+          example: 43
+        icd_id:
+          type: string
+          format: uuid
+          example: ffffffff-ffff-4fff-8fff-ffffffffffff
+        incident_time:
+          type: string
+          format: date-time
+          example: '2019-02-01T11:50:06.347Z'
+        status:
+          type: integer
+          format: int32
+          example: 1
+        system_mode:
+          type: integer
+          format: int32
+          example: 3
+        telemetry_data:
+          type: object
+          properties:
+            pmax:
+              type: integer
+              format: int32
+              example: 100
+            rssi:
+              type: string
+              format: nullable
+            tmax:
+              type: integer
+              format: int32
+              example: 150
+            f:
+              type: integer
+              format: int32
+              example: 0
+            freq:
+              type: string
+              format: nullable
+            tmin:
+              type: integer
+              format: int32
+              example: 36
+            mbps:
+              type: string
+              format: nullable
+            sw1:
+              type: integer
+              format: int32
+              example: 0
+            ft:
+              type: integer
+              format: int32
+              example: 0
+            pefl:
+              type: integer
+              format: int32
+              example: 50
+            wf:
+              type: integer
+              format: int32
+              example: 0
+            sw2:
+              type: integer
+              format: int32
+              example: 1
+            fdl:
+              type: integer
+              format: int32
+              example: 3600
+            p:
+              type: number
+              example: 0.1
+            pef:
+              type: integer
+              format: int32
+              example: 0
+            mafr:
+              type: integer
+              format: int32
+              example: 8
+            t:
+              type: integer
+              format: int32
+              example: 92
+            v:
+              type: integer
+              format: int32
+              example: 0
+            pmin:
+              type: integer
+              format: int32
+              example: 20
+            fd:
+              type: integer
+              format: int32
+              example: 0
+            ftl:
+              type: integer
+              format: int32
+              example: 8
+        friendly_name:
+          type: string
+          example: Health Test Skipped
+        self_resolved_message:
+          type: string
+          format: nullable
+        self_resolved:
+          type: integer
+          format: int32
+          example: 0
+        user_action_taken:
+          type: string
+          format: nullable
+        friendly_description:
+          type: string
+          example: >-
+            On February 01 3:50 am your Flo by Moen device did not perform the
+            Health Test due to the valve being closed.
+        acknowledged_by_user:
+          type: integer
+          format: int32
+          example: 1
+        default_delivery_media:
+          type: array
+          items:
+            type: integer
+            format: int32
+          example:
+            - 2
+            - 3
+        user_actions:
+          type: object
+          properties:
+            support_options:
+              type: array
+              items:
+                type: object
+                properties:
+                  action_path:
+                    type: string
+                    example: user.meetflo.com/support/alarms/4
+                  sort:
+                    type: integer
+                    format: int32
+                    example: 1
+                  text:
+                    type: string
+                    example: Learn More
+                  id:
+                    type: integer
+                    format: int32
+                    example: 1
+                  action_type:
+                    type: integer
+                    format: int32
+                    example: 0
+            title:
+              type: string
+              example: Clear this alert
+            prompt:
+              type: string
+              example: Do you want to ignore this alert if it happens again?
+            actions:
+              type: array
+              items:
+                type: object
+                properties:
+                  success_message:
+                    type: string
+                    example: >-
+                      You will not be alerted about this alert again for 2
+                      hours.
+                  display:
+                    type: string
+                    example: Yes for 2 hours
+                  sort:
+                    type: integer
+                    format: int32
+                    example: 1
+                  failure_message:
+                    type: string
+                    example: >-
+                      Sorry there was a problem processing your request. Please
+                      try again later or call support.
+                  id:
+                    type: integer
+                    format: int32
+                    example: 1
+                  option:
+                    type: string
+                    example: Ignore For 2 hours
+                  display_when:
+                    type: object
+                    properties:
+                      time:
+                        type: string
+                        format: nullable
+                      valve:
+                        type: string
+                        format: nullable
+                      alarm_notification_delivery_filter:
+                        type: object
+                        properties:
+                          status:
+                            type: integer
+                            format: int32
+                            example: 3
+                      chains:
+                        type: string
+                        format: nullable
+        geo_location:
+          type: object
+          properties:
+            address2:
+              type: string
+              format: nullable
+            postal_code:
+              type: string
+              example: 0
+            state_or_province:
+              type: string
+              example: CA
+            country:
+              type: string
+              example: us
+            location_id:
+              type: string
+              format: uuid
+              example: ffffffff-ffff-4fff-8fff-ffffffffffff
+            timezone:
+              type: string
+              example: US/Pacific
+        account:
+          type: object
+          properties:
+            account_id:
+              type: string
+              example: ffffffff-ffff-4fff-8fff-ffffffffffff
+              format: uuid
+            group_id:
+              type: string
+              example: ffffffff-ffff-4fff-8fff-ffffffffffff
+              format: uuid
+        onboarding:
+          type: object
+          properties:
+            event:
+              type: integer
+              format: int32
+              example: 3
+            created_at:
+              type: string
+              format: date-time
+              example: '2019-01-25T09:54:48.979Z'
+      example:
+        $ref: '#/components/examples/Alert'
+    Alerts:
+      description: Alerts
+      type: object
+      properties:
+        total:
+          type: integer
+          description: Total number of matching records.
+        items:
+          type: array
+          description: >-
+            Data page of alert type documents in descending order of
+            `incident_time`
+          items:
+            $ref: '#/components/schemas/Alert'
+      example:
+        total: 1
+        items:
+          - is_cleared: false
+            severity: 2
+            updated_at: '2019-01-31t07:07:17.510Z'
+            incident_id: ffffffff-ffff-4fff-8fff-ffffffffffff
+            alarm_id: 33
+            alarm_id_system_mode: '33_2'
+            icd_id: ffffffff-ffff-4fff-8fff-ffffffffffff
+            incident_time: '2019-01-31t07:07:16.704Z'
+            status: 3
+            system_mode: 2
+            telemetry_data:
+              pmax: -1
+              tmax: -1
+              f: -1
+              tmin: -1
+              sw1: 1
+              ft: -1
+              pefl: -1
+              wf: -1
+              sw2: 0
+              fdl: -1
+              p: -1
+              pef: -1
+              mafr: -1
+              t: -1
+              v: 1
+              pmin: -1
+              fd: -1
+              ftl: -1
+            friendly_name: Device Offline
+            self_resolved: 0
+            friendly_description: >-
+              On January 30 11:07 pm, your Flo by Moen device went offline. This
+              could be due to a power or internet outage.
+            acknowledged_by_user: 0
+            default_delivery_media:
+              - 2
+              - 3
+            user_actions:
+              support_options:
+                - action_path: user.meetflo.com/support/alarms/33
+                  sort: 1
+                  text: Learn More
+                  id: 1
+                  action_type: 0
+              title: Clear this alert
+              prompt: Do you want to ignore this alert if it happens again?
+              actions:
+                - success_message: You will not be alerted about this alert again for 2 hours.
+                  display: 'Yes, for 2 hours'
+                  sort: 1
+                  failure_message: >-
+                    Sorry, there was a problem processing your request. Please
+                    try again later or call support.
+                  id: 1
+                  option: Ignore For 2 hours
+                  display_when:
+                    alarm_notification_delivery_filter:
+                      status: 3
+                - success_message: You will not be alerted about this alert again for 24 hours.
+                  display: 'Yes, for 24 hours'
+                  sort: 2
+                  failure_message: >-
+                    Sorry, there was a problem processing your request. Please
+                    try again later or call support.
+                  id: 6
+                  option: Ignore For 24 hours
+                  display_when:
+                    alarm_notification_delivery_filter:
+                      status: 3
+                - success_message: You will be alerted the next time this issue occurs.
+                  display: 'No, send me alerts'
+                  sort: 4
+                  failure_message: >-
+                    Sorry, there was a problem processing your request. Please
+                    try again later or call support.
+                  id: 4
+                  option: Do not ignore this alert
+                  display_when:
+                    alarm_notification_delivery_filter:
+                      status: 3
+            onboarding:
+              event: 3
+              created_at: '2019-01-25T09:54:48.979Z'
+            geo_location:
+              postal_code: '00000'
+              state_or_province: CA
+              country: us
+              location_id: ffffffff-ffff-4fff-8fff-ffffffffffff
+              timezone: US/Pacific
+            account:
+              account_id: ffffffff-ffff-4fff-8fff-ffffffffffff
+              group_id: ffffffff-ffff-4fff-8fff-ffffffffffff
+    NotificationToken:
+      description: Notification Token
+      type: object
+      properties:
+        updated_at:
+          type: string
+          example: '2019-02-01T00:08:30.640Z'
+          description: Date record was updated
+          format: date-time
+        aws_endpoint_id:
+          type: string
+          format: uuid
+          example: ffffffff-ffff-4fff-8fff-ffffffffffff
+        user_id:
+          type: string
+          format: uuid
+          description: ID of user
+          example: ffffffff-ffff-4fff-8fff-ffffffffffff
+        created_at:
+          type: string
+          format: date-time
+          description: Date record was created
+          example: '2019-02-01T00:08:30.640Z'
+        token:
+          type: string
+          description: The push notification token to be associated with the mobile device
+          example: ffffffffff
+        mobile_device_id:
+          type: string
+          description: Unique identifier for the mobile device
+          example: ffffffffffffffff
+        client_id:
+          type: string
+          format: uuid
+          description: ID of client application
+          example: ffffffff-ffff-4fff-8fff-ffffffffffff
+        client_type:
+          type: integer
+          format: int32
+          description: |
+            Type of the client
+
+            * 1 = iOS
+            * 3 = Android
+          example: 3
+          enum:
+            - 1
+            - 3
+        is_disabled:
+          type: integer
+          format: int32
+          description: |
+            Is token disabled (i.e. soft deleted)
+            ```
+            Undefined/Null => False
+            0 => False
+            1 => True
+            ```
+          example: 1
+      example:
+        updated_at: '2019-02-01T00:08:30.640Z'
+        aws_endpoint_id: ffffffff-ffff-4fff-8fff-ffffffffffff
+        user_id: ffffffff-ffff-4fff-8fff-ffffffffffff
+        created_at: '2019-02-01T00:08:30.640Z'
+        token: ffffffffffffffff
+        mobile_device_id: ffffffffffffffff
+        client_id: ffffffff-ffff-4fff-8fff-ffffffffffff
+        client_type: 3
+    AddNotificationToken:
+      description: Add Notification Token
+      type: object
+      properties:
+        aws_endpoint_id:
+          type: string
+          format: uuid
+          example: ffffffff-ffff-4fff-8fff-ffffffffffff
+        token:
+          type: string
+          description: The push notification token to be associated with the mobile device
+          example: ffffffffff
+        mobile_device_id:
+          type: string
+          description: Unique identifier for the mobile device
+          example: ffffffffffffffff
+      example:
+        aws_endpoint_id: ffffffff-ffff-4fff-8fff-ffffffffffff
+        token: ffffffffffffffff
+        mobile_device_id: ffffffffffffffff
+    Logout:
+      description: Logout
+      type: object
+      properties:
+        mobile_device_id:
+          type: string
+          description: ID of the mobile device associated with the notification token
+          example: ffffffffffffffff
+      example:
+        mobile_device_id: ffffffffffffffff
+    Registration:
+      description: Logout
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          description: A valid email that the user wishes to register with
+          example: user@example.com
+        password:
+          type: string
+          format: password
+          description: A password that meets our password complexity requirements
+        password_conf:
+          type: string
+          format: password
+          description: The password reentered to confirm it is correct
+        firstname:
+          type: string
+          example: Andrew
+          description: User's first name
+        lastname:
+          type: string
+          example: Chen
+          description: User's last name
+        country:
+          type: string
+          example: Taiwan
+          description: User's country
+        phone_mobile:
+          type: string
+          example: '+886912345678'
+          description: A valid phone number for the user
+    VerifyAuthToken:
+      description: Verify AuthToken
+      type: object
+      properties:
+        token:
+          type: string
+          description: Verify AuthToken
+          example: ffffffffffffffff
+      example:
+        token: ffffffffffffffff
+    AuthToken:
+      description: Authentication Token
+      type: object
+      properties:
+        token:
+          type: string
+          example: ffffffffffff
+        tokenPayload:
+          $ref: '#/components/schemas/TokenPayload'
+        tokenExpiration:
+          type: integer
+          format: int32
+          example: 1549009948
+          description: How many seconds before the token expires
+        timeNow:
+          type: integer
+          format: int32
+          example: 1549009948
+          description: Unix timestamp of the token (redundant)
+    TokenPayload:
+      description: Object containing metadata regarding the token
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/TokenUser'
+        timestamp:
+          type: integer
+          format: int32
+          example: 1549009948
+          description: Unix timestap of the token
+    TokenUser:
+      description: Object containing user metadata
+      type: object
+      properties:
+        user_id:
+          type: string
+          format: uuid
+          example: ffffffff-ffff-4fff-8fff-ffffffffffff
+          description: ID of user
+        email:
+          type: string
+          format: email
+          example: user@example.com
+          description: Email of user
+    Email:
+      description: Verifying email availability
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          example: user@example.com
+          description: Email of user
+    VerifiedEmail:
+      description: Verified email availability
+      type: object
+      properties:
+        is_registered:
+          type: boolean
+          description: Has the email already been registered and confirmed
+        is_pending:
+          type: boolean
+          description: Is the email already pending confirmation
+    UserAccount:
+      description: User Account
+      type: object
+      properties:
+        group_id:
+          type: string
+          format: uuid
+          example: ffffffff-ffff-4fff-8fff-ffffffffffff
+          description: ID of the account group to which the user belongs
+        email:
+          type: string
+          format: email
+          example: user@example.com
+          description: Email/username
+        password:
+          type: string
+          format: password
+          example: passw0rd
+          description: Password
+        firstname:
+          type: string
+          example: Andrew
+          description: First name of tenant
+        lastname:
+          type: string
+          example: Chen
+          description: Last name of tenant
+        phone_mobile:
+          type: string
+          example: 310123456
+          description: Phone number of tenant
+        address:
+          type: string
+          example: 3750 Robertson Blvd
+          description: Street address of unit
+        address2:
+          type: string
+          description: Unit number
+        city:
+          type: string
+          example: Los Angeles
+          description: City of unit
+        state:
+          type: string
+          example: CA
+          description: State of unit
+        country:
+          type: string
+          example: us
+          description: Country of unit
+        postalcode:
+          type: string
+          example: 0
+          description: Postal/ZIP code of unit
+        timezone:
+          type: string
+          example: US/Pacific
+          description: Timezone of unit
+      required:
+        - group_id
+        - email
+        - password
+        - firstname
+        - lastname
+        - phone_mobile
+        - address
+        - city
+        - state
+        - country
+        - postalcode
+        - timezone
+    UserAccountResult:
+      description: User Account
+      type: object
+      properties:
+        user_id:
+          type: string
+          example: ffffffff-ffff-4fff-8fff-ffffffffffff
+          format: uuid
+          description: ID of User created
+        account_id:
+          type: string
+          example: ffffffff-ffff-4fff-8fff-ffffffffffff
+          format: uuid
+          description: 'ID of Account created, User created is the owner'
+        location_id:
+          type: string
+          example: ffffffff-ffff-4fff-8fff-ffffffffffff
+          format: uuid
+          description: 'ID of Location created, User created is the owner'
+    Subscription:
+      description: Subscription
+      type: object
+      properties:
+        account_id:
+          type: string
+          format: uuid
+          example: ffffffff-ffff-4fff-8fff-ffffffffffff
+          description: ID of account
+        stripe_customer_id:
+          type: string
+          example: ffffffff
+          description: ID of customer in Stripe's system
+        plan_id:
+          type: string
+          example: ffffffff
+          description: ID of subscription plan
+        source_id:
+          type: string
+          example: ffffffff
+          description: ID of the sales source of the subscription
+        status:
+          type: string
+          example: ffffffff
+          description: |
+            Status of the subscription, maybe one of the following:
+            trialing, active, past_due, canceled, unpaid
+          enum:
+            - trialing
+            - active
+            - past_due
+            - canceled
+            - unpaid
+        created_at:
+          type: string
+          format: date-time
+          example: '2019-01-31T07:07:17.510Z'
+          description: Time the record was created
+        updated_at:
+          type: string
+          format: date-time
+          example: '2019-01-31T07:07:17.510Z'
+          description: Time the record was last updated
+        current_period_end:
+          type: string
+          format: date-time
+          example: '2019-01-31T07:07:17.510Z'
+          description: End date of current paid-for subscription end
+        current_period_start:
+          type: string
+          format: date-time
+          example: '2019-01-31T07:07:17.510Z'
+          description: Start date of current paid-for subscription period
+        canceled_at:
+          type: string
+          format: date-time
+          example: '2019-01-31T07:07:17.510Z'
+          description: >-
+            If the subscription was canceled, then this records the date at
+            which it was canceled
+        ended_at:
+          type: string
+          format: date-time
+          example: '2019-01-31T07:07:17.510Z'
+          description: >-
+            If the subscription was ended for any reason, then this records the
+            date at which the subscription was ended
+      required:
+        - account_id
+        - stripe_customer_id
+        - plan_id
+        - source_id
+        - status
+        - created_at
+        - updated_at
+        - current_period_end
+        - current_period_start
+    Plan:
+      description: Plan
+      type: object
+      properties:
+        plan_id:
+          type: string
+          description: ID of the subscription plan
+        features:
+          type: array
+          items:
+            type: string
+          description: An array of the features the subscription plan includes
+        monthly_cost:
+          type: number
+          format: float
+          description: Monthly cost of the subscription in US dollars
+    Payment:
+      description: Payment
+      type: object
+      properties:
+        stripe_token:
+          type: string
+          description: Token containing the payment information to be sent to Stripe
+        plan_id:
+          type: string
+          description: >-
+            ID of the plan being subscribed to. If not provided, a default plan
+            will be set
+        source_id:
+          type: string
+          description: >-
+            ID of the sales source of the subscription, If not provided a
+            default source will be set
+      required:
+        - stripe_token
+    SystemMode:
+      type: integer
+      format: int32
+      example: 2
+      description: |
+        * `2` - Home mode
+        * `3` - Away mode
+      enum:
+        - 2
+        - 3
+    SleepMode:
+      description: SleepMode
+      type: object
+      properties:
+        sleep_minutes:
+          type: integer
+          format: int32
+          example: 60
+          description: >-
+            Number of minutes for the device to be in sleep/manual mode before
+            reverting to the wake up system mode
+        wake_up_system_mode:
+          $ref: '#/components/schemas/SystemMode'
+      required:
+        - sleep_minutes
+        - wake_up_system_mode
+    Feature:
+      description: >-
+        The name of the feature name and the version of the feature version
+        supported by the firmware requested. This make it open to have more than
+        one version of the feature like we do with away mode.
+      type: object
+      properties:
+        name:
+          type: string
+          example: away_mode
+        version:
+          type: string
+          example: 2.0.0
+      required:
+        - name
+        - version
+    FloDetect:
+      type: object
+      properties:
+        compute_end_date:
+          type: string
+          example: '2019-01-10T06:42:41.244Z'
+          format: date-time
+          description: End date of the computation--used for performance profiling
+        fixtures:
+          type: array
+          description: List of fixtures detected
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+                example: shower/bath
+                description: Name of fixture type
+              index:
+                type: integer
+                format: int32
+                example: 0
+                description: Sort order of fixture record
+              type:
+                type: integer
+                format: int32
+                example: 1
+                description: Enumerated type of fixture
+              gallons:
+                type: number
+                example: 19.6176
+                format: float
+                description: Gallons used by fixture
+              ratio:
+                type: number
+                example: 0.1508
+                format: float
+              num_events:
+                type: integer
+                format: int32
+                example: 1
+                description: Number of flow events attributed to fixture
+            required:
+              - index
+              - gallons
+              - name
+              - ratio
+              - type
+        end_date:
+          type: string
+          example: '2019-01-10T06:00:34.906Z'
+          format: date-time
+          description: >-
+            Beginning of date range of data used in computation
+        status:
+          type: string
+          description: >-
+            Status of computation.
+          enum:
+            - sent
+            - executed
+            - feedback_submitted
+            - learning
+            - insufficient_data
+            - internal_error
+          example: executed
+        device_id:
+          $ref: '#/components/schemas/DeviceId'
+        event_chronology:
+          type: array
+          items:
+            $ref: '#/components/schemas/FlowEvent'
+        known_fixtures:
+          type: array
+          items:
+            type: string
+            example: irrigation
+          description: >-
+            Known fixtures
+        compute_start_date:
+          type: string
+          example: '2019-01-10T06:42:34.027Z'
+          format: date-time
+          description: >-
+            Start date of the computation--used for performance profiling
+        start_date:
+          type: string
+          example: '2019-01-09T06:00:34.906Z'
+          format: date-time
+          description: >-
+            Beginning of date range of data used in computation
+        request_id:
+          type: string
+          example: ffffffff-ffff-4fff-8fff-ffffffffffff
+          format: uuid
+          description: >-
+            Unique ID of the computation request
+        duration_in_seconds:
+          type: integer
+          format: int32
+          example: 86400
+          description: >-
+            Number of seconds of date range of date used in computation
+      required:
+        - device_id
+        - status
+        - request_id
+        - start_date
+        - end_date
+        - duration_in_seconds
+    AddFloDetect:
+      type: object
+      properties:
+        did:
+          type: string
+          example: ffffffff-ffff-4fff-8fff-ffffffffffff
+          format: uuid
+        compute_end_date:
+          type: string
+          example: '2019-01-10T06:42:41.244Z'
+          format: date-time
+        fixtures:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+                example: shower/bath
+                description: Name of fixture type
+              index:
+                type: integer
+                format: int32
+                example: 0
+                description: Sort order of fixture record
+              type:
+                type: integer
+                format: int32
+                example: 1
+                description: Enumerated type of fixture
+              gallons:
+                type: number
+                example: 19.6176
+                format: float
+                description: Gallons used by fixture
+              ratio:
+                type: number
+                example: 0.1508
+                format: float
+              num_events:
+                type: integer
+                format: int32
+                example: 1
+                description: Number of flow events attributed to fixture
+            required:
+              - index
+              - gallons
+              - name
+              - ratio
+              - type
+        end_date:
+          type: string
+          example: '2019-01-10T06:00:34.906Z'
+          format: date-time
+        status:
+          type: string
+          example: executed
+        device_id:
+          $ref: '#/components/schemas/DeviceId'
+        event_chronology:
+          type: array
+          items:
+            $ref: '#/components/schemas/FlowEvent'
+        known_fixtures:
+          type: array
+          items:
+            type: string
+            example: irrigation
+        compute_start_date:
+          type: string
+          example: '2019-01-10T06:42:34.027Z'
+          format: date-time
+        start_date:
+          type: string
+          example: '2019-01-09T06:00:34.906Z'
+          format: date-time
+        request_id:
+          type: string
+          example: ffffffff-ffff-4fff-8fff-ffffffffffff
+          format: uuid
+        duration_in_seconds:
+          type: integer
+          format: int32
+          example: 86400
+      required:
+        - request_id
+        - start_date
+        - end_date
+        - fixtures
+      example:
+        compute_end_date: '2019-01-10T06:42:41.244267'
+        fixtures:
+          - name: shower/bath
+            index: 0
+            type: 1
+            gallons: 19.6176
+            ratio: 0.1508
+            num_events: 1
+          - name: toilet
+            index: 1
+            type: 2
+            gallons: 15.7767
+            ratio: 0.1213
+            num_events: 9
+          - name: appliance
+            index: 2
+            type: 3
+            gallons: 74.4954
+            ratio: 0.5726
+            num_events: 9
+          - name: faucet
+            index: 3
+            type: 4
+            gallons: 20.2066
+            ratio: 0.1553
+            num_events: 20
+          - name: other
+            index: 4
+            type: 5
+            gallons: 0
+            ratio: 0
+            num_events: 0
+          - name: irrigation
+            index: 5
+            type: 6
+            gallons: 0
+            ratio: 0
+            num_events: 0
+          - name: pool/hot tub
+            index: 6
+            type: 7
+            gallons: 0
+            ratio: 0
+            num_events: 0
+        end_date: '2019-01-10T06:00:34.906Z'
+        status: executed
+        device_id: ffffffffffff
+        event_chronology:
+          - fixture: faucet
+            not_label: []
+            duration: 23
+            cluster_means:
+              - 0.26727133811566733
+              - 0.6972295776930452
+              - 23
+            gpm: 0.6972295776930452
+            start: '2019-01-10T04:05:12.025Z'
+            end: '2019-01-10T04:05:34.025Z'
+            predicted_fixture: pool/hot tub
+            type: 4
+            flow: 0.26727133811566733
+          - fixture: faucet
+            not_label: []
+            duration: 15
+            cluster_means:
+              - 0.14796972950898996
+              - 0.5918789180359598
+              - 15
+            gpm: 0.5918789180359598
+            start: '2019-01-10T03:46:50.024Z'
+            end: '2019-01-10T03:47:04.024Z'
+            predicted_fixture: pool/hot tub
+            type: 4
+            flow: 0.14796972950898996
+          - fixture: faucet
+            not_label: []
+            duration: 11
+            cluster_means:
+              - 0.0955861132858243
+              - 0.5213787997408598
+              - 11
+            gpm: 0.5213787997408598
+            start: '2019-01-10T03:19:30.024Z'
+            end: '2019-01-10T03:19:40.025Z'
+            predicted_fixture: pool/hot tub
+            type: 4
+            flow: 0.0955861132858243
+          - fixture: faucet
+            not_label: []
+            duration: 15
+            cluster_means:
+              - 0.11051073981146763
+              - 0.4420429592458705
+              - 15
+            gpm: 0.4420429592458705
+            start: '2019-01-10T03:18:52.024Z'
+            end: '2019-01-10T03:19:06.024Z'
+            predicted_fixture: pool/hot tub
+            type: 4
+            flow: 0.11051073981146763
+          - fixture: faucet
+            not_label: []
+            duration: 13
+            cluster_means:
+              - 0.07248914106551661
+              - 0.3345652664562305
+              - 13
+            gpm: 0.3345652664562305
+            start: '2019-01-10T03:08:33.027Z'
+            end: '2019-01-10T03:08:45.027Z'
+            predicted_fixture: pool/hot tub
+            type: 4
+            flow: 0.07248914106551661
+          - fixture: faucet
+            not_label: []
+            duration: 52
+            cluster_means:
+              - 0.7232994692494259
+              - 0.8345763106724146
+              - 52
+            gpm: 0.8345763106724146
+            start: '2019-01-10T02:54:47.027Z'
+            end: '2019-01-10T02:55:38.027Z'
+            predicted_fixture: pool/hot tub
+            type: 4
+            flow: 0.7232994692494259
+          - fixture: faucet
+            not_label: []
+            duration: 17
+            cluster_means:
+              - 0.14906867004605714
+              - 0.5261247178096135
+              - 17
+            gpm: 0.5261247178096135
+            start: '2019-01-10T02:51:41.027Z'
+            end: '2019-01-10T02:51:57.027Z'
+            predicted_fixture: pool/hot tub
+            type: 4
+            flow: 0.14906867004605714
+          - fixture: toilet
+            sub_label:
+              all:
+                - 2
+              individual: 2
+            duration: 51
+            is_from_ml_profile: true
+            cluster_means:
+              - 1.7252895749080555
+              - 2.0297524410683003
+              - 51
+            gpm: 2.0297524410683003
+            start: '2019-01-09T20:34:07.020Z'
+            end: '2019-01-09T20:34:57.020Z'
+            label:
+              - 0
+              - 5
+              - 6
+              - 9
+              - 13
+              - 14
+            type: 2
+            flow: 1.7252895749080555
+          - fixture: toilet
+            sub_label:
+              all:
+                - 2
+              individual: 2
+            duration: 39
+            is_from_ml_profile: true
+            cluster_means:
+              - 2.1283035190830626
+              - 3.274313106281635
+              - 39
+            gpm: 3.274313106281635
+            start: '2019-01-09T20:28:28.021Z'
+            end: '2019-01-09T20:29:06.021Z'
+            label:
+              - 0
+              - 5
+              - 6
+              - 9
+              - 13
+              - 14
+            type: 2
+            flow: 2.1283035190830626
+          - fixture: appliance
+            sub_label:
+              all:
+                - 4
+              individual: 3
+            duration: 133
+            is_from_ml_profile: true
+            cluster_means:
+              - 8.186598550571112
+              - 3.6932023536411034
+              - 133
+            gpm: 3.6932023536411034
+            start: '2019-01-09T20:24:16.021Z'
+            end: '2019-01-09T20:26:28.021Z'
+            label:
+              - 0
+              - 5
+              - 6
+              - 9
+              - 13
+              - 14
+            type: 3
+            flow: 8.186598550571112
+          - fixture: faucet
+            not_label: []
+            duration: 64
+            cluster_means:
+              - 1.4331223502416752
+              - 1.3435522033515706
+              - 64
+            gpm: 1.3435522033515706
+            start: '2019-01-09T20:17:06.022Z'
+            end: '2019-01-09T20:18:09.022Z'
+            predicted_fixture: pool/hot tub
+            type: 4
+            flow: 1.4331223502416752
+          - fixture: faucet
+            not_label: []
+            duration: 76
+            cluster_means:
+              - 1.8181129920589458
+              - 1.4353523621517994
+              - 76
+            gpm: 1.4353523621517994
+            start: '2019-01-09T20:09:04.023Z'
+            end: '2019-01-09T20:10:19.022Z'
+            predicted_fixture: pool/hot tub
+            type: 4
+            flow: 1.8181129920589458
+          - fixture: faucet
+            not_label: []
+            duration: 36
+            cluster_means:
+              - 0.5133975225489927
+              - 0.8556625375816546
+              - 36
+            gpm: 0.8556625375816546
+            start: '2019-01-09T19:59:57.024Z'
+            end: '2019-01-09T20:00:32.023Z'
+            predicted_fixture: pool/hot tub
+            type: 4
+            flow: 0.5133975225489927
+          - fixture: faucet
+            not_label: []
+            duration: 19
+            cluster_means:
+              - 0.2532803971332305
+              - 0.7998328330523067
+              - 19
+            gpm: 0.7998328330523067
+            start: '2019-01-09T19:55:16.024Z'
+            end: '2019-01-09T19:55:34.024Z'
+            predicted_fixture: pool/hot tub
+            type: 4
+            flow: 0.2532803971332305
+          - fixture: faucet
+            not_label: []
+            duration: 23
+            cluster_means:
+              - 0.1702594873385425
+              - 0.44415518436141516
+              - 23
+            gpm: 0.44415518436141516
+            start: '2019-01-09T19:34:57.028Z'
+            end: '2019-01-09T19:35:19.028Z'
+            predicted_fixture: pool/hot tub
+            type: 4
+            flow: 0.1702594873385425
+          - fixture: appliance
+            sub_label:
+              all:
+                - 4
+              individual: 3
+            duration: 137
+            is_from_ml_profile: true
+            cluster_means:
+              - 2.8342919026645013
+              - 1.241295723794672
+              - 137
+            gpm: 1.241295723794672
+            start: '2019-01-09T19:32:00.019Z'
+            end: '2019-01-09T19:34:16.028Z'
+            label:
+              - 0
+              - 5
+              - 6
+              - 9
+              - 13
+              - 14
+            type: 3
+            flow: 2.8342919026645013
+          - fixture: appliance
+            sub_label:
+              all:
+                - 4
+              individual: 3
+            duration: 137
+            is_from_ml_profile: true
+            cluster_means:
+              - 4.679273849977214
+              - 2.049317014588561
+              - 137
+            gpm: 2.049317014588561
+            start: '2019-01-09T19:24:15.025Z'
+            end: '2019-01-09T19:26:31.022Z'
+            label:
+              - 0
+              - 5
+              - 6
+              - 9
+              - 13
+              - 14
+            type: 3
+            flow: 4.679273849977214
+          - fixture: faucet
+            not_label: []
+            duration: 20
+            cluster_means:
+              - 0.23631201035015875
+              - 0.7089360310504763
+              - 20
+            gpm: 0.7089360310504763
+            start: '2019-01-09T19:15:12.028Z'
+            end: '2019-01-09T19:15:31.028Z'
+            predicted_fixture: pool/hot tub
+            type: 4
+            flow: 0.23631201035015875
+          - fixture: appliance
+            sub_label:
+              all:
+                - 4
+              individual: 3
+            duration: 421
+            is_from_ml_profile: true
+            cluster_means:
+              - 18.83973087059194
+              - 2.6849972737185666
+              - 421
+            gpm: 2.6849972737185666
+            start: '2019-01-09T19:08:01.028Z'
+            end: '2019-01-09T19:15:01.028Z'
+            label:
+              - 0
+              - 5
+              - 6
+              - 9
+              - 13
+              - 14
+            type: 3
+            flow: 18.83973087059194
+          - fixture: faucet
+            not_label: []
+            duration: 111
+            cluster_means:
+              - 4.38310410029996
+              - 2.3692454596215997
+              - 111
+            gpm: 2.3692454596215997
+            start: '2019-01-09T19:05:33.018Z'
+            end: '2019-01-09T19:07:23.028Z'
+            predicted_fixture: pool/hot tub
+            type: 4
+            flow: 4.38310410029996
+          - fixture: shower/bath
+            sub_label:
+              all:
+                - 0
+                - 1
+                - 2
+                - 3
+                - 4
+              individual: 1
+            duration: 343
+            is_from_ml_profile: true
+            cluster_means:
+              - 19.617605857850336
+              - 3.4316511704694466
+              - 343
+            gpm: 3.4316511704694466
+            start: '2019-01-09T18:58:51.020Z'
+            end: '2019-01-09T19:04:33.019Z'
+            label:
+              - 1
+              - 7
+              - 8
+              - 11
+              - 14
+            type: 1
+            flow: 19.617605857850336
+          - fixture: toilet
+            sub_label:
+              all:
+                - 2
+              individual: 2
+            duration: 34
+            is_from_ml_profile: true
+            cluster_means:
+              - 1.5995345282566789
+              - 2.8227079910411983
+              - 34
+            gpm: 2.8227079910411983
+            start: '2019-01-09T18:56:05.022Z'
+            end: '2019-01-09T18:56:38.021Z'
+            label:
+              - 0
+              - 5
+              - 6
+              - 9
+              - 13
+              - 14
+            type: 2
+            flow: 1.5995345282566789
+          - fixture: faucet
+            not_label: []
+            duration: 79
+            cluster_means:
+              - 2.94967820075584
+              - 2.2402619246246886
+              - 79
+            gpm: 2.2402619246246886
+            start: '2019-01-09T18:50:43.027Z'
+            end: '2019-01-09T18:52:01.025Z'
+            predicted_fixture: pool/hot tub
+            type: 4
+            flow: 2.94967820075584
+          - fixture: appliance
+            sub_label:
+              all:
+                - 4
+              individual: 3
+            duration: 126
+            is_from_ml_profile: true
+            cluster_means:
+              - 6.579340706928584
+              - 3.133019384251707
+              - 126
+            gpm: 3.133019384251707
+            start: '2019-01-09T18:46:09.021Z'
+            end: '2019-01-09T18:48:14.020Z'
+            label:
+              - 0
+              - 5
+              - 6
+              - 9
+              - 13
+              - 14
+            type: 3
+            flow: 6.579340706928584
+          - fixture: faucet
+            not_label: []
+            duration: 71
+            cluster_means:
+              - 3.574718429932732
+              - 3.020888814027661
+              - 71
+            gpm: 3.020888814027661
+            start: '2019-01-09T17:57:11.018Z'
+            end: '2019-01-09T17:58:21.019Z'
+            predicted_fixture: pool/hot tub
+            type: 4
+            flow: 3.574718429932732
+          - fixture: toilet
+            sub_label:
+              all:
+                - 2
+              individual: 2
+            duration: 49
+            is_from_ml_profile: true
+            cluster_means:
+              - 1.6635324458452192
+              - 2.0369785051165947
+              - 49
+            gpm: 2.0369785051165947
+            start: '2019-01-09T17:53:33.027Z'
+            end: '2019-01-09T17:54:21.028Z'
+            label:
+              - 0
+              - 5
+              - 6
+              - 9
+              - 13
+              - 14
+            type: 2
+            flow: 1.6635324458452192
+          - fixture: faucet
+            not_label: []
+            duration: 33
+            cluster_means:
+              - 0.5784211677311059
+              - 1.0516748504201925
+              - 33
+            gpm: 1.0516748504201925
+            start: '2019-01-09T17:43:39.028Z'
+            end: '2019-01-09T17:44:11.027Z'
+            predicted_fixture: pool/hot tub
+            type: 4
+            flow: 0.5784211677311059
+          - fixture: toilet
+            sub_label:
+              all:
+                - 2
+              individual: 2
+            duration: 46
+            is_from_ml_profile: true
+            cluster_means:
+              - 1.5521737706842185
+              - 2.0245744835011545
+              - 46
+            gpm: 2.0245744835011545
+            start: '2019-01-09T17:41:14.019Z'
+            end: '2019-01-09T17:41:59.018Z'
+            label:
+              - 0
+              - 5
+              - 6
+              - 9
+              - 13
+              - 14
+            type: 2
+            flow: 1.5521737706842185
+          - fixture: appliance
+            sub_label:
+              all:
+                - 4
+              individual: 3
+            duration: 157
+            is_from_ml_profile: true
+            cluster_means:
+              - 6.658405406763418
+              - 2.544613531247166
+              - 157
+            gpm: 2.544613531247166
+            start: '2019-01-09T17:30:44.025Z'
+            end: '2019-01-09T17:33:20.027Z'
+            label:
+              - 0
+              - 5
+              - 6
+              - 9
+              - 13
+              - 14
+            type: 3
+            flow: 6.658405406763418
+          - fixture: toilet
+            sub_label:
+              all:
+                - 2
+              individual: 2
+            duration: 39
+            is_from_ml_profile: true
+            cluster_means:
+              - 2.1638215890492845
+              - 3.328956290845053
+              - 39
+            gpm: 3.328956290845053
+            start: '2019-01-09T17:21:47.019Z'
+            end: '2019-01-09T17:22:25.019Z'
+            label:
+              - 0
+              - 5
+              - 6
+              - 9
+              - 13
+              - 14
+            type: 2
+            flow: 2.1638215890492845
+          - fixture: appliance
+            sub_label:
+              all:
+                - 4
+              individual: 3
+            duration: 243
+            is_from_ml_profile: true
+            cluster_means:
+              - 11.833409229070583
+              - 2.9218294392766873
+              - 243
+            gpm: 2.9218294392766873
+            start: '2019-01-09T17:08:30.024Z'
+            end: '2019-01-09T17:12:32.024Z'
+            label:
+              - 0
+              - 5
+              - 6
+              - 9
+              - 13
+              - 14
+            type: 3
+            flow: 11.833409229070583
+          - fixture: faucet
+            not_label: []
+            duration: 51
+            cluster_means:
+              - 1.3019696089453185
+              - 1.5317289517003747
+              - 51
+            gpm: 1.5317289517003747
+            start: '2019-01-09T17:04:18.023Z'
+            end: '2019-01-09T17:05:08.024Z'
+            predicted_fixture: pool/hot tub
+            type: 4
+            flow: 1.3019696089453185
+          - fixture: toilet
+            sub_label:
+              all:
+                - 2
+              individual: 2
+            duration: 49
+            is_from_ml_profile: true
+            cluster_means:
+              - 2.005257473942795
+              - 2.455417315031994
+              - 49
+            gpm: 2.455417315031994
+            start: '2019-01-09T17:00:28.021Z'
+            end: '2019-01-09T17:01:16.021Z'
+            label:
+              - 0
+              - 5
+              - 6
+              - 9
+              - 13
+              - 14
+            type: 2
+            flow: 2.005257473942795
+          - fixture: appliance
+            sub_label:
+              all:
+                - 4
+              individual: 3
+            duration: 131
+            is_from_ml_profile: true
+            cluster_means:
+              - 1.5478383417909314
+              - 0.7089335916599686
+              - 131
+            gpm: 0.7089335916599686
+            start: '2019-01-09T16:49:25.025Z'
+            end: '2019-01-09T16:51:35.026Z'
+            label:
+              - 0
+              - 5
+              - 6
+              - 9
+              - 13
+              - 14
+            type: 3
+            flow: 1.5478383417909314
+          - fixture: appliance
+            sub_label:
+              all:
+                - 4
+              individual: 3
+            duration: 261
+            is_from_ml_profile: true
+            cluster_means:
+              - 13.336472316367077
+              - 3.065855704911972
+              - 261
+            gpm: 3.065855704911972
+            start: '2019-01-09T16:44:03.026Z'
+            end: '2019-01-09T16:48:23.025Z'
+            label:
+              - 0
+              - 5
+              - 6
+              - 9
+              - 13
+              - 14
+            type: 3
+            flow: 13.336472316367077
+          - fixture: toilet
+            sub_label:
+              all:
+                - 2
+              individual: 2
+            duration: 51
+            is_from_ml_profile: true
+            cluster_means:
+              - 1.5779291293621456
+              - 1.856387211014289
+              - 51
+            gpm: 1.856387211014289
+            start: '2019-01-09T16:04:00.024Z'
+            end: '2019-01-09T16:04:50.024Z'
+            label:
+              - 0
+              - 5
+              - 6
+              - 9
+              - 13
+              - 14
+            type: 2
+            flow: 1.5779291293621456
+          - fixture: toilet
+            sub_label:
+              all:
+                - 2
+              individual: 2
+            duration: 45
+            is_from_ml_profile: true
+            cluster_means:
+              - 1.3608589541886653
+              - 1.8144786055848872
+              - 45
+            gpm: 1.8144786055848872
+            start: '2019-01-09T07:41:24.024Z'
+            end: '2019-01-09T07:42:08.024Z'
+            label:
+              - 0
+              - 5
+              - 6
+              - 9
+              - 13
+              - 14
+            type: 2
+            flow: 1.3608589541886653
+          - fixture: faucet
+            not_label: []
+            duration: 88
+            cluster_means:
+              - 0.8221554134942862
+              - 0.5605605092006497
+              - 88
+            gpm: 0.5605605092006497
+            start: '2019-01-09T07:35:38.022Z'
+            end: '2019-01-09T07:37:05.023Z'
+            predicted_fixture: pool/hot tub
+            type: 4
+            flow: 0.8221554134942862
+          - fixture: faucet
+            not_label: []
+            duration: 49
+            cluster_means:
+              - 0.6059225202302311
+              - 0.7419459431390584
+              - 49
+            gpm: 0.7419459431390584
+            start: '2019-01-09T06:57:02.021Z'
+            end: '2019-01-09T06:57:50.021Z'
+            predicted_fixture: pool/hot tub
+            type: 4
+            flow: 0.6059225202302311
+        known_fixtures:
+          - irrigation
+          - shower/bath
+          - faucet
+          - appliance
+          - pool/hot tub
+          - toilet
+        compute_start_date: '2019-01-10T06:42:34.027618'
+        start_date: '2019-01-09T06:00:34.906Z'
+        request_id: ffffffff-ffff-4fff-8fff-ffffffffffff
+        duration_in_seconds: 86400
+    FlowEvent:
+      type: object
+      properties:
+        fixture:
+          type: string
+          example: faucet
+        not_label:
+          type: array
+          items:
+            type: integer
+            format: int32
+        duration:
+          type: integer
+          format: int32
+          example: 23
+        cluster_means:
+          type: array
+          items:
+            type: number
+            example: 0.26727133811566733
+            format: double
+        gpm:
+          type: number
+          example: 0.6972295776930452
+          format: double
+        start:
+          type: string
+          example: '2019-01-10T04:05:12.025Z'
+          format: date-time
+        end:
+          type: string
+          example: '2019-01-10T04:05:34.025Z'
+          format: date-time
+        predicted_fixture:
+          type: string
+          example: pool/hot tub
+        type:
+          type: integer
+          format: int32
+          example: 4
+        flow:
+          type: number
+          example: 0.26727133811566733
+          format: double
+        sub_label:
+          $ref: '#/components/schemas/Label'
+        not_sub_label:
+          $ref: '#/components/schemas/Label'
+        feedback:
+          $ref: '#/components/schemas/Feedback'
+      required:
+        - duration
+        - fixture
+        - type
+        - start
+        - end
+        - flow
+        - gpm
+    Label:
+      type: object
+      properties:
+        all:
+          type: array
+          items:
+            type: integer
+        individual:
+          type: integer
+      required:
+        - all
+        - individual
+    Feedback:
+      type: object
+      properties:
+        case:
+          type: integer
+        correct_fixture:
+          type: string
+      required:
+        - case
+        - correct_fixture
+    PutFeedback:
+      type: object
+      properties:
+        fixtures:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+                example: shower/bath
+                description: Name of fixture type
+              index:
+                type: integer
+                format: int32
+                example: 0
+                description: Sort order of fixture record
+              type:
+                type: integer
+                format: int32
+                example: 1
+                description: Enumerated type of fixture
+              gallons:
+                type: number
+                example: 19.6176
+                format: float
+                description: Gallons used by fixture
+              ratio:
+                type: number
+                example: 0.1508
+                format: float
+              num_events:
+                type: integer
+                format: int32
+                example: 1
+                description: Number of flow events attributed to fixture
+              feedback:
+                type: object
+                properties:
+                  accurate:
+                    type: boolean
+                    example: true
+                    description: Is computation accurate?
+                  reason:
+                    type: integer
+                    description: Enumerated reason
+                  other_reason:
+                    type: string
+                    description: Explained other reason
+                required:
+                  - accurate
+            required:
+              - name
+              - index
+              - type
+              - gallons
+              - ratio
+              - feedback
+    Uuid:
+      type: string
+      format: uuid
+      example: ffffffff-ffff-4fff-8fff-ffffffffffff
+    AlertFeedbackPayload:
+      type: object
+      properties:
+        icd_id:
+          type: string
+          format: uuid
+          example: ffffffff-ffff-4fff-8fff-ffffffffffff
+          description: Unique pairing ID of the Flo device
+        incident_id:
+          type: string
+          format: uuid
+          example: ffffffff-ffff-4fff-8fff-ffffffffffff
+          description: Unique incident ID of the alert
+        alarm_id:
+          type: integer
+          format: int32
+          example: 15
+          description: Alarm ID of the alert
+        system_mode:
+          type: integer
+          format: int32
+          example: 2
+          description: System mode ID of the alert
+        should_accept_as_normal:
+          type: boolean
+          example: true
+          description: Should this alert have been accepted as normal water usage?
+        cause:
+          type: integer
+          format: int32
+          example: 0
+          description: Enum value of what caused the alert
+        cause_other:
+          type: string
+          example: Something
+          description: Free form text response for if user chooses "Other" for cause
+        plumbing_failure:
+          type: integer
+          format: int32
+          example: 0
+          description: >-
+            Enum value of the plumbing failure behind the alert. This should
+            only be set if cause value indicates a plumbing failure
+        plumbing_failure_other:
+          type: string
+          example: Something
+          description: >-
+            Free form text response for if user chooses "Other" for
+            plumbing_failure
+        action_taken:
+          type: string
+          example: none
+          description: Enum value
+          enum:
+            - sleep_24h
+            - sleep_2h
+            - none
+      required:
+        - icd_id
+        - incident_id
+        - alarm_id
+        - system_mode
+        - should_accept_as_normal
+        - cause
+      example:
+        icd_id: ffffffff-ffff-4fff-8fff-ffffffffffff
+        incident_id: ffffffff-ffff-4fff-8fff-ffffffffffff
+        alarm_id: 15
+        system_mode: 2
+        should_accept_as_normal: true
+        cause: 0
+        plumbing_failure: 0
+    AlertFeedback:
+      type: object
+      properties:
+        icd_id:
+          type: string
+          format: uuid
+          example: ffffffff-ffff-4fff-8fff-ffffffffffff
+          description: Unique pairing ID of the Flo device
+        incident_id:
+          type: string
+          format: uuid
+          example: ffffffff-ffff-4fff-8fff-ffffffffffff
+          description: Unique incident ID of the alert
+        alarm_id:
+          type: integer
+          format: int32
+          example: 15
+          description: Alarm ID of the alert
+        system_mode:
+          type: integer
+          format: int32
+          example: 2
+          description: System mode ID of the alert
+        should_accept_as_normal:
+          type: boolean
+          example: true
+          description: Should this alert have been accepted as normal water usage?
+        cause:
+          type: integer
+          format: int32
+          example: 0
+          description: >-
+            Enum value of what caused the alert
+             * `0` - Not Sure
+             * `1` - Other
+             * `2` - Irrgiation
+             * `3` - Pool / Hot Tub
+             * `4` - Hose Bibb
+             * `5` - Plumbing Failure
+             * `6` - Toilet Flapper
+             * `7` - Long Shower
+             * `8` - Multiple Fixtures On at Once
+             * `9` - Water Softener / Filtration
+             * `10` - Drip Irrigation
+             * `11` - Fixture Left On
+          enum:
+            - 0
+            - 1
+            - 2
+            - 3
+            - 4
+            - 5
+            - 6
+            - 7
+            - 8
+            - 9
+            - 10
+            - 11
+        cause_other:
+          type: string
+          example: Something
+          description: Free form text response for if user chooses "Other" for cause
+        plumbing_failure:
+          type: integer
+          format: int32
+          example: 0
+          description: >-
+            Enum value of the plumbing failure behind the alert. This should
+            only be set if cause value indicates a plumbing failure
+             * `0` - Not Sure
+             * `1` - Other
+             * `2` - Cracked / Burst Pipe
+             * `3` - Bad Connector / Supply Line
+             * `4` - Sprinkler Head
+             * `5` - Running Toilet
+             * `6` - Pinhole Leak
+             * `7` - Reverse Osmosis
+             * `8` - Relief Valve Discharging
+          enum:
+            - 0
+            - 1
+            - 2
+            - 3
+            - 4
+            - 5
+            - 6
+            - 7
+            - 8
+        plumbing_failure_other:
+          type: string
+          example: Something
+          description: >-
+            Free form text response for if user chooses "Other" for
+            plumbing_failure
+        action_taken:
+          type: string
+          example: none
+          description: Enum value
+          enum:
+            - sleep_24h
+            - sleep_2h
+            - none
+        created_at:
+          type: string
+          format: date-time
+          example: 2018-12-12T00:45:17.893Z
+          description: Date and time the feedback record was submitted
+        updated_at:
+          type: string
+          format: date-time
+          example: 2018-12-12T00:45:17.893Z
+          description: Date and time the feedback record was updated
+      required:
+        - icd_id
+        - incident_id
+        - alarm_id
+        - system_mode
+        - should_accept_as_normal
+        - cause
+        - created_at
+        - updated_at
+      example:
+        icd_id: ffffffff-ffff-4fff-8fff-ffffffffffff
+        incident_id: ffffffff-ffff-4fff-8fff-ffffffffffff
+        alarm_id: 15
+        system_mode: 2
+        should_accept_as_normal: true
+        cause: 0
+        plumbing_failure: 0
+        created_at: 2018-12-12T00:45:17.893Z
+        updated_at: 2018-12-12T00:45:17.893Z
+    FeedbackStepOption:
+      type: object
+      properties:
+        display_text:
+          type: string
+          example: 'Yes'
+          description: Text to be displayed for the option
+        sort_order:
+          type: integer
+          format: int32
+          example: 0
+          description: >-
+            Zero-based index indicating the order in which options are to be
+            displayed
+        property:
+          type: string
+          example: 'yes'
+          description: Property key that ought to be assigned in the feedback
+        value:
+          type: string
+          example: 'yes'
+          description: >-
+            Value to be assigned to property in the feedback. For "text" type, this can represent default value if the user does not enter any text.
+        flow:
+          description: >-
+            Recursive structure indicating the options to be displayed on the
+            next screen if this particular option is displayed
+          $ref: '#/components/schemas/FeedbackStep'
+        action:
+          type: string
+          example: sleep_24h
+          description: >-
+            Represents the action to take if the option is selected. Possible values are
+
+             * `sleep_2h` - Sleep for 2 hours
+             * `sleep_24h` - Sleep for 24 hours
+          enum:
+            - sleep_2h
+            - sleep_24h
+        tag:
+          type: string
+          description: >-
+            If tag is defined, then retrieve the FeedbackStep from the flow_tags and proceed from there
+      required:
+        - property
+    FeedbackTag:
+      type: object
+      properties:
+        tag:
+          type: string
+    FeedbackStep:
+      type: object
+      description: Step in the feedback flow
+      properties:
+        title_text:
+          type: string
+          description: Text to be displayed for view title
+          example: Should Flo have accepted this event as normal?
+        type:
+          type: string
+          description: >-
+            Display type of the options. Possible values are
+
+             * `list` - A list of options where a single option can be selected
+             * `text` - Free form text response
+          example: list
+          enum:
+            - list
+            - text
+        options:
+          type: array
+          description: Input options for the flow
+          items:
+            $ref: '#/components/schemas/FeedbackStepOption'
+      required:
+        - title_text
+        - type
+        - options
+    FeedbackFlow:
+      type: object
+      properties:
+        alarm_id:
+          type: integer
+          example: 10
+          description: Alarm ID for which the feedback flow is defined
+        system_mode:
+          type: integer
+          example: 2
+          description: System Mode ID for which the feedback flow is defined
+        flow_tags:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/FeedbackStep'
+          example:
+            sleep_flow:
+              options:
+                - property: action_taken
+                  action: sleep_2h
+                  display_text: 'Yes, sleep for 2 hours'
+                  sort_order: 0
+                  value: sleep_2h
+                - property: action_taken
+                  action: sleep_24h
+                  display_text: 'Yes, sleep for 24 hours'
+                  sort_order: 1
+                  value: sleep_24h
+                - property: action_taken
+                  action: null
+                  display_text: 'No'
+                  sort_order: 2
+                  value: none
+              title_text: Would you like to put your Flo device to sleep?
+              type: list
+        flow:
+          $ref: '#/components/schemas/FeedbackStep'
+      required:
+        - alarm_id
+        - system_mode
+        - flow
+      example:
+        flow_tags:
+          sleep_flow:
+            options:
+              - property: action_taken
+                action: sleep_2h
+                display_text: 'Yes, sleep for 2 hours'
+                sort_order: 0
+                value: sleep_2h
+              - property: action_taken
+                action: sleep_24h
+                display_text: 'Yes, sleep for 24 hours'
+                sort_order: 1
+                value: sleep_24h
+              - property: action_taken
+                action: null
+                display_text: 'No, please alert me'
+                sort_order: 2
+                value: none
+            title_text: Would you like to put your Flo device in sleep mode temporarily to avoid being alerted? Please note your Flo device will not shut off your water while in Sleep mode.
+            type: list
+        flow:
+          options:
+            - property: should_accept_as_normal
+              display_text: 'No'
+              sort_order: 1
+              value: true
+              flow:
+                options:
+                  - property: cause
+                    display_text: Irrigation
+                    sort_order: 0
+                    value: 2
+                    flow:
+                      tag: sleep_flow
+                  - property: cause
+                    display_text: Pool / Hot Tub
+                    sort_order: 1
+                    value: 3
+                    flow:
+                      tag: sleep_flow
+                  - property: cause
+                    display_text: Hose Bibb
+                    sort_order: 2
+                    value: 4
+                    flow:
+                      tag: sleep_flow
+                  - property: cause
+                    display_text: Other
+                    sort_order: 3
+                    value: 1
+                    flow:
+                      options:
+                        - property: cause_other
+                          flow:
+                            tag: sleep_flow
+                      title_text: Please explain what caused this alert
+                      type: text
+                title_text: Please select the option that best describes the source of the issue
+                type: list
+            - property: should_accept_as_normal
+              display_text: 'Yes'
+              sort_order: 0
+              value: false
+              flow:
+                options:
+                  - property: cause
+                    display_text: Plumbing Failure
+                    sort_order: 0
+                    value: 5
+                    flow:
+                      options:
+                        - property: plumbing_failure
+                          display_text: Cracked / Burst Pipe
+                          sort_order: 0
+                          value: 2
+                          flow:
+                            tag: sleep_flow
+                        - property: plumbing_failure
+                          display_text: Bad Connector / Supply Line
+                          sort_order: 1
+                          value: 3
+                          flow:
+                            tag: sleep_flow
+                        - property: plumbing_failure
+                          display_text: Sprinkler Head
+                          sort_order: 2
+                          value: 4
+                          flow:
+                            tag: sleep_flow
+                        - property: plumbing_failure
+                          display_text: Not Sure
+                          sort_order: 3
+                          value: 0
+                          flow:
+                            tag: sleep_flow
+                        - property: plumbing_failure
+                          display_text: Other
+                          sort_order: 4
+                          value: 1
+                          flow:
+                            options:
+                              - property: plumbing_failure_other
+                                flow:
+                                  tag: sleep_flow
+                            title_text: Please explain what caused this alert
+                            type: text
+                      title_text: Please describe the plumbing failure
+                      type: list
+                  - property: cause
+                    display_text: Toilet Flapper
+                    sort_order: 1
+                    value: 6
+                    flow:
+                      tag: sleep_flow
+                  - property: cause
+                    display_text: Pool / Hot Tub
+                    sort_order: 2
+                    value: 3
+                    flow:
+                      tag: sleep_flow
+                  - property: cause
+                    display_text: Hose Bibb
+                    sort_order: 3
+                    value: 4
+                    flow:
+                      tag: sleep_flow
+                  - property: cause
+                    display_text: Not Sure
+                    sort_order: 4
+                    value: 0
+                    flow:
+                      tag: sleep_flow
+                  - property: cause
+                    display_text: Other
+                    sort_order: 5
+                    value: 1
+                    flow:
+                      options:
+                        - property: cause_other
+                          flow:
+                            tag: sleep_flow
+                      title_text: Please explain what caused this alert
+                      type: text
+                title_text: Please select the option that best describes the source of the issue
+                type: list
+          title_text: 'In the future, should events like this send alerts?'
+          type: list
+        alarm_id: 10
+        system_mode: 2
+  responses:
+    NotFoundError:
+      description: Not Found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    InternalServerError:
+      description: Internal Server Error.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    InvalidRequestError:
+      description: Invalid Request.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    UnprocessableEntityError:
+      description: Unprocessable Entity.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    DataValidataionError:
+      description: Data validation error.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    InvalidAuthTokenError:
+      description: Invalid auth token.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NoPermissionError:
+      description: Token does not have permission to make request to endpoint.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Ok:
+      description: Ok
+  parameters:
+    Authorization:
+      name: Authorization
+      in: header
+      required: true
+      description: Contains the JWT token
+      schema:
+        type: string
+        format: 'Bearer [token]'
+    AdminAuthorization:
+      name: Authorization
+      in: header
+      required: true
+      description: Contains the admin or specific JWT token
+      schema:
+        type: string
+        format: 'Bearer [token]'
+    DeviceId:
+      name: device_id
+      in: path
+      description: Device ID of the device for which the computation was performed
+      required: true
+      schema:
+        type: string
+  requestBodies:
+    AddNotificationToken:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/AddNotificationToken'
+      required: true
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: 'https://user.meetflo.com/authorization'
+          tokenUrl: 'https://api.meetflo.com/api/v1/oauth2/token'
+          scopes:
+            user: Grants user read/write access
+            admin: Grants read and write access to administrative information
+  examples:
+    Alert:
+      value:
+        is_cleared: false
+        severity: 2
+        updated_at: '2019-01-31t07:07:17.510Z'
+        incident_id: ffffffff-ffff-4fff-8fff-ffffffffffff
+        alarm_id: 33
+        alarm_id_system_mode: '33_2'
+        icd_id: ffffffff-ffff-4fff-8fff-ffffffffffff
+        incident_time: '2019-01-31t07:07:16.704Z'
+        status: 3
+        system_mode: 2
+        telemetry_data:
+          pmax: -1
+          tmax: -1
+          f: -1
+          tmin: -1
+          sw1: 1
+          ft: -1
+          pefl: -1
+          wf: -1
+          sw2: 0
+          fdl: -1
+          p: -1
+          pef: -1
+          mafr: -1
+          t: -1
+          v: 1
+          pmin: -1
+          fd: -1
+          ftl: -1
+        friendly_name: Device Offline
+        self_resolved: 0
+        friendly_description: >-
+          On January 30 11:07 pm, your Flo by Moen device went offline. This
+          could be due to a power or internet outage.
+        acknowledged_by_user: 0
+        default_delivery_media:
+          - 2
+          - 3
+        user_actions:
+          support_options:
+            - action_path: user.meetflo.com/support/alarms/33
+              sort: 1
+              text: Learn More
+              id: 1
+              action_type: 0
+          title: Clear this alert
+          prompt: Do you want to ignore this alert if it happens again?
+          actions:
+            - success_message: You will not be alerted about this alert again for 2 hours.
+              display: 'Yes, for 2 hours'
+              sort: 1
+              failure_message: >-
+                Sorry, there was a problem processing your request. Please try
+                again later or call support.
+              id: 1
+              option: Ignore For 2 hours
+              display_when:
+                alarm_notification_delivery_filter:
+                  status: 3
+            - success_message: You will not be alerted about this alert again for 24 hours.
+              display: 'Yes, for 24 hours'
+              sort: 2
+              failure_message: >-
+                Sorry, there was a problem processing your request. Please try
+                again later or call support.
+              id: 6
+              option: Ignore For 24 hours
+              display_when:
+                alarm_notification_delivery_filter:
+                  status: 3
+            - success_message: You will be alerted the next time this issue occurs.
+              display: 'No, send me alerts'
+              sort: 4
+              failure_message: >-
+                Sorry, there was a problem processing your request. Please try
+                again later or call support.
+              id: 4
+              option: Do not ignore this alert
+              display_when:
+                alarm_notification_delivery_filter:
+                  status: 3
+        onboarding:
+          event: 3
+          created_at: '2019-01-25T09:54:48.979Z'
+        geo_location:
+          postal_code: '00000'
+          state_or_province: CA
+          country: us
+          location_id: ffffffff-ffff-4fff-8fff-ffffffffffff
+          timezone: US/Pacific
+        account:
+          account_id: ffffffff-ffff-4fff-8fff-ffffffffffff
+          group_id: ffffffff-ffff-4fff-8fff-ffffffffffff
+    PendingAlert:
+      value:
+        severity: 2
+        total: 2
+        alarm_ids:
+          - alarm_id: 15
+            total: 1
+            system_modes:
+              - system_mode: 3
+                total: 1
+                alerts:
+                  - is_cleared: false
+                    severity: 2
+                    updated_at: '2019-01-31t07:07:17.510Z'
+                    incident_id: ffffffff-ffff-4fff-8fff-ffffffffffff
+                    alarm_id: 33
+                    alarm_id_system_mode: '33_2'
+                    icd_id: ffffffff-ffff-4fff-8fff-ffffffffffff
+                    incident_time: '2019-01-31t07:07:16.704Z'
+                    status: 3
+                    system_mode: 2
+                    telemetry_data:
+                      pmax: -1
+                      tmax: -1
+                      f: -1
+                      tmin: -1
+                      sw1: 1
+                      ft: -1
+                      pefl: -1
+                      wf: -1
+                      sw2: 0
+                      fdl: -1
+                      p: -1
+                      pef: -1
+                      mafr: -1
+                      t: -1
+                      v: 1
+                      pmin: -1
+                      fd: -1
+                      ftl: -1
+                    friendly_name: Device Offline
+                    self_resolved: 0
+                    friendly_description: >-
+                      On January 30 11:07 pm, your Flo by Moen device went
+                      offline. This could be due to a power or internet outage.
+                    acknowledged_by_user: 0
+                    default_delivery_media:
+                      - 2
+                      - 3
+                    user_actions:
+                      support_options:
+                        - action_path: user.meetflo.com/support/alarms/33
+                          sort: 1
+                          text: Learn More
+                          id: 1
+                          action_type: 0
+                      title: Clear this alert
+                      prompt: Do you want to ignore this alert if it happens again?
+                      actions:
+                        - success_message: >-
+                            You will not be alerted about this alert again for 2
+                            hours.
+                          display: 'Yes, for 2 hours'
+                          sort: 1
+                          failure_message: >-
+                            Sorry, there was a problem processing your request.
+                            Please try again later or call support.
+                          id: 1
+                          option: Ignore For 2 hours
+                          display_when:
+                            alarm_notification_delivery_filter:
+                              status: 3
+                        - success_message: >-
+                            You will not be alerted about this alert again for
+                            24 hours.
+                          display: 'Yes, for 24 hours'
+                          sort: 2
+                          failure_message: >-
+                            Sorry, there was a problem processing your request.
+                            Please try again later or call support.
+                          id: 6
+                          option: Ignore For 24 hours
+                          display_when:
+                            alarm_notification_delivery_filter:
+                              status: 3
+                        - success_message: You will be alerted the next time this issue occurs.
+                          display: 'No, send me alerts'
+                          sort: 4
+                          failure_message: >-
+                            Sorry, there was a problem processing your request.
+                            Please try again later or call support.
+                          id: 4
+                          option: Do not ignore this alert
+                          display_when:
+                            alarm_notification_delivery_filter:
+                              status: 3
+                    onboarding:
+                      event: 3
+                      created_at: '2019-01-25T09:54:48.979Z'
+                    geo_location:
+                      postal_code: '00000'
+                      state_or_province: CA
+                      country: us
+                      location_id: ffffffff-ffff-4fff-8fff-ffffffffffff
+                      timezone: US/Pacific
+                    account:
+                      account_id: ffffffff-ffff-4fff-8fff-ffffffffffff
+                      group_id: ffffffff-ffff-4fff-8fff-ffffffffffff
+          - alarm_id: 10
+            total: 1
+            system_modes:
+              - system_mode: 2
+                total: 1
+                alerts:
+                  - is_cleared: false
+                    severity: 2
+                    updated_at: '2019-01-31t07:07:17.510Z'
+                    incident_id: ffffffff-ffff-4fff-8fff-ffffffffffff
+                    alarm_id: 33
+                    alarm_id_system_mode: '33_2'
+                    icd_id: ffffffff-ffff-4fff-8fff-ffffffffffff
+                    incident_time: '2019-01-31t07:07:16.704Z'
+                    status: 3
+                    system_mode: 2
+                    telemetry_data:
+                      pmax: -1
+                      tmax: -1
+                      f: -1
+                      tmin: -1
+                      sw1: 1
+                      ft: -1
+                      pefl: -1
+                      wf: -1
+                      sw2: 0
+                      fdl: -1
+                      p: -1
+                      pef: -1
+                      mafr: -1
+                      t: -1
+                      v: 1
+                      pmin: -1
+                      fd: -1
+                      ftl: -1
+                    friendly_name: Device Offline
+                    self_resolved: 0
+                    friendly_description: >-
+                      On January 30 11:07 pm, your Flo by Moen device went
+                      offline. This could be due to a power or internet outage.
+                    acknowledged_by_user: 0
+                    default_delivery_media:
+                      - 2
+                      - 3
+                    user_actions:
+                      support_options:
+                        - action_path: user.meetflo.com/support/alarms/33
+                          sort: 1
+                          text: Learn More
+                          id: 1
+                          action_type: 0
+                      title: Clear this alert
+                      prompt: Do you want to ignore this alert if it happens again?
+                      actions:
+                        - success_message: >-
+                            You will not be alerted about this alert again for 2
+                            hours.
+                          display: 'Yes, for 2 hours'
+                          sort: 1
+                          failure_message: >-
+                            Sorry, there was a problem processing your request.
+                            Please try again later or call support.
+                          id: 1
+                          option: Ignore For 2 hours
+                          display_when:
+                            alarm_notification_delivery_filter:
+                              status: 3
+                        - success_message: >-
+                            You will not be alerted about this alert again for
+                            24 hours.
+                          display: 'Yes, for 24 hours'
+                          sort: 2
+                          failure_message: >-
+                            Sorry, there was a problem processing your request.
+                            Please try again later or call support.
+                          id: 6
+                          option: Ignore For 24 hours
+                          display_when:
+                            alarm_notification_delivery_filter:
+                              status: 3
+                        - success_message: You will be alerted the next time this issue occurs.
+                          display: 'No, send me alerts'
+                          sort: 4
+                          failure_message: >-
+                            Sorry, there was a problem processing your request.
+                            Please try again later or call support.
+                          id: 4
+                          option: Do not ignore this alert
+                          display_when:
+                            alarm_notification_delivery_filter:
+                              status: 3
+                    onboarding:
+                      event: 3
+                      created_at: '2019-01-25T09:54:48.979Z'
+                    geo_location:
+                      postal_code: '00000'
+                      state_or_province: CA
+                      country: us
+                      location_id: ffffffff-ffff-4fff-8fff-ffffffffffff
+                      timezone: US/Pacific
+                    account:
+                      account_id: ffffffff-ffff-4fff-8fff-ffffffffffff
+                      group_id: ffffffff-ffff-4fff-8fff-ffffffffffff
