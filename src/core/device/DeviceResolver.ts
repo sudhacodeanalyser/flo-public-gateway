@@ -109,24 +109,33 @@ class DeviceResolver extends Resolver<Device> {
       return this.notificationService.getAlarmCounts({});
     },
     hardwareThresholds: async (device: Device, shouldExpand = false) => {
+      const gpm = device.deviceType !== 'flo_device_075_v2' ?
+        {
+          okMax: 50,
+          maxValue: 80
+        } :
+        {
+          okMax: 30,
+          maxValue: 50
+        };
+
       return {
         gpm: {
           okMin: 0,
-          okMax: 12,
-          maxValue: 20,
-          minValue: 0
+          minValue: 0,
+          ...gpm
         },
         psi: {
           okMin: 30,
           okMax: 80,
           minValue: 0,
-          maxValue: 150
+          maxValue: 100
         },
         temp: {
-          okMin: 40,
-          okMax: 120,
+          okMin: 50,
+          okMax: 80,
           minValue: 0,
-          maxValue: 180
+          maxValue: 100
         }
       }
     }

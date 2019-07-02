@@ -84,25 +84,17 @@ export interface DeviceUpdate extends t.TypeOf<typeof DeviceUpdateValidator> {
   systemMode?: Partial<SystemModeData>;
 };
 
+interface ThresholdDefinition {
+  okMin: number;
+  okMax: number;
+  maxValue: number;
+  minValue: number;
+}
+
 interface HardwareThresholds {
-  gpm: {
-    okMin: number;
-    okMax: number;
-    maxValue: number;
-    minValue: number;
-  };
-  psi: {
-    okMin: number;
-    okMax: number;
-    minValue: number;
-    maxValue: number;
-  };
-  temp: {
-    okMin: number;
-    okMax: number;
-    minValue: number;
-    maxValue: number;
-  };
+  gpm: ThresholdDefinition;
+  psi: ThresholdDefinition;
+  temp: ThresholdDefinition;
 }
 
 export interface Device extends Omit<DeviceUpdate, 'valve'>, TimestampedModel {
