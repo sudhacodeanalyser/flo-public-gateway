@@ -1,6 +1,6 @@
 # TODO: Make this file external, downloadable via versioned URL
 ---
-image: registry.gitlab.com/flotechnologies/gitlabci-docker-compose:latest
+image: registry.gitlab.com/flotechnologies/gitlabci-docker-compose:18.06-fat
 
 services:
   - docker:dind
