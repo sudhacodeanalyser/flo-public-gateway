@@ -3,11 +3,10 @@ import { injectHttpContext, interfaces } from 'inversify-express-utils';
 import _ from 'lodash';
 import uuid from 'uuid';
 import { fromPartialRecord } from '../../database/Patch';
-import { ApiNotificationServiceFactory } from '../../notification/ApiNotificationServiceFactory';
 import { DependencyFactoryFactory, Device, Location, LocationUserRole, SystemMode } from '../api';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import LocationTable from '../location/LocationTable';
-import { NotificationService } from '../notification/NotificationService';
+import { NotificationService, NotificationServiceFactory } from '../notification/NotificationService';
 import { AccountResolver, DeviceResolver, PropertyResolverMap, Resolver, SubscriptionResolver, UserResolver } from '../resolver';
 import { UserLocationRoleRecord } from '../user/UserLocationRoleRecord';
 import UserLocationRoleTable from '../user/UserLocationRoleTable';
@@ -133,7 +132,7 @@ class LocationResolver extends Resolver<Location> {
     @inject('LocationTable') private locationTable: LocationTable,
     @inject('UserLocationRoleTable') private userLocationRoleTable: UserLocationRoleTable,
     @inject('DependencyFactoryFactory') depFactoryFactory: DependencyFactoryFactory,
-    @inject('NotificationServiceFactory') notificationServiceFactory: ApiNotificationServiceFactory,
+    @inject('NotificationServiceFactory') notificationServiceFactory: NotificationServiceFactory,
     @injectHttpContext private readonly httpContext: interfaces.HttpContext
   ) {
     super();
