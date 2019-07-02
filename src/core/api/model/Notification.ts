@@ -71,4 +71,8 @@ export interface SupportOption {
   text: string;
 }
 
-
+export interface NotificationCounts {
+  criticalCount: number;
+  warningCount: number;
+  infoCount: number;
+}

@@ -1,14 +1,16 @@
 import { inject, injectable } from 'inversify';
-import uuid from 'uuid';
-import { LocationRecordData, LocationRecord } from './LocationRecord';
-import { UserLocationRoleRecord } from '../user/UserLocationRoleRecord';
-import { Location, LocationUserRole, DependencyFactoryFactory, Device, SystemMode } from '../api';
-import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
-import { Resolver, PropertyResolverMap, DeviceResolver, UserResolver, AccountResolver, SubscriptionResolver } from '../resolver';
-import LocationTable from '../location/LocationTable';
-import UserLocationRoleTable from '../user/UserLocationRoleTable';
-import { fromPartialRecord } from '../../database/Patch';
+import { injectHttpContext, interfaces } from 'inversify-express-utils';
 import _ from 'lodash';
+import uuid from 'uuid';
+import { fromPartialRecord } from '../../database/Patch';
+import { DependencyFactoryFactory, Device, Location, LocationUserRole, SystemMode } from '../api';
+import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
+import LocationTable from '../location/LocationTable';
+import { NotificationService, NotificationServiceFactory } from '../notification/NotificationService';
+import { AccountResolver, DeviceResolver, PropertyResolverMap, Resolver, SubscriptionResolver, UserResolver } from '../resolver';
+import { UserLocationRoleRecord } from '../user/UserLocationRoleRecord';
+import UserLocationRoleTable from '../user/UserLocationRoleTable';
+import { LocationRecord, LocationRecordData } from './LocationRecord';
 
 @injectable()
 class LocationResolver extends Resolver<Location> {
@@ -67,7 +69,7 @@ class LocationResolver extends Resolver<Location> {
       if (!shouldExpand) {
         return {
           id: subscription.id,
-          provider: { 
+          provider: {
             isActive: subscription.provider.isActive
           }
         };
@@ -85,8 +87,8 @@ class LocationResolver extends Resolver<Location> {
       const device: Device | undefined = devices
         .filter((d: Device) =>
           d.systemMode &&
-          !d.systemMode.isLocked && 
-          (d.systemMode.lastKnown || d.systemMode.target) 
+          !d.systemMode.isLocked &&
+          (d.systemMode.lastKnown || d.systemMode.target)
         )
         .sort((deviceA: Device, deviceB: Device) => {
           if (_.get(deviceA, 'systemMode.target') && !_.get(deviceB, 'systemMode.target')) {
@@ -99,11 +101,11 @@ class LocationResolver extends Resolver<Location> {
         })[0];
 
       return {
-        target: _.get(device, 'systemMode.target') || _.get(device, 'systemMode.lastKnown') || SystemMode.HOME 
+        target: _.get(device, 'systemMode.target') || _.get(device, 'systemMode.lastKnown') || SystemMode.HOME
       };
     },
     irrigationSchedule: async (location: Location, shouldExpand = false) => {
-      
+
       if (location.irrigationSchedule !== undefined) {
         return location.irrigationSchedule;
       }
@@ -114,6 +116,9 @@ class LocationResolver extends Resolver<Location> {
       return {
         isEnabled: _.get(devices[0], 'irrigationSchedule.isEnabled', false)
       };
+    },
+    notifications: async (location: Location, shouldExpand = false) => {
+      return this.notificationService.getAlarmCounts({});
     }
   };
 
@@ -121,11 +126,14 @@ class LocationResolver extends Resolver<Location> {
   private accountResolverFactory: () => AccountResolver;
   private userResolverFactory: () => UserResolver;
   private subscriptionResolverFactory: () => SubscriptionResolver;
+  private notificationService: NotificationService;
 
   constructor(
     @inject('LocationTable') private locationTable: LocationTable,
     @inject('UserLocationRoleTable') private userLocationRoleTable: UserLocationRoleTable,
-    @inject('DependencyFactoryFactory') depFactoryFactory: DependencyFactoryFactory
+    @inject('DependencyFactoryFactory') depFactoryFactory: DependencyFactoryFactory,
+    @inject('NotificationServiceFactory') notificationServiceFactory: NotificationServiceFactory,
+    @injectHttpContext private readonly httpContext: interfaces.HttpContext
   ) {
     super();
 
@@ -133,6 +141,10 @@ class LocationResolver extends Resolver<Location> {
     this.accountResolverFactory = depFactoryFactory<AccountResolver>('AccountResolver');
     this.userResolverFactory = depFactoryFactory<UserResolver>('UserResolver');
     this.subscriptionResolverFactory = depFactoryFactory<SubscriptionResolver>('SubscriptionResolver');
+
+    if (!_.isEmpty(this.httpContext)) {
+      this.notificationService = notificationServiceFactory.create(this.httpContext.request);
+    }
   }
 
   public async get(id: string, expandProps: string[] = []): Promise<Location | null> {
@@ -276,3 +288,4 @@ class LocationResolver extends Resolver<Location> {
 }
 
 export { LocationResolver };
+
