@@ -5,9 +5,11 @@ import _ from 'lodash';
 import uuid from 'uuid';
 import { fromPartialRecord } from '../../database/Patch';
 import { InternalDeviceService } from "../../internal-device-service/InternalDeviceService";
+import { ApiNotificationServiceFactory } from '../../notification/ApiNotificationServiceFactory';
 import { DependencyFactoryFactory, Device, DeviceCreate, DeviceModelType, DeviceSystemModeNumeric, DeviceType, DeviceUpdate, SystemMode, ValveState, ValveStateNumeric } from '../api';
 import { translateNumericToStringEnum } from '../api/enumUtils';
 import DeviceTable from '../device/DeviceTable';
+import { NotificationService } from '../notification/NotificationService';
 import { LocationResolver, PropertyResolverMap, Resolver } from '../resolver';
 import DeviceForcedSystemModeTable from './DeviceForcedSystemModeTable';
 import { DeviceRecord, DeviceRecordData } from './DeviceRecord';
@@ -103,10 +105,14 @@ class DeviceResolver extends Resolver<Device> {
       return {
         isInstalled: onboardingLog !== null
       }
+    },
+    notifications: async (device: Device, shouldExpand = false) => {
+      return this.notificationService.getAlarmCounts({});
     }
   };
   private locationResolverFactory: () => LocationResolver;
   private irrigationScheduleService: IrrigationScheduleService;
+  private notificationService: NotificationService;
 
   constructor(
    @inject('DeviceTable') private deviceTable: DeviceTable,
@@ -116,6 +122,7 @@ class DeviceResolver extends Resolver<Device> {
    @inject('OnboardingLogTable') private onboardingLogTable: OnboardingLogTable,
    @inject('Logger') private readonly logger: Logger,
    @inject('IrrigationScheduleServiceFactory') irrigationScheduleServiceFactory: IrrigationScheduleServiceFactory,
+   @inject('NotificationServiceFactory') notificationServiceFactory: ApiNotificationServiceFactory,
    @injectHttpContext private readonly httpContext: interfaces.HttpContext
   ) {
     super();
@@ -124,6 +131,7 @@ class DeviceResolver extends Resolver<Device> {
 
     if (!_.isEmpty(this.httpContext)) {
       this.irrigationScheduleService = irrigationScheduleServiceFactory.create(this.httpContext.request);
+      this.notificationService = notificationServiceFactory.create(this.httpContext.request);
     }
   }
 

@@ -1,4 +1,4 @@
-import {ActionsSupportResponse, AlertEvent, AlertSettings, ClearAlertResponse, PaginatedResult} from '../api';
+import { ActionsSupportResponse, AlertEvent, AlertSettings, ClearAlertResponse, NotificationCounts, PaginatedResult } from '../api';
 import Request from '../api/Request';
 
 export interface NotificationServiceFactory {
@@ -17,4 +17,5 @@ export interface NotificationService {
   updateAlarmSettings(userId: string, data: any): Promise<void>;
   generateEventsSample(data: any): Promise<void>;
   getActions(data: any): Promise<ActionsSupportResponse>;
+  getAlarmCounts(data: any): Promise<NotificationCounts>;
 }
