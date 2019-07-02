@@ -107,6 +107,28 @@ class DeviceResolver extends Resolver<Device> {
     },
     notifications: async (device: Device, shouldExpand = false) => {
       return this.notificationService.getAlarmCounts({});
+    },
+    hardwareThresholds: async (device: Device, shouldExpand = false) => {
+      return {
+        gpm: {
+          okMin: 0,
+          okMax: 12,
+          maxValue: 20,
+          minValue: 0
+        },
+        psi: {
+          okMin: 30,
+          okMax: 80,
+          minValue: 0,
+          maxValue: 150
+        },
+        temp: {
+          okMin: 40,
+          okMax: 120,
+          minValue: 0,
+          maxValue: 180
+        }
+      }
     }
   };
   private locationResolverFactory: () => LocationResolver;

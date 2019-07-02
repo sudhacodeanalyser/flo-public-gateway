@@ -84,6 +84,27 @@ export interface DeviceUpdate extends t.TypeOf<typeof DeviceUpdateValidator> {
   systemMode?: Partial<SystemModeData>;
 };
 
+interface HardwareThresholds {
+  gpm: {
+    okMin: number;
+    okMax: number;
+    maxValue: number;
+    minValue: number;
+  };
+  psi: {
+    okMin: number;
+    okMax: number;
+    minValue: number;
+    maxValue: number;
+  };
+  temp: {
+    okMin: number;
+    okMax: number;
+    minValue: number;
+    maxValue: number;
+  };
+}
+
 export interface Device extends Omit<DeviceUpdate, 'valve'>, TimestampedModel {
   id: string,
   macAddress: string;
@@ -105,6 +126,7 @@ export interface Device extends Omit<DeviceUpdate, 'valve'>, TimestampedModel {
     updatedAt?: string
   };
   notifications?: NotificationCounts;
+  hardwareThresholds?: HardwareThresholds;
 }
 
 interface FwProperties {
