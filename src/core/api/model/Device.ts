@@ -1,7 +1,7 @@
 import * as t from 'io-ts';
 import _ from 'lodash';
 import { InternalDevice } from '../../../internal-device-service/models';
-import { Expandable, Location, Omit, SystemModeCodec as DeviceSystemModeCodec, TimestampedModel } from '../../api';
+import { Expandable, Location, NotificationCounts, Omit, SystemModeCodec as DeviceSystemModeCodec, TimestampedModel } from '../../api';
 import { convertEnumtoCodec } from '../../api/enumUtils';
 import { ComputedIrrigationSchedule } from '../../device/IrrigationScheduleService';
 import { NoYesUnsure } from '../NoYesUnsure';
@@ -92,6 +92,9 @@ export interface Device extends Omit<DeviceUpdate, 'valve'>, TimestampedModel {
   deviceModel: string;
   isPaired: boolean;
   additionalProps: AdditionalDeviceProps | null | undefined;
+  installStatus: {
+    isInstalled: boolean
+  };
   valve?: {
     target?: ValveState,
     lastKnown?: ValveState
@@ -101,9 +104,7 @@ export interface Device extends Omit<DeviceUpdate, 'valve'>, TimestampedModel {
     computed?: Omit<ComputedIrrigationSchedule, 'macAddress'>,
     updatedAt?: string
   };
-  installStatus: {
-    isInstalled: boolean
-  };
+  notifications?: NotificationCounts;
 }
 
 interface FwProperties {
