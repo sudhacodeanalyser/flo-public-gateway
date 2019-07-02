@@ -1,0 +1,5940 @@
+paths:
+  '/api/v1/stockicds/device/{device_id}/qrcode':
+    get:
+      operationId: getQrCode
+      summary: Get QR Code
+      security:
+        - OAuth2:
+            - admin
+      tags:
+        - Pairing
+      parameters:
+        - $ref: '#/components/parameters/AdminAuthorization'
+        - name: device_id
+          in: path
+          description: Device ID of the device for which the computation was performed
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  qr_code_data_svg:
+                    type: string
+                    example: >-
+                      <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"525\"
+                      height=\"525\" viewBox=\"0 0 525 525\"></svg>
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      x-code-samples:
+        - lang: Java_okhttp
+          source: |-
+            OkHttpClient client = new OkHttpClient();
+
+            Request request = new Request.Builder()
+              .url("https://api.meetflo.com//api/v1/stockicds/device/%7Bdevice_id%7D/qrcode")
+              .get()
+              .addHeader("authorization", "Bearer REPLACE_BEARER_TOKEN")
+              .build();
+
+            Response response = client.newCall(request).execute();
+        - lang: Javascript_xhr
+          source: >-
+            var data = null;
+
+
+            var xhr = new XMLHttpRequest();
+
+            xhr.withCredentials = true;
+
+
+            xhr.addEventListener("readystatechange", function () {
+              if (this.readyState === this.DONE) {
+                console.log(this.responseText);
+              }
+            });
+
+
+            xhr.open("GET",
+            "https://api.meetflo.com//api/v1/stockicds/device/%7Bdevice_id%7D/qrcode");
+
+            xhr.setRequestHeader("authorization", "Bearer
+            REPLACE_BEARER_TOKEN");
+
+
+            xhr.send(data);
+        - lang: Node_native
+          source: |-
+            var http = require("https");
+
+            var options = {
+              "method": "GET",
+              "hostname": "api.meetflo.com",
+              "port": null,
+              "path": "//api/v1/stockicds/device/%7Bdevice_id%7D/qrcode",
+              "headers": {
+                "authorization": "Bearer REPLACE_BEARER_TOKEN"
+              }
+            };
+
+            var req = http.request(options, function (res) {
+              var chunks = [];
+
+              res.on("data", function (chunk) {
+                chunks.push(chunk);
+              });
+
+              res.on("end", function () {
+                var body = Buffer.concat(chunks);
+                console.log(body.toString());
+              });
+            });
+
+            req.end();
+        - lang: Python_python3
+          source: >-
+            import http.client
+
+
+            conn = http.client.HTTPSConnection("api.meetflo.com")
+
+
+            headers = { 'authorization': "Bearer REPLACE_BEARER_TOKEN" }
+
+
+            conn.request("GET",
+            "//api/v1/stockicds/device/%7Bdevice_id%7D/qrcode", headers=headers)
+
+
+            res = conn.getresponse()
+
+            data = res.read()
+
+
+            print(data.decode("utf-8"))
+        - lang: Python_requests
+          source: >-
+            import requests
+
+
+            url =
+            "https://api.meetflo.com//api/v1/stockicds/device/%7Bdevice_id%7D/qrcode"
+
+
+            headers = {'authorization': 'Bearer REPLACE_BEARER_TOKEN'}
+
+
+            response = requests.request("GET", url, headers=headers)
+
+
+            print(response.text)
+        - lang: Shell_curl
+          source: |-
+            curl --request GET \
+              --url https://api.meetflo.com//api/v1/stockicds/device/%7Bdevice_id%7D/qrcode \
+              --header 'authorization: Bearer REPLACE_BEARER_TOKEN'
+  '/api/v1/stockicds/device/{device_id}/qrdata':
+
+    get:
+      operationId: getQrDataByDeviceId
+      summary: Get QR Data By Device ID
+      security:
+        - OAuth2:
+            - admin
+      tags:
+        - Pairing
+      parameters:
+        - $ref: '#/components/parameters/AdminAuthorization'
+        - name: device_id
+          in: path
+          description: Device ID of the device for which the computation was performed
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+          schema:
+            type: string
+            example: >-
+              V:2$I:ffffffff-ffff-4fff-8fff-ffffffffffff$E:ffffffff-ffff-4fff-8fff-ffffffffffff$
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      x-code-samples:
+        - lang: Java_okhttp
+          source: |-
+            OkHttpClient client = new OkHttpClient();
+
+            Request request = new Request.Builder()
+              .url("https://api.meetflo.com//api/v1/stockicds/device/%7Bdevice_id%7D/qrdata")
+              .get()
+              .addHeader("authorization", "Bearer REPLACE_BEARER_TOKEN")
+              .build();
+
+            Response response = client.newCall(request).execute();
+        - lang: Javascript_xhr
+          source: >-
+            var data = null;
+
+
+            var xhr = new XMLHttpRequest();
+
+            xhr.withCredentials = true;
+
+
+            xhr.addEventListener("readystatechange", function () {
+              if (this.readyState === this.DONE) {
+                console.log(this.responseText);
+              }
+            });
+
+
+            xhr.open("GET",
+            "https://api.meetflo.com//api/v1/stockicds/device/%7Bdevice_id%7D/qrdata");
+
+            xhr.setRequestHeader("authorization", "Bearer
+            REPLACE_BEARER_TOKEN");
+
+
+            xhr.send(data);
+        - lang: Node_native
+          source: |-
+            var http = require("https");
+
+            var options = {
+              "method": "GET",
+              "hostname": "api.meetflo.com",
+              "port": null,
+              "path": "//api/v1/stockicds/device/%7Bdevice_id%7D/qrdata",
+              "headers": {
+                "authorization": "Bearer REPLACE_BEARER_TOKEN"
+              }
+            };
+
+            var req = http.request(options, function (res) {
+              var chunks = [];
+
+              res.on("data", function (chunk) {
+                chunks.push(chunk);
+              });
+
+              res.on("end", function () {
+                var body = Buffer.concat(chunks);
+                console.log(body.toString());
+              });
+            });
+
+            req.end();
+        - lang: Python_python3
+          source: >-
+            import http.client
+
+
+            conn = http.client.HTTPSConnection("api.meetflo.com")
+
+
+            headers = { 'authorization': "Bearer REPLACE_BEARER_TOKEN" }
+
+
+            conn.request("GET",
+            "//api/v1/stockicds/device/%7Bdevice_id%7D/qrdata", headers=headers)
+
+
+            res = conn.getresponse()
+
+            data = res.read()
+
+
+            print(data.decode("utf-8"))
+        - lang: Python_requests
+          source: >-
+            import requests
+
+
+            url =
+            "https://api.meetflo.com//api/v1/stockicds/device/%7Bdevice_id%7D/qrdata"
+
+
+            headers = {'authorization': 'Bearer REPLACE_BEARER_TOKEN'}
+
+
+            response = requests.request("GET", url, headers=headers)
+
+
+            print(response.text)
+        - lang: Shell_curl
+          source: |-
+            curl --request GET \
+              --url https://api.meetflo.com//api/v1/stockicds/device/%7Bdevice_id%7D/qrdata \
+              --header 'authorization: Bearer REPLACE_BEARER_TOKEN'
+
+  '/api/v1/stockicds/registration/device/{device_id}':
+    get:
+      operationId: getRegistrationByDeviceId
+      summary: Get Registration By Device ID
+      security:
+        - OAuth2:
+            - admin
+      tags:
+        - Pairing
+      parameters:
+        - $ref: '#/components/parameters/AdminAuthorization'
+        - name: device_id
+          in: path
+          description: Device ID of the device for which the computation was performed
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  wlan_mac_id:
+                    type: string
+                    example: 'ff:ff:ff:ff:ff:ff'
+                  device_id:
+                    $ref: '#/components/schemas/DeviceId'
+                  wifi_ssid:
+                    type: string
+                    example: Flo-ffff
+                  sku:
+                    type: string
+                    example: '{"m": 0.00068000000000000000 "b": -0.0079999999999999999}'
+                  websocket_cert:
+                    type: string
+                  websocket_key:
+                    type: string
+                  icd_login_token:
+                    type: string
+                    example: ffffffffffffffffffffffffffffffffffffffff
+                  ssh_private_key:
+                    type: string
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      x-code-samples:
+        - lang: Java_okhttp
+          source: |-
+            OkHttpClient client = new OkHttpClient();
+
+            Request request = new Request.Builder()
+              .url("https://api.meetflo.com//api/v1/stockicds/registration/device/%7Bdevice_id%7D")
+              .get()
+              .addHeader("authorization", "Bearer REPLACE_BEARER_TOKEN")
+              .build();
+
+            Response response = client.newCall(request).execute();
+        - lang: Javascript_xhr
+          source: >-
+            var data = null;
+
+
+            var xhr = new XMLHttpRequest();
+
+            xhr.withCredentials = true;
+
+
+            xhr.addEventListener("readystatechange", function () {
+              if (this.readyState === this.DONE) {
+                console.log(this.responseText);
+              }
+            });
+
+
+            xhr.open("GET",
+            "https://api.meetflo.com//api/v1/stockicds/registration/device/%7Bdevice_id%7D");
+
+            xhr.setRequestHeader("authorization", "Bearer
+            REPLACE_BEARER_TOKEN");
+
+
+            xhr.send(data);
+        - lang: Node_native
+          source: |-
+            var http = require("https");
+
+            var options = {
+              "method": "GET",
+              "hostname": "api.meetflo.com",
+              "port": null,
+              "path": "//api/v1/stockicds/registration/device/%7Bdevice_id%7D",
+              "headers": {
+                "authorization": "Bearer REPLACE_BEARER_TOKEN"
+              }
+            };
+
+            var req = http.request(options, function (res) {
+              var chunks = [];
+
+              res.on("data", function (chunk) {
+                chunks.push(chunk);
+              });
+
+              res.on("end", function () {
+                var body = Buffer.concat(chunks);
+                console.log(body.toString());
+              });
+            });
+
+            req.end();
+        - lang: Python_python3
+          source: >-
+            import http.client
+
+
+            conn = http.client.HTTPSConnection("api.meetflo.com")
+
+
+            headers = { 'authorization': "Bearer REPLACE_BEARER_TOKEN" }
+
+
+            conn.request("GET",
+            "//api/v1/stockicds/registration/device/%7Bdevice_id%7D",
+            headers=headers)
+
+
+            res = conn.getresponse()
+
+            data = res.read()
+
+
+            print(data.decode("utf-8"))
+        - lang: Python_requests
+          source: >-
+            import requests
+
+
+            url =
+            "https://api.meetflo.com//api/v1/stockicds/registration/device/%7Bdevice_id%7D"
+
+
+            headers = {'authorization': 'Bearer REPLACE_BEARER_TOKEN'}
+
+
+            response = requests.request("GET", url, headers=headers)
+
+
+            print(response.text)
+        - lang: Shell_curl
+          source: |-
+            curl --request GET \
+              --url https://api.meetflo.com//api/v1/stockicds/registration/device/%7Bdevice_id%7D \
+              --header 'authorization: Bearer REPLACE_BEARER_TOKEN'
+  /api/v1/userdetails/me:
+    get:
+      operationId: getUserDetails
+      summary: /api/v1/userdetails/me
+      tags:
+        - userDetailRoutes
+      security:
+        - OAuth2:
+            - user
+      parameters:
+        - $ref: '#/components/parameters/Authorization'
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  firstname:
+                    type: string
+                    example: Andrew
+                  lastname:
+                    type: string
+                    example: Chen
+                  user_id:
+                    type: string
+                    example: ffffffff-ffff-4fff-8fff-ffffffffffff
+                    format: uuid
+                  unit_system:
+                    type: string
+                    example: imperial_us
+              example:
+                firstname: Andrew
+                lastname: Chen
+                user_id: ffffffff-ffff-4fff-8fff-ffffffffffff
+                unit_system: imperial_us
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      x-code-samples:
+        - lang: Java_okhttp
+          source: |-
+            OkHttpClient client = new OkHttpClient();
+
+            Request request = new Request.Builder()
+              .url("https://api.meetflo.com//api/v1/userdetails/me")
+              .get()
+              .addHeader("authorization", "Bearer REPLACE_BEARER_TOKEN")
+              .build();
+
+            Response response = client.newCall(request).execute();
+        - lang: Javascript_xhr
+          source: >-
+            var data = null;
+
+
+            var xhr = new XMLHttpRequest();
+
+            xhr.withCredentials = true;
+
+
+            xhr.addEventListener("readystatechange", function () {
+              if (this.readyState === this.DONE) {
+                console.log(this.responseText);
+              }
+            });
+
+
+            xhr.open("GET", "https://api.meetflo.com//api/v1/userdetails/me");
+
+            xhr.setRequestHeader("authorization", "Bearer
+            REPLACE_BEARER_TOKEN");
+
+
+            xhr.send(data);
+        - lang: Node_native
+          source: |-
+            var http = require("https");
+
+            var options = {
+              "method": "GET",
+              "hostname": "api.meetflo.com",
+              "port": null,
+              "path": "//api/v1/userdetails/me",
+              "headers": {
+                "authorization": "Bearer REPLACE_BEARER_TOKEN"
+              }
+            };
+
+            var req = http.request(options, function (res) {
+              var chunks = [];
+
+              res.on("data", function (chunk) {
+                chunks.push(chunk);
+              });
+
+              res.on("end", function () {
+                var body = Buffer.concat(chunks);
+                console.log(body.toString());
+              });
+            });
+
+            req.end();
+        - lang: Python_python3
+          source: |-
+            import http.client
+
+            conn = http.client.HTTPSConnection("api.meetflo.com")
+
+            headers = { 'authorization': "Bearer REPLACE_BEARER_TOKEN" }
+
+            conn.request("GET", "//api/v1/userdetails/me", headers=headers)
+
+            res = conn.getresponse()
+            data = res.read()
+
+            print(data.decode("utf-8"))
+        - lang: Python_requests
+          source: |-
+            import requests
+
+            url = "https://api.meetflo.com//api/v1/userdetails/me"
+
+            headers = {'authorization': 'Bearer REPLACE_BEARER_TOKEN'}
+
+            response = requests.request("GET", url, headers=headers)
+
+            print(response.text)
+        - lang: Shell_curl
+          source: |-
+            curl --request GET \
+              --url https://api.meetflo.com//api/v1/userdetails/me \
+              --header 'authorization: Bearer REPLACE_BEARER_TOKEN'
+    /api/v1/icds/me:
+      get:
+        operationId: getIcd
+        summary: /api/v1/icds/me
+        tags:
+          - ICDRoutes
+        security:
+          - OAuth2:
+              - user
+        parameters:
+          - $ref: '#/components/parameters/Authorization'
+        responses:
+          '200':
+            $ref: '#/components/responses/Ok'
+            schema:
+              type: object
+              properties:
+                is_paired:
+                  type: boolean
+                device_id:
+                  type: string
+                  example: ffffffffffff
+                id:
+                  type: string
+                  example: ffffffff-ffff-4fff-8fff-ffffffffffff
+                  format: uuid
+                location_id:
+                  type: string
+                  example: ffffffff-ffff-4fff-8fff-ffffffffffff
+                  format: uuid
+          '404':
+            $ref: '#/components/responses/NotFoundError'
+          '500':
+            $ref: '#/components/responses/InternalServerError'
+        x-code-samples:
+          - lang: Java_okhttp
+            source: |-
+              OkHttpClient client = new OkHttpClient();
+
+              Request request = new Request.Builder()
+                .url("https://api.meetflo.com//api/v1/icds/me")
+                .get()
+                .addHeader("authorization", "Bearer REPLACE_BEARER_TOKEN")
+                .build();
+
+              Response response = client.newCall(request).execute();
+          - lang: Javascript_xhr
+            source: >-
+              var data = null;
+
+
+              var xhr = new XMLHttpRequest();
+
+              xhr.withCredentials = true;
+
+
+              xhr.addEventListener("readystatechange", function () {
+                if (this.readyState === this.DONE) {
+                  console.log(this.responseText);
+                }
+              });
+
+
+              xhr.open("GET", "https://api.meetflo.com//api/v1/icds/me");
+
+              xhr.setRequestHeader("authorization", "Bearer
+              REPLACE_BEARER_TOKEN");
+
+
+              xhr.send(data);
+          - lang: Node_native
+            source: |-
+              var http = require("https");
+
+              var options = {
+                "method": "GET",
+                "hostname": "api.meetflo.com",
+                "port": null,
+                "path": "//api/v1/icds/me",
+                "headers": {
+                  "authorization": "Bearer REPLACE_BEARER_TOKEN"
+                }
+              };
+
+              var req = http.request(options, function (res) {
+                var chunks = [];
+
+                res.on("data", function (chunk) {
+                  chunks.push(chunk);
+                });
+
+                res.on("end", function () {
+                  var body = Buffer.concat(chunks);
+                  console.log(body.toString());
+                });
+              });
+
+              req.end();
+          - lang: Python_python3
+            source: |-
+              import http.client
+
+              conn = http.client.HTTPSConnection("api.meetflo.com")
+
+              headers = { 'authorization': "Bearer REPLACE_BEARER_TOKEN" }
+
+              conn.request("GET", "//api/v1/icds/me", headers=headers)
+
+              res = conn.getresponse()
+              data = res.read()
+
+              print(data.decode("utf-8"))
+          - lang: Python_requests
+            source: |-
+              import requests
+
+              url = "https://api.meetflo.com//api/v1/icds/me"
+
+              headers = {'authorization': 'Bearer REPLACE_BEARER_TOKEN'}
+
+              response = requests.request("GET", url, headers=headers)
+
+              print(response.text)
+          - lang: Shell_curl
+            source: |-
+              curl --request GET \
+                --url https://api.meetflo.com//api/v1/icds/me \
+                --header 'authorization: Bearer REPLACE_BEARER_TOKEN'
+  '/api/v1/icds/device/{device_id}':
+    get:
+      operationId: getIcdByDeviceId
+      summary: '/api/v1/icds/device/{device_id}'
+      tags:
+        - ICDRoutes
+      security:
+        - OAuth2:
+            - admin
+      parameters:
+        - $ref: '#/components/parameters/AdminAuthorization'
+        - name: device_id
+          in: path
+          description: Device ID of the device for which the computation was performed
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  is_paired:
+                    type: boolean
+                  device_id:
+                    type: string
+                    example: ffffffffffff
+                  id:
+                    type: string
+                    example: ffffffff-ffff-4fff-8fff-ffffffffffff
+                    format: uuid
+                  location_id:
+                    type: string
+                    example: ffffffff-ffff-4fff-8fff-ffffffffffff
+                    format: uuid
+              example:
+                is_paired: true
+                device_id: ffffffffffff
+                id: ffffffff-ffff-4fff-8fff-ffffffffffff
+                location_id: ffffffff-ffff-4fff-8fff-ffffffffffff
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      x-code-samples:
+        - lang: Java_okhttp
+          source: |-
+            OkHttpClient client = new OkHttpClient();
+
+            Request request = new Request.Builder()
+              .url("https://api.meetflo.com//api/v1/icds/device/%7Bdevice_id%7D")
+              .get()
+              .addHeader("authorization", "Bearer REPLACE_BEARER_TOKEN")
+              .build();
+
+            Response response = client.newCall(request).execute();
+        - lang: Javascript_xhr
+          source: >-
+            var data = null;
+
+
+            var xhr = new XMLHttpRequest();
+
+            xhr.withCredentials = true;
+
+
+            xhr.addEventListener("readystatechange", function () {
+              if (this.readyState === this.DONE) {
+                console.log(this.responseText);
+              }
+            });
+
+
+            xhr.open("GET",
+            "https://api.meetflo.com//api/v1/icds/device/%7Bdevice_id%7D");
+
+            xhr.setRequestHeader("authorization", "Bearer
+            REPLACE_BEARER_TOKEN");
+
+
+            xhr.send(data);
+        - lang: Node_native
+          source: |-
+            var http = require("https");
+
+            var options = {
+              "method": "GET",
+              "hostname": "api.meetflo.com",
+              "port": null,
+              "path": "//api/v1/icds/device/%7Bdevice_id%7D",
+              "headers": {
+                "authorization": "Bearer REPLACE_BEARER_TOKEN"
+              }
+            };
+
+            var req = http.request(options, function (res) {
+              var chunks = [];
+
+              res.on("data", function (chunk) {
+                chunks.push(chunk);
+              });
+
+              res.on("end", function () {
+                var body = Buffer.concat(chunks);
+                console.log(body.toString());
+              });
+            });
+
+            req.end();
+        - lang: Python_python3
+          source: >-
+            import http.client
+
+
+            conn = http.client.HTTPSConnection("api.meetflo.com")
+
+
+            headers = { 'authorization': "Bearer REPLACE_BEARER_TOKEN" }
+
+
+            conn.request("GET", "//api/v1/icds/device/%7Bdevice_id%7D",
+            headers=headers)
+
+
+            res = conn.getresponse()
+
+            data = res.read()
+
+
+            print(data.decode("utf-8"))
+        - lang: Python_requests
+          source: |-
+            import requests
+
+            url = "https://api.meetflo.com//api/v1/icds/device/%7Bdevice_id%7D"
+
+            headers = {'authorization': 'Bearer REPLACE_BEARER_TOKEN'}
+
+            response = requests.request("GET", url, headers=headers)
+
+            print(response.text)
+        - lang: Shell_curl
+          source: |-
+            curl --request GET \
+              --url https://api.meetflo.com//api/v1/icds/device/%7Bdevice_id%7D \
+              --header 'authorization: Bearer REPLACE_BEARER_TOKEN'
+    /api/v1/locations/me:
+      get:
+        operationId: getLocation
+        summary: /api/v1/locations/me
+        tags:
+          - locationRoutes
+        security:
+          - OAuth2:
+              - user
+        parameters:
+          - $ref: '#/components/parameters/Authorization'
+        responses:
+          '200':
+            description: Ok
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    expansion_tank:
+                      type: integer
+                      format: int32
+                      example: 2
+                    stories:
+                      type: integer
+                      format: int32
+                      example: 3
+                    location_type:
+                      type: string
+                      example: sfh
+                    occupants:
+                      type: integer
+                      format: int32
+                      example: 3
+                    water_filtering_system:
+                      type: integer
+                      format: int32
+                      example: 2
+                    bathroom_amenities:
+                      type: array
+                      items:
+                        type: string
+                        example: Hot Tub
+                    galvanized_plumbing:
+                      type: integer
+                      format: int32
+                      example: 2
+                    address:
+                      type: string
+                      example: Yucca St
+                    outdoor_amenities:
+                      type: array
+                      items:
+                        type: string
+                        example: Hot Tub
+                    postalcode:
+                      type: string
+                      example: 90028
+                    account_id:
+                      type: string
+                      example: ffffffff-ffff-4fff-8fff-ffffffffffff
+                      format: uuid
+                    country:
+                      type: string
+                      example: us
+                    state:
+                      type: string
+                      example: CA
+                    city:
+                      type: string
+                      example: Los Angeles
+                    tankless:
+                      type: integer
+                      format: int32
+                      example: 2
+                    is_profile_complete:
+                      type: boolean
+                    location_size_category:
+                      type: integer
+                      format: int32
+                      example: 2
+                    whole_house_humidifier:
+                      type: integer
+                      format: int32
+                      example: 2
+                    gallons_per_day_goal:
+                      type: integer
+                      format: int32
+                      example: 170
+                    timezone:
+                      type: string
+                      example: US/Pacific
+                    location_id:
+                      type: string
+                      example: ffffffff-ffff-4fff-8fff-ffffffffffff
+                      format: uuid
+                    hot_water_recirculation:
+                      type: integer
+                      format: int32
+                      example: 2
+                    water_shutoff_known:
+                      type: integer
+                      format: int32
+                      example: 2
+                    kitchen_amenities:
+                      type: array
+                      items:
+                        type: string
+                        example: Washer / Dryer
+          '404':
+            $ref: '#/components/responses/NotFoundError'
+          '500':
+            $ref: '#/components/responses/InternalServerError'
+        x-code-samples:
+          - lang: Java_okhttp
+            source: |-
+              OkHttpClient client = new OkHttpClient();
+
+              Request request = new Request.Builder()
+                .url("https://api.meetflo.com//api/v1/locations/me")
+                .get()
+                .addHeader("authorization", "Bearer REPLACE_BEARER_TOKEN")
+                .build();
+
+              Response response = client.newCall(request).execute();
+          - lang: Javascript_xhr
+            source: >-
+              var data = null;
+
+
+              var xhr = new XMLHttpRequest();
+
+              xhr.withCredentials = true;
+
+
+              xhr.addEventListener("readystatechange", function () {
+                if (this.readyState === this.DONE) {
+                  console.log(this.responseText);
+                }
+              });
+
+
+              xhr.open("GET", "https://api.meetflo.com//api/v1/locations/me");
+
+              xhr.setRequestHeader("authorization", "Bearer
+              REPLACE_BEARER_TOKEN");
+
+
+              xhr.send(data);
+          - lang: Node_native
+            source: |-
+              var http = require("https");
+
+              var options = {
+                "method": "GET",
+                "hostname": "api.meetflo.com",
+                "port": null,
+                "path": "//api/v1/locations/me",
+                "headers": {
+                  "authorization": "Bearer REPLACE_BEARER_TOKEN"
+                }
+              };
+
+              var req = http.request(options, function (res) {
+                var chunks = [];
+
+                res.on("data", function (chunk) {
+                  chunks.push(chunk);
+                });
+
+                res.on("end", function () {
+                  var body = Buffer.concat(chunks);
+                  console.log(body.toString());
+                });
+              });
+
+              req.end();
+          - lang: Python_python3
+            source: |-
+              import http.client
+
+              conn = http.client.HTTPSConnection("api.meetflo.com")
+
+              headers = { 'authorization': "Bearer REPLACE_BEARER_TOKEN" }
+
+              conn.request("GET", "//api/v1/locations/me", headers=headers)
+
+              res = conn.getresponse()
+              data = res.read()
+
+              print(data.decode("utf-8"))
+          - lang: Python_requests
+            source: |-
+              import requests
+
+              url = "https://api.meetflo.com//api/v1/locations/me"
+
+              headers = {'authorization': 'Bearer REPLACE_BEARER_TOKEN'}
+
+              response = requests.request("GET", url, headers=headers)
+
+              print(response.text)
+          - lang: Shell_curl
+            source: |-
+              curl --request GET \
+                --url https://api.meetflo.com//api/v1/locations/me \
+                --header 'authorization: Bearer REPLACE_BEARER_TOKEN'
+
+  /api/v1/users/me:
+    get:
+      operationId: getUser
+      summary: /api/v1/users/me
+      tags:
+        - userRoutes
+      security:
+        - OAuth2:
+            - user
+      parameters:
+        - $ref: '#/components/parameters/Authorization'
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  is_active:
+                    type: boolean
+                  id:
+                    type: string
+                    example: ffffffff-ffff-4fff-8fff-ffffffffffff
+                    format: uuid
+                  email:
+                    type: string
+                    example: user@example.com
+                    format: email
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      x-code-samples:
+        - lang: Java_okhttp
+          source: |-
+            OkHttpClient client = new OkHttpClient();
+
+            Request request = new Request.Builder()
+              .url("https://api.meetflo.com//api/v1/users/me")
+              .get()
+              .addHeader("authorization", "Bearer REPLACE_BEARER_TOKEN")
+              .build();
+
+            Response response = client.newCall(request).execute();
+        - lang: Javascript_xhr
+          source: >-
+            var data = null;
+
+
+            var xhr = new XMLHttpRequest();
+
+            xhr.withCredentials = true;
+
+
+            xhr.addEventListener("readystatechange", function () {
+              if (this.readyState === this.DONE) {
+                console.log(this.responseText);
+              }
+            });
+
+
+            xhr.open("GET", "https://api.meetflo.com//api/v1/users/me");
+
+            xhr.setRequestHeader("authorization", "Bearer
+            REPLACE_BEARER_TOKEN");
+
+
+            xhr.send(data);
+        - lang: Node_native
+          source: |-
+            var http = require("https");
+
+            var options = {
+              "method": "GET",
+              "hostname": "api.meetflo.com",
+              "port": null,
+              "path": "//api/v1/users/me",
+              "headers": {
+                "authorization": "Bearer REPLACE_BEARER_TOKEN"
+              }
+            };
+
+            var req = http.request(options, function (res) {
+              var chunks = [];
+
+              res.on("data", function (chunk) {
+                chunks.push(chunk);
+              });
+
+              res.on("end", function () {
+                var body = Buffer.concat(chunks);
+                console.log(body.toString());
+              });
+            });
+
+            req.end();
+        - lang: Python_python3
+          source: |-
+            import http.client
+
+            conn = http.client.HTTPSConnection("api.meetflo.com")
+
+            headers = { 'authorization': "Bearer REPLACE_BEARER_TOKEN" }
+
+            conn.request("GET", "//api/v1/users/me", headers=headers)
+
+            res = conn.getresponse()
+            data = res.read()
+
+            print(data.decode("utf-8"))
+        - lang: Python_requests
+          source: |-
+            import requests
+
+            url = "https://api.meetflo.com//api/v1/users/me"
+
+            headers = {'authorization': 'Bearer REPLACE_BEARER_TOKEN'}
+
+            response = requests.request("GET", url, headers=headers)
+
+            print(response.text)
+        - lang: Shell_curl
+          source: |-
+            curl --request GET \
+              --url https://api.meetflo.com//api/v1/users/me \
+              --header 'authorization: Bearer REPLACE_BEARER_TOKEN'
+  '/api/v1/info/devices/{icd_id}':
+    get:
+      operationId: getDeviceInfo
+      summary: '/api/v1/info/devices/{icd_id}'
+      tags:
+        - InfoRouteMap
+      security:
+        - OAuth2:
+            - admin
+      parameters:
+        - $ref: '#/components/parameters/AdminAuthorization'
+        - name: icd_id
+          in: path
+          description: UUID of paired device
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+          schema:
+            type: object
+            properties:
+              total:
+                type: integer
+                format: int32
+                example: 1
+              items:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      example: ffffffff-ffff-4fff-8fff-ffffffffffff
+                      format: uuid
+                    onboarding:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          created_at:
+                            type: string
+                            example: '2018-12-10T21:50:00.289Z'
+                            format: date-time
+                          event:
+                            type: integer
+                            format: int32
+                            example: 1
+                    is_paired:
+                      type: boolean
+                    geo_location:
+                      type: object
+                      properties:
+                        state_or_province:
+                          type: string
+                          example: CA
+                        country:
+                          type: string
+                          example: us
+                        address:
+                          type: string
+                          example: Yucca St
+                        address2:
+                          type: string
+                          format: nullable
+                        city:
+                          type: string
+                          example: Los Angeles
+                        timezone:
+                          type: string
+                          example: US/Pacific
+                        postal_code:
+                          type: string
+                          example: 0
+                        location_id:
+                          type: string
+                          example: ffffffff-ffff-4fff-8fff-ffffffffffff
+                          format: uuid
+                    device_id:
+                      type: string
+                      example: ffffffffffff
+                    owner_user_id:
+                      type: string
+                      example: ffffffff-ffff-4fff-8fff-ffffffffffff
+                      format: uuid
+                    account:
+                      type: object
+                      properties:
+                        account_id:
+                          type: string
+                          example: ffffffff-ffff-4fff-8fff-ffffffffffff
+                          format: uuid
+                        group_id:
+                          type: string
+                          format: nullable
+                        subscription:
+                          type: object
+                    users:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          firstname:
+                            type: string
+                            example: Andrew
+                          user_id:
+                            type: string
+                            example: ffffffff-ffff-4fff-8fff-ffffffffffff
+                            format: uuid
+                          email:
+                            type: string
+                            example: user@example.com
+                            format: email
+                          lastname:
+                            type: string
+                            example: Chen
+                    pending_alerts:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          severity:
+                            type: integer
+                            format: int32
+                            example: 2
+                          expires_at:
+                            type: string
+                            example: '2118-12-12T00:45:18.820Z'
+                            format: date-time
+                          updated_at:
+                            type: string
+                            example: '2018-12-12T00:45:18.819Z'
+                          last_icd_alarm_incident_registry_id:
+                            type: string
+                            example: ffffffff-ffff-4fff-8fff-ffffffffffff
+                            format: uuid
+                          created_at:
+                            type: string
+                            example: '2018-12-12T00:45:18.467Z'
+                            format: date-time
+                          alarm_id:
+                            type: string
+                            example: 33
+                          alarm_id_system_mode:
+                            type: string
+                            example: 332
+                          incident_time:
+                            type: string
+                            example: '2018-12-12T00:45:17.893Z'
+                            format: date-time
+                          status:
+                            type: integer
+                            format: int32
+                            example: 3
+                          system_mode:
+                            type: string
+                            example: 2
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      x-code-samples:
+        - lang: Java_okhttp
+          source: |-
+            OkHttpClient client = new OkHttpClient();
+
+            Request request = new Request.Builder()
+              .url("https://api.meetflo.com//api/v1/info/devices/%7Bicd_id%7D")
+              .get()
+              .addHeader("authorization", "Bearer REPLACE_BEARER_TOKEN")
+              .build();
+
+            Response response = client.newCall(request).execute();
+        - lang: Javascript_xhr
+          source: >-
+            var data = null;
+
+
+            var xhr = new XMLHttpRequest();
+
+            xhr.withCredentials = true;
+
+
+            xhr.addEventListener("readystatechange", function () {
+              if (this.readyState === this.DONE) {
+                console.log(this.responseText);
+              }
+            });
+
+
+            xhr.open("GET",
+            "https://api.meetflo.com//api/v1/info/devices/%7Bicd_id%7D");
+
+            xhr.setRequestHeader("authorization", "Bearer
+            REPLACE_BEARER_TOKEN");
+
+
+            xhr.send(data);
+        - lang: Node_native
+          source: |-
+            var http = require("https");
+
+            var options = {
+              "method": "GET",
+              "hostname": "api.meetflo.com",
+              "port": null,
+              "path": "//api/v1/info/devices/%7Bicd_id%7D",
+              "headers": {
+                "authorization": "Bearer REPLACE_BEARER_TOKEN"
+              }
+            };
+
+            var req = http.request(options, function (res) {
+              var chunks = [];
+
+              res.on("data", function (chunk) {
+                chunks.push(chunk);
+              });
+
+              res.on("end", function () {
+                var body = Buffer.concat(chunks);
+                console.log(body.toString());
+              });
+            });
+
+            req.end();
+        - lang: Python_python3
+          source: >-
+            import http.client
+
+
+            conn = http.client.HTTPSConnection("api.meetflo.com")
+
+
+            headers = { 'authorization': "Bearer REPLACE_BEARER_TOKEN" }
+
+
+            conn.request("GET", "//api/v1/info/devices/%7Bicd_id%7D",
+            headers=headers)
+
+
+            res = conn.getresponse()
+
+            data = res.read()
+
+
+            print(data.decode("utf-8"))
+        - lang: Python_requests
+          source: |-
+            import requests
+
+            url = "https://api.meetflo.com//api/v1/info/devices/%7Bicd_id%7D"
+
+            headers = {'authorization': 'Bearer REPLACE_BEARER_TOKEN'}
+
+            response = requests.request("GET", url, headers=headers)
+
+            print(response.text)
+        - lang: Shell_curl
+          source: |-
+            curl --request GET \
+              --url https://api.meetflo.com//api/v1/info/devices/%7Bicd_id%7D \
+              --header 'authorization: Bearer REPLACE_BEARER_TOKEN'
+
+  '/api/v1/info/users/{user_id}':
+    get:
+      operationId: getUserInfo
+      summary: '/api/v1/info/users/{user_id}'
+      tags:
+        - InfoRouteMap
+      description: Retrive user info if you have acess such as your own or admin
+      security:
+        - OAuth2:
+            - user
+      parameters:
+        - $ref: '#/components/parameters/Authorization'
+        - name: user_id
+          in: path
+          description: UUID of user
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+          schema:
+            type: object
+            properties:
+              total:
+                type: integer
+                format: int32
+                example: 1
+              items:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      example: ffffffff-ffff-4fff-8fff-ffffffffffff
+                      format: uuid
+                    geo_locations:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          state_or_province:
+                            type: string
+                            example: CA
+                          country:
+                            type: string
+                            example: us
+                          address:
+                            type: string
+                            example: Yucca St
+                          address2:
+                            type: string
+                            format: nullable
+                          city:
+                            type: string
+                            example: Los Angeles
+                          timezone:
+                            type: string
+                            example: US/Pacific
+                          postal_code:
+                            type: string
+                            example: 0
+                          location_id:
+                            type: string
+                            example: ffffffff-ffff-4fff-8fff-ffffffffffff
+                            format: uuid
+                    is_active:
+                      type: boolean
+                    is_system_user:
+                      type: boolean
+                    email:
+                      type: string
+                      example: user@example.com
+                      format: email
+                    firstname:
+                      type: string
+                      example: Andrew
+                    phone_mobile:
+                      type: string
+                      format: nullable
+                    lastname:
+                      type: string
+                      example: Chen
+                    account:
+                      type: object
+                      properties:
+                        account_id:
+                          type: string
+                          example: ffffffff-ffff-4fff-8fff-ffffffffffff
+                          format: uuid
+                        group_id:
+                          type: string
+                          format: nullable
+                    devices:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          is_paired:
+                            type: boolean
+                          id:
+                            type: string
+                            example: ffffffff-ffff-4fff-8fff-ffffffffffff
+                            format: uuid
+                          device_id:
+                            type: string
+                            example: ffffffffffff
+                          location_id:
+                            type: string
+                            example: ffffffff-ffff-4fff-8fff-ffffffffffff
+                            format: uuid
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      x-code-samples:
+        - lang: Java_okhttp
+          source: |-
+            OkHttpClient client = new OkHttpClient();
+
+            Request request = new Request.Builder()
+              .url("https://api.meetflo.com//api/v1/info/users/%7Buser_id%7D")
+              .get()
+              .addHeader("authorization", "Bearer REPLACE_BEARER_TOKEN")
+              .build();
+
+            Response response = client.newCall(request).execute();
+        - lang: Javascript_xhr
+          source: >-
+            var data = null;
+
+
+            var xhr = new XMLHttpRequest();
+
+            xhr.withCredentials = true;
+
+
+            xhr.addEventListener("readystatechange", function () {
+              if (this.readyState === this.DONE) {
+                console.log(this.responseText);
+              }
+            });
+
+
+            xhr.open("GET",
+            "https://api.meetflo.com//api/v1/info/users/%7Buser_id%7D");
+
+            xhr.setRequestHeader("authorization", "Bearer
+            REPLACE_BEARER_TOKEN");
+
+
+            xhr.send(data);
+        - lang: Node_native
+          source: |-
+            var http = require("https");
+
+            var options = {
+              "method": "GET",
+              "hostname": "api.meetflo.com",
+              "port": null,
+              "path": "//api/v1/info/users/%7Buser_id%7D",
+              "headers": {
+                "authorization": "Bearer REPLACE_BEARER_TOKEN"
+              }
+            };
+
+            var req = http.request(options, function (res) {
+              var chunks = [];
+
+              res.on("data", function (chunk) {
+                chunks.push(chunk);
+              });
+
+              res.on("end", function () {
+                var body = Buffer.concat(chunks);
+                console.log(body.toString());
+              });
+            });
+
+            req.end();
+        - lang: Python_python3
+          source: >-
+            import http.client
+
+
+            conn = http.client.HTTPSConnection("api.meetflo.com")
+
+
+            headers = { 'authorization': "Bearer REPLACE_BEARER_TOKEN" }
+
+
+            conn.request("GET", "//api/v1/info/users/%7Buser_id%7D",
+            headers=headers)
+
+
+            res = conn.getresponse()
+
+            data = res.read()
+
+
+            print(data.decode("utf-8"))
+        - lang: Python_requests
+          source: |-
+            import requests
+
+            url = "https://api.meetflo.com//api/v1/info/users/%7Buser_id%7D"
+
+            headers = {'authorization': 'Bearer REPLACE_BEARER_TOKEN'}
+
+            response = requests.request("GET", url, headers=headers)
+
+            print(response.text)
+        - lang: Shell_curl
+          source: |-
+            curl --request GET \
+              --url https://api.meetflo.com//api/v1/info/users/%7Buser_id%7D \
+              --header 'authorization: Bearer REPLACE_BEARER_TOKEN'
+  '/api/v1/waterflow/measurement/icd/{icd_id}/last_24_hours':
+    get:
+      security:
+        - OAuth2:
+            - user
+      summary: '/api/v1/waterflow/measurement/icd/{icd_id}/last_24_hours'
+      parameters:
+        - name: icd_id
+          in: path
+          description: icd_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      x-code-samples:
+        - lang: Java_okhttp
+          source: |-
+            OkHttpClient client = new OkHttpClient();
+
+            Request request = new Request.Builder()
+              .url("https://api.meetflo.com//api/v1/waterflow/measurement/icd/%7Bicd_id%7D/last_24_hours")
+              .get()
+              .addHeader("authorization", "Bearer REPLACE_BEARER_TOKEN")
+              .build();
+
+            Response response = client.newCall(request).execute();
+        - lang: Javascript_xhr
+          source: >-
+            var data = null;
+
+
+            var xhr = new XMLHttpRequest();
+
+            xhr.withCredentials = true;
+
+
+            xhr.addEventListener("readystatechange", function () {
+              if (this.readyState === this.DONE) {
+                console.log(this.responseText);
+              }
+            });
+
+
+            xhr.open("GET",
+            "https://api.meetflo.com//api/v1/waterflow/measurement/icd/%7Bicd_id%7D/last_24_hours");
+
+            xhr.setRequestHeader("authorization", "Bearer
+            REPLACE_BEARER_TOKEN");
+
+
+            xhr.send(data);
+        - lang: Node_native
+          source: |-
+            var http = require("https");
+
+            var options = {
+              "method": "GET",
+              "hostname": "api.meetflo.com",
+              "port": null,
+              "path": "//api/v1/waterflow/measurement/icd/%7Bicd_id%7D/last_24_hours",
+              "headers": {
+                "authorization": "Bearer REPLACE_BEARER_TOKEN"
+              }
+            };
+
+            var req = http.request(options, function (res) {
+              var chunks = [];
+
+              res.on("data", function (chunk) {
+                chunks.push(chunk);
+              });
+
+              res.on("end", function () {
+                var body = Buffer.concat(chunks);
+                console.log(body.toString());
+              });
+            });
+
+            req.end();
+        - lang: Python_python3
+          source: >-
+            import http.client
+
+
+            conn = http.client.HTTPSConnection("api.meetflo.com")
+
+
+            headers = { 'authorization': "Bearer REPLACE_BEARER_TOKEN" }
+
+
+            conn.request("GET",
+            "//api/v1/waterflow/measurement/icd/%7Bicd_id%7D/last_24_hours",
+            headers=headers)
+
+
+            res = conn.getresponse()
+
+            data = res.read()
+
+
+            print(data.decode("utf-8"))
+        - lang: Python_requests
+          source: >-
+            import requests
+
+
+            url =
+            "https://api.meetflo.com//api/v1/waterflow/measurement/icd/%7Bicd_id%7D/last_24_hours"
+
+
+            headers = {'authorization': 'Bearer REPLACE_BEARER_TOKEN'}
+
+
+            response = requests.request("GET", url, headers=headers)
+
+
+            print(response.text)
+        - lang: Shell_curl
+          source: |-
+            curl --request GET \
+              --url https://api.meetflo.com//api/v1/waterflow/measurement/icd/%7Bicd_id%7D/last_24_hours \
+              --header 'authorization: Bearer REPLACE_BEARER_TOKEN'
+  '/api/v1/waterflow/measurement/icd/{icd_id}/last_28_days':
+    get:
+      security:
+        - OAuth2:
+            - user
+      summary: '/api/v1/waterflow/measurement/icd/{icd_id}/last_28_days'
+      parameters:
+        - name: icd_id
+          in: path
+          description: icd_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      x-code-samples:
+        - lang: Java_okhttp
+          source: |-
+            OkHttpClient client = new OkHttpClient();
+
+            Request request = new Request.Builder()
+              .url("https://api.meetflo.com//api/v1/waterflow/measurement/icd/%7Bicd_id%7D/last_28_days")
+              .get()
+              .addHeader("authorization", "Bearer REPLACE_BEARER_TOKEN")
+              .build();
+
+            Response response = client.newCall(request).execute();
+        - lang: Javascript_xhr
+          source: >-
+            var data = null;
+
+
+            var xhr = new XMLHttpRequest();
+
+            xhr.withCredentials = true;
+
+
+            xhr.addEventListener("readystatechange", function () {
+              if (this.readyState === this.DONE) {
+                console.log(this.responseText);
+              }
+            });
+
+
+            xhr.open("GET",
+            "https://api.meetflo.com//api/v1/waterflow/measurement/icd/%7Bicd_id%7D/last_28_days");
+
+            xhr.setRequestHeader("authorization", "Bearer
+            REPLACE_BEARER_TOKEN");
+
+
+            xhr.send(data);
+        - lang: Node_native
+          source: |-
+            var http = require("https");
+
+            var options = {
+              "method": "GET",
+              "hostname": "api.meetflo.com",
+              "port": null,
+              "path": "//api/v1/waterflow/measurement/icd/%7Bicd_id%7D/last_28_days",
+              "headers": {
+                "authorization": "Bearer REPLACE_BEARER_TOKEN"
+              }
+            };
+
+            var req = http.request(options, function (res) {
+              var chunks = [];
+
+              res.on("data", function (chunk) {
+                chunks.push(chunk);
+              });
+
+              res.on("end", function () {
+                var body = Buffer.concat(chunks);
+                console.log(body.toString());
+              });
+            });
+
+            req.end();
+        - lang: Python_python3
+          source: >-
+            import http.client
+
+
+            conn = http.client.HTTPSConnection("api.meetflo.com")
+
+
+            headers = { 'authorization': "Bearer REPLACE_BEARER_TOKEN" }
+
+
+            conn.request("GET",
+            "//api/v1/waterflow/measurement/icd/%7Bicd_id%7D/last_28_days",
+            headers=headers)
+
+
+            res = conn.getresponse()
+
+            data = res.read()
+
+
+            print(data.decode("utf-8"))
+        - lang: Python_requests
+          source: >-
+            import requests
+
+
+            url =
+            "https://api.meetflo.com//api/v1/waterflow/measurement/icd/%7Bicd_id%7D/last_28_days"
+
+
+            headers = {'authorization': 'Bearer REPLACE_BEARER_TOKEN'}
+
+
+            response = requests.request("GET", url, headers=headers)
+
+
+            print(response.text)
+        - lang: Shell_curl
+          source: |-
+            curl --request GET \
+              --url https://api.meetflo.com//api/v1/waterflow/measurement/icd/%7Bicd_id%7D/last_28_days \
+              --header 'authorization: Bearer REPLACE_BEARER_TOKEN'
+  '/api/v1/waterflow/measurement/icd/{icd_id}/last_day':
+    get:
+      security:
+        - OAuth2:
+            - user
+      summary: '/api/v1/waterflow/measurement/icd/{icd_id}/last_day'
+      parameters:
+        - name: icd_id
+          in: path
+          description: icd_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      x-code-samples:
+        - lang: Java_okhttp
+          source: |-
+            OkHttpClient client = new OkHttpClient();
+
+            Request request = new Request.Builder()
+              .url("https://api.meetflo.com//api/v1/waterflow/measurement/icd/%7Bicd_id%7D/last_day")
+              .get()
+              .addHeader("authorization", "Bearer REPLACE_BEARER_TOKEN")
+              .build();
+
+            Response response = client.newCall(request).execute();
+        - lang: Javascript_xhr
+          source: >-
+            var data = null;
+
+
+            var xhr = new XMLHttpRequest();
+
+            xhr.withCredentials = true;
+
+
+            xhr.addEventListener("readystatechange", function () {
+              if (this.readyState === this.DONE) {
+                console.log(this.responseText);
+              }
+            });
+
+
+            xhr.open("GET",
+            "https://api.meetflo.com//api/v1/waterflow/measurement/icd/%7Bicd_id%7D/last_day");
+
+            xhr.setRequestHeader("authorization", "Bearer
+            REPLACE_BEARER_TOKEN");
+
+
+            xhr.send(data);
+        - lang: Node_native
+          source: |-
+            var http = require("https");
+
+            var options = {
+              "method": "GET",
+              "hostname": "api.meetflo.com",
+              "port": null,
+              "path": "//api/v1/waterflow/measurement/icd/%7Bicd_id%7D/last_day",
+              "headers": {
+                "authorization": "Bearer REPLACE_BEARER_TOKEN"
+              }
+            };
+
+            var req = http.request(options, function (res) {
+              var chunks = [];
+
+              res.on("data", function (chunk) {
+                chunks.push(chunk);
+              });
+
+              res.on("end", function () {
+                var body = Buffer.concat(chunks);
+                console.log(body.toString());
+              });
+            });
+
+            req.end();
+        - lang: Python_python3
+          source: >-
+            import http.client
+
+
+            conn = http.client.HTTPSConnection("api.meetflo.com")
+
+
+            headers = { 'authorization': "Bearer REPLACE_BEARER_TOKEN" }
+
+
+            conn.request("GET",
+            "//api/v1/waterflow/measurement/icd/%7Bicd_id%7D/last_day",
+            headers=headers)
+
+
+            res = conn.getresponse()
+
+            data = res.read()
+
+
+            print(data.decode("utf-8"))
+        - lang: Python_requests
+          source: >-
+            import requests
+
+
+            url =
+            "https://api.meetflo.com//api/v1/waterflow/measurement/icd/%7Bicd_id%7D/last_day"
+
+
+            headers = {'authorization': 'Bearer REPLACE_BEARER_TOKEN'}
+
+
+            response = requests.request("GET", url, headers=headers)
+
+
+            print(response.text)
+        - lang: Shell_curl
+          source: |-
+            curl --request GET \
+              --url https://api.meetflo.com//api/v1/waterflow/measurement/icd/%7Bicd_id%7D/last_day \
+              --header 'authorization: Bearer REPLACE_BEARER_TOKEN'
+  '/api/v1/waterflow/measurement/icd/{icd_id}/last_week':
+    get:
+      security:
+        - OAuth2:
+            - user
+      summary: '/api/v1/waterflow/measurement/icd/{icd_id}/last_week'
+      parameters:
+        - name: icd_id
+          in: path
+          description: icd_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      x-code-samples:
+        - lang: Java_okhttp
+          source: |-
+            OkHttpClient client = new OkHttpClient();
+
+            Request request = new Request.Builder()
+              .url("https://api.meetflo.com//api/v1/waterflow/measurement/icd/%7Bicd_id%7D/last_week")
+              .get()
+              .addHeader("authorization", "Bearer REPLACE_BEARER_TOKEN")
+              .build();
+
+            Response response = client.newCall(request).execute();
+        - lang: Javascript_xhr
+          source: >-
+            var data = null;
+
+
+            var xhr = new XMLHttpRequest();
+
+            xhr.withCredentials = true;
+
+
+            xhr.addEventListener("readystatechange", function () {
+              if (this.readyState === this.DONE) {
+                console.log(this.responseText);
+              }
+            });
+
+
+            xhr.open("GET",
+            "https://api.meetflo.com//api/v1/waterflow/measurement/icd/%7Bicd_id%7D/last_week");
+
+            xhr.setRequestHeader("authorization", "Bearer
+            REPLACE_BEARER_TOKEN");
+
+
+            xhr.send(data);
+        - lang: Node_native
+          source: |-
+            var http = require("https");
+
+            var options = {
+              "method": "GET",
+              "hostname": "api.meetflo.com",
+              "port": null,
+              "path": "//api/v1/waterflow/measurement/icd/%7Bicd_id%7D/last_week",
+              "headers": {
+                "authorization": "Bearer REPLACE_BEARER_TOKEN"
+              }
+            };
+
+            var req = http.request(options, function (res) {
+              var chunks = [];
+
+              res.on("data", function (chunk) {
+                chunks.push(chunk);
+              });
+
+              res.on("end", function () {
+                var body = Buffer.concat(chunks);
+                console.log(body.toString());
+              });
+            });
+
+            req.end();
+        - lang: Python_python3
+          source: >-
+            import http.client
+
+
+            conn = http.client.HTTPSConnection("api.meetflo.com")
+
+
+            headers = { 'authorization': "Bearer REPLACE_BEARER_TOKEN" }
+
+
+            conn.request("GET",
+            "//api/v1/waterflow/measurement/icd/%7Bicd_id%7D/last_week",
+            headers=headers)
+
+
+            res = conn.getresponse()
+
+            data = res.read()
+
+
+            print(data.decode("utf-8"))
+        - lang: Python_requests
+          source: >-
+            import requests
+
+
+            url =
+            "https://api.meetflo.com//api/v1/waterflow/measurement/icd/%7Bicd_id%7D/last_week"
+
+
+            headers = {'authorization': 'Bearer REPLACE_BEARER_TOKEN'}
+
+
+            response = requests.request("GET", url, headers=headers)
+
+
+            print(response.text)
+        - lang: Shell_curl
+          source: |-
+            curl --request GET \
+              --url https://api.meetflo.com//api/v1/waterflow/measurement/icd/%7Bicd_id%7D/last_week \
+              --header 'authorization: Bearer REPLACE_BEARER_TOKEN'
+  '/api/v1/waterflow/measurement/icd/{icd_id}/this_week':
+    get:
+      security:
+        - OAuth2:
+            - user
+      summary: '/api/v1/waterflow/measurement/icd/{icd_id}/this_week'
+      parameters:
+        - name: icd_id
+          in: path
+          description: icd_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      x-code-samples:
+        - lang: Java_okhttp
+          source: |-
+            OkHttpClient client = new OkHttpClient();
+
+            Request request = new Request.Builder()
+              .url("https://api.meetflo.com//api/v1/waterflow/measurement/icd/%7Bicd_id%7D/this_week")
+              .get()
+              .addHeader("authorization", "Bearer REPLACE_BEARER_TOKEN")
+              .build();
+
+            Response response = client.newCall(request).execute();
+        - lang: Javascript_xhr
+          source: >-
+            var data = null;
+
+
+            var xhr = new XMLHttpRequest();
+
+            xhr.withCredentials = true;
+
+
+            xhr.addEventListener("readystatechange", function () {
+              if (this.readyState === this.DONE) {
+                console.log(this.responseText);
+              }
+            });
+
+
+            xhr.open("GET",
+            "https://api.meetflo.com//api/v1/waterflow/measurement/icd/%7Bicd_id%7D/this_week");
+
+            xhr.setRequestHeader("authorization", "Bearer
+            REPLACE_BEARER_TOKEN");
+
+
+            xhr.send(data);
+        - lang: Node_native
+          source: |-
+            var http = require("https");
+
+            var options = {
+              "method": "GET",
+              "hostname": "api.meetflo.com",
+              "port": null,
+              "path": "//api/v1/waterflow/measurement/icd/%7Bicd_id%7D/this_week",
+              "headers": {
+                "authorization": "Bearer REPLACE_BEARER_TOKEN"
+              }
+            };
+
+            var req = http.request(options, function (res) {
+              var chunks = [];
+
+              res.on("data", function (chunk) {
+                chunks.push(chunk);
+              });
+
+              res.on("end", function () {
+                var body = Buffer.concat(chunks);
+                console.log(body.toString());
+              });
+            });
+
+            req.end();
+        - lang: Python_python3
+          source: >-
+            import http.client
+
+
+            conn = http.client.HTTPSConnection("api.meetflo.com")
+
+
+            headers = { 'authorization': "Bearer REPLACE_BEARER_TOKEN" }
+
+
+            conn.request("GET",
+            "//api/v1/waterflow/measurement/icd/%7Bicd_id%7D/this_week",
+            headers=headers)
+
+
+            res = conn.getresponse()
+
+            data = res.read()
+
+
+            print(data.decode("utf-8"))
+        - lang: Python_requests
+          source: >-
+            import requests
+
+
+            url =
+            "https://api.meetflo.com//api/v1/waterflow/measurement/icd/%7Bicd_id%7D/this_week"
+
+
+            headers = {'authorization': 'Bearer REPLACE_BEARER_TOKEN'}
+
+
+            response = requests.request("GET", url, headers=headers)
+
+
+            print(response.text)
+        - lang: Shell_curl
+          source: |-
+            curl --request GET \
+              --url https://api.meetflo.com//api/v1/waterflow/measurement/icd/%7Bicd_id%7D/this_week \
+              --header 'authorization: Bearer REPLACE_BEARER_TOKEN'
+  '/api/v1/waterflow/monthlyusage/{device_id}':
+    get:
+      security:
+        - OAuth2:
+            - user
+      summary: '/api/v1/waterflow/monthlyusage/{device_id}'
+      parameters:
+        - name: device_id
+          in: path
+          description: device_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      x-code-samples:
+        - lang: Java_okhttp
+          source: |-
+            OkHttpClient client = new OkHttpClient();
+
+            Request request = new Request.Builder()
+              .url("https://api.meetflo.com//api/v1/waterflow/monthlyusage/%7Bdevice_id%7D")
+              .get()
+              .addHeader("authorization", "Bearer REPLACE_BEARER_TOKEN")
+              .build();
+
+            Response response = client.newCall(request).execute();
+        - lang: Javascript_xhr
+          source: >-
+            var data = null;
+
+
+            var xhr = new XMLHttpRequest();
+
+            xhr.withCredentials = true;
+
+
+            xhr.addEventListener("readystatechange", function () {
+              if (this.readyState === this.DONE) {
+                console.log(this.responseText);
+              }
+            });
+
+
+            xhr.open("GET",
+            "https://api.meetflo.com//api/v1/waterflow/monthlyusage/%7Bdevice_id%7D");
+
+            xhr.setRequestHeader("authorization", "Bearer
+            REPLACE_BEARER_TOKEN");
+
+
+            xhr.send(data);
+        - lang: Node_native
+          source: |-
+            var http = require("https");
+
+            var options = {
+              "method": "GET",
+              "hostname": "api.meetflo.com",
+              "port": null,
+              "path": "//api/v1/waterflow/monthlyusage/%7Bdevice_id%7D",
+              "headers": {
+                "authorization": "Bearer REPLACE_BEARER_TOKEN"
+              }
+            };
+
+            var req = http.request(options, function (res) {
+              var chunks = [];
+
+              res.on("data", function (chunk) {
+                chunks.push(chunk);
+              });
+
+              res.on("end", function () {
+                var body = Buffer.concat(chunks);
+                console.log(body.toString());
+              });
+            });
+
+            req.end();
+        - lang: Python_python3
+          source: >-
+            import http.client
+
+
+            conn = http.client.HTTPSConnection("api.meetflo.com")
+
+
+            headers = { 'authorization': "Bearer REPLACE_BEARER_TOKEN" }
+
+
+            conn.request("GET",
+            "//api/v1/waterflow/monthlyusage/%7Bdevice_id%7D", headers=headers)
+
+
+            res = conn.getresponse()
+
+            data = res.read()
+
+
+            print(data.decode("utf-8"))
+        - lang: Python_requests
+          source: >-
+            import requests
+
+
+            url =
+            "https://api.meetflo.com//api/v1/waterflow/monthlyusage/%7Bdevice_id%7D"
+
+
+            headers = {'authorization': 'Bearer REPLACE_BEARER_TOKEN'}
+
+
+            response = requests.request("GET", url, headers=headers)
+
+
+            print(response.text)
+        - lang: Shell_curl
+          source: |-
+            curl --request GET \
+              --url https://api.meetflo.com//api/v1/waterflow/monthlyusage/%7Bdevice_id%7D \
+              --header 'authorization: Bearer REPLACE_BEARER_TOKEN'
+  '/api/v1/waterflow/rates/device/{device_id}/last_day':
+    get:
+      security:
+        - OAuth2:
+            - user
+      summary: '/api/v1/waterflow/rates/device/{device_id}/last_day'
+      parameters:
+        - name: device_id
+          in: path
+          description: device_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      x-code-samples:
+        - lang: Java_okhttp
+          source: |-
+            OkHttpClient client = new OkHttpClient();
+
+            Request request = new Request.Builder()
+              .url("https://api.meetflo.com//api/v1/waterflow/rates/device/%7Bdevice_id%7D/last_day")
+              .get()
+              .addHeader("authorization", "Bearer REPLACE_BEARER_TOKEN")
+              .build();
+
+            Response response = client.newCall(request).execute();
+        - lang: Javascript_xhr
+          source: >-
+            var data = null;
+
+
+            var xhr = new XMLHttpRequest();
+
+            xhr.withCredentials = true;
+
+
+            xhr.addEventListener("readystatechange", function () {
+              if (this.readyState === this.DONE) {
+                console.log(this.responseText);
+              }
+            });
+
+
+            xhr.open("GET",
+            "https://api.meetflo.com//api/v1/waterflow/rates/device/%7Bdevice_id%7D/last_day");
+
+            xhr.setRequestHeader("authorization", "Bearer
+            REPLACE_BEARER_TOKEN");
+
+
+            xhr.send(data);
+        - lang: Node_native
+          source: |-
+            var http = require("https");
+
+            var options = {
+              "method": "GET",
+              "hostname": "api.meetflo.com",
+              "port": null,
+              "path": "//api/v1/waterflow/rates/device/%7Bdevice_id%7D/last_day",
+              "headers": {
+                "authorization": "Bearer REPLACE_BEARER_TOKEN"
+              }
+            };
+
+            var req = http.request(options, function (res) {
+              var chunks = [];
+
+              res.on("data", function (chunk) {
+                chunks.push(chunk);
+              });
+
+              res.on("end", function () {
+                var body = Buffer.concat(chunks);
+                console.log(body.toString());
+              });
+            });
+
+            req.end();
+        - lang: Python_python3
+          source: >-
+            import http.client
+
+
+            conn = http.client.HTTPSConnection("api.meetflo.com")
+
+
+            headers = { 'authorization': "Bearer REPLACE_BEARER_TOKEN" }
+
+
+            conn.request("GET",
+            "//api/v1/waterflow/rates/device/%7Bdevice_id%7D/last_day",
+            headers=headers)
+
+
+            res = conn.getresponse()
+
+            data = res.read()
+
+
+            print(data.decode("utf-8"))
+        - lang: Python_requests
+          source: >-
+            import requests
+
+
+            url =
+            "https://api.meetflo.com//api/v1/waterflow/rates/device/%7Bdevice_id%7D/last_day"
+
+
+            headers = {'authorization': 'Bearer REPLACE_BEARER_TOKEN'}
+
+
+            response = requests.request("GET", url, headers=headers)
+
+
+            print(response.text)
+        - lang: Shell_curl
+          source: |-
+            curl --request GET \
+              --url https://api.meetflo.com//api/v1/waterflow/rates/device/%7Bdevice_id%7D/last_day \
+              --header 'authorization: Bearer REPLACE_BEARER_TOKEN'
+  '/api/v1/waterflow/today/{device_id}':
+    get:
+      security:
+        - OAuth2:
+            - user
+      summary: '/api/v1/waterflow/today/{device_id}'
+      parameters:
+        - name: device_id
+          in: path
+          description: device_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      x-code-samples:
+        - lang: Java_okhttp
+          source: |-
+            OkHttpClient client = new OkHttpClient();
+
+            Request request = new Request.Builder()
+              .url("https://api.meetflo.com//api/v1/waterflow/today/%7Bdevice_id%7D")
+              .get()
+              .addHeader("authorization", "Bearer REPLACE_BEARER_TOKEN")
+              .build();
+
+            Response response = client.newCall(request).execute();
+        - lang: Javascript_xhr
+          source: >-
+            var data = null;
+
+
+            var xhr = new XMLHttpRequest();
+
+            xhr.withCredentials = true;
+
+
+            xhr.addEventListener("readystatechange", function () {
+              if (this.readyState === this.DONE) {
+                console.log(this.responseText);
+              }
+            });
+
+
+            xhr.open("GET",
+            "https://api.meetflo.com//api/v1/waterflow/today/%7Bdevice_id%7D");
+
+            xhr.setRequestHeader("authorization", "Bearer
+            REPLACE_BEARER_TOKEN");
+
+
+            xhr.send(data);
+        - lang: Node_native
+          source: |-
+            var http = require("https");
+
+            var options = {
+              "method": "GET",
+              "hostname": "api.meetflo.com",
+              "port": null,
+              "path": "//api/v1/waterflow/today/%7Bdevice_id%7D",
+              "headers": {
+                "authorization": "Bearer REPLACE_BEARER_TOKEN"
+              }
+            };
+
+            var req = http.request(options, function (res) {
+              var chunks = [];
+
+              res.on("data", function (chunk) {
+                chunks.push(chunk);
+              });
+
+              res.on("end", function () {
+                var body = Buffer.concat(chunks);
+                console.log(body.toString());
+              });
+            });
+
+            req.end();
+        - lang: Python_python3
+          source: >-
+            import http.client
+
+
+            conn = http.client.HTTPSConnection("api.meetflo.com")
+
+
+            headers = { 'authorization': "Bearer REPLACE_BEARER_TOKEN" }
+
+
+            conn.request("GET", "//api/v1/waterflow/today/%7Bdevice_id%7D",
+            headers=headers)
+
+
+            res = conn.getresponse()
+
+            data = res.read()
+
+
+            print(data.decode("utf-8"))
+        - lang: Python_requests
+          source: >-
+            import requests
+
+
+            url =
+            "https://api.meetflo.com//api/v1/waterflow/today/%7Bdevice_id%7D"
+
+
+            headers = {'authorization': 'Bearer REPLACE_BEARER_TOKEN'}
+
+
+            response = requests.request("GET", url, headers=headers)
+
+
+            print(response.text)
+        - lang: Shell_curl
+          source: |-
+            curl --request GET \
+              --url https://api.meetflo.com//api/v1/waterflow/today/%7Bdevice_id%7D \
+              --header 'authorization: Bearer REPLACE_BEARER_TOKEN'
+  '/api/v1/waterflow/today/total/{device_id}':
+    get:
+      security:
+        - OAuth2:
+            - user
+      summary: '/api/v1/waterflow/today/total/{device_id}'
+      parameters:
+        - name: device_id
+          in: path
+          description: device_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      x-code-samples:
+        - lang: Java_okhttp
+          source: |-
+            OkHttpClient client = new OkHttpClient();
+
+            Request request = new Request.Builder()
+              .url("https://api.meetflo.com//api/v1/waterflow/today/total/%7Bdevice_id%7D")
+              .get()
+              .addHeader("authorization", "Bearer REPLACE_BEARER_TOKEN")
+              .build();
+
+            Response response = client.newCall(request).execute();
+        - lang: Javascript_xhr
+          source: >-
+            var data = null;
+
+
+            var xhr = new XMLHttpRequest();
+
+            xhr.withCredentials = true;
+
+
+            xhr.addEventListener("readystatechange", function () {
+              if (this.readyState === this.DONE) {
+                console.log(this.responseText);
+              }
+            });
+
+
+            xhr.open("GET",
+            "https://api.meetflo.com//api/v1/waterflow/today/total/%7Bdevice_id%7D");
+
+            xhr.setRequestHeader("authorization", "Bearer
+            REPLACE_BEARER_TOKEN");
+
+
+            xhr.send(data);
+        - lang: Node_native
+          source: |-
+            var http = require("https");
+
+            var options = {
+              "method": "GET",
+              "hostname": "api.meetflo.com",
+              "port": null,
+              "path": "//api/v1/waterflow/today/total/%7Bdevice_id%7D",
+              "headers": {
+                "authorization": "Bearer REPLACE_BEARER_TOKEN"
+              }
+            };
+
+            var req = http.request(options, function (res) {
+              var chunks = [];
+
+              res.on("data", function (chunk) {
+                chunks.push(chunk);
+              });
+
+              res.on("end", function () {
+                var body = Buffer.concat(chunks);
+                console.log(body.toString());
+              });
+            });
+
+            req.end();
+        - lang: Python_python3
+          source: >-
+            import http.client
+
+
+            conn = http.client.HTTPSConnection("api.meetflo.com")
+
+
+            headers = { 'authorization': "Bearer REPLACE_BEARER_TOKEN" }
+
+
+            conn.request("GET",
+            "//api/v1/waterflow/today/total/%7Bdevice_id%7D", headers=headers)
+
+
+            res = conn.getresponse()
+
+            data = res.read()
+
+
+            print(data.decode("utf-8"))
+        - lang: Python_requests
+          source: >-
+            import requests
+
+
+            url =
+            "https://api.meetflo.com//api/v1/waterflow/today/total/%7Bdevice_id%7D"
+
+
+            headers = {'authorization': 'Bearer REPLACE_BEARER_TOKEN'}
+
+
+            response = requests.request("GET", url, headers=headers)
+
+
+            print(response.text)
+        - lang: Shell_curl
+          source: |-
+            curl --request GET \
+              --url https://api.meetflo.com//api/v1/waterflow/today/total/%7Bdevice_id%7D \
+              --header 'authorization: Bearer REPLACE_BEARER_TOKEN'
+  '/api/v1/weeklyreports/{user_id}/{location_id}/{unsubscribe_token}/unsubscribe':
+    get:
+      security:
+        - OAuth2:
+            - user
+      summary: >-
+        /api/v1/weeklyreports/{user_id}/{location_id}/{unsubscribe_token}/unsubscribe
+      parameters:
+        - name: user_id
+          in: path
+          description: user_id
+          required: true
+          schema:
+            type: string
+        - name: location_id
+          in: path
+          description: location_id
+          required: true
+          schema:
+            type: string
+        - name: unsubscribe_token
+          in: path
+          description: unsubscribe_token
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      x-code-samples:
+        - lang: Java_okhttp
+          source: |-
+            OkHttpClient client = new OkHttpClient();
+
+            Request request = new Request.Builder()
+              .url("https://api.meetflo.com//api/v1/weeklyreports/%7Buser_id%7D/%7Blocation_id%7D/%7Bunsubscribe_token%7D/unsubscribe")
+              .get()
+              .addHeader("authorization", "Bearer REPLACE_BEARER_TOKEN")
+              .build();
+
+            Response response = client.newCall(request).execute();
+        - lang: Javascript_xhr
+          source: >-
+            var data = null;
+
+
+            var xhr = new XMLHttpRequest();
+
+            xhr.withCredentials = true;
+
+
+            xhr.addEventListener("readystatechange", function () {
+              if (this.readyState === this.DONE) {
+                console.log(this.responseText);
+              }
+            });
+
+
+            xhr.open("GET",
+            "https://api.meetflo.com//api/v1/weeklyreports/%7Buser_id%7D/%7Blocation_id%7D/%7Bunsubscribe_token%7D/unsubscribe");
+
+            xhr.setRequestHeader("authorization", "Bearer
+            REPLACE_BEARER_TOKEN");
+
+
+            xhr.send(data);
+        - lang: Node_native
+          source: |-
+            var http = require("https");
+
+            var options = {
+              "method": "GET",
+              "hostname": "api.meetflo.com",
+              "port": null,
+              "path": "//api/v1/weeklyreports/%7Buser_id%7D/%7Blocation_id%7D/%7Bunsubscribe_token%7D/unsubscribe",
+              "headers": {
+                "authorization": "Bearer REPLACE_BEARER_TOKEN"
+              }
+            };
+
+            var req = http.request(options, function (res) {
+              var chunks = [];
+
+              res.on("data", function (chunk) {
+                chunks.push(chunk);
+              });
+
+              res.on("end", function () {
+                var body = Buffer.concat(chunks);
+                console.log(body.toString());
+              });
+            });
+
+            req.end();
+        - lang: Python_python3
+          source: >-
+            import http.client
+
+
+            conn = http.client.HTTPSConnection("api.meetflo.com")
+
+
+            headers = { 'authorization': "Bearer REPLACE_BEARER_TOKEN" }
+
+
+            conn.request("GET",
+            "//api/v1/weeklyreports/%7Buser_id%7D/%7Blocation_id%7D/%7Bunsubscribe_token%7D/unsubscribe",
+            headers=headers)
+
+
+            res = conn.getresponse()
+
+            data = res.read()
+
+
+            print(data.decode("utf-8"))
+        - lang: Python_requests
+          source: >-
+            import requests
+
+
+            url =
+            "https://api.meetflo.com//api/v1/weeklyreports/%7Buser_id%7D/%7Blocation_id%7D/%7Bunsubscribe_token%7D/unsubscribe"
+
+
+            headers = {'authorization': 'Bearer REPLACE_BEARER_TOKEN'}
+
+
+            response = requests.request("GET", url, headers=headers)
+
+
+            print(response.text)
+        - lang: Shell_curl
+          source: |-
+            curl --request GET \
+              --url https://api.meetflo.com//api/v1/weeklyreports/%7Buser_id%7D/%7Blocation_id%7D/%7Bunsubscribe_token%7D/unsubscribe \
+              --header 'authorization: Bearer REPLACE_BEARER_TOKEN'
+  '/api/v1/weeklyreports/link/{user_id}/{location_id}':
+    post:
+      security:
+        - OAuth2:
+            - user
+      summary: '/api/v1/weeklyreports/link/{user_id}/{location_id}'
+      parameters:
+        - name: user_id
+          in: path
+          description: user_id
+          required: true
+          schema:
+            type: string
+        - name: location_id
+          in: path
+          description: location_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      x-code-samples:
+        - lang: Java_okhttp
+          source: |-
+            OkHttpClient client = new OkHttpClient();
+
+            Request request = new Request.Builder()
+              .url("https://api.meetflo.com//api/v1/weeklyreports/link/%7Buser_id%7D/%7Blocation_id%7D")
+              .post(null)
+              .addHeader("authorization", "Bearer REPLACE_BEARER_TOKEN")
+              .build();
+
+            Response response = client.newCall(request).execute();
+        - lang: Javascript_xhr
+          source: >-
+            var data = null;
+
+
+            var xhr = new XMLHttpRequest();
+
+            xhr.withCredentials = true;
+
+
+            xhr.addEventListener("readystatechange", function () {
+              if (this.readyState === this.DONE) {
+                console.log(this.responseText);
+              }
+            });
+
+
+            xhr.open("POST",
+            "https://api.meetflo.com//api/v1/weeklyreports/link/%7Buser_id%7D/%7Blocation_id%7D");
+
+            xhr.setRequestHeader("authorization", "Bearer
+            REPLACE_BEARER_TOKEN");
+
+
+            xhr.send(data);
+        - lang: Node_native
+          source: |-
+            var http = require("https");
+
+            var options = {
+              "method": "POST",
+              "hostname": "api.meetflo.com",
+              "port": null,
+              "path": "//api/v1/weeklyreports/link/%7Buser_id%7D/%7Blocation_id%7D",
+              "headers": {
+                "authorization": "Bearer REPLACE_BEARER_TOKEN"
+              }
+            };
+
+            var req = http.request(options, function (res) {
+              var chunks = [];
+
+              res.on("data", function (chunk) {
+                chunks.push(chunk);
+              });
+
+              res.on("end", function () {
+                var body = Buffer.concat(chunks);
+                console.log(body.toString());
+              });
+            });
+
+            req.end();
+        - lang: Python_python3
+          source: >-
+            import http.client
+
+
+            conn = http.client.HTTPSConnection("api.meetflo.com")
+
+
+            headers = { 'authorization': "Bearer REPLACE_BEARER_TOKEN" }
+
+
+            conn.request("POST",
+            "//api/v1/weeklyreports/link/%7Buser_id%7D/%7Blocation_id%7D",
+            headers=headers)
+
+
+            res = conn.getresponse()
+
+            data = res.read()
+
+
+            print(data.decode("utf-8"))
+        - lang: Python_requests
+          source: >-
+            import requests
+
+
+            url =
+            "https://api.meetflo.com//api/v1/weeklyreports/link/%7Buser_id%7D/%7Blocation_id%7D"
+
+
+            headers = {'authorization': 'Bearer REPLACE_BEARER_TOKEN'}
+
+
+            response = requests.request("POST", url, headers=headers)
+
+
+            print(response.text)
+        - lang: Shell_curl
+          source: |-
+            curl --request POST \
+              --url https://api.meetflo.com//api/v1/weeklyreports/link/%7Buser_id%7D/%7Blocation_id%7D \
+              --header 'authorization: Bearer REPLACE_BEARER_TOKEN'
+  /api/v1/weeklyreports/subscribe:
+    post:
+      security:
+        - OAuth2:
+            - user
+      summary: /api/v1/weeklyreports/subscribe
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      x-code-samples:
+        - lang: Java_okhttp
+          source: |-
+            OkHttpClient client = new OkHttpClient();
+
+            Request request = new Request.Builder()
+              .url("https://api.meetflo.com//api/v1/weeklyreports/subscribe")
+              .post(null)
+              .addHeader("authorization", "Bearer REPLACE_BEARER_TOKEN")
+              .build();
+
+            Response response = client.newCall(request).execute();
+        - lang: Javascript_xhr
+          source: >-
+            var data = null;
+
+
+            var xhr = new XMLHttpRequest();
+
+            xhr.withCredentials = true;
+
+
+            xhr.addEventListener("readystatechange", function () {
+              if (this.readyState === this.DONE) {
+                console.log(this.responseText);
+              }
+            });
+
+
+            xhr.open("POST",
+            "https://api.meetflo.com//api/v1/weeklyreports/subscribe");
+
+            xhr.setRequestHeader("authorization", "Bearer
+            REPLACE_BEARER_TOKEN");
+
+
+            xhr.send(data);
+        - lang: Node_native
+          source: |-
+            var http = require("https");
+
+            var options = {
+              "method": "POST",
+              "hostname": "api.meetflo.com",
+              "port": null,
+              "path": "//api/v1/weeklyreports/subscribe",
+              "headers": {
+                "authorization": "Bearer REPLACE_BEARER_TOKEN"
+              }
+            };
+
+            var req = http.request(options, function (res) {
+              var chunks = [];
+
+              res.on("data", function (chunk) {
+                chunks.push(chunk);
+              });
+
+              res.on("end", function () {
+                var body = Buffer.concat(chunks);
+                console.log(body.toString());
+              });
+            });
+
+            req.end();
+        - lang: Python_python3
+          source: >-
+            import http.client
+
+
+            conn = http.client.HTTPSConnection("api.meetflo.com")
+
+
+            headers = { 'authorization': "Bearer REPLACE_BEARER_TOKEN" }
+
+
+            conn.request("POST", "//api/v1/weeklyreports/subscribe",
+            headers=headers)
+
+
+            res = conn.getresponse()
+
+            data = res.read()
+
+
+            print(data.decode("utf-8"))
+        - lang: Python_requests
+          source: |-
+            import requests
+
+            url = "https://api.meetflo.com//api/v1/weeklyreports/subscribe"
+
+            headers = {'authorization': 'Bearer REPLACE_BEARER_TOKEN'}
+
+            response = requests.request("POST", url, headers=headers)
+
+            print(response.text)
+        - lang: Shell_curl
+          source: |-
+            curl --request POST \
+              --url https://api.meetflo.com//api/v1/weeklyreports/subscribe \
+              --header 'authorization: Bearer REPLACE_BEARER_TOKEN'
+  /api/v1/weeklyreports/unsubscribe:
+    post:
+      security:
+        - OAuth2:
+            - user
+      summary: /api/v1/weeklyreports/unsubscribe
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      x-code-samples:
+        - lang: Java_okhttp
+          source: |-
+            OkHttpClient client = new OkHttpClient();
+
+            Request request = new Request.Builder()
+              .url("https://api.meetflo.com//api/v1/weeklyreports/unsubscribe")
+              .post(null)
+              .addHeader("authorization", "Bearer REPLACE_BEARER_TOKEN")
+              .build();
+
+            Response response = client.newCall(request).execute();
+        - lang: Javascript_xhr
+          source: >-
+            var data = null;
+
+
+            var xhr = new XMLHttpRequest();
+
+            xhr.withCredentials = true;
+
+
+            xhr.addEventListener("readystatechange", function () {
+              if (this.readyState === this.DONE) {
+                console.log(this.responseText);
+              }
+            });
+
+
+            xhr.open("POST",
+            "https://api.meetflo.com//api/v1/weeklyreports/unsubscribe");
+
+            xhr.setRequestHeader("authorization", "Bearer
+            REPLACE_BEARER_TOKEN");
+
+
+            xhr.send(data);
+        - lang: Node_native
+          source: |-
+            var http = require("https");
+
+            var options = {
+              "method": "POST",
+              "hostname": "api.meetflo.com",
+              "port": null,
+              "path": "//api/v1/weeklyreports/unsubscribe",
+              "headers": {
+                "authorization": "Bearer REPLACE_BEARER_TOKEN"
+              }
+            };
+
+            var req = http.request(options, function (res) {
+              var chunks = [];
+
+              res.on("data", function (chunk) {
+                chunks.push(chunk);
+              });
+
+              res.on("end", function () {
+                var body = Buffer.concat(chunks);
+                console.log(body.toString());
+              });
+            });
+
+            req.end();
+        - lang: Python_python3
+          source: >-
+            import http.client
+
+
+            conn = http.client.HTTPSConnection("api.meetflo.com")
+
+
+            headers = { 'authorization': "Bearer REPLACE_BEARER_TOKEN" }
+
+
+            conn.request("POST", "//api/v1/weeklyreports/unsubscribe",
+            headers=headers)
+
+
+            res = conn.getresponse()
+
+            data = res.read()
+
+
+            print(data.decode("utf-8"))
+        - lang: Python_requests
+          source: |-
+            import requests
+
+            url = "https://api.meetflo.com//api/v1/weeklyreports/unsubscribe"
+
+            headers = {'authorization': 'Bearer REPLACE_BEARER_TOKEN'}
+
+            response = requests.request("POST", url, headers=headers)
+
+            print(response.text)
+        - lang: Shell_curl
+          source: |-
+            curl --request POST \
+              --url https://api.meetflo.com//api/v1/weeklyreports/unsubscribe \
+              --header 'authorization: Bearer REPLACE_BEARER_TOKEN'
+  '/api/v1/weeklyreports/user/{user_id}':
+    get:
+      security:
+        - OAuth2:
+            - user
+      summary: '/api/v1/weeklyreports/user/{user_id}'
+      parameters:
+        - name: user_id
+          in: path
+          description: user_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      x-code-samples:
+        - lang: Java_okhttp
+          source: |-
+            OkHttpClient client = new OkHttpClient();
+
+            Request request = new Request.Builder()
+              .url("https://api.meetflo.com//api/v1/weeklyreports/user/%7Buser_id%7D")
+              .get()
+              .addHeader("authorization", "Bearer REPLACE_BEARER_TOKEN")
+              .build();
+
+            Response response = client.newCall(request).execute();
+        - lang: Javascript_xhr
+          source: >-
+            var data = null;
+
+
+            var xhr = new XMLHttpRequest();
+
+            xhr.withCredentials = true;
+
+
+            xhr.addEventListener("readystatechange", function () {
+              if (this.readyState === this.DONE) {
+                console.log(this.responseText);
+              }
+            });
+
+
+            xhr.open("GET",
+            "https://api.meetflo.com//api/v1/weeklyreports/user/%7Buser_id%7D");
+
+            xhr.setRequestHeader("authorization", "Bearer
+            REPLACE_BEARER_TOKEN");
+
+
+            xhr.send(data);
+        - lang: Node_native
+          source: |-
+            var http = require("https");
+
+            var options = {
+              "method": "GET",
+              "hostname": "api.meetflo.com",
+              "port": null,
+              "path": "//api/v1/weeklyreports/user/%7Buser_id%7D",
+              "headers": {
+                "authorization": "Bearer REPLACE_BEARER_TOKEN"
+              }
+            };
+
+            var req = http.request(options, function (res) {
+              var chunks = [];
+
+              res.on("data", function (chunk) {
+                chunks.push(chunk);
+              });
+
+              res.on("end", function () {
+                var body = Buffer.concat(chunks);
+                console.log(body.toString());
+              });
+            });
+
+            req.end();
+        - lang: Python_python3
+          source: >-
+            import http.client
+
+
+            conn = http.client.HTTPSConnection("api.meetflo.com")
+
+
+            headers = { 'authorization': "Bearer REPLACE_BEARER_TOKEN" }
+
+
+            conn.request("GET", "//api/v1/weeklyreports/user/%7Buser_id%7D",
+            headers=headers)
+
+
+            res = conn.getresponse()
+
+            data = res.read()
+
+
+            print(data.decode("utf-8"))
+        - lang: Python_requests
+          source: >-
+            import requests
+
+
+            url =
+            "https://api.meetflo.com//api/v1/weeklyreports/user/%7Buser_id%7D"
+
+
+            headers = {'authorization': 'Bearer REPLACE_BEARER_TOKEN'}
+
+
+            response = requests.request("GET", url, headers=headers)
+
+
+            print(response.text)
+        - lang: Shell_curl
+          source: |-
+            curl --request GET \
+              --url https://api.meetflo.com//api/v1/weeklyreports/user/%7Buser_id%7D \
+              --header 'authorization: Bearer REPLACE_BEARER_TOKEN'
+  '/api/v1/zitresults/{icd_id}/{round_id}':
+    get:
+      security:
+        - OAuth2:
+            - user
+      summary: '/api/v1/zitresults/{icd_id}/{round_id}'
+      parameters:
+        - name: icd_id
+          in: path
+          description: icd_id
+          required: true
+          schema:
+            type: string
+        - name: round_id
+          in: path
+          description: round_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      x-code-samples:
+        - lang: Java_okhttp
+          source: |-
+            OkHttpClient client = new OkHttpClient();
+
+            Request request = new Request.Builder()
+              .url("https://api.meetflo.com//api/v1/zitresults/%7Bicd_id%7D/%7Bround_id%7D")
+              .get()
+              .addHeader("authorization", "Bearer REPLACE_BEARER_TOKEN")
+              .build();
+
+            Response response = client.newCall(request).execute();
+        - lang: Javascript_xhr
+          source: >-
+            var data = null;
+
+
+            var xhr = new XMLHttpRequest();
+
+            xhr.withCredentials = true;
+
+
+            xhr.addEventListener("readystatechange", function () {
+              if (this.readyState === this.DONE) {
+                console.log(this.responseText);
+              }
+            });
+
+
+            xhr.open("GET",
+            "https://api.meetflo.com//api/v1/zitresults/%7Bicd_id%7D/%7Bround_id%7D");
+
+            xhr.setRequestHeader("authorization", "Bearer
+            REPLACE_BEARER_TOKEN");
+
+
+            xhr.send(data);
+        - lang: Node_native
+          source: |-
+            var http = require("https");
+
+            var options = {
+              "method": "GET",
+              "hostname": "api.meetflo.com",
+              "port": null,
+              "path": "//api/v1/zitresults/%7Bicd_id%7D/%7Bround_id%7D",
+              "headers": {
+                "authorization": "Bearer REPLACE_BEARER_TOKEN"
+              }
+            };
+
+            var req = http.request(options, function (res) {
+              var chunks = [];
+
+              res.on("data", function (chunk) {
+                chunks.push(chunk);
+              });
+
+              res.on("end", function () {
+                var body = Buffer.concat(chunks);
+                console.log(body.toString());
+              });
+            });
+
+            req.end();
+        - lang: Python_python3
+          source: >-
+            import http.client
+
+
+            conn = http.client.HTTPSConnection("api.meetflo.com")
+
+
+            headers = { 'authorization': "Bearer REPLACE_BEARER_TOKEN" }
+
+
+            conn.request("GET",
+            "//api/v1/zitresults/%7Bicd_id%7D/%7Bround_id%7D", headers=headers)
+
+
+            res = conn.getresponse()
+
+            data = res.read()
+
+
+            print(data.decode("utf-8"))
+        - lang: Python_requests
+          source: >-
+            import requests
+
+
+            url =
+            "https://api.meetflo.com//api/v1/zitresults/%7Bicd_id%7D/%7Bround_id%7D"
+
+
+            headers = {'authorization': 'Bearer REPLACE_BEARER_TOKEN'}
+
+
+            response = requests.request("GET", url, headers=headers)
+
+
+            print(response.text)
+        - lang: Shell_curl
+          source: |-
+            curl --request GET \
+              --url https://api.meetflo.com//api/v1/zitresults/%7Bicd_id%7D/%7Bround_id%7D \
+              --header 'authorization: Bearer REPLACE_BEARER_TOKEN'
+  '/api/v1/zitresults/device/{device_id}':
+    get:
+      security:
+        - OAuth2:
+            - user
+      summary: '/api/v1/zitresults/device/{device_id}'
+      parameters:
+        - name: device_id
+          in: path
+          description: device_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      x-code-samples:
+        - lang: Java_okhttp
+          source: |-
+            OkHttpClient client = new OkHttpClient();
+
+            Request request = new Request.Builder()
+              .url("https://api.meetflo.com//api/v1/zitresults/device/%7Bdevice_id%7D")
+              .get()
+              .addHeader("authorization", "Bearer REPLACE_BEARER_TOKEN")
+              .build();
+
+            Response response = client.newCall(request).execute();
+        - lang: Javascript_xhr
+          source: >-
+            var data = null;
+
+
+            var xhr = new XMLHttpRequest();
+
+            xhr.withCredentials = true;
+
+
+            xhr.addEventListener("readystatechange", function () {
+              if (this.readyState === this.DONE) {
+                console.log(this.responseText);
+              }
+            });
+
+
+            xhr.open("GET",
+            "https://api.meetflo.com//api/v1/zitresults/device/%7Bdevice_id%7D");
+
+            xhr.setRequestHeader("authorization", "Bearer
+            REPLACE_BEARER_TOKEN");
+
+
+            xhr.send(data);
+        - lang: Node_native
+          source: |-
+            var http = require("https");
+
+            var options = {
+              "method": "GET",
+              "hostname": "api.meetflo.com",
+              "port": null,
+              "path": "//api/v1/zitresults/device/%7Bdevice_id%7D",
+              "headers": {
+                "authorization": "Bearer REPLACE_BEARER_TOKEN"
+              }
+            };
+
+            var req = http.request(options, function (res) {
+              var chunks = [];
+
+              res.on("data", function (chunk) {
+                chunks.push(chunk);
+              });
+
+              res.on("end", function () {
+                var body = Buffer.concat(chunks);
+                console.log(body.toString());
+              });
+            });
+
+            req.end();
+        - lang: Python_python3
+          source: >-
+            import http.client
+
+
+            conn = http.client.HTTPSConnection("api.meetflo.com")
+
+
+            headers = { 'authorization': "Bearer REPLACE_BEARER_TOKEN" }
+
+
+            conn.request("GET", "//api/v1/zitresults/device/%7Bdevice_id%7D",
+            headers=headers)
+
+
+            res = conn.getresponse()
+
+            data = res.read()
+
+
+            print(data.decode("utf-8"))
+        - lang: Python_requests
+          source: >-
+            import requests
+
+
+            url =
+            "https://api.meetflo.com//api/v1/zitresults/device/%7Bdevice_id%7D"
+
+
+            headers = {'authorization': 'Bearer REPLACE_BEARER_TOKEN'}
+
+
+            response = requests.request("GET", url, headers=headers)
+
+
+            print(response.text)
+        - lang: Shell_curl
+          source: |-
+            curl --request GET \
+              --url https://api.meetflo.com//api/v1/zitresults/device/%7Bdevice_id%7D \
+              --header 'authorization: Bearer REPLACE_BEARER_TOKEN'
+    post:
+      security:
+        - OAuth2:
+            - user
+      summary: '/api/v1/zitresults/device/{device_id}'
+      parameters:
+        - name: device_id
+          in: path
+          description: device_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      x-code-samples:
+        - lang: Java_okhttp
+          source: |-
+            OkHttpClient client = new OkHttpClient();
+
+            Request request = new Request.Builder()
+              .url("https://api.meetflo.com//api/v1/zitresults/device/%7Bdevice_id%7D")
+              .post(null)
+              .addHeader("authorization", "Bearer REPLACE_BEARER_TOKEN")
+              .build();
+
+            Response response = client.newCall(request).execute();
+        - lang: Javascript_xhr
+          source: >-
+            var data = null;
+
+
+            var xhr = new XMLHttpRequest();
+
+            xhr.withCredentials = true;
+
+
+            xhr.addEventListener("readystatechange", function () {
+              if (this.readyState === this.DONE) {
+                console.log(this.responseText);
+              }
+            });
+
+
+            xhr.open("POST",
+            "https://api.meetflo.com//api/v1/zitresults/device/%7Bdevice_id%7D");
+
+            xhr.setRequestHeader("authorization", "Bearer
+            REPLACE_BEARER_TOKEN");
+
+
+            xhr.send(data);
+        - lang: Node_native
+          source: |-
+            var http = require("https");
+
+            var options = {
+              "method": "POST",
+              "hostname": "api.meetflo.com",
+              "port": null,
+              "path": "//api/v1/zitresults/device/%7Bdevice_id%7D",
+              "headers": {
+                "authorization": "Bearer REPLACE_BEARER_TOKEN"
+              }
+            };
+
+            var req = http.request(options, function (res) {
+              var chunks = [];
+
+              res.on("data", function (chunk) {
+                chunks.push(chunk);
+              });
+
+              res.on("end", function () {
+                var body = Buffer.concat(chunks);
+                console.log(body.toString());
+              });
+            });
+
+            req.end();
+        - lang: Python_python3
+          source: >-
+            import http.client
+
+
+            conn = http.client.HTTPSConnection("api.meetflo.com")
+
+
+            headers = { 'authorization': "Bearer REPLACE_BEARER_TOKEN" }
+
+
+            conn.request("POST", "//api/v1/zitresults/device/%7Bdevice_id%7D",
+            headers=headers)
+
+
+            res = conn.getresponse()
+
+            data = res.read()
+
+
+            print(data.decode("utf-8"))
+        - lang: Python_requests
+          source: >-
+            import requests
+
+
+            url =
+            "https://api.meetflo.com//api/v1/zitresults/device/%7Bdevice_id%7D"
+
+
+            headers = {'authorization': 'Bearer REPLACE_BEARER_TOKEN'}
+
+
+            response = requests.request("POST", url, headers=headers)
+
+
+            print(response.text)
+        - lang: Shell_curl
+          source: |-
+            curl --request POST \
+              --url https://api.meetflo.com//api/v1/zitresults/device/%7Bdevice_id%7D \
+              --header 'authorization: Bearer REPLACE_BEARER_TOKEN'
+  '/api/v1/zitresults/icd/{icd_id}':
+    get:
+      security:
+        - OAuth2:
+            - user
+      summary: '/api/v1/zitresults/icd/{icd_id}'
+      parameters:
+        - name: icd_id
+          in: path
+          description: icd_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      x-code-samples:
+        - lang: Java_okhttp
+          source: |-
+            OkHttpClient client = new OkHttpClient();
+
+            Request request = new Request.Builder()
+              .url("https://api.meetflo.com//api/v1/zitresults/icd/%7Bicd_id%7D")
+              .get()
+              .addHeader("authorization", "Bearer REPLACE_BEARER_TOKEN")
+              .build();
+
+            Response response = client.newCall(request).execute();
+        - lang: Javascript_xhr
+          source: >-
+            var data = null;
+
+
+            var xhr = new XMLHttpRequest();
+
+            xhr.withCredentials = true;
+
+
+            xhr.addEventListener("readystatechange", function () {
+              if (this.readyState === this.DONE) {
+                console.log(this.responseText);
+              }
+            });
+
+
+            xhr.open("GET",
+            "https://api.meetflo.com//api/v1/zitresults/icd/%7Bicd_id%7D");
+
+            xhr.setRequestHeader("authorization", "Bearer
+            REPLACE_BEARER_TOKEN");
+
+
+            xhr.send(data);
+        - lang: Node_native
+          source: |-
+            var http = require("https");
+
+            var options = {
+              "method": "GET",
+              "hostname": "api.meetflo.com",
+              "port": null,
+              "path": "//api/v1/zitresults/icd/%7Bicd_id%7D",
+              "headers": {
+                "authorization": "Bearer REPLACE_BEARER_TOKEN"
+              }
+            };
+
+            var req = http.request(options, function (res) {
+              var chunks = [];
+
+              res.on("data", function (chunk) {
+                chunks.push(chunk);
+              });
+
+              res.on("end", function () {
+                var body = Buffer.concat(chunks);
+                console.log(body.toString());
+              });
+            });
+
+            req.end();
+        - lang: Python_python3
+          source: >-
+            import http.client
+
+
+            conn = http.client.HTTPSConnection("api.meetflo.com")
+
+
+            headers = { 'authorization': "Bearer REPLACE_BEARER_TOKEN" }
+
+
+            conn.request("GET", "//api/v1/zitresults/icd/%7Bicd_id%7D",
+            headers=headers)
+
+
+            res = conn.getresponse()
+
+            data = res.read()
+
+
+            print(data.decode("utf-8"))
+        - lang: Python_requests
+          source: |-
+            import requests
+
+            url = "https://api.meetflo.com//api/v1/zitresults/icd/%7Bicd_id%7D"
+
+            headers = {'authorization': 'Bearer REPLACE_BEARER_TOKEN'}
+
+            response = requests.request("GET", url, headers=headers)
+
+            print(response.text)
+        - lang: Shell_curl
+          source: |-
+            curl --request GET \
+              --url https://api.meetflo.com//api/v1/zitresults/icd/%7Bicd_id%7D \
+              --header 'authorization: Bearer REPLACE_BEARER_TOKEN'
+  /api/v1_5/accounts:
+    post:
+      security:
+        - OAuth2:
+            - user
+      summary: /api/v1_5/accounts
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      x-code-samples:
+        - lang: Java_okhttp
+          source: |-
+            OkHttpClient client = new OkHttpClient();
+
+            Request request = new Request.Builder()
+              .url("https://api.meetflo.com//api/v1_5/accounts")
+              .post(null)
+              .addHeader("authorization", "Bearer REPLACE_BEARER_TOKEN")
+              .build();
+
+            Response response = client.newCall(request).execute();
+        - lang: Javascript_xhr
+          source: >-
+            var data = null;
+
+
+            var xhr = new XMLHttpRequest();
+
+            xhr.withCredentials = true;
+
+
+            xhr.addEventListener("readystatechange", function () {
+              if (this.readyState === this.DONE) {
+                console.log(this.responseText);
+              }
+            });
+
+
+            xhr.open("POST", "https://api.meetflo.com//api/v1_5/accounts");
+
+            xhr.setRequestHeader("authorization", "Bearer
+            REPLACE_BEARER_TOKEN");
+
+
+            xhr.send(data);
+        - lang: Node_native
+          source: |-
+            var http = require("https");
+
+            var options = {
+              "method": "POST",
+              "hostname": "api.meetflo.com",
+              "port": null,
+              "path": "//api/v1_5/accounts",
+              "headers": {
+                "authorization": "Bearer REPLACE_BEARER_TOKEN"
+              }
+            };
+
+            var req = http.request(options, function (res) {
+              var chunks = [];
+
+              res.on("data", function (chunk) {
+                chunks.push(chunk);
+              });
+
+              res.on("end", function () {
+                var body = Buffer.concat(chunks);
+                console.log(body.toString());
+              });
+            });
+
+            req.end();
+        - lang: Python_python3
+          source: |-
+            import http.client
+
+            conn = http.client.HTTPSConnection("api.meetflo.com")
+
+            headers = { 'authorization': "Bearer REPLACE_BEARER_TOKEN" }
+
+            conn.request("POST", "//api/v1_5/accounts", headers=headers)
+
+            res = conn.getresponse()
+            data = res.read()
+
+            print(data.decode("utf-8"))
+        - lang: Python_requests
+          source: |-
+            import requests
+
+            url = "https://api.meetflo.com//api/v1_5/accounts"
+
+            headers = {'authorization': 'Bearer REPLACE_BEARER_TOKEN'}
+
+            response = requests.request("POST", url, headers=headers)
+
+            print(response.text)
+        - lang: Shell_curl
+          source: |-
+            curl --request POST \
+              --url https://api.meetflo.com//api/v1_5/accounts \
+              --header 'authorization: Bearer REPLACE_BEARER_TOKEN'
+  '/api/v1_5/accounts/{id}':
+    delete:
+      security:
+        - OAuth2:
+            - user
+      summary: '/api/v1_5/accounts/{id}'
+      parameters:
+        - name: id
+          in: path
+          description: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      x-code-samples:
+        - lang: Java_okhttp
+          source: |-
+            OkHttpClient client = new OkHttpClient();
+
+            Request request = new Request.Builder()
+              .url("https://api.meetflo.com//api/v1_5/accounts/%7Bid%7D")
+              .delete(null)
+              .addHeader("authorization", "Bearer REPLACE_BEARER_TOKEN")
+              .build();
+
+            Response response = client.newCall(request).execute();
+        - lang: Javascript_xhr
+          source: >-
+            var data = null;
+
+
+            var xhr = new XMLHttpRequest();
+
+            xhr.withCredentials = true;
+
+
+            xhr.addEventListener("readystatechange", function () {
+              if (this.readyState === this.DONE) {
+                console.log(this.responseText);
+              }
+            });
+
+
+            xhr.open("DELETE",
+            "https://api.meetflo.com//api/v1_5/accounts/%7Bid%7D");
+
+            xhr.setRequestHeader("authorization", "Bearer
+            REPLACE_BEARER_TOKEN");
+
+
+            xhr.send(data);
+        - lang: Node_native
+          source: |-
+            var http = require("https");
+
+            var options = {
+              "method": "DELETE",
+              "hostname": "api.meetflo.com",
+              "port": null,
+              "path": "//api/v1_5/accounts/%7Bid%7D",
+              "headers": {
+                "authorization": "Bearer REPLACE_BEARER_TOKEN"
+              }
+            };
+
+            var req = http.request(options, function (res) {
+              var chunks = [];
+
+              res.on("data", function (chunk) {
+                chunks.push(chunk);
+              });
+
+              res.on("end", function () {
+                var body = Buffer.concat(chunks);
+                console.log(body.toString());
+              });
+            });
+
+            req.end();
+        - lang: Python_python3
+          source: >-
+            import http.client
+
+
+            conn = http.client.HTTPSConnection("api.meetflo.com")
+
+
+            headers = { 'authorization': "Bearer REPLACE_BEARER_TOKEN" }
+
+
+            conn.request("DELETE", "//api/v1_5/accounts/%7Bid%7D",
+            headers=headers)
+
+
+            res = conn.getresponse()
+
+            data = res.read()
+
+
+            print(data.decode("utf-8"))
+        - lang: Python_requests
+          source: |-
+            import requests
+
+            url = "https://api.meetflo.com//api/v1_5/accounts/%7Bid%7D"
+
+            headers = {'authorization': 'Bearer REPLACE_BEARER_TOKEN'}
+
+            response = requests.request("DELETE", url, headers=headers)
+
+            print(response.text)
+        - lang: Shell_curl
+          source: |-
+            curl --request DELETE \
+              --url https://api.meetflo.com//api/v1_5/accounts/%7Bid%7D \
+              --header 'authorization: Bearer REPLACE_BEARER_TOKEN'
+    get:
+      security:
+        - OAuth2:
+            - user
+      summary: '/api/v1_5/accounts/{id}'
+      parameters:
+        - name: id
+          in: path
+          description: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      x-code-samples:
+        - lang: Java_okhttp
+          source: |-
+            OkHttpClient client = new OkHttpClient();
+
+            Request request = new Request.Builder()
+              .url("https://api.meetflo.com//api/v1_5/accounts/%7Bid%7D")
+              .get()
+              .addHeader("authorization", "Bearer REPLACE_BEARER_TOKEN")
+              .build();
+
+            Response response = client.newCall(request).execute();
+        - lang: Javascript_xhr
+          source: >-
+            var data = null;
+
+
+            var xhr = new XMLHttpRequest();
+
+            xhr.withCredentials = true;
+
+
+            xhr.addEventListener("readystatechange", function () {
+              if (this.readyState === this.DONE) {
+                console.log(this.responseText);
+              }
+            });
+
+
+            xhr.open("GET",
+            "https://api.meetflo.com//api/v1_5/accounts/%7Bid%7D");
+
+            xhr.setRequestHeader("authorization", "Bearer
+            REPLACE_BEARER_TOKEN");
+
+
+            xhr.send(data);
+        - lang: Node_native
+          source: |-
+            var http = require("https");
+
+            var options = {
+              "method": "GET",
+              "hostname": "api.meetflo.com",
+              "port": null,
+              "path": "//api/v1_5/accounts/%7Bid%7D",
+              "headers": {
+                "authorization": "Bearer REPLACE_BEARER_TOKEN"
+              }
+            };
+
+            var req = http.request(options, function (res) {
+              var chunks = [];
+
+              res.on("data", function (chunk) {
+                chunks.push(chunk);
+              });
+
+              res.on("end", function () {
+                var body = Buffer.concat(chunks);
+                console.log(body.toString());
+              });
+            });
+
+            req.end();
+        - lang: Python_python3
+          source: |-
+            import http.client
+
+            conn = http.client.HTTPSConnection("api.meetflo.com")
+
+            headers = { 'authorization': "Bearer REPLACE_BEARER_TOKEN" }
+
+            conn.request("GET", "//api/v1_5/accounts/%7Bid%7D", headers=headers)
+
+            res = conn.getresponse()
+            data = res.read()
+
+            print(data.decode("utf-8"))
+        - lang: Python_requests
+          source: |-
+            import requests
+
+            url = "https://api.meetflo.com//api/v1_5/accounts/%7Bid%7D"
+
+            headers = {'authorization': 'Bearer REPLACE_BEARER_TOKEN'}
+
+            response = requests.request("GET", url, headers=headers)
+
+            print(response.text)
+        - lang: Shell_curl
+          source: |-
+            curl --request GET \
+              --url https://api.meetflo.com//api/v1_5/accounts/%7Bid%7D \
+              --header 'authorization: Bearer REPLACE_BEARER_TOKEN'
+    post:
+      security:
+        - OAuth2:
+            - user
+      summary: '/api/v1_5/accounts/{id}'
+      parameters:
+        - name: id
+          in: path
+          description: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      x-code-samples:
+        - lang: Java_okhttp
+          source: |-
+            OkHttpClient client = new OkHttpClient();
+
+            Request request = new Request.Builder()
+              .url("https://api.meetflo.com//api/v1_5/accounts/%7Bid%7D")
+              .post(null)
+              .addHeader("authorization", "Bearer REPLACE_BEARER_TOKEN")
+              .build();
+
+            Response response = client.newCall(request).execute();
+        - lang: Javascript_xhr
+          source: >-
+            var data = null;
+
+
+            var xhr = new XMLHttpRequest();
+
+            xhr.withCredentials = true;
+
+
+            xhr.addEventListener("readystatechange", function () {
+              if (this.readyState === this.DONE) {
+                console.log(this.responseText);
+              }
+            });
+
+
+            xhr.open("POST",
+            "https://api.meetflo.com//api/v1_5/accounts/%7Bid%7D");
+
+            xhr.setRequestHeader("authorization", "Bearer
+            REPLACE_BEARER_TOKEN");
+
+
+            xhr.send(data);
+        - lang: Node_native
+          source: |-
+            var http = require("https");
+
+            var options = {
+              "method": "POST",
+              "hostname": "api.meetflo.com",
+              "port": null,
+              "path": "//api/v1_5/accounts/%7Bid%7D",
+              "headers": {
+                "authorization": "Bearer REPLACE_BEARER_TOKEN"
+              }
+            };
+
+            var req = http.request(options, function (res) {
+              var chunks = [];
+
+              res.on("data", function (chunk) {
+                chunks.push(chunk);
+              });
+
+              res.on("end", function () {
+                var body = Buffer.concat(chunks);
+                console.log(body.toString());
+              });
+            });
+
+            req.end();
+        - lang: Python_python3
+          source: >-
+            import http.client
+
+
+            conn = http.client.HTTPSConnection("api.meetflo.com")
+
+
+            headers = { 'authorization': "Bearer REPLACE_BEARER_TOKEN" }
+
+
+            conn.request("POST", "//api/v1_5/accounts/%7Bid%7D",
+            headers=headers)
+
+
+            res = conn.getresponse()
+
+            data = res.read()
+
+
+            print(data.decode("utf-8"))
+        - lang: Python_requests
+          source: |-
+            import requests
+
+            url = "https://api.meetflo.com//api/v1_5/accounts/%7Bid%7D"
+
+            headers = {'authorization': 'Bearer REPLACE_BEARER_TOKEN'}
+
+            response = requests.request("POST", url, headers=headers)
+
+            print(response.text)
+        - lang: Shell_curl
+          source: |-
+            curl --request POST \
+              --url https://api.meetflo.com//api/v1_5/accounts/%7Bid%7D \
+              --header 'authorization: Bearer REPLACE_BEARER_TOKEN'
+    put:
+      security:
+        - OAuth2:
+            - user
+      summary: '/api/v1_5/accounts/{id}'
+      parameters:
+        - name: id
+          in: path
+          description: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      x-code-samples:
+        - lang: Java_okhttp
+          source: |-
+            OkHttpClient client = new OkHttpClient();
+
+            Request request = new Request.Builder()
+              .url("https://api.meetflo.com//api/v1_5/accounts/%7Bid%7D")
+              .put(null)
+              .addHeader("authorization", "Bearer REPLACE_BEARER_TOKEN")
+              .build();
+
+            Response response = client.newCall(request).execute();
+        - lang: Javascript_xhr
+          source: >-
+            var data = null;
+
+
+            var xhr = new XMLHttpRequest();
+
+            xhr.withCredentials = true;
+
+
+            xhr.addEventListener("readystatechange", function () {
+              if (this.readyState === this.DONE) {
+                console.log(this.responseText);
+              }
+            });
+
+
+            xhr.open("PUT",
+            "https://api.meetflo.com//api/v1_5/accounts/%7Bid%7D");
+
+            xhr.setRequestHeader("authorization", "Bearer
+            REPLACE_BEARER_TOKEN");
+
+
+            xhr.send(data);
+        - lang: Node_native
+          source: |-
+            var http = require("https");
+
+            var options = {
+              "method": "PUT",
+              "hostname": "api.meetflo.com",
+              "port": null,
+              "path": "//api/v1_5/accounts/%7Bid%7D",
+              "headers": {
+                "authorization": "Bearer REPLACE_BEARER_TOKEN"
+              }
+            };
+
+            var req = http.request(options, function (res) {
+              var chunks = [];
+
+              res.on("data", function (chunk) {
+                chunks.push(chunk);
+              });
+
+              res.on("end", function () {
+                var body = Buffer.concat(chunks);
+                console.log(body.toString());
+              });
+            });
+
+            req.end();
+        - lang: Python_python3
+          source: |-
+            import http.client
+
+            conn = http.client.HTTPSConnection("api.meetflo.com")
+
+            headers = { 'authorization': "Bearer REPLACE_BEARER_TOKEN" }
+
+            conn.request("PUT", "//api/v1_5/accounts/%7Bid%7D", headers=headers)
+
+            res = conn.getresponse()
+            data = res.read()
+
+            print(data.decode("utf-8"))
+        - lang: Python_requests
+          source: |-
+            import requests
+
+            url = "https://api.meetflo.com//api/v1_5/accounts/%7Bid%7D"
+
+            headers = {'authorization': 'Bearer REPLACE_BEARER_TOKEN'}
+
+            response = requests.request("PUT", url, headers=headers)
+
+            print(response.text)
+        - lang: Shell_curl
+          source: |-
+            curl --request PUT \
+              --url https://api.meetflo.com//api/v1_5/accounts/%7Bid%7D \
+              --header 'authorization: Bearer REPLACE_BEARER_TOKEN'
+  '/api/v1_5/accounts/archive/{id}':
+    delete:
+      security:
+        - OAuth2:
+            - user
+      summary: '/api/v1_5/accounts/archive/{id}'
+      parameters:
+        - name: id
+          in: path
+          description: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      x-code-samples:
+        - lang: Java_okhttp
+          source: |-
+            OkHttpClient client = new OkHttpClient();
+
+            Request request = new Request.Builder()
+              .url("https://api.meetflo.com//api/v1_5/accounts/archive/%7Bid%7D")
+              .delete(null)
+              .addHeader("authorization", "Bearer REPLACE_BEARER_TOKEN")
+              .build();
+
+            Response response = client.newCall(request).execute();
+        - lang: Javascript_xhr
+          source: >-
+            var data = null;
+
+
+            var xhr = new XMLHttpRequest();
+
+            xhr.withCredentials = true;
+
+
+            xhr.addEventListener("readystatechange", function () {
+              if (this.readyState === this.DONE) {
+                console.log(this.responseText);
+              }
+            });
+
+
+            xhr.open("DELETE",
+            "https://api.meetflo.com//api/v1_5/accounts/archive/%7Bid%7D");
+
+            xhr.setRequestHeader("authorization", "Bearer
+            REPLACE_BEARER_TOKEN");
+
+
+            xhr.send(data);
+        - lang: Node_native
+          source: |-
+            var http = require("https");
+
+            var options = {
+              "method": "DELETE",
+              "hostname": "api.meetflo.com",
+              "port": null,
+              "path": "//api/v1_5/accounts/archive/%7Bid%7D",
+              "headers": {
+                "authorization": "Bearer REPLACE_BEARER_TOKEN"
+              }
+            };
+
+            var req = http.request(options, function (res) {
+              var chunks = [];
+
+              res.on("data", function (chunk) {
+                chunks.push(chunk);
+              });
+
+              res.on("end", function () {
+                var body = Buffer.concat(chunks);
+                console.log(body.toString());
+              });
+            });
+
+            req.end();
+        - lang: Python_python3
+          source: >-
+            import http.client
+
+
+            conn = http.client.HTTPSConnection("api.meetflo.com")
+
+
+            headers = { 'authorization': "Bearer REPLACE_BEARER_TOKEN" }
+
+
+            conn.request("DELETE", "//api/v1_5/accounts/archive/%7Bid%7D",
+            headers=headers)
+
+
+            res = conn.getresponse()
+
+            data = res.read()
+
+
+            print(data.decode("utf-8"))
+        - lang: Python_requests
+          source: |-
+            import requests
+
+            url = "https://api.meetflo.com//api/v1_5/accounts/archive/%7Bid%7D"
+
+            headers = {'authorization': 'Bearer REPLACE_BEARER_TOKEN'}
+
+            response = requests.request("DELETE", url, headers=headers)
+
+            print(response.text)
+        - lang: Shell_curl
+          source: |-
+            curl --request DELETE \
+              --url https://api.meetflo.com//api/v1_5/accounts/archive/%7Bid%7D \
+              --header 'authorization: Bearer REPLACE_BEARER_TOKEN'
+  '/api/v1_5/accounts/group/{group_id}':
+    get:
+      security:
+        - OAuth2:
+            - user
+      summary: '/api/v1_5/accounts/group/{group_id}'
+      parameters:
+        - name: group_id
+          in: path
+          description: group_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      x-code-samples:
+        - lang: Java_okhttp
+          source: |-
+            OkHttpClient client = new OkHttpClient();
+
+            Request request = new Request.Builder()
+              .url("https://api.meetflo.com//api/v1_5/accounts/group/%7Bgroup_id%7D")
+              .get()
+              .addHeader("authorization", "Bearer REPLACE_BEARER_TOKEN")
+              .build();
+
+            Response response = client.newCall(request).execute();
+        - lang: Javascript_xhr
+          source: >-
+            var data = null;
+
+
+            var xhr = new XMLHttpRequest();
+
+            xhr.withCredentials = true;
+
+
+            xhr.addEventListener("readystatechange", function () {
+              if (this.readyState === this.DONE) {
+                console.log(this.responseText);
+              }
+            });
+
+
+            xhr.open("GET",
+            "https://api.meetflo.com//api/v1_5/accounts/group/%7Bgroup_id%7D");
+
+            xhr.setRequestHeader("authorization", "Bearer
+            REPLACE_BEARER_TOKEN");
+
+
+            xhr.send(data);
+        - lang: Node_native
+          source: |-
+            var http = require("https");
+
+            var options = {
+              "method": "GET",
+              "hostname": "api.meetflo.com",
+              "port": null,
+              "path": "//api/v1_5/accounts/group/%7Bgroup_id%7D",
+              "headers": {
+                "authorization": "Bearer REPLACE_BEARER_TOKEN"
+              }
+            };
+
+            var req = http.request(options, function (res) {
+              var chunks = [];
+
+              res.on("data", function (chunk) {
+                chunks.push(chunk);
+              });
+
+              res.on("end", function () {
+                var body = Buffer.concat(chunks);
+                console.log(body.toString());
+              });
+            });
+
+            req.end();
+        - lang: Python_python3
+          source: >-
+            import http.client
+
+
+            conn = http.client.HTTPSConnection("api.meetflo.com")
+
+
+            headers = { 'authorization': "Bearer REPLACE_BEARER_TOKEN" }
+
+
+            conn.request("GET", "//api/v1_5/accounts/group/%7Bgroup_id%7D",
+            headers=headers)
+
+
+            res = conn.getresponse()
+
+            data = res.read()
+
+
+            print(data.decode("utf-8"))
+        - lang: Python_requests
+          source: >-
+            import requests
+
+
+            url =
+            "https://api.meetflo.com//api/v1_5/accounts/group/%7Bgroup_id%7D"
+
+
+            headers = {'authorization': 'Bearer REPLACE_BEARER_TOKEN'}
+
+
+            response = requests.request("GET", url, headers=headers)
+
+
+            print(response.text)
+        - lang: Shell_curl
+          source: |-
+            curl --request GET \
+              --url https://api.meetflo.com//api/v1_5/accounts/group/%7Bgroup_id%7D \
+              --header 'authorization: Bearer REPLACE_BEARER_TOKEN'
+  '/api/v1_5/accounts/user/{owner_user_id}':
+    get:
+      security:
+        - OAuth2:
+            - user
+      summary: '/api/v1_5/accounts/user/{owner_user_id}'
+      parameters:
+        - name: owner_user_id
+          in: path
+          description: owner_user_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      x-code-samples:
+        - lang: Java_okhttp
+          source: |-
+            OkHttpClient client = new OkHttpClient();
+
+            Request request = new Request.Builder()
+              .url("https://api.meetflo.com//api/v1_5/accounts/user/%7Bowner_user_id%7D")
+              .get()
+              .addHeader("authorization", "Bearer REPLACE_BEARER_TOKEN")
+              .build();
+
+            Response response = client.newCall(request).execute();
+        - lang: Javascript_xhr
+          source: >-
+            var data = null;
+
+
+            var xhr = new XMLHttpRequest();
+
+            xhr.withCredentials = true;
+
+
+            xhr.addEventListener("readystatechange", function () {
+              if (this.readyState === this.DONE) {
+                console.log(this.responseText);
+              }
+            });
+
+
+            xhr.open("GET",
+            "https://api.meetflo.com//api/v1_5/accounts/user/%7Bowner_user_id%7D");
+
+            xhr.setRequestHeader("authorization", "Bearer
+            REPLACE_BEARER_TOKEN");
+
+
+            xhr.send(data);
+        - lang: Node_native
+          source: |-
+            var http = require("https");
+
+            var options = {
+              "method": "GET",
+              "hostname": "api.meetflo.com",
+              "port": null,
+              "path": "//api/v1_5/accounts/user/%7Bowner_user_id%7D",
+              "headers": {
+                "authorization": "Bearer REPLACE_BEARER_TOKEN"
+              }
+            };
+
+            var req = http.request(options, function (res) {
+              var chunks = [];
+
+              res.on("data", function (chunk) {
+                chunks.push(chunk);
+              });
+
+              res.on("end", function () {
+                var body = Buffer.concat(chunks);
+                console.log(body.toString());
+              });
+            });
+
+            req.end();
+        - lang: Python_python3
+          source: >-
+            import http.client
+
+
+            conn = http.client.HTTPSConnection("api.meetflo.com")
+
+
+            headers = { 'authorization': "Bearer REPLACE_BEARER_TOKEN" }
+
+
+            conn.request("GET", "//api/v1_5/accounts/user/%7Bowner_user_id%7D",
+            headers=headers)
+
+
+            res = conn.getresponse()
+
+            data = res.read()
+
+
+            print(data.decode("utf-8"))
+        - lang: Python_requests
+          source: >-
+            import requests
+
+
+            url =
+            "https://api.meetflo.com//api/v1_5/accounts/user/%7Bowner_user_id%7D"
+
+
+            headers = {'authorization': 'Bearer REPLACE_BEARER_TOKEN'}
+
+
+            response = requests.request("GET", url, headers=headers)
+
+
+            print(response.text)
+        - lang: Shell_curl
+          source: |-
+            curl --request GET \
+              --url https://api.meetflo.com//api/v1_5/accounts/user/%7Bowner_user_id%7D \
+              --header 'authorization: Bearer REPLACE_BEARER_TOKEN'
+  /api/v1_5/locations:
+    post:
+      security:
+        - OAuth2:
+            - user
+      summary: /api/v1_5/locations
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      x-code-samples:
+        - lang: Java_okhttp
+          source: |-
+            OkHttpClient client = new OkHttpClient();
+
+            Request request = new Request.Builder()
+              .url("https://api.meetflo.com//api/v1_5/locations")
+              .post(null)
+              .addHeader("authorization", "Bearer REPLACE_BEARER_TOKEN")
+              .build();
+
+            Response response = client.newCall(request).execute();
+        - lang: Javascript_xhr
+          source: >-
+            var data = null;
+
+
+            var xhr = new XMLHttpRequest();
+
+            xhr.withCredentials = true;
+
+
+            xhr.addEventListener("readystatechange", function () {
+              if (this.readyState === this.DONE) {
+                console.log(this.responseText);
+              }
+            });
+
+
+            xhr.open("POST", "https://api.meetflo.com//api/v1_5/locations");
+
+            xhr.setRequestHeader("authorization", "Bearer
+            REPLACE_BEARER_TOKEN");
+
+
+            xhr.send(data);
+        - lang: Node_native
+          source: |-
+            var http = require("https");
+
+            var options = {
+              "method": "POST",
+              "hostname": "api.meetflo.com",
+              "port": null,
+              "path": "//api/v1_5/locations",
+              "headers": {
+                "authorization": "Bearer REPLACE_BEARER_TOKEN"
+              }
+            };
+
+            var req = http.request(options, function (res) {
+              var chunks = [];
+
+              res.on("data", function (chunk) {
+                chunks.push(chunk);
+              });
+
+              res.on("end", function () {
+                var body = Buffer.concat(chunks);
+                console.log(body.toString());
+              });
+            });
+
+            req.end();
+        - lang: Python_python3
+          source: |-
+            import http.client
+
+            conn = http.client.HTTPSConnection("api.meetflo.com")
+
+            headers = { 'authorization': "Bearer REPLACE_BEARER_TOKEN" }
+
+            conn.request("POST", "//api/v1_5/locations", headers=headers)
+
+            res = conn.getresponse()
+            data = res.read()
+
+            print(data.decode("utf-8"))
+        - lang: Python_requests
+          source: |-
+            import requests
+
+            url = "https://api.meetflo.com//api/v1_5/locations"
+
+            headers = {'authorization': 'Bearer REPLACE_BEARER_TOKEN'}
+
+            response = requests.request("POST", url, headers=headers)
+
+            print(response.text)
+        - lang: Shell_curl
+          source: |-
+            curl --request POST \
+              --url https://api.meetflo.com//api/v1_5/locations \
+              --header 'authorization: Bearer REPLACE_BEARER_TOKEN'
+  '/api/v1_5/locations/{account_id}':
+    get:
+      security:
+        - OAuth2:
+            - user
+      summary: '/api/v1_5/locations/{account_id}'
+      parameters:
+        - name: account_id
+          in: path
+          description: account_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      x-code-samples:
+        - lang: Java_okhttp
+          source: |-
+            OkHttpClient client = new OkHttpClient();
+
+            Request request = new Request.Builder()
+              .url("https://api.meetflo.com//api/v1_5/locations/%7Baccount_id%7D")
+              .get()
+              .addHeader("authorization", "Bearer REPLACE_BEARER_TOKEN")
+              .build();
+
+            Response response = client.newCall(request).execute();
+        - lang: Javascript_xhr
+          source: >-
+            var data = null;
+
+
+            var xhr = new XMLHttpRequest();
+
+            xhr.withCredentials = true;
+
+
+            xhr.addEventListener("readystatechange", function () {
+              if (this.readyState === this.DONE) {
+                console.log(this.responseText);
+              }
+            });
+
+
+            xhr.open("GET",
+            "https://api.meetflo.com//api/v1_5/locations/%7Baccount_id%7D");
+
+            xhr.setRequestHeader("authorization", "Bearer
+            REPLACE_BEARER_TOKEN");
+
+
+            xhr.send(data);
+        - lang: Node_native
+          source: |-
+            var http = require("https");
+
+            var options = {
+              "method": "GET",
+              "hostname": "api.meetflo.com",
+              "port": null,
+              "path": "//api/v1_5/locations/%7Baccount_id%7D",
+              "headers": {
+                "authorization": "Bearer REPLACE_BEARER_TOKEN"
+              }
+            };
+
+            var req = http.request(options, function (res) {
+              var chunks = [];
+
+              res.on("data", function (chunk) {
+                chunks.push(chunk);
+              });
+
+              res.on("end", function () {
+                var body = Buffer.concat(chunks);
+                console.log(body.toString());
+              });
+            });
+
+            req.end();
+        - lang: Python_python3
+          source: >-
+            import http.client
+
+
+            conn = http.client.HTTPSConnection("api.meetflo.com")
+
+
+            headers = { 'authorization': "Bearer REPLACE_BEARER_TOKEN" }
+
+
+            conn.request("GET", "//api/v1_5/locations/%7Baccount_id%7D",
+            headers=headers)
+
+
+            res = conn.getresponse()
+
+            data = res.read()
+
+
+            print(data.decode("utf-8"))
+        - lang: Python_requests
+          source: |-
+            import requests
+
+            url = "https://api.meetflo.com//api/v1_5/locations/%7Baccount_id%7D"
+
+            headers = {'authorization': 'Bearer REPLACE_BEARER_TOKEN'}
+
+            response = requests.request("GET", url, headers=headers)
+
+            print(response.text)
+        - lang: Shell_curl
+          source: |-
+            curl --request GET \
+              --url https://api.meetflo.com//api/v1_5/locations/%7Baccount_id%7D \
+              --header 'authorization: Bearer REPLACE_BEARER_TOKEN'
+    post:
+      security:
+        - OAuth2:
+            - user
+      summary: '/api/v1_5/locations/{account_id}'
+      parameters:
+        - name: account_id
+          in: path
+          description: account_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      x-code-samples:
+        - lang: Java_okhttp
+          source: |-
+            OkHttpClient client = new OkHttpClient();
+
+            Request request = new Request.Builder()
+              .url("https://api.meetflo.com//api/v1_5/locations/%7Baccount_id%7D")
+              .post(null)
+              .addHeader("authorization", "Bearer REPLACE_BEARER_TOKEN")
+              .build();
+
+            Response response = client.newCall(request).execute();
+        - lang: Javascript_xhr
+          source: >-
+            var data = null;
+
+
+            var xhr = new XMLHttpRequest();
+
+            xhr.withCredentials = true;
+
+
+            xhr.addEventListener("readystatechange", function () {
+              if (this.readyState === this.DONE) {
+                console.log(this.responseText);
+              }
+            });
+
+
+            xhr.open("POST",
+            "https://api.meetflo.com//api/v1_5/locations/%7Baccount_id%7D");
+
+            xhr.setRequestHeader("authorization", "Bearer
+            REPLACE_BEARER_TOKEN");
+
+
+            xhr.send(data);
+        - lang: Node_native
+          source: |-
+            var http = require("https");
+
+            var options = {
+              "method": "POST",
+              "hostname": "api.meetflo.com",
+              "port": null,
+              "path": "//api/v1_5/locations/%7Baccount_id%7D",
+              "headers": {
+                "authorization": "Bearer REPLACE_BEARER_TOKEN"
+              }
+            };
+
+            var req = http.request(options, function (res) {
+              var chunks = [];
+
+              res.on("data", function (chunk) {
+                chunks.push(chunk);
+              });
+
+              res.on("end", function () {
+                var body = Buffer.concat(chunks);
+                console.log(body.toString());
+              });
+            });
+
+            req.end();
+        - lang: Python_python3
+          source: >-
+            import http.client
+
+
+            conn = http.client.HTTPSConnection("api.meetflo.com")
+
+
+            headers = { 'authorization': "Bearer REPLACE_BEARER_TOKEN" }
+
+
+            conn.request("POST", "//api/v1_5/locations/%7Baccount_id%7D",
+            headers=headers)
+
+
+            res = conn.getresponse()
+
+            data = res.read()
+
+
+            print(data.decode("utf-8"))
+        - lang: Python_requests
+          source: |-
+            import requests
+
+            url = "https://api.meetflo.com//api/v1_5/locations/%7Baccount_id%7D"
+
+            headers = {'authorization': 'Bearer REPLACE_BEARER_TOKEN'}
+
+            response = requests.request("POST", url, headers=headers)
+
+            print(response.text)
+        - lang: Shell_curl
+          source: |-
+            curl --request POST \
+              --url https://api.meetflo.com//api/v1_5/locations/%7Baccount_id%7D \
+              --header 'authorization: Bearer REPLACE_BEARER_TOKEN'
+  '/api/v1_5/locations/{account_id}/{location_id}':
+    delete:
+      security:
+        - OAuth2:
+            - user
+      summary: '/api/v1_5/locations/{account_id}/{location_id}'
+      parameters:
+        - name: account_id
+          in: path
+          description: account_id
+          required: true
+          schema:
+            type: string
+        - name: location_id
+          in: path
+          description: location_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      x-code-samples:
+        - lang: Java_okhttp
+          source: |-
+            OkHttpClient client = new OkHttpClient();
+
+            Request request = new Request.Builder()
+              .url("https://api.meetflo.com//api/v1_5/locations/%7Baccount_id%7D/%7Blocation_id%7D")
+              .delete(null)
+              .addHeader("authorization", "Bearer REPLACE_BEARER_TOKEN")
+              .build();
+
+            Response response = client.newCall(request).execute();
+        - lang: Javascript_xhr
+          source: >-
+            var data = null;
+
+
+            var xhr = new XMLHttpRequest();
+
+            xhr.withCredentials = true;
+
+
+            xhr.addEventListener("readystatechange", function () {
+              if (this.readyState === this.DONE) {
+                console.log(this.responseText);
+              }
+            });
+
+
+            xhr.open("DELETE",
+            "https://api.meetflo.com//api/v1_5/locations/%7Baccount_id%7D/%7Blocation_id%7D");
+
+            xhr.setRequestHeader("authorization", "Bearer
+            REPLACE_BEARER_TOKEN");
+
+
+            xhr.send(data);
+        - lang: Node_native
+          source: |-
+            var http = require("https");
+
+            var options = {
+              "method": "DELETE",
+              "hostname": "api.meetflo.com",
+              "port": null,
+              "path": "//api/v1_5/locations/%7Baccount_id%7D/%7Blocation_id%7D",
+              "headers": {
+                "authorization": "Bearer REPLACE_BEARER_TOKEN"
+              }
+            };
+
+            var req = http.request(options, function (res) {
+              var chunks = [];
+
+              res.on("data", function (chunk) {
+                chunks.push(chunk);
+              });
+
+              res.on("end", function () {
+                var body = Buffer.concat(chunks);
+                console.log(body.toString());
+              });
+            });
+
+            req.end();
+        - lang: Python_python3
+          source: >-
+            import http.client
+
+
+            conn = http.client.HTTPSConnection("api.meetflo.com")
+
+
+            headers = { 'authorization': "Bearer REPLACE_BEARER_TOKEN" }
+
+
+            conn.request("DELETE",
+            "//api/v1_5/locations/%7Baccount_id%7D/%7Blocation_id%7D",
+            headers=headers)
+
+
+            res = conn.getresponse()
+
+            data = res.read()
+
+
+            print(data.decode("utf-8"))
+        - lang: Python_requests
+          source: >-
+            import requests
+
+
+            url =
+            "https://api.meetflo.com//api/v1_5/locations/%7Baccount_id%7D/%7Blocation_id%7D"
+
+
+            headers = {'authorization': 'Bearer REPLACE_BEARER_TOKEN'}
+
+
+            response = requests.request("DELETE", url, headers=headers)
+
+
+            print(response.text)
+        - lang: Shell_curl
+          source: |-
+            curl --request DELETE \
+              --url https://api.meetflo.com//api/v1_5/locations/%7Baccount_id%7D/%7Blocation_id%7D \
+              --header 'authorization: Bearer REPLACE_BEARER_TOKEN'
+    get:
+      security:
+        - OAuth2:
+            - user
+      summary: '/api/v1_5/locations/{account_id}/{location_id}'
+      parameters:
+        - name: account_id
+          in: path
+          description: account_id
+          required: true
+          schema:
+            type: string
+        - name: location_id
+          in: path
+          description: location_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      x-code-samples:
+        - lang: Java_okhttp
+          source: |-
+            OkHttpClient client = new OkHttpClient();
+
+            Request request = new Request.Builder()
+              .url("https://api.meetflo.com//api/v1_5/locations/%7Baccount_id%7D/%7Blocation_id%7D")
+              .get()
+              .addHeader("authorization", "Bearer REPLACE_BEARER_TOKEN")
+              .build();
+
+            Response response = client.newCall(request).execute();
+        - lang: Javascript_xhr
+          source: >-
+            var data = null;
+
+
+            var xhr = new XMLHttpRequest();
+
+            xhr.withCredentials = true;
+
+
+            xhr.addEventListener("readystatechange", function () {
+              if (this.readyState === this.DONE) {
+                console.log(this.responseText);
+              }
+            });
+
+
+            xhr.open("GET",
+            "https://api.meetflo.com//api/v1_5/locations/%7Baccount_id%7D/%7Blocation_id%7D");
+
+            xhr.setRequestHeader("authorization", "Bearer
+            REPLACE_BEARER_TOKEN");
+
+
+            xhr.send(data);
+        - lang: Node_native
+          source: |-
+            var http = require("https");
+
+            var options = {
+              "method": "GET",
+              "hostname": "api.meetflo.com",
+              "port": null,
+              "path": "//api/v1_5/locations/%7Baccount_id%7D/%7Blocation_id%7D",
+              "headers": {
+                "authorization": "Bearer REPLACE_BEARER_TOKEN"
+              }
+            };
+
+            var req = http.request(options, function (res) {
+              var chunks = [];
+
+              res.on("data", function (chunk) {
+                chunks.push(chunk);
+              });
+
+              res.on("end", function () {
+                var body = Buffer.concat(chunks);
+                console.log(body.toString());
+              });
+            });
+
+            req.end();
+        - lang: Python_python3
+          source: >-
+            import http.client
+
+
+            conn = http.client.HTTPSConnection("api.meetflo.com")
+
+
+            headers = { 'authorization': "Bearer REPLACE_BEARER_TOKEN" }
+
+
+            conn.request("GET",
+            "//api/v1_5/locations/%7Baccount_id%7D/%7Blocation_id%7D",
+            headers=headers)
+
+
+            res = conn.getresponse()
+
+            data = res.read()
+
+
+            print(data.decode("utf-8"))
+        - lang: Python_requests
+          source: >-
+            import requests
+
+
+            url =
+            "https://api.meetflo.com//api/v1_5/locations/%7Baccount_id%7D/%7Blocation_id%7D"
+
+
+            headers = {'authorization': 'Bearer REPLACE_BEARER_TOKEN'}
+
+
+            response = requests.request("GET", url, headers=headers)
+
+
+            print(response.text)
+        - lang: Shell_curl
+          source: |-
+            curl --request GET \
+              --url https://api.meetflo.com//api/v1_5/locations/%7Baccount_id%7D/%7Blocation_id%7D \
+              --header 'authorization: Bearer REPLACE_BEARER_TOKEN'
+    post:
+      security:
+        - OAuth2:
+            - user
+      summary: '/api/v1_5/locations/{account_id}/{location_id}'
+      parameters:
+        - name: account_id
+          in: path
+          description: account_id
+          required: true
+          schema:
+            type: string
+        - name: location_id
+          in: path
+          description: location_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      x-code-samples:
+        - lang: Java_okhttp
+          source: |-
+            OkHttpClient client = new OkHttpClient();
+
+            Request request = new Request.Builder()
+              .url("https://api.meetflo.com//api/v1_5/locations/%7Baccount_id%7D/%7Blocation_id%7D")
+              .post(null)
+              .addHeader("authorization", "Bearer REPLACE_BEARER_TOKEN")
+              .build();
+
+            Response response = client.newCall(request).execute();
+        - lang: Javascript_xhr
+          source: >-
+            var data = null;
+
+
+            var xhr = new XMLHttpRequest();
+
+            xhr.withCredentials = true;
+
+
+            xhr.addEventListener("readystatechange", function () {
+              if (this.readyState === this.DONE) {
+                console.log(this.responseText);
+              }
+            });
+
+
+            xhr.open("POST",
+            "https://api.meetflo.com//api/v1_5/locations/%7Baccount_id%7D/%7Blocation_id%7D");
+
+            xhr.setRequestHeader("authorization", "Bearer
+            REPLACE_BEARER_TOKEN");
+
+
+            xhr.send(data);
+        - lang: Node_native
+          source: |-
+            var http = require("https");
+
+            var options = {
+              "method": "POST",
+              "hostname": "api.meetflo.com",
+              "port": null,
+              "path": "//api/v1_5/locations/%7Baccount_id%7D/%7Blocation_id%7D",
+              "headers": {
+                "authorization": "Bearer REPLACE_BEARER_TOKEN"
+              }
+            };
+
+            var req = http.request(options, function (res) {
+              var chunks = [];
+
+              res.on("data", function (chunk) {
+                chunks.push(chunk);
+              });
+
+              res.on("end", function () {
+                var body = Buffer.concat(chunks);
+                console.log(body.toString());
+              });
+            });
+
+            req.end();
+        - lang: Python_python3
+          source: >-
+            import http.client
+
+
+            conn = http.client.HTTPSConnection("api.meetflo.com")
+
+
+            headers = { 'authorization': "Bearer REPLACE_BEARER_TOKEN" }
+
+
+            conn.request("POST",
+            "//api/v1_5/locations/%7Baccount_id%7D/%7Blocation_id%7D",
+            headers=headers)
+
+
+            res = conn.getresponse()
+
+            data = res.read()
+
+
+            print(data.decode("utf-8"))
+        - lang: Python_requests
+          source: >-
+            import requests
+
+
+            url =
+            "https://api.meetflo.com//api/v1_5/locations/%7Baccount_id%7D/%7Blocation_id%7D"
+
+
+            headers = {'authorization': 'Bearer REPLACE_BEARER_TOKEN'}
+
+
+            response = requests.request("POST", url, headers=headers)
+
+
+            print(response.text)
+        - lang: Shell_curl
+          source: |-
+            curl --request POST \
+              --url https://api.meetflo.com//api/v1_5/locations/%7Baccount_id%7D/%7Blocation_id%7D \
+              --header 'authorization: Bearer REPLACE_BEARER_TOKEN'
+    put:
+      security:
+        - OAuth2:
+            - user
+      summary: '/api/v1_5/locations/{account_id}/{location_id}'
+      parameters:
+        - name: account_id
+          in: path
+          description: account_id
+          required: true
+          schema:
+            type: string
+        - name: location_id
+          in: path
+          description: location_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      x-code-samples:
+        - lang: Java_okhttp
+          source: |-
+            OkHttpClient client = new OkHttpClient();
+
+            Request request = new Request.Builder()
+              .url("https://api.meetflo.com//api/v1_5/locations/%7Baccount_id%7D/%7Blocation_id%7D")
+              .put(null)
+              .addHeader("authorization", "Bearer REPLACE_BEARER_TOKEN")
+              .build();
+
+            Response response = client.newCall(request).execute();
+        - lang: Javascript_xhr
+          source: >-
+            var data = null;
+
+
+            var xhr = new XMLHttpRequest();
+
+            xhr.withCredentials = true;
+
+
+            xhr.addEventListener("readystatechange", function () {
+              if (this.readyState === this.DONE) {
+                console.log(this.responseText);
+              }
+            });
+
+
+            xhr.open("PUT",
+            "https://api.meetflo.com//api/v1_5/locations/%7Baccount_id%7D/%7Blocation_id%7D");
+
+            xhr.setRequestHeader("authorization", "Bearer
+            REPLACE_BEARER_TOKEN");
+
+
+            xhr.send(data);
+        - lang: Node_native
+          source: |-
+            var http = require("https");
+
+            var options = {
+              "method": "PUT",
+              "hostname": "api.meetflo.com",
+              "port": null,
+              "path": "//api/v1_5/locations/%7Baccount_id%7D/%7Blocation_id%7D",
+              "headers": {
+                "authorization": "Bearer REPLACE_BEARER_TOKEN"
+              }
+            };
+
+            var req = http.request(options, function (res) {
+              var chunks = [];
+
+              res.on("data", function (chunk) {
+                chunks.push(chunk);
+              });
+
+              res.on("end", function () {
+                var body = Buffer.concat(chunks);
+                console.log(body.toString());
+              });
+            });
+
+            req.end();
+        - lang: Python_python3
+          source: >-
+            import http.client
+
+
+            conn = http.client.HTTPSConnection("api.meetflo.com")
+
+
+            headers = { 'authorization': "Bearer REPLACE_BEARER_TOKEN" }
+
+
+            conn.request("PUT",
+            "//api/v1_5/locations/%7Baccount_id%7D/%7Blocation_id%7D",
+            headers=headers)
+
+
+            res = conn.getresponse()
+
+            data = res.read()
+
+
+            print(data.decode("utf-8"))
+        - lang: Python_requests
+          source: >-
+            import requests
+
+
+            url =
+            "https://api.meetflo.com//api/v1_5/locations/%7Baccount_id%7D/%7Blocation_id%7D"
+
+
+            headers = {'authorization': 'Bearer REPLACE_BEARER_TOKEN'}
+
+
+            response = requests.request("PUT", url, headers=headers)
+
+
+            print(response.text)
+        - lang: Shell_curl
+          source: |-
+            curl --request PUT \
+              --url https://api.meetflo.com//api/v1_5/locations/%7Baccount_id%7D/%7Blocation_id%7D \
+              --header 'authorization: Bearer REPLACE_BEARER_TOKEN'
+  '/api/v1_5/locations/archive/{account_id}/{location_id}':
+    delete:
+      security:
+        - OAuth2:
+            - user
+      summary: '/api/v1_5/locations/archive/{account_id}/{location_id}'
+      parameters:
+        - name: account_id
+          in: path
+          description: account_id
+          required: true
+          schema:
+            type: string
+        - name: location_id
+          in: path
+          description: location_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      x-code-samples:
+        - lang: Java_okhttp
+          source: |-
+            OkHttpClient client = new OkHttpClient();
+
+            Request request = new Request.Builder()
+              .url("https://api.meetflo.com//api/v1_5/locations/archive/%7Baccount_id%7D/%7Blocation_id%7D")
+              .delete(null)
+              .addHeader("authorization", "Bearer REPLACE_BEARER_TOKEN")
+              .build();
+
+            Response response = client.newCall(request).execute();
+        - lang: Javascript_xhr
+          source: >-
+            var data = null;
+
+
+            var xhr = new XMLHttpRequest();
+
+            xhr.withCredentials = true;
+
+
+            xhr.addEventListener("readystatechange", function () {
+              if (this.readyState === this.DONE) {
+                console.log(this.responseText);
+              }
+            });
+
+
+            xhr.open("DELETE",
+            "https://api.meetflo.com//api/v1_5/locations/archive/%7Baccount_id%7D/%7Blocation_id%7D");
+
+            xhr.setRequestHeader("authorization", "Bearer
+            REPLACE_BEARER_TOKEN");
+
+
+            xhr.send(data);
+        - lang: Node_native
+          source: |-
+            var http = require("https");
+
+            var options = {
+              "method": "DELETE",
+              "hostname": "api.meetflo.com",
+              "port": null,
+              "path": "//api/v1_5/locations/archive/%7Baccount_id%7D/%7Blocation_id%7D",
+              "headers": {
+                "authorization": "Bearer REPLACE_BEARER_TOKEN"
+              }
+            };
+
+            var req = http.request(options, function (res) {
+              var chunks = [];
+
+              res.on("data", function (chunk) {
+                chunks.push(chunk);
+              });
+
+              res.on("end", function () {
+                var body = Buffer.concat(chunks);
+                console.log(body.toString());
+              });
+            });
+
+            req.end();
+        - lang: Python_python3
+          source: >-
+            import http.client
+
+
+            conn = http.client.HTTPSConnection("api.meetflo.com")
+
+
+            headers = { 'authorization': "Bearer REPLACE_BEARER_TOKEN" }
+
+
+            conn.request("DELETE",
+            "//api/v1_5/locations/archive/%7Baccount_id%7D/%7Blocation_id%7D",
+            headers=headers)
+
+
+            res = conn.getresponse()
+
+            data = res.read()
+
+
+            print(data.decode("utf-8"))
+        - lang: Python_requests
+          source: >-
+            import requests
+
+
+            url =
+            "https://api.meetflo.com//api/v1_5/locations/archive/%7Baccount_id%7D/%7Blocation_id%7D"
+
+
+            headers = {'authorization': 'Bearer REPLACE_BEARER_TOKEN'}
+
+
+            response = requests.request("DELETE", url, headers=headers)
+
+
+            print(response.text)
+        - lang: Shell_curl
+          source: |-
+            curl --request DELETE \
+              --url https://api.meetflo.com//api/v1_5/locations/archive/%7Baccount_id%7D/%7Blocation_id%7D \
+              --header 'authorization: Bearer REPLACE_BEARER_TOKEN'
+
+
+
+
+
+
+
+
+
+
+
+
+
+

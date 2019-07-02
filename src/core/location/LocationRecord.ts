@@ -1,23 +1,8 @@
 import _ from 'lodash';
-import { 
-  Omit,
-  Location, 
-  LocationCodec, 
-  Timestamped, 
-  LocationType, 
-  WaterSource, 
-  ResidenceType,
-  WaterDamageClaim,
-  PlumbingType,
-  IndoorAmenity,
-  OutdoorAmenity,
-  PlumbingAppliance,
-  LocationSize,
-  SystemMode
-} from '../api';
-import { NoYesUnsure } from '../api/NoYesUnsure';
 import { morphism, StrictSchema } from 'morphism';
+import { IndoorAmenity, Location, LocationSize, LocationType, Omit, OutdoorAmenity, PlumbingAppliance, PlumbingType, SystemMode, Timestamped } from '../api';
 import { translateNumericToStringEnum, translateStringToNumericEnum } from '../api/enumUtils';
+import { NoYesUnsure } from '../api/NoYesUnsure';
 
 export enum LegacyLocationSizeCategory {
   LTE_700 = 0,
@@ -209,8 +194,8 @@ const RecordToModelSchema: StrictSchema<Location, LocationRecordData> = {
   showerBathCount: 'profile.shower_bath_count',
   toiletCount: 'profile.toilet_count',
   nickname: 'location_name',
-  irrigationSchedule: (input: LocationRecordData) => 
-    input.is_irrigation_schedule_enabled === undefined ? 
+  irrigationSchedule: (input: LocationRecordData) =>
+    input.is_irrigation_schedule_enabled === undefined ?
       undefined :({
         isEnabled: input.is_irrigation_schedule_enabled
       }),
@@ -279,7 +264,7 @@ const RecordToModelSchema: StrictSchema<Location, LocationRecordData> = {
   indoorAmenities: (input: LocationRecordData) => {
     if (input.profile !== undefined && !_.isEmpty(input.profile.indoor_amenities)) {
       return input.profile.indoor_amenities;
-    } 
+    }
 
     const kitchenAmenities = (input.kitchen_amenities || [])
       .map(kitchenAmenity => {
@@ -302,7 +287,7 @@ const RecordToModelSchema: StrictSchema<Location, LocationRecordData> = {
             return IndoorAmenity.BATHTUB;
           case LegacyBathroomAmenity.HOT_TUB:
           case LegacyBathroomAmenity.SPA:
-            return IndoorAmenity.HOT_TUB;              
+            return IndoorAmenity.HOT_TUB;
           default:
             return undefined;
         }
@@ -319,7 +304,7 @@ const RecordToModelSchema: StrictSchema<Location, LocationRecordData> = {
     return (input.outdoor_amenities || [])
       .map(outdoorAmenity => {
         switch (outdoorAmenity) {
-          case LegacyOutdoorAmenity.SWIMMING_POOL: 
+          case LegacyOutdoorAmenity.SWIMMING_POOL:
             return OutdoorAmenity.POOL;
           case LegacyOutdoorAmenity.FOUNTAIN:
             return OutdoorAmenity.FOUNTAIN;
@@ -338,9 +323,9 @@ const RecordToModelSchema: StrictSchema<Location, LocationRecordData> = {
     }
 
     return [
-      input.hot_water_recirculation === NoYesUnsure.Numeric.YES && 
+      input.hot_water_recirculation === NoYesUnsure.Numeric.YES &&
         PlumbingAppliance.RECIRCULATION_PUMP,
-      input.water_filtering_system === NoYesUnsure.Numeric.YES && 
+      input.water_filtering_system === NoYesUnsure.Numeric.YES &&
         PlumbingAppliance.WHOLE_HOME_FILTRATION,
       input.tankless === NoYesUnsure.Numeric.YES &&
         PlumbingAppliance.TANKLESS_WATER_HEATER,
@@ -351,7 +336,8 @@ const RecordToModelSchema: StrictSchema<Location, LocationRecordData> = {
     ]
     .filter(plumbingAppliance => plumbingAppliance) as PlumbingAppliance[];
   },
-  pastWaterDamageClaimAmount: 'profile.past_water_damage_claim_amount'
+  pastWaterDamageClaimAmount: 'profile.past_water_damage_claim_amount',
+  notifications: () => undefined
 };
 
 const ModelToRecordSchema: StrictSchema<LocationRecordData, Location> = {
@@ -396,7 +382,7 @@ const ModelToRecordSchema: StrictSchema<LocationRecordData, Location> = {
       plumbing_applicances: (input.plumbingAppliances || []),
       home_owners_insurance: input.homeownersInsurance,
       has_past_water_damage: input.hasPastWaterDamage || false,
-      past_water_damage_claim_amount: input.pastWaterDamageClaimAmount 
+      past_water_damage_claim_amount: input.pastWaterDamageClaimAmount
     };
   }
 };
@@ -423,7 +409,7 @@ const PartialModelToPartialRecordSchema: StrictSchema<PartialLocationRecordData,
   target_system_mode: 'systemMode.target',
   revert_minutes: 'systemMode.revertMinutes',
   revert_mode: 'systemMode.revertMode',
-  revert_scheduled_at: 'systemMode.revertScheduledAt',  
+  revert_scheduled_at: 'systemMode.revertScheduledAt',
   is_irrigation_schedule_enabled: 'irrigationSchedule.isEnabled',
   profile: (input: Partial<Location>) => {
     return {

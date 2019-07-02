@@ -1,0 +1,238 @@
+paths:
+
+  /api/v2/devices:
+    get:
+      summary: Retrieves a Device by MAC address.
+      tags:
+        - Devices
+      produces:
+        - application/json
+      parameters:
+        - in: query
+          name: macAddress
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/ExpandParam'
+      responses:
+        200:
+          description: A Device with the specified MAC address or an empty object if not found.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/Device'
+                  - $ref: '#/components/schemas/Empty'
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        403:
+          $ref: '#/components/responses/ForbiddenError'
+
+  /api/v2/devices/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Device ID
+    get:
+      summary: Retrieves a Device by ID.
+      tags:
+        - Devices
+      produces:
+        - application/json
+      parameters:
+        - $ref: '#/components/parameters/ExpandParam'
+      responses:
+        200:
+          description: A Device with the specified ID or an empty object if not found.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/Device'
+                  - $ref: '#/components/schemas/Empty'
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        403:
+          $ref: '#/components/responses/ForbiddenError'
+
+    post:
+      summary: Updates a Device by ID (partially).
+      tags:
+        - Devices
+      produces:
+        - application/json
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeviceMutable'
+      responses:
+        200:
+          description: The Device was successfully updated.
+          schema:
+            $ref: '#/components/schemas/Device'
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        403:
+          $ref: '#/components/responses/ForbiddenError'
+        409:
+          description: A Device with the specified ID was not found.
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  /api/v2/devices/{id}/systemMode:
+    post:
+      summary: Sends directive to change device system mode
+      tags:
+        - Devices
+        - System Mode
+      produces:
+        application/json
+      requestBody:
+        required: true
+        content: 
+          application/json:
+            schema:
+              type: object
+              required:
+                - target
+              properties:
+                target:
+                  $ref: '#/components/schemas/SystemMode'
+                isLocked:
+                  type: boolean
+                revertMode:
+                  $ref: '#/components/schemas/SystemMode'
+                revertMinutes:
+                  type: number
+      responses:
+        202:
+          description: Directive sent
+          schema:
+            $ref: '#/components/schemas/Device'
+        400:
+          description: Invalid request body
+        409:
+          description: Device system mode is locked and cannot be changed
+components:
+  schemas:
+    DeviceMutable:
+      type: object
+      properties:
+        prvInstalledAfter:
+          type: boolean
+        irrigationType:
+          $ref: '#/components/schemas/IrrigationType'
+        installationPoint:
+          type: string
+        nickname:
+          type: string
+        valve:
+          type: object
+          properties:
+            target:
+              type: string
+              enum: 
+                - open
+                - closed
+    IrrigationType:
+      type: string
+      enum:
+        - none
+        - sprinklers
+        - drip
+    Device:
+      allOf:
+        - $ref: '#/components/schemas/DeviceMutable'
+        - $ref: '#/components/schemas/Timestamped'
+        - type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            macAddress:
+              type: string
+            location:
+              $ref: '#/components/schemas/LocationExpandable'
+            deviceType:
+              type: string
+            deviceModel:
+              type: string
+            isConnected:
+              type: boolean
+            lastHeardFromTime:
+              type: string
+              format: date-time
+            fwVersion:
+              type: string
+            fwProperties:
+              type: object
+            irrigationType:
+              $ref: '#/components/schemas/IrrigationType'
+            systemMode:
+              type: object
+              properties:
+                target:
+                  $ref: '#/components/schemas/SystemMode'
+                shouldInhert:
+                  type: boolean
+                revertMinutes:
+                  type: number
+                revertMode:
+                  $ref: '#/components/schemas/SystemMode'
+                revertScheduledAt:
+                  type: string
+                  format: date-time
+            valve:
+              type: object
+              properties:
+                target:
+                  type: string
+                  enum: 
+                    - open
+                    - closed
+                lastKnown:
+                  type: string
+                  enum: 
+                    - open
+                    - closed
+                    - in_transition
+            irrigationSchedule:
+              type: object
+              properties:
+                computed:
+                  type: object
+                  properties:
+                    status:
+                      type: string
+                    times:
+                      type: array
+                      items:
+                        type: array
+                        items:
+                          type: string
+                          pattern: '^\d{2}:\d{2}:\d{2}$'
+                isEnabled:
+                  type: boolean
+                updatedAt:
+                  type: string
+                  format: date-time
+    DeviceExpandable:
+      oneOf:
+        - type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+        - $ref: '#/components/schemas/Device'
+    SystemMode:
+      type: string
+      enum:
+        - home
+        - away
+        - sleep

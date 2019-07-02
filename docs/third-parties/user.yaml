@@ -1,0 +1,170 @@
+paths:
+  /api/v2/users/password/request-reset:
+    post:
+      summary: Request password reset
+      tags:
+        - Password Reset
+      produces:
+        - application/json
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+      responses:
+        202:
+          description: If user with given email exists, password reset email will be sent
+        400:
+          description: Invalid request body
+  /api/v2/users/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: User ID
+
+    get:
+      summary: Retrieves a User by ID.
+      tags:
+        - Users
+      produces:
+        - application/json
+      parameters:
+        - $ref: '#/components/parameters/ExpandParam'
+      responses:
+        200:
+          description: A User with the specified ID or an empty object if not found.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/User'
+                  - $ref: '#/components/schemas/Empty'
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        403:
+          $ref: '#/components/responses/ForbiddenError'
+
+    post:
+      summary: Updates a User by ID (partially).
+      tags:
+        - Users
+      produces:
+        - application/json
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserMutable'
+      responses:
+        200:
+          description: The User was successfully updated.
+          schema:
+            $ref: '#/components/schemas/User'
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        403:
+          $ref: '#/components/responses/ForbiddenError'
+        409:
+          description: A User with the specified ID was not found.
+          schema:
+            $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    UserRegistration:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        firstName:
+          type: string
+        lastName:
+          type: string
+        password:
+          type: string
+        phone:
+          type: string
+    EmailAvailability:
+      type: object
+      properties:
+        isPending:
+          type: boolean
+        isRegistered:
+          type: boolean
+    UserMutable:
+      type: object
+      properties:
+        firstName:
+          type: string
+        middleName:
+          type: string
+        lastName:
+          type: string
+        prefixName:
+          type: string
+        suffixName:
+          type: string
+        unitSystem:
+          type: string
+        phoneMobile:
+          type: string
+        locale:
+          type: string
+
+    User:
+      allOf:
+        - $ref: '#/components/schemas/UserMutable'
+        - $ref: '#/components/schemas/Timestamped'
+        - type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            email:
+              type: string
+              format: email
+            isActive:
+              type: boolean
+            locations:
+              type: array
+              items:
+                $ref: '#/components/schemas/LocationExpandable'
+            locationRoles:
+              type: array
+              items:
+                allOf:
+                  - type: object
+                    properties:
+                      locationId:
+                        type: string
+                        format: uuid
+                  - $ref: '#/components/schemas/Roles'
+            account:
+              $ref: '#/components/schemas/AccountExpandable'
+            accountRole:
+              allOf:
+                - type: object
+                  properties:
+                    accountId:
+                      type: string
+                      format: uuid
+                - $ref: '#/components/schemas/Roles'
+    UserExpandable:
+      oneOf:
+        - type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+        - $ref: '#/components/schemas/User'
