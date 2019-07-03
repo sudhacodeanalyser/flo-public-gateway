@@ -1,5 +1,4 @@
 paths:
-
   /api/v2/devices:
     get:
       summary: Retrieves a Device by MAC address.
@@ -59,66 +58,6 @@ paths:
         403:
           $ref: '#/components/responses/ForbiddenError'
 
-    post:
-      summary: Updates a Device by ID (partially).
-      tags:
-        - Devices
-      produces:
-        - application/json
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/DeviceMutable'
-      responses:
-        200:
-          description: The Device was successfully updated.
-          schema:
-            $ref: '#/components/schemas/Device'
-        401:
-          $ref: '#/components/responses/UnauthorizedError'
-        403:
-          $ref: '#/components/responses/ForbiddenError'
-        409:
-          description: A Device with the specified ID was not found.
-          schema:
-            $ref: '#/components/schemas/Error'
-
-  /api/v2/devices/{id}/systemMode:
-    post:
-      summary: Sends directive to change device system mode
-      tags:
-        - Devices
-        - System Mode
-      produces:
-        application/json
-      requestBody:
-        required: true
-        content: 
-          application/json:
-            schema:
-              type: object
-              required:
-                - target
-              properties:
-                target:
-                  $ref: '#/components/schemas/SystemMode'
-                isLocked:
-                  type: boolean
-                revertMode:
-                  $ref: '#/components/schemas/SystemMode'
-                revertMinutes:
-                  type: number
-      responses:
-        202:
-          description: Directive sent
-          schema:
-            $ref: '#/components/schemas/Device'
-        400:
-          description: Invalid request body
-        409:
-          description: Device system mode is locked and cannot be changed
 components:
   schemas:
     DeviceMutable:
