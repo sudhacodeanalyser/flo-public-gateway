@@ -15,10 +15,10 @@ paths:
               type: object
               properties:
                 data:
-                  oneOf: 
+                  oneOf:
                     - type: object
                       properties:
-                        i: 
+                        i:
                           type: string
                           format: uuid
                         e:
@@ -241,6 +241,7 @@ paths:
           $ref: '#/components/responses/UnauthorizedError'
         403:
           $ref: '#/components/responses/ForbiddenError'
+
   /api/v2/devices/{id}/systemMode:
     post:
       summary: Sends directive to change device system mode
@@ -251,7 +252,7 @@ paths:
         application/json
       requestBody:
         required: true
-        content: 
+        content:
           application/json:
             schema:
               type: object
@@ -275,6 +276,41 @@ paths:
           description: Invalid request body
         409:
           description: Device system mode is locked and cannot be changed
+
+  /api/v2/devices/{id}/reset:
+    post:
+      summary: Sends directive to reset the device according to the given target.
+      tags:
+        - Devices
+      produces:
+        - application/json
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - target
+              properties:
+                target:
+                  type: string
+                  enum:
+                    - power
+      responses:
+        202:
+          description: Directive sent.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Empty'
+        400:
+          description: Invalid request body
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        403:
+          $ref: '#/components/responses/ForbiddenError'
+
 components:
   schemas:
     DeviceMutable:
@@ -293,7 +329,7 @@ components:
           properties:
             target:
               type: string
-              enum: 
+              enum:
                 - open
                 - closed
     IrrigationType:
@@ -349,12 +385,12 @@ components:
               properties:
                 target:
                   type: string
-                  enum: 
+                  enum:
                     - open
                     - closed
                 lastKnown:
                   type: string
-                  enum: 
+                  enum:
                     - open
                     - closed
                     - in_transition

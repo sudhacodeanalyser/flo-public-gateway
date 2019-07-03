@@ -235,7 +235,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     }
 
     @httpPost('/:id/reset',
-      authWithId,
+      // Auth is deferred to  API v1 call
       reqValidator.create(t.type({
         params: t.type({
           id: t.string
