@@ -1,5 +1,5 @@
-import {ApiService} from '../ApiService';
-import {ActionsSupportResponse, AlertEvent, AlertSettings, ClearAlertResponse, PaginatedResult} from '../core/api';
+import { ApiService } from '../ApiService';
+import { ActionsSupportResponse, AlertEvent, AlertSettings, ClearAlertResponse, NotificationCounts, PaginatedResult } from '../core/api';
 
 class ApiNotificationService {
   constructor(private notificationApi: ApiService) {}
@@ -87,6 +87,14 @@ class ApiNotificationService {
       url: '/actions',
       body: data
     });
+  }
+
+  public async getAlarmCounts(tbd: any): Promise<NotificationCounts> {
+    return Promise.resolve({
+      criticalCount: 12,
+      warningCount: 9,
+      infoCount: 3
+    })
   }
 }
 

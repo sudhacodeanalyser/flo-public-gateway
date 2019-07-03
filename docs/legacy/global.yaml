@@ -1,0 +1,234 @@
+tags:
+  - name: Oauth 2
+    description: >
+      #### Client
+
+
+      A client is another application that is performing requests to the API on
+      behalf of the end-user. Examples of clients are mobile apps, web apps, and
+      back-end services. All clients are assigned an ID that is associated with
+      activity of their users so that it can be determined which application is
+      making the request on the behalf of the end-user. Clients may also be
+      issued a client secret which allows them to authenticate themselves as
+      user and access API resources without relying on interaction with an
+      end-user.
+
+
+      #### Trusted Client
+
+      A trusted client is one that can be trusted to directly handle the user's
+      credentials (i.e. username & password). Trusted clients are usually
+      first-party (i.e. we control the source code) confidential clients. A
+      client who is not trusted cannot directly handle the user's credentials
+      and must use a grant type such as the implicit or authorization code
+      grants.
+
+
+      #### Confidential Client
+
+      A confidential client is one that is granted a client secret and which can
+      be relied on to protect this secret. Confidential clients may use the
+      client credential grant type, which allows them to access API resources
+      without needing an end-user to directly interact with them. Examples of
+      confidential clients would include back-end services such as the
+      Notification Router or server-side web app.
+
+
+      #### Public Client
+
+      A public client is one that cannot be relied on to protect a client
+      secret. Native desktop apps, mobile apps, or in-browser JavaScript apps
+      (i.e. single page apps) are examples of public clients since their client
+      secrets can be exposed through reverse engineering. Public clients are
+      typically not trusted clients with the occasional exception of first-party
+      public clients such as own mobile app.
+
+
+      #### Access Token
+
+      The access token is the token that authenticates the user when making a
+      request to the API. If the access token has an expiration, it's
+      time-to-live will be included in the grant response.
+
+
+      #### Grant Types
+
+      To perform an access token grant, you must make a POST request to the
+      endpoint /api/v1/oauth2/token, following one of the following grant types:
+
+
+      #### Client Credentials
+
+      To retrieve an access token via the client credentials grant type the
+      client must have been issued a client secret.
+
+
+      #### Using An Access Token
+
+
+      In order use the access token, in your will need to set the Authorization
+      header of your request to "Bearer ACCESS_TOKEN", replacing ACCESS_TOKEN
+      with the access token retrieved from one of the grant requests described
+      above . Be sure to inclue the "Bearer " part with a space between Bearer
+      and the access token.
+
+
+      #### Authorization Code Flow for 3rd Party Integration
+
+
+      The OAuth 2 authorization code flow is documented here in the official RFC
+      https://tools.ietf.org/html/rfc6749#section-4.1
+
+
+      #### Authorization Request
+
+
+      To begin the authorization code flow, the 3rd party client application
+      should direct the user's user agent to the Flo authorization page's URI.
+    externalDocs:
+      url: >-
+        https://flotechnologies.atlassian.net/wiki/spaces/FLO/pages/109117483/OAuth+2
+  - name: Away Mode
+    description: _
+    externalDocs:
+      url: >-
+        https://flotechnologies.atlassian.net/wiki/spaces/FLO/pages/560824321/Pairing+Endpoints
+  - name: Locales
+    description: _
+    externalDocs:
+      url: >-
+        https://flotechnologies.atlassian.net/wiki/spaces/FLO/pages/85786625/Locales
+  - name: Alerts
+    description: >
+      ## Retrieval
+
+      ### Paging
+
+
+      Each retrieval endpoint supports paging. The page number and the maximum
+      number of records per page are specified as query string parameters in the
+      URL. Page numbers begin counting from 1. The total number of pages can be
+      determined by the total property of the response from the endpoint with
+      the formula total / size, where size is the maximum number of records per
+      page.
+
+
+      ## Filtering
+
+
+      Each retrieval endpoint supports filtering on any given property of an
+      alert type document by including a specific JSON structure in the request
+      body. Since not all clients support request bodies in GET requests, all
+      endpoints will behave identically to a POST request.
+
+
+      The request body has the following format:
+
+
+      ```
+
+      {
+          "filter": {
+             "property_0": value,
+             "property_1": [value_0, value_1]
+          }
+      }
+
+      ```
+
+
+      If, for example, you wish to exclusively retrieve alert type documents
+      that have a severity of 1 that have been resolved with a user action_id of
+      1, 2, 3 or 6, then you would provide the following request body:
+
+
+      ```
+
+      {
+          "filter": {
+              "severity": 1,
+              "user_action_taken.action_id": [1, 2, 3, 6]
+          }
+      }
+
+      ```
+
+
+      In order to filter nested properties, you will need to wrap the property
+      name in square brackets [ ].
+
+
+      ```
+
+      {
+        "filter": {
+          "[devices.device_id]": "8cc7aa027840"
+        }
+      }
+
+      ```
+
+
+      To filter for a range, you can use the gt, lt, gte, or lte operators.
+
+
+      ```
+
+      {
+        "filter": {
+          "property_1": {
+            "gt": "2017-08-25",
+            "lt": "2017-09"
+          }
+        }
+      }
+
+      ```
+    externalDocs:
+      url: >-
+        https://flotechnologies.atlassian.net/wiki/spaces/FLO/pages/60325889/Alerts
+  - name: Notification Tokens
+    description: ''
+    externalDocs:
+      url: >-
+        https://flotechnologies.atlassian.net/wiki/spaces/FLO/pages/67862547/Notification+Tokens+v2
+  - name: Registration
+    description: ''
+    externalDocs:
+      url: >-
+        https://flotechnologies.atlassian.net/wiki/spaces/FLO/pages/84639748/In-App+User+Registration
+  - name: Automated User Creation
+    description: ''
+    externalDocs:
+      url: >-
+        https://flotechnologies.atlassian.net/wiki/spaces/FLO/pages/223674371/Automated+User+Creation
+  - name: Account Subscriptions
+    description: ''
+    externalDocs:
+      url: >-
+        https://flotechnologies.atlassian.net/wiki/spaces/FLO/pages/255197185/Account+Subscriptions
+  - name: Directives
+    description: ''
+    externalDocs:
+      url: >-
+        https://flotechnologies.atlassian.net/wiki/spaces/FLO/pages/683278356/Directives+Endpoints
+  - name: Device System Mode
+    description: ''
+    externalDocs:
+      url: >-
+        https://flotechnologies.atlassian.net/wiki/spaces/FLO/pages/683016193/Device+System+Mode
+  - name: Firmware Features
+    description: ''
+    externalDocs:
+      url: >-
+        https://flotechnologies.atlassian.net/wiki/spaces/FLO/pages/696516609/Firmware+features
+  - name: Flo Detect
+    description: ''
+    externalDocs:
+      url: >-
+        https://flotechnologies.atlassian.net/wiki/spaces/FLO/pages/379944961/Flo+Detect+Endpoints#FloDetectEndpoints-POST/api/v1/flodetect/:device_id
+  - name: Alert Feedback
+    description: ''
+    externalDocs:
+      url: >-
+        https://flotechnologies.atlassian.net/wiki/spaces/FLO/pages/704479328/Alert+Feedback

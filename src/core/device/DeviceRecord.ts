@@ -56,7 +56,9 @@ const RecordToModelSchema: StrictSchema<Device, DeviceRecordData>  = {
   irrigationSchedule: () => undefined,
   installStatus: () => ({
     isInstalled: false
-  })
+  }),
+  notifications: () => undefined,
+  hardwareThresholds: () => undefined
 };
 
 const ModelToRecordSchema: StrictSchema<DeviceRecordData, Device> = {

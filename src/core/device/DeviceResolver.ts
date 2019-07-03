@@ -8,6 +8,7 @@ import { InternalDeviceService } from "../../internal-device-service/InternalDev
 import { DependencyFactoryFactory, Device, DeviceCreate, DeviceModelType, DeviceSystemModeNumeric, DeviceType, DeviceUpdate, SystemMode, ValveState, ValveStateNumeric } from '../api';
 import { translateNumericToStringEnum } from '../api/enumUtils';
 import DeviceTable from '../device/DeviceTable';
+import { NotificationService, NotificationServiceFactory } from '../notification/NotificationService';
 import { LocationResolver, PropertyResolverMap, Resolver } from '../resolver';
 import DeviceForcedSystemModeTable from './DeviceForcedSystemModeTable';
 import { DeviceRecord, DeviceRecordData } from './DeviceRecord';
@@ -103,10 +104,45 @@ class DeviceResolver extends Resolver<Device> {
       return {
         isInstalled: onboardingLog !== null
       }
+    },
+    notifications: async (device: Device, shouldExpand = false) => {
+      return this.notificationService.getAlarmCounts({});
+    },
+    hardwareThresholds: async (device: Device, shouldExpand = false) => {
+      const gpm = device.deviceType !== 'flo_device_075_v2' ?
+        {
+          okMax: 50,
+          maxValue: 80
+        } :
+        {
+          okMax: 30,
+          maxValue: 50
+        };
+
+      return {
+        gpm: {
+          okMin: 0,
+          minValue: 0,
+          ...gpm
+        },
+        psi: {
+          okMin: 30,
+          okMax: 80,
+          minValue: 0,
+          maxValue: 100
+        },
+        temp: {
+          okMin: 50,
+          okMax: 80,
+          minValue: 0,
+          maxValue: 100
+        }
+      }
     }
   };
   private locationResolverFactory: () => LocationResolver;
   private irrigationScheduleService: IrrigationScheduleService;
+  private notificationService: NotificationService;
 
   constructor(
    @inject('DeviceTable') private deviceTable: DeviceTable,
@@ -116,6 +152,7 @@ class DeviceResolver extends Resolver<Device> {
    @inject('OnboardingLogTable') private onboardingLogTable: OnboardingLogTable,
    @inject('Logger') private readonly logger: Logger,
    @inject('IrrigationScheduleServiceFactory') irrigationScheduleServiceFactory: IrrigationScheduleServiceFactory,
+   @inject('NotificationServiceFactory') notificationServiceFactory: NotificationServiceFactory,
    @injectHttpContext private readonly httpContext: interfaces.HttpContext
   ) {
     super();
@@ -124,6 +161,7 @@ class DeviceResolver extends Resolver<Device> {
 
     if (!_.isEmpty(this.httpContext)) {
       this.irrigationScheduleService = irrigationScheduleServiceFactory.create(this.httpContext.request);
+      this.notificationService = notificationServiceFactory.create(this.httpContext.request);
     }
   }
 

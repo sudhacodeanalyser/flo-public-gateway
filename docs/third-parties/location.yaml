@@ -1,0 +1,321 @@
+paths:
+  /api/v2/locations:
+    post:
+      summary: Creates a Location.
+      tags:
+        - Locations
+      produces:
+        - application/json
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LocationCreate'
+      responses:
+        201:
+          description: The newly created Location.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Location'
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        403:
+          $ref: '#/components/responses/ForbiddenError'
+  /api/v2/locations/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Location ID
+    get:
+      summary: Retrieves a Location by ID.
+      tags:
+        - Locations
+      produces:
+        - application/json
+      parameters:
+        - $ref: '#/components/parameters/ExpandParam'
+      responses:
+        200:
+          description: A Location with the specified ID or an empty object if not found.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/Location'
+                  - $ref: '#/components/schemas/Empty'
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        403:
+          $ref: '#/components/responses/ForbiddenError'
+
+    post:
+      summary: Updates a Location by ID (partially).
+      tags:
+        - Locations
+      produces:
+        - application/json
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LocationUpdate'
+      responses:
+        200:
+          description: The Location was successfully updated.
+          schema:
+            $ref: '#/components/schemas/Location'
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        403:
+          $ref: '#/components/responses/ForbiddenError'
+        409:
+          description: A Location with the specified ID was not found.
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  /api/v2/locations/{id}/systemMode:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Location ID
+    post:
+      summary: Set system mode
+      tags:
+        - Locations
+        - System Mode
+      produces:
+        - application/json
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                target:
+                  type: string
+                  enum:
+                    - home
+                    - sleep
+                    - away
+                revertMinutes:
+                  type: number
+                revertMode:
+                  type: string
+                  enum:
+                    - home
+                    - away
+                    - sleep
+      responses: 
+        200:
+          description: System mode will be changed
+          schema:
+            $ref: '#/components/schemas/Location'
+        400:
+          description: Invalid request body
+components:
+  schemas:
+    LocationUserRole:
+      allOf:
+        - type: object
+          properties:
+            userId:
+              type: string
+              format: uuid
+        - $ref: '#/components/schemas/Roles'
+    LocationMutable:
+      type: object
+      properties:
+        nickname:
+          type: string
+        address:
+          type: string
+        address2:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        country:
+          type: string
+        postalCode:
+          type: string
+        timezone:
+          type: string
+        gallonsPerDayGoal:
+          type: number
+        occupants:
+          type: integer
+        stories:
+          type: integer
+        isProfileComplete:
+          type: boolean
+        waterShutoffKnown:
+          $ref: '#/components/schemas/NoYesUnsure'
+        indoorAmenities:
+          type: array
+          items:
+            type: string
+        outdoorAmenities:
+          type: array
+          items: 
+            type: string
+        plumbingAppliances:
+          type: array
+          items:
+            type: string
+        locationType:
+          type: string
+          enum:
+            - sfh
+            - apartment
+            - condo
+            - other
+        residenceType:
+          type: string
+          enum:
+            - primary
+            - rental
+            - vacation
+            - other
+        waterSource:
+          type: string
+          enum: 
+            - utility
+            - well
+        locationSize: 
+          type: string
+          enum:
+            - lte_700
+            - gt_700_ft_lte_1000_ft
+            - gt_1000_ft_lte_2000_ft
+            - gt_2000_ft_lte_4000_ft
+            - gt_4000_ft
+        showerBathCount:
+          type: number
+        toiletCount:
+          type: number
+        plumbingType:
+          type: string
+          enum:
+            - copper
+            - galvanized
+        waterUtility:
+          type: string
+        homeownersInsurance:
+          type: string
+        hasPastWaterDamage:
+          type: boolean
+        pastWaterDamageClaimAmount:
+          type: string
+          enum:
+            - lte_10k_usd
+            - gt_10k_usd_lte_50k_usd
+            - gt_50k_usd_lte_100k_usd
+            - gt_100K_usd
+        irrigationSchedule:
+          type: object
+          properties:
+            isEnabled:
+              type: boolean
+    LocationUpdate:
+      $ref: '#/components/schemas/LocationMutable'
+ 
+    LocationCreate:
+      required:
+        - address
+        - city
+        - state
+        - country
+        - timezone
+        - locationType
+        - residenceType
+        - account
+      allOf:
+        - type: object
+          required: 
+            - id
+          properties:
+            account:
+              type: object
+              properties:
+                id:
+                  type: string
+                  format: uuid
+        - $ref: '#/components/schemas/LocationMutable'
+    Location:
+      allOf:
+        - $ref: '#/components/schemas/LocationUpdate'
+        - $ref: '#/components/schemas/Timestamped'
+        - type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            account:
+              $ref: '#/components/schemas/AccountExpandable'
+            userRoles:
+              type: array
+              items:
+                allOf:
+                  - type: object
+                    properties:
+                      userId:
+                        type: string
+                        format: uuid
+                  - $ref: '#/components/schemas/Roles'
+            users:
+              type: array
+              items:
+                $ref: '#/components/schemas/UserExpandable'
+            locations:
+              type: array
+              items:
+                $ref: '#/components/schemas/DeviceExpandable'
+            subscription:
+              $ref: '#/components/schemas/SubscriptionExpandable'
+            systemMode:
+              type: object
+              properties:
+                target:
+                  type: string
+                  enum:
+                    - home
+                    - away
+                    - sleep
+                revertMinutes: 
+                  type: number
+                revertMode:
+                  type: string
+                  enum:
+                    - home
+                    - away
+                    - sleep
+                revertScheduledAt:
+                  type: string
+                  format: date-time
+    LocationExpandable:
+      oneOf:
+        - type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+        - $ref: '#/components/schemas/Location'
+    NoYesUnsure:
+      type: string
+      enum:
+        - no
+        - yes
+        - unsure
