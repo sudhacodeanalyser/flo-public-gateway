@@ -1,26 +1,4 @@
 paths:
-  /api/v2/users/password/request-reset:
-    post:
-      summary: Request password reset
-      tags:
-        - Password Reset
-      produces:
-        - application/json
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                email:
-                  type: string
-                  format: email
-      responses:
-        202:
-          description: If user with given email exists, password reset email will be sent
-        400:
-          description: Invalid request body
   /api/v2/users/{id}:
     parameters:
       - in: path
@@ -52,32 +30,6 @@ paths:
           $ref: '#/components/responses/UnauthorizedError'
         403:
           $ref: '#/components/responses/ForbiddenError'
-
-    post:
-      summary: Updates a User by ID (partially).
-      tags:
-        - Users
-      produces:
-        - application/json
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UserMutable'
-      responses:
-        200:
-          description: The User was successfully updated.
-          schema:
-            $ref: '#/components/schemas/User'
-        401:
-          $ref: '#/components/responses/UnauthorizedError'
-        403:
-          $ref: '#/components/responses/ForbiddenError'
-        409:
-          description: A User with the specified ID was not found.
-          schema:
-            $ref: '#/components/schemas/Error'
 
 components:
   schemas:
