@@ -342,6 +342,7 @@ components:
       allOf:
         - $ref: '#/components/schemas/DeviceMutable'
         - $ref: '#/components/schemas/Timestamped'
+        - $ref: '#/components/schemas/Notifications'
         - type: object
           properties:
             id:
@@ -414,6 +415,11 @@ components:
                 updatedAt:
                   type: string
                   format: date-time
+            installStatus:
+              type: object
+              properties:
+                isInstalled:
+                  type: boolean
     DeviceExpandable:
       oneOf:
         - type: object
