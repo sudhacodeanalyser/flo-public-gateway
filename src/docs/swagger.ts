@@ -17,6 +17,7 @@ const buildSwaggerJsDoc = (docsFolder: string, description?: string) =>
       ],
     },
     apis: [
+      `./dist/docs/global.yaml`,
       `./dist/docs/${docsFolder}/*.yaml`
     ]
   });
