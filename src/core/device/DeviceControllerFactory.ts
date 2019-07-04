@@ -18,8 +18,7 @@ import { DirectiveServiceFactory } from './DirectiveService';
 import { HealthTestService } from './HealthTestService';
 
 enum HealthTestActions {
-  RUN = 'run',
-  CANCEL = 'cancel'
+  RUN = 'run'
 }
 
 const HealthTestActionsCodec = convertEnumtoCodec(HealthTestActions);
@@ -272,16 +271,37 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     )
     @asyncMethod
     private async healthTest(@requestParam('id') id: string, @requestParam('action') action: string): Promise<void> {
+      const device = await this.deviceService.getDeviceById(id);
+
+      if (_.isEmpty(device)) {
+        throw new ResourceDoesNotExistError();
+      }
+
       switch (action) {
         case HealthTestActions.RUN: {
-          return this.healthTestService.run(id);
-        }
-        case HealthTestActions.CANCEL: {
-          return this.healthTestService.cancel(id);
+          return this.healthTestService.run((device as Device).macAddress);
         }
       }
     }
 
+    @httpGet('/:id/healthTest',
+      authWithId,
+      reqValidator.create(t.type({
+        params: t.type({
+          id: t.string
+        })
+      }))
+    )
+    @asyncMethod
+    private async getLatestHealthTest(@requestParam('id') id: string): Promise<void> {
+      const device = await this.deviceService.getDeviceById(id);
+
+      if (_.isEmpty(device)) {
+        throw new ResourceDoesNotExistError();
+      }
+
+      return this.healthTestService.getLatest((device as Device).macAddress);
+    }
 
     private isSleep({ target, revertMinutes, revertMode }: SystemModeRequest): boolean {
       return revertMinutes !== undefined && revertMode !== undefined && target === DeviceSystemMode.SLEEP;

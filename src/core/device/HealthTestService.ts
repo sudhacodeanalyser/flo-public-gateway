@@ -1,5 +1,6 @@
 
 export interface HealthTestService {
-  run(id: string): Promise<void>;
-  cancel(id: string): Promise<void>;
+  run(deviceMacAddress: string): Promise<void>;
+
+  getLatest(deviceMacAddress: string): Promise<void>;
 }

@@ -19,7 +19,8 @@ function getDefaults(): { [key: string]: any } {
         apiV1Url: 'https://api-dev.flocloud.co/api/v1',
         defaultUserLocale: 'en-US',
         localizationApiUrl: 'https://flo-localization-service-dev.flocloud.co/v1',
-        notificationApiUrl: 'https://flo-notification-api-dev.et89cag4sw.us-west-2.elasticbeanstalk.com'
+        notificationApiUrl: 'https://flo-notification-api-dev.et89cag4sw.us-west-2.elasticbeanstalk.com',
+        healthTestServiceUrl: 'https://flo-device-manager.flocloud.co'
       };
   }
 }
@@ -50,7 +51,8 @@ const config = {
   postgresPort: process.env.POSTGRES_PORT,
   defaultUserLocale: process.env.DEFAULT_USER_LOCALE,
   localizationApiUrl: process.env.LOCALIZATION_API_URL,
-  notificationApiUrl: process.env.NOTIFICATION_API_URL
+  notificationApiUrl: process.env.NOTIFICATION_API_URL,
+  healthTestServiceUrl: process.env.HEALTH_TEST_SERVICE_URL
 };
 
 export default {
