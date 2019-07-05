@@ -162,7 +162,7 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
 
     @httpPost(
       '/:id/systemMode',
-      authWithLocationId,
+      authWithId,
       reqValidator.create(t.type({
         params: t.type({
           id: t.string
