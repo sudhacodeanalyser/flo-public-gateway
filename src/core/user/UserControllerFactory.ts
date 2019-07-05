@@ -42,6 +42,9 @@ export function UserControllerFactory(container: Container, apiVersion: number):
       // auth is deferred to  API V1 call
       '/:id/password',
       reqValidator.create(t.type({
+        params: t.type({
+          id: t.string
+        }),
         body: t.type({
           oldPassword: t.string,
           newPassword: t.string
