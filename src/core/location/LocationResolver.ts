@@ -60,7 +60,9 @@ class LocationResolver extends Resolver<Location> {
       return this.accountResolverFactory().getAccount(location.account.id);
     },
     subscription: async (location: Location, shouldExpand = false) => {
-      const subscription = await this.subscriptionResolverFactory().getByRelatedEntityId(location.id);
+      // TODO: Uncomment this line and remove next line when data migration is completed.
+      // const subscription = await this.subscriptionResolverFactory().getByRelatedEntityId(location.id);
+      const subscription = await this.subscriptionResolverFactory().getByAccountId(location.account.id);
 
       if (subscription === null) {
         return null;
