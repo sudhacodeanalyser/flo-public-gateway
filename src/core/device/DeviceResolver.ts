@@ -27,7 +27,7 @@ class DeviceResolver extends Resolver<Device> {
     },
     additionalProps: async (device: Device, shouldExpand = false) => {
       try {
-        return this.internalDeviceService.getDevice(device.macAddress);
+        return (await this.internalDeviceService.getDevice(device.macAddress));
       } catch (err) {
         this.logger.error({ err });
         return null;
