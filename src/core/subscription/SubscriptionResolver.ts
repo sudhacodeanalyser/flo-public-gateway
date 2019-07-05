@@ -6,6 +6,7 @@ import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import { LocationResolver, PropertyResolverMap, Resolver } from '../resolver';
 import SubscriptionPlanTable from '../subscription/SubscriptionPlanTable';
 import SubscriptionTable from '../subscription/SubscriptionTable';
+import OldSubscriptionTable from './OldSubscriptionTable';
 import { SubscriptionPlanRecord, SubscriptionPlanRecordData } from './SubscriptionPlanRecord';
 import { SubscriptionRecord, SubscriptionRecordData } from './SubscriptionRecord';
 
@@ -35,6 +36,8 @@ class SubscriptionResolver extends Resolver<Subscription> {
   private locationResolverFactory: () => LocationResolver;
 
   constructor(
+   // TODO: Remove this dependency once data migration is completed.
+   @inject('OldSubscriptionTable') private oldSubscriptionTable: OldSubscriptionTable,
    @inject('SubscriptionTable') private subscriptionTable: SubscriptionTable,
    @inject('SubscriptionPlanTable') private subscriptionPlanTable: SubscriptionPlanTable,
    @inject('DependencyFactoryFactory') depFactoryFactory: DependencyFactoryFactory
@@ -89,6 +92,26 @@ class SubscriptionResolver extends Resolver<Subscription> {
     return this.toModel(subscriptionRecordData);
   }
 
+  // TODO: Remove me once data migration is completed.
+  public async getByAccountId(accountId: string): Promise<any | null> {
+    const subscriptionRecordData: any | null = await this.oldSubscriptionTable.get({ account_id: accountId });
+
+    if (subscriptionRecordData === null) {
+      return null;
+    }
+
+    return {
+      id: subscriptionRecordData.account_id,
+      provider: {
+        isActive: subscriptionRecordData.status === 'active'
+      },
+      plan: {
+        id: subscriptionRecordData.plan_id
+      },
+      sourceId: subscriptionRecordData.source_id
+    };
+  }
+
   public async getByProviderCustomerId(customerId: string): Promise<Subscription | null> {
     const subscriptionRecordData: SubscriptionRecordData | null = await this.subscriptionTable.getByProviderCustomerId(customerId);
 
@@ -127,3 +150,4 @@ class SubscriptionResolver extends Resolver<Subscription> {
 }
 
 export { SubscriptionResolver };
+

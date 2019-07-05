@@ -1,0 +1,49 @@
+components:
+  schemas:
+    SubscriptionPlan:
+      type: object
+      properties:
+        id:
+          type: string
+        features:
+          type: array
+          items:
+            type: string
+        monthlyCost:
+          type: number
+    SubscriptionPlanExpandable:
+      oneOf:
+        - type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+        - $ref: '#/components/schemas/SubscriptionPlan'
+    SubscriptionExpandable:
+      type: object
+      required:
+        - id
+        - provider
+      properties:
+        id:
+          type: string
+          format: uuid
+        sourceId:
+          type: string
+        plan:
+          $ref: '#/components/schemas/SubscriptionPlanExpandable'
+        location:
+          $ref: '#/components/schemas/LocationExpandable'
+        provider:
+          type: object
+          required:
+            - isActive
+          properties:
+            name:
+              type: string
+            isActive:
+              type: boolean
+
+
+
+

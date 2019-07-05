@@ -1,28 +1,4 @@
 paths:
-  /api/v2/locations:
-    post:
-      summary: Creates a Location.
-      tags:
-        - Locations
-      produces:
-        - application/json
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/LocationCreate'
-      responses:
-        201:
-          description: The newly created Location.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Location'
-        401:
-          $ref: '#/components/responses/UnauthorizedError'
-        403:
-          $ref: '#/components/responses/ForbiddenError'
   /api/v2/locations/{id}:
     parameters:
       - in: path
@@ -54,32 +30,6 @@ paths:
         403:
           $ref: '#/components/responses/ForbiddenError'
 
-    post:
-      summary: Updates a Location by ID (partially).
-      tags:
-        - Locations
-      produces:
-        - application/json
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/LocationUpdate'
-      responses:
-        200:
-          description: The Location was successfully updated.
-          schema:
-            $ref: '#/components/schemas/Location'
-        401:
-          $ref: '#/components/responses/UnauthorizedError'
-        403:
-          $ref: '#/components/responses/ForbiddenError'
-        409:
-          description: A Location with the specified ID was not found.
-          schema:
-            $ref: '#/components/schemas/Error'
-
   /api/v2/locations/{id}/systemMode:
     parameters:
       - in: path
@@ -93,7 +43,6 @@ paths:
       summary: Set system mode
       tags:
         - Locations
-        - System Mode
       produces:
         - application/json
       requestBody:
