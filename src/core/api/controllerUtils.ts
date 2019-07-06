@@ -5,10 +5,10 @@ import { PropExpand } from './index';
 
 export function parseExpand(expand?: string): PropExpand {
 
-  return (expand === undefined ? '' : expand).split(',')
+  return (expand === undefined ? '' : expand).split(/,(?![^(]*\))/)
     .filter(prop => !_.isEmpty(prop))
     .map(prop => {
-      const match = prop.match(/([^()]+)\((.+)\)$/);
+      const match = prop.match(/([^()]+)\((.*)\)$/);
 
       if (!match) {
         return prop;
