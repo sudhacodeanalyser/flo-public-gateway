@@ -1,6 +1,6 @@
 import { inject, injectable, multiInject } from 'inversify';
 import _ from 'lodash';
-import { Location, PartialBy, Subscription, SubscriptionCreate, SubscriptionProvider, User } from '../api';
+import { Location, PartialBy, Subscription, SubscriptionCreate, SubscriptionProvider, User, PropExpand } from '../api';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import ValidationError from '../api/error/ValidationError';
 import { LocationService, UserService } from '../service';
@@ -63,7 +63,7 @@ class SubscriptionService {
     return this.subscriptionResolver.create(subscription);
   }
 
-  public async getSubscriptionById(id: string, expand?: string[]): Promise<Subscription | {}> {
+  public async getSubscriptionById(id: string, expand?: PropExpand): Promise<Subscription | {}> {
     const subscription: Subscription | null = await this.subscriptionResolver.get(id, expand);
 
     if (subscription === null) {

@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import { injectable, inject } from 'inversify';
-import { User, UserUpdate } from '../api';
+import { User, UserUpdate, PropExpand } from '../api';
 import { UserResolver } from '../resolver';
 import { AccountService } from '../service';
 import ValidationError from '../api/error/ValidationError';
@@ -16,7 +16,7 @@ class UserService {
     return this.userResolver.updatePartialUser(id, userUpdate);
   }
 
-  public async getUserById(id: string, expand?: string[]): Promise<User | {}> {
+  public async getUserById(id: string, expand?: PropExpand): Promise<User | {}> {
     const user: User | null = await this.userResolver.getUserById(id, expand);
 
     return user === null ? {} : user;

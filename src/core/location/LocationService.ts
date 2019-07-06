@@ -1,6 +1,6 @@
 import { inject, injectable } from 'inversify';
 import { LocationResolver } from '../resolver';
-import { DependencyFactoryFactory, Location, LocationUpdate, LocationUserRole, SystemMode, Account } from '../api';
+import { DependencyFactoryFactory, Location, LocationUpdate, LocationUserRole, SystemMode, Account, PropExpand } from '../api';
 import { DeviceSystemModeService } from '../device/DeviceSystemModeService';
 import { DeviceService, AccountService } from '../service';
 import { IrrigationScheduleService, IrrigationScheduleServiceFactory } from '../device/IrrigationScheduleService';
@@ -40,7 +40,7 @@ class LocationService {
     return createdLocation === null ? {} : createdLocation;
   }
 
-  public async getLocation(id: string, expand?: string[]): Promise<Location | {}> {
+  public async getLocation(id: string, expand?: PropExpand): Promise<Location | {}> {
     const location: Location | null = await this.locationResolver.get(id, expand);
 
     return location === null ? {} : location;

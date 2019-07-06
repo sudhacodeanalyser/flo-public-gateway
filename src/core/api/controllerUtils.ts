@@ -1,9 +1,23 @@
 import _ from 'lodash';
 import { controller, interfaces, HttpResponseMessage, JsonContent, requestHeaders } from 'inversify-express-utils';
 import ResourceDoesNotExistError from './error/ResourceDoesNotExistError';
+import { PropExpand } from './index';
 
-export function parseExpand(expand?: string): string[] {
-  return (expand === undefined ? '' : expand).split(',').filter(prop => !_.isEmpty(prop))
+export function parseExpand(expand?: string): PropExpand {
+
+  return (expand === undefined ? '' : expand).split(',')
+    .filter(prop => !_.isEmpty(prop))
+    .map(prop => {
+      const match = prop.match(/([^()]+)\((.+)\)$/);
+
+      // return prop;
+
+      if (!match) {
+        return prop;
+      }
+
+      return [match[1], ...match[2].split(',')];
+    });
 }
 
 export interface ControllerOptions {
