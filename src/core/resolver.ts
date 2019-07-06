@@ -18,7 +18,6 @@ class Resolver<T extends {}> {
     const shouldExpandAll = expandProps !== undefined && _.includes(expandProps, EXPAND_ALL);
     const resolvedProps = await Promise.all(
       _.map(model, async (value: any, key: K) => {
-        const shouldExpand = expandProps === undefined ? false : shouldExpandAll || _.includes(expandProps, key as string);
         const expandProp = expandProps &&
           _.find(expandProps, prop => (_.isArray(prop) ? prop[0] : prop) === key);
 
