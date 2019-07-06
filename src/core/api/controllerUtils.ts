@@ -10,8 +10,6 @@ export function parseExpand(expand?: string): PropExpand {
     .map(prop => {
       const match = prop.match(/([^()]+)\((.+)\)$/);
 
-      // return prop;
-
       if (!match) {
         return prop;
       }
