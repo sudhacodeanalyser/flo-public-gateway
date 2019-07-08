@@ -1,0 +1,18 @@
+image:
+  tag:
+secrets:
+  datas:
+    application_name:
+    environment:
+    docs_endpoint_password:
+    docs_endpoint_user:
+    external_docs_endpoint_password:
+    external_docs_endpoint_user:
+    internal_device_service_base_url:
+    kafka_host:
+    kafka_timeout_ms:
+    psotgres_database:
+    postgres_host:
+    postgres_password:
+    postgres_port:
+    postgres_user:
