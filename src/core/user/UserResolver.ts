@@ -1,6 +1,6 @@
 import { inject, injectable } from 'inversify';
 import { fromPartialRecord } from '../../database/Patch';
-import { DependencyFactoryFactory, User } from '../api';
+import { DependencyFactoryFactory, User, PropExpand } from '../api';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import { AccountResolver, LocationResolver, PropertyResolverMap, Resolver } from '../resolver';
 import { UserAccountRoleRecord } from './UserAccountRoleRecord';
@@ -95,7 +95,7 @@ class UserResolver extends Resolver<User> {
     return new UserRecord({ ...userRecord, ...updatedUserDetailRecord }).toModel();
   }
 
-  public async getUserById(id: string, expandProps: string[] = []): Promise<User | null> {
+  public async getUserById(id: string, expandProps: PropExpand = []): Promise<User | null> {
     const [userRecord, userDetailRecord] = await Promise.all([
       this.userTable.get({ id }),
       this.userDetailTable.get({ user_id: id })

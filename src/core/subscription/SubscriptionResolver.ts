@@ -1,7 +1,7 @@
 import { inject, injectable } from 'inversify';
 import uuid from 'uuid';
 import { fromPartialRecord } from '../../database/Patch';
-import { DependencyFactoryFactory, PartialBy, Subscription } from '../api';
+import { DependencyFactoryFactory, PartialBy, Subscription, PropExpand } from '../api';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import { LocationResolver, PropertyResolverMap, Resolver } from '../resolver';
 import SubscriptionPlanTable from '../subscription/SubscriptionPlanTable';
@@ -72,7 +72,7 @@ class SubscriptionResolver extends Resolver<Subscription> {
     return new SubscriptionRecord(createdSubscriptionRecordData).toModel();
   }
 
-  public async get(id: string, expandProps: string[] = []): Promise<Subscription | null> {
+  public async get(id: string, expandProps: PropExpand = []): Promise<Subscription | null> {
     const subscriptionRecordData: SubscriptionRecordData | null = await this.subscriptionTable.get({ id });
 
     if (subscriptionRecordData === null) {
@@ -138,7 +138,7 @@ class SubscriptionResolver extends Resolver<Subscription> {
     return this.subscriptionPlanTable.get({ plan_id: planId });
   }
 
-  private async toModel(subscriptionRecordData: SubscriptionRecordData, expandProps: string[] = []): Promise<Subscription> {
+  private async toModel(subscriptionRecordData: SubscriptionRecordData, expandProps: PropExpand = []): Promise<Subscription> {
     const subscription = new SubscriptionRecord(subscriptionRecordData).toModel();
     const expandedProps = await this.resolveProps(subscription, expandProps);
 
