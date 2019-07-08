@@ -8,12 +8,20 @@ import { InternalDeviceService } from '../../internal-device-service/InternalDev
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
 import { Device, DeviceCreate, DeviceCreateValidator, DeviceUpdate, DeviceUpdateValidator, SystemMode as DeviceSystemMode, SystemModeCodec as DeviceSystemModeCodec } from '../api';
 import { asyncMethod, authorizationHeader, createMethod, deleteMethod, httpController, parseExpand } from '../api/controllerUtils';
+import { convertEnumtoCodec } from '../api/enumUtils';
 import ResourceDoesNotExistError from "../api/error/ResourceDoesNotExistError";
 import Request from '../api/Request';
 import * as Responses from '../api/response';
 import { DeviceService } from '../service';
 import { DeviceSystemModeServiceFactory } from './DeviceSystemModeService';
 import { DirectiveServiceFactory } from './DirectiveService';
+import { HealthTest, HealthTestService } from './HealthTestService';
+
+enum HealthTestActions {
+  RUN = 'run'
+}
+
+const HealthTestActionsCodec = convertEnumtoCodec(HealthTestActions);
 
 export function DeviceControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
@@ -72,7 +80,8 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       @inject('DeviceService') private deviceService: DeviceService,
       @inject('InternalDeviceService') private internalDeviceService: InternalDeviceService,
       @inject('DeviceSystemModeServiceFactory') private deviceSystemModeServiceFactory: DeviceSystemModeServiceFactory,
-      @inject('DirectiveServiceFactory') private directiveServiceFactory: DirectiveServiceFactory
+      @inject('DirectiveServiceFactory') private directiveServiceFactory: DirectiveServiceFactory,
+      @inject('HealthTestService') private healthTestService: HealthTestService
     ) {
       super();
     }
@@ -249,6 +258,55 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     private async rebootDevice(@request() req: Request, @requestParam('id') id: string): Promise<void> {
       const directiveService = this.directiveServiceFactory.create(req);
       return directiveService.reboot(id);
+    }
+
+    @httpPost('/:id/healthTest/:action',
+      authWithId,
+      reqValidator.create(t.type({
+        params: t.type({
+          id: t.string,
+          action: HealthTestActionsCodec
+        })
+      }))
+    )
+    @asyncMethod
+    private async healthTest(@requestParam('id') id: string, @requestParam('action') action: string): Promise<void> {
+      const device = await this.deviceService.getDeviceById(id);
+
+      if (_.isEmpty(device)) {
+        throw new ResourceDoesNotExistError();
+      }
+
+      switch (action) {
+        case HealthTestActions.RUN: {
+          return this.healthTestService.run((device as Device).macAddress);
+        }
+      }
+    }
+
+    @httpGet('/:id/healthTest',
+      authWithId,
+      reqValidator.create(t.type({
+        params: t.type({
+          id: t.string
+        })
+      }))
+    )
+    @asyncMethod
+    private async getLatestHealthTest(@requestParam('id') id: string): Promise<HealthTest | {}> {
+      const device = await this.deviceService.getDeviceById(id);
+
+      if (_.isEmpty(device)) {
+        throw new ResourceDoesNotExistError();
+      }
+
+      const latestHealthTest = await this.healthTestService.getLatest((device as Device).macAddress);
+
+      if (latestHealthTest === null) {
+        return {};
+      }
+
+      return latestHealthTest;
     }
 
     private isSleep({ target, revertMinutes, revertMode }: SystemModeRequest): boolean {
