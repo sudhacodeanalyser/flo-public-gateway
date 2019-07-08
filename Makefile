@@ -13,8 +13,9 @@ NPM ?= $(COMPOSE) -f build-tools.yml run --rm npm --node-env=$(NODE_ENV)
 GRADLE ?= $(COMPOSE) -f build-tools.yml run --rm gradle
 GIT ?= $(COMPOSE) -f build-tools.yml run --rm git
 RUN ?= $(COMPOSE) -f build-tools.yml run --rm --service-ports run --node-env=$(NODE_ENV) run
-EB_INIT ?= $(COMPOSE) -f build-tools.yml run --rm eb init $(APP) --region=${AWS_REGION} --platform docker-18.06.1-ce
-EB_DEPLOY ?= $(COMPOSE) -f build-tools.yml run --rm eb deploy $(APP)-$(ENV) --staged
+#EB_INIT ?= $(COMPOSE) -f build-tools.yml run --rm eb init $(APP) --region=${AWS_REGION} --platform docker-18.06.1-ce
+#EB_DEPLOY ?= $(COMPOSE) -f build-tools.yml run --rm eb deploy $(APP)-$(ENV) --staged
+HELM ?= $(shell which helm)
 
 .PHONY: help auth
 help: ## Display this help screen (default)
@@ -67,10 +68,15 @@ push: docker
 	$(COMPOSE) -f build-tools.yml $(@) || true
 
 deploy:
-	$(GRADLE) preDeploy
-	$(GIT) add .
-	$(EB_INIT)
-	$(EB_DEPLOY)
+	#$(GRADLE) preDeploy
+	#$(GIT) add .
+	#$(EB_INIT)
+	#$(EB_DEPLOY)
+	helm install --name flo-public-gateway ./k8s/flo-public-gateway -f ./k8s/pipeline.yaml  --set environment=${params.environment} --namespace=flo-public-gateway
+environment:
+	chmod +x ./k8s/env.sh
+	./k8s/env.sh
+
 
 clean: down ## Remove build arifacts & related images
 	rm -rf node_modules

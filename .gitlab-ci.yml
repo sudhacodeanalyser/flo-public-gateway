@@ -23,7 +23,10 @@ Compile:
   stage: build
   except:
     - tags
-
+  tags:
+      - build
+  only:
+    - kloia-helmchart-deployment      
   artifacts:
     paths:
       - logs/
@@ -55,12 +58,15 @@ Sanity:
       # Collect logs
       - build.log
       - /root/.npm/_logs
-
+  only:
+    - kloia-helmchart-deployment
   dependencies:
     - Compile
   script:
     - make pull
     - make test | tee build.log
+  tags:
+      - test
 
 Dev:
   variables:
@@ -70,13 +76,16 @@ Dev:
   dependencies:
     - Compile
   only:
-    - dev
+    - kloia-helmchart-deployment
   environment:
     name: dev
     url: https://flo-public-gateway.flocloud.co/ping
   script:
-    - make pull
+    - make environment
+    #- make pull
     - make deploy ENV=dev
+  tags:
+      - dev
 
 Prod:
   variables:
