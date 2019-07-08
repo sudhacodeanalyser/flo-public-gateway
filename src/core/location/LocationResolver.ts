@@ -3,7 +3,7 @@ import { injectHttpContext, interfaces } from 'inversify-express-utils';
 import _ from 'lodash';
 import uuid from 'uuid';
 import { fromPartialRecord } from '../../database/Patch';
-import { DependencyFactoryFactory, Device, Location, LocationUserRole, SystemMode } from '../api';
+import { DependencyFactoryFactory, Device, Location, LocationUserRole, SystemMode, PropExpand } from '../api';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import LocationTable from '../location/LocationTable';
 import { NotificationService, NotificationServiceFactory } from '../notification/NotificationService';
@@ -15,8 +15,8 @@ import { LocationRecord, LocationRecordData } from './LocationRecord';
 @injectable()
 class LocationResolver extends Resolver<Location> {
   protected propertyResolverMap: PropertyResolverMap<Location> = {
-    devices: async (location: Location, shouldExpand = false) => {
-      const devices = await this.deviceResolverFactory().getAllByLocationId(location.id);
+    devices: async (location: Location, shouldExpand = false, expandProps?: PropExpand) => {
+      const devices = await this.deviceResolverFactory().getAllByLocationId(location.id, expandProps);
 
       return devices.map(device => {
 
@@ -149,7 +149,7 @@ class LocationResolver extends Resolver<Location> {
     }
   }
 
-  public async get(id: string, expandProps: string[] = []): Promise<Location | null> {
+  public async get(id: string, expandProps: PropExpand = []): Promise<Location | null> {
     const locationRecordData: LocationRecordData | null = await this.locationTable.getByLocationId(id);
 
     if (locationRecordData === null) {

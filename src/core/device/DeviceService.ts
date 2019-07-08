@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import { injectable, inject } from 'inversify';
-import { DependencyFactoryFactory, Device, DeviceUpdate, DeviceCreate, Location, ValveState } from '../api';
+import { DependencyFactoryFactory, Device, DeviceUpdate, DeviceCreate, Location, ValveState, PropExpand } from '../api';
 import { DeviceResolver } from '../resolver';
 import { LocationService } from '../service';
 import { PairingService, PairingData, QrData } from '../../api-v1/pairing/PairingService';
@@ -22,13 +22,13 @@ class DeviceService {
     this.locationServiceFactory = depFactoryFactory<LocationService>('LocationService');
   }
 
-  public async getDeviceById(id: string, expand?: string[]): Promise<Device | {}> {
+  public async getDeviceById(id: string, expand?: PropExpand): Promise<Device | {}> {
     const device: Device | null = await this.deviceResolver.get(id, expand);
 
     return device === null ? {} : device;
   }
 
-  public async getByMacAddress(macAddress: string, expand?: string[]): Promise<Device | null> {
+  public async getByMacAddress(macAddress: string, expand?: PropExpand): Promise<Device | null> {
     return this.deviceResolver.getByMacAddress(macAddress, expand);
   }
 
@@ -85,7 +85,7 @@ class DeviceService {
     return createdDevice;
   }
 
-  public async getAllByLocationId(locationId: string, expand?: string[]): Promise<Device[]> {
+  public async getAllByLocationId(locationId: string, expand?: PropExpand): Promise<Device[]> {
     return this.deviceResolver.getAllByLocationId(locationId, expand);
   }
 }
