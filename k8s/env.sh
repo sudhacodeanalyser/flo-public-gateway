@@ -1,5 +1,7 @@
 #!/bin/sh
 
+ENVIRONMENT=$1
+
 sed -i  "s/  tag:.*/  tag: '$CI_PIPELINE_ID'/g" k8s/pipeline.yaml
 sed -i  "s/    application_name:.*/    application_name: $APPLICATION_NAME/g" k8s/pipeline.yaml
 sed -i  "s/    docs_endpoint_password:.*/    docs_endpoint_password: $DOCS_ENDPOINT_PASSWORD/g" k8s/pipeline.yaml
