@@ -12,6 +12,7 @@ import internalDeviceServiceFetcherModule from '../internal-device-service/conta
 import apiV1ContainerModule from '../api-v1/containerModule';
 import postgresContainerModule from '../database/pg/containerModule';
 import localizationContainerModule from '../localization/containerModule';
+import influxContainerModule from '../database/influx/containerModule';
 
 // Core container modules
 import coreContainerModules from '../core/containerModule';
@@ -31,6 +32,7 @@ export default function ContainerFactory(container: Container = new Container())
     apiV1ContainerModule,
     localizationContainerModule,
     postgresContainerModule,
+    influxContainerModule,
     ...coreContainerModules
   );
 
