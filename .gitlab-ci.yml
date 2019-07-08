@@ -12,12 +12,14 @@ stages:
 
 before_script:
   - export DOCKER_HOST=tcp://localhost:2375
+  - export CI_REGISTRY=registry.gitlab.com
   - apk add --no-cache make bash # TODO: this should be part of the compose image
   - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
   - |
     if [[ -f Dockerrun.aws.json ]]; then
       sed -i "s/:latest/:${CI_PIPELINE_ID}/g" Dockerrun.aws.json
     fi
+  - - export CI_REGISTRY_IMAGE="registry.gitlab.com/flotechnologies/flo-public-gateway"
 
 Compile:
   stage: build
