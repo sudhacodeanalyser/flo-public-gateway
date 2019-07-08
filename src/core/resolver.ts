@@ -21,7 +21,14 @@ class Resolver<T extends {}> {
         const expandProp = expandProps &&
           _.find(expandProps, prop => (_.isArray(prop) ? prop[0] : prop) === key);
 
-        return this.resolveProp(model, key, expandProp !== undefined || shouldExpandAll, _.isArray(expandProp) ? expandProp.slice(1) : undefined);
+        return this.resolveProp(
+          model, 
+          key, 
+          expandProp !== undefined || shouldExpandAll, 
+          shouldExpandAll ? 
+            [EXPAND_ALL] :
+            _.isArray(expandProp) ? expandProp.slice(1) : undefined
+        );
       })
     );
 
