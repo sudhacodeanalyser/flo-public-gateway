@@ -72,7 +72,7 @@ deploy:
 	#$(GIT) add .
 	#$(EB_INIT)
 	#$(EB_DEPLOY)
-	helm install --name flo-public-gateway ./k8s/flo-public-gateway -f ./k8s/pipeline.yaml  --set environment=${params.environment} --namespace=flo-public-gateway
+	$(HELM) install --name flo-public-gateway ./k8s/flo-public-gateway -f ./k8s/pipeline.yaml  --set environment=${params.environment} --namespace=flo-public-gateway
 environment:
 	chmod +x ./k8s/env.sh
 	./k8s/env.sh
