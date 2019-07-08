@@ -1,6 +1,6 @@
 import { inject, injectable } from 'inversify';
 import { AccountRecordData, AccountRecord } from './AccountRecord';
-import { Account, AccountUserRole, DependencyFactoryFactory } from '../api';
+import { Account, AccountUserRole, DependencyFactoryFactory, PropExpand } from '../api';
 import { Resolver, PropertyResolverMap, LocationResolver, UserResolver } from '../resolver';
 import AccountTable from './AccountTable';
 import UserAccountRoleTable from '../user/UserAccountRoleTable';
@@ -56,7 +56,7 @@ class AccountResolver extends Resolver<Account> {
     this.userResolverFactory = depFactoryFactory<UserResolver>('UserResolver');
   }
 
-  public async getAccount(id: string, expandProps: string[] = []): Promise<Account | null> {
+  public async getAccount(id: string, expandProps: PropExpand = []): Promise<Account | null> {
     const accountRecordData: AccountRecordData | null = await this.accountTable.get({ id });
 
     if (accountRecordData === null) {
