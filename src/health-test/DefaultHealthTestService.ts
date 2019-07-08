@@ -1,5 +1,6 @@
 import { inject, injectable } from 'inversify';
-import { HealthTestService } from '../core/device/HealthTestService';
+import _ from 'lodash';
+import { HealthTest, HealthTestService } from '../core/device/HealthTestService';
 import { HttpService } from '../http/HttpService';
 
 @injectable()
@@ -22,12 +23,14 @@ export class DefaulthHealthTestService extends HttpService implements HealthTest
     await this.sendRequest(request);
   }
 
-  public async getLatest(deviceMacAddress: string): Promise<void> {
+  public async getLatest(deviceMacAddress: string): Promise<HealthTest | null> {
     const request = {
       method: 'GET',
       url: `${this.healthTestServiceUrl}/healthtest?deviceId=${deviceMacAddress}&sort=desc&limit=1`
     };
 
-    await this.sendRequest(request);
+    const { items } = await this.sendRequest(request);
+
+    return _.first(items) || null;
   }
 }

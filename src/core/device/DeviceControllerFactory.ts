@@ -15,7 +15,7 @@ import * as Responses from '../api/response';
 import { DeviceService } from '../service';
 import { DeviceSystemModeServiceFactory } from './DeviceSystemModeService';
 import { DirectiveServiceFactory } from './DirectiveService';
-import { HealthTestService } from './HealthTestService';
+import { HealthTest, HealthTestService } from './HealthTestService';
 
 enum HealthTestActions {
   RUN = 'run'
@@ -293,14 +293,20 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       }))
     )
     @asyncMethod
-    private async getLatestHealthTest(@requestParam('id') id: string): Promise<void> {
+    private async getLatestHealthTest(@requestParam('id') id: string): Promise<HealthTest | {}> {
       const device = await this.deviceService.getDeviceById(id);
 
       if (_.isEmpty(device)) {
         throw new ResourceDoesNotExistError();
       }
 
-      return this.healthTestService.getLatest((device as Device).macAddress);
+      const latestHealthTest = await this.healthTestService.getLatest((device as Device).macAddress);
+
+      if (latestHealthTest === null) {
+        return {};
+      }
+
+      return latestHealthTest;
     }
 
     private isSleep({ target, revertMinutes, revertMode }: SystemModeRequest): boolean {
