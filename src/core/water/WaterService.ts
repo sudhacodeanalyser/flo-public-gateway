@@ -51,7 +51,7 @@ class WaterService {
     return this.formatReport(startDate, endDate, interval, tz, results, undefined, macAddress);
   }
 
-  protected formatQuery(macAddress: string, column: string, measurement: string, startDate: string, endDate: string, timezone: string): string {
+  private formatQuery(macAddress: string, column: string, measurement: string, startDate: string, endDate: string, timezone: string): string {
 
     if (endDate < startDate) {
       throw new Error('Invalid date range');
@@ -66,7 +66,7 @@ class WaterService {
     `.replace(/\s/, ' ');
   }
 
-  protected formatReport(startDate: string, endDate: string, interval: string, timezone: string, results: InfluxRow[], locationId?: string, macAddress?: string): WaterConsumptionReport {
+  private formatReport(startDate: string, endDate: string, interval: string, timezone: string, results: InfluxRow[], locationId?: string, macAddress?: string): WaterConsumptionReport {
     const items = interval === WaterConsumptionInterval.ONE_HOUR ? 
       results :
       _.chain(results)
@@ -95,7 +95,7 @@ class WaterService {
     };
   }
 
-  protected combineResults(startDate: string, endDate: string, hourlyResults?: IResults<InfluxRow>, secondResults?: IResults<InfluxRow>): InfluxRow[] {
+  private combineResults(startDate: string, endDate: string, hourlyResults?: IResults<InfluxRow>, secondResults?: IResults<InfluxRow>): InfluxRow[] {
     const hourlyConsumption =this.zeroFillHours(startDate, endDate, hourlyResults);
     const lastHourConsumption = this.combineLastHourResults(endDate, hourlyConsumption, secondResults);
 
