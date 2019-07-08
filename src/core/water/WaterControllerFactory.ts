@@ -1,6 +1,7 @@
 import { interfaces, controller, httpGet, requestParam, queryParam } from 'inversify-express-utils';
 import { inject, Container } from 'inversify';
-import { WaterService, WaterConsumptionReport } from '../service';
+import { WaterService } from '../service';
+import { WaterConsumptionReport } from '../api';
 import { httpController } from '../api/controllerUtils';
 import moment from 'moment';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';

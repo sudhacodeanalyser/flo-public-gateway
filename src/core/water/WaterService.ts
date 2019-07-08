@@ -3,31 +3,9 @@ import { InfluxDB, IResults } from 'influx';
 import moment from 'moment-timezone';
 import _ from 'lodash';
 import { DeviceService, LocationService } from '../service';
-import { DependencyFactoryFactory } from '../api';
+import { DependencyFactoryFactory, WaterConsumptionItem, WaterConsumptionReport, WaterConsumptionInterval } from '../api';
 
 type InfluxRow = { time: Date, sum: number };
-
-export interface WaterConsumptionItem {
-  time: string;
-  gallonsConsumed: number;
-};
-
-export interface WaterConsumptionReport {
-  params: {
-    startDate: string;
-    endDate: string;
-    interval: string;
-    tz: string;
-    locationId?: string;
-    macAddress?: string;
-  },
-  items: WaterConsumptionItem[]
-}
-
-export enum WaterConsumptionInterval {
-  ONE_HOUR = '1h',
-  ONE_DAY = '1d'
-}
 
 @injectable()
 class WaterService {
@@ -46,7 +24,7 @@ class WaterService {
     this.locationServiceFactory = depFactoryFactory<LocationService>('LocationService');
   }
 
-  public async getLocationConsumption(locationId: string, startDate: string, endDate: string = new Date().toISOString(), interval: string = '1h', timezone?: string): Promise<WaterConsumptionReport> {
+  public async getLocationConsumption(locationId: string, startDate: string, endDate: string = new Date().toISOString(), interval: string = WaterConsumptionInterval.ONE_HOUR, timezone?: string): Promise<WaterConsumptionReport> {
     const devices = await this.deviceServiceFactory().getAllByLocationId(locationId);
     const location = await (timezone ? undefined : this.locationServiceFactory().getLocation(locationId));
     const tz = _.get(location, 'timezone', timezone);
@@ -65,7 +43,7 @@ class WaterService {
     return this.formatReport(startDate, endDate, interval, tz, results, locationId);
   }
 
-  public async getDeviceConsumption(macAddress: string, startDate: string, endDate: string = new Date().toISOString(), interval: string = '1h', timezone?: string): Promise<WaterConsumptionReport> {
+  public async getDeviceConsumption(macAddress: string, startDate: string, endDate: string = new Date().toISOString(), interval: string = WaterConsumptionInterval.ONE_HOUR, timezone?: string): Promise<WaterConsumptionReport> {
     const device = await (timezone ? undefined : this.deviceServiceFactory().getByMacAddress(macAddress, ['location']));
     const tz = _.get(device, 'location.timezone', timezone);
     const results = await this.queryDeviceConsumption(macAddress, startDate, endDate, tz);
