@@ -19,6 +19,8 @@ spec:
         app.kubernetes.io/name: {{ include "flo-public-gateway.name" . }}
         app.kubernetes.io/instance: {{ .Release.Name }}
     spec:
+      imagePullSecrets:
+        - name: gitlab-registry
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
