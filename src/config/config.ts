@@ -20,7 +20,14 @@ function getDefaults(): { [key: string]: any } {
         defaultUserLocale: 'en-US',
         localizationApiUrl: 'https://flo-localization-service-dev.flocloud.co/v1',
         notificationApiUrl: 'https://flo-notification-api-dev.et89cag4sw.us-west-2.elasticbeanstalk.com',
-        healthTestServiceUrl: 'https://flo-device-manager.flocloud.co'
+        healthTestServiceUrl: 'https://flo-device-manager.flocloud.co',
+        influxPort: 8086,
+        influxHost: 'mcfly-da662558.influxcloud.net',
+        influxUsername: 'flo_api_dev',
+        influxAnalyticsDb: 'telemetry_analytics_dev',
+        influxHourlyMeasurement: 'telemetry_hourly',
+        influxTelemetryDb: 'telemetry_dev',
+        influxSecondMeasurement: 'telemetry_raw'
       };
   }
 }
@@ -52,7 +59,15 @@ const config = {
   defaultUserLocale: process.env.DEFAULT_USER_LOCALE,
   localizationApiUrl: process.env.LOCALIZATION_API_URL,
   notificationApiUrl: process.env.NOTIFICATION_API_URL,
-  healthTestServiceUrl: process.env.HEALTH_TEST_SERVICE_URL
+  healthTestServiceUrl: process.env.HEALTH_TEST_SERVICE_URL,
+  influxHost: process.env.INFLUX_HOST,
+  influxPort: process.env.INFLUX_PORT,
+  influxUsername: process.env.INFLUX_USERNAME,
+  influxPassword: process.env.INFLUX_PASSWORD,
+  influxAnalyticsDb: process.env.INFLUX_ANALYTICS_DB,
+  influxHourlyMeasurement: process.env.INFLUX_HOURLY_MEASUREMENT,
+  influxTelemetryDb: process.env.INFLUX_TELEMETRY_DB,
+  influxSecondMeasurement: process.env.INFLUX_SECOND_MEASUREMNT
 };
 
 export default {

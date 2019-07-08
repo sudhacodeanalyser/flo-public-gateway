@@ -10,6 +10,7 @@ import healthTestServiceContainerModule from '../health-test/containerModule';
 import internalDeviceServiceFetcherModule from '../internal-device-service/containerModule';
 import kafkaContainerModule from '../kafka/containerModule';
 import localizationContainerModule from '../localization/containerModule';
+import influxContainerModule from '../database/influx/containerModule';
 // Shared container modules
 import loggerFactoryContainerModule from '../logging/containerModule';
 import subscriptionProviderModule from '../subscription/containerModule';
@@ -33,6 +34,7 @@ export default function ContainerFactory(container: Container = new Container())
     localizationContainerModule,
     postgresContainerModule,
     healthTestServiceContainerModule,
+    influxContainerModule,
     ...coreContainerModules
   );
 
