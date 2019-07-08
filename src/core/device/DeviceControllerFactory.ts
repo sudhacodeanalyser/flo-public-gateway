@@ -292,7 +292,6 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
         })
       }))
     )
-    @asyncMethod
     private async getLatestHealthTest(@requestParam('id') id: string): Promise<HealthTest | {}> {
       const device = await this.deviceService.getDeviceById(id);
 
