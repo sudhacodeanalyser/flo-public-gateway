@@ -9,13 +9,13 @@ function getDefaults(): { [key: string]: any } {
     case 'development':
     default:
       return {
-        port: 8080,
+        port: 3000,
         appName: 'flo-public-gateway',
         enforceSSL: false,
         dynamoTablePrefix: 'dev_',
         apiVersion: 2,
         authUrl: 'https://api-dev.flocloud.co/api/v1/accesscontrol/authorize',
-        internalDeviceServiceBaseUrl: 'http://localhost:3000',
+        internalDeviceServiceBaseUrl: 'https://flo-device-service.flocloud.co/v1',
         apiV1Url: 'https://api-dev.flocloud.co/api/v1',
         defaultUserLocale: 'en-US',
         localizationApiUrl: 'https://flo-localization-service-dev.flocloud.co/v1',

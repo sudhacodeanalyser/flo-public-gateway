@@ -21,8 +21,6 @@ class InternalDeviceServiceHandler {
         data: request.body
       });
 
-      // tslint:disable
-      console.log("WTF: " + response.data);
       return response.data;
 
     } catch (err) {
