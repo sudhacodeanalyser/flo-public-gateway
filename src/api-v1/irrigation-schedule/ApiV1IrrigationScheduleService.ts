@@ -1,6 +1,7 @@
 import { HttpService } from '../../http/HttpService';
 import { IrrigationScheduleService, ComputedIrrigationSchedule, DeviceIrrigationAllowedState } from '../../core/device/IrrigationScheduleService';
 import { ResponseToComputedIrrigationSchedule, ResponseToDeviceIrrigationAllowedState } from './models';
+import { isLeft } from 'fp-ts/lib/Either';
 
 class ApiV1IrrigationScheduleService extends HttpService implements IrrigationScheduleService {
   constructor(
@@ -19,11 +20,11 @@ class ApiV1IrrigationScheduleService extends HttpService implements IrrigationSc
     const response = await this.sendRequest(request);
     const result = ResponseToComputedIrrigationSchedule.decode(response);
 
-    if (result.isLeft()) {
+    if (isLeft(result)) {
       throw new Error('Invalid response.')
     }
 
-    return result.value;
+    return result.right;
   }
 
   public async enableDeviceIrrigationAllowedInAwayMode(id: string, times: string[][]): Promise<void> {
@@ -58,11 +59,11 @@ class ApiV1IrrigationScheduleService extends HttpService implements IrrigationSc
     const response = await this.sendRequest(request);
     const result = ResponseToDeviceIrrigationAllowedState.decode(response);
 
-    if (result.isLeft()) {
+    if (isLeft(result)) {
       throw new Error('Invalid response.');
     }
 
-    return result.value;
+    return result.right;
   }
 }
 

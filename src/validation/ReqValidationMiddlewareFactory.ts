@@ -5,6 +5,7 @@ import Request from '../core/api/Request';
 import * as express from 'express';
 import { injectable } from 'inversify';
 import ReqValidationError from './ReqValidationError';
+import { isRight } from 'fp-ts/lib/Either';
 
 type RequestValidator = t.TypeC<any>;
 
@@ -79,7 +80,7 @@ class ReqValidationMiddlewareFactory {
 
       const result = reqType.decode(req);
 
-      if (result.isRight()) {
+      if (isRight(result)) {
         next();
       } else {
         const message = PathReporter.report(result).join(', ');

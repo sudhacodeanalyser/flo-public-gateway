@@ -1,6 +1,7 @@
 import * as t from 'io-ts';
 import { ComputedIrrigationSchedule, ComputedIrrigationScheduleCodec, DeviceIrrigationAllowedState, DeviceIrrigationAllowedStateCodec, ComputationStatusCodec, ComputationStatus } from '../../core/device/IrrigationScheduleService';
 import _ from 'lodash';
+import { either } from 'fp-ts/lib/Either';
 
 const ComputedIrrigationScheduleResponseCodec = t.type({
   device_id: t.string,
@@ -12,12 +13,11 @@ export const ResponseToComputedIrrigationSchedule = new t.Type<ComputedIrrigatio
   'ComputedIrrigationSchedule',
   (u: unknown): u is ComputedIrrigationSchedule => ComputedIrrigationScheduleCodec.is(u),
   (u: unknown, context: t.Context) => {
-    return ComputedIrrigationScheduleResponseCodec.validate(u, context)
-      .map(computedIrrigationScheduleResponse => ({
+    return either.map(ComputedIrrigationScheduleResponseCodec.validate(u, context), (computedIrrigationScheduleResponse => ({
         status: computedIrrigationScheduleResponse.status,
         times: computedIrrigationScheduleResponse.times || undefined,
         macAddress: computedIrrigationScheduleResponse.device_id
-      }))
+      })));
   },
   (a: ComputedIrrigationSchedule) => ({
     status: a.status,
@@ -37,8 +37,10 @@ export const ResponseToDeviceIrrigationAllowedState = new t.Type<DeviceIrrigatio
   'DeviceIrrigationAllowedState',
   (u: unknown): u is DeviceIrrigationAllowedState => true,
   (u: unknown, context: t.Context) => {
-    return DeviceIrrigationAllowedStateResponse.validate(u, context)
-      .map(deviceIrrigationAllowedStateResponse => ({
+    const validation = DeviceIrrigationAllowedStateResponse.validate(u, context);
+    
+    return either
+      .map(validation, deviceIrrigationAllowedStateResponse => ({
         id: deviceIrrigationAllowedStateResponse.icd_id,
         updatedAt: deviceIrrigationAllowedStateResponse.created_at || new Date().toISOString(),
         isEnabled: deviceIrrigationAllowedStateResponse.is_enabled,

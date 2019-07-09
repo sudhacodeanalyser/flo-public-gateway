@@ -1,15 +1,15 @@
 import * as t from 'io-ts';
 import moment from 'moment';
+import { either } from 'fp-ts/lib/Either';
 
 const DateFromISOString = new t.Type<Date, string, unknown>(
   'DateFromISOString',
   (u): u is Date => u instanceof Date,
   (u, c) => {
-    return t.string.validate(u, c)
-      .chain(str => {
-        const date = new Date(str);
-        return isNaN(date.getTime()) ? t.failure(str, c) : t.success(date);
-      });
+    return either.chain(t.string.validate(u, c), str => {
+      const date = new Date(str);
+      return isNaN(date.getTime()) ? t.failure(str, c) : t.success(date);
+    });
   },
   a => a.toISOString()
 );
