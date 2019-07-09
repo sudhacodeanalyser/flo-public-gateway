@@ -1,4 +1,4 @@
-import { inject, injectable } from 'inversify';
+import { injectable } from 'inversify';
 import _ from 'lodash';
 import { HealthTest, HealthTestService } from '../core/device/HealthTestService';
 import { HttpService } from '../http/HttpService';
@@ -6,17 +6,20 @@ import { HttpService } from '../http/HttpService';
 @injectable()
 export class DefaulthHealthTestService extends HttpService implements HealthTestService {
   constructor(
-    @inject('healthTestServiceUrl') private readonly healthTestServiceUrl: string
+    private readonly healthTestServiceUrl: string,
+    private readonly authToken: string
   ) {
     super();
   }
 
-  public async run(deviceMacAddress: string): Promise<void> {
+  public async run(deviceMacAddress: string, icdId: string): Promise<void> {
     const request = {
       method: 'POST',
       url: `${this.healthTestServiceUrl}/healthtest`,
+      authToken: this.authToken,
       body: {
-        deviceId: deviceMacAddress
+        deviceId: deviceMacAddress,
+        icdId
       }
     };
 

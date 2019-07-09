@@ -15,7 +15,7 @@ import * as Responses from '../api/response';
 import { DeviceService } from '../service';
 import { DeviceSystemModeServiceFactory } from './DeviceSystemModeService';
 import { DirectiveServiceFactory } from './DirectiveService';
-import { HealthTest, HealthTestService } from './HealthTestService';
+import { HealthTest, HealthTestServiceFactory } from './HealthTestService';
 
 enum HealthTestActions {
   RUN = 'run'
@@ -81,7 +81,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       @inject('InternalDeviceService') private internalDeviceService: InternalDeviceService,
       @inject('DeviceSystemModeServiceFactory') private deviceSystemModeServiceFactory: DeviceSystemModeServiceFactory,
       @inject('DirectiveServiceFactory') private directiveServiceFactory: DirectiveServiceFactory,
-      @inject('HealthTestService') private healthTestService: HealthTestService
+      @inject('HealthTestServiceFactory') private healthTestServiceFactory: HealthTestServiceFactory
     ) {
       super();
     }
@@ -270,7 +270,8 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       }))
     )
     @asyncMethod
-    private async healthTest(@requestParam('id') id: string, @requestParam('action') action: string): Promise<void> {
+    private async healthTest(@request() req: Request, @requestParam('id') id: string, @requestParam('action') action: string): Promise<void> {
+      const healthTestService = this.healthTestServiceFactory.create(req);
       const device = await this.deviceService.getDeviceById(id);
 
       if (_.isEmpty(device)) {
@@ -279,7 +280,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
 
       switch (action) {
         case HealthTestActions.RUN: {
-          return this.healthTestService.run((device as Device).macAddress);
+          return healthTestService.run((device as Device).macAddress, id);
         }
       }
     }
@@ -292,14 +293,15 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
         })
       }))
     )
-    private async getLatestHealthTest(@requestParam('id') id: string): Promise<HealthTest | {}> {
+    private async getLatestHealthTest(@request() req: Request, @requestParam('id') id: string): Promise<HealthTest | {}> {
+      const healthTestService = this.healthTestServiceFactory.create(req);
       const device = await this.deviceService.getDeviceById(id);
 
       if (_.isEmpty(device)) {
         throw new ResourceDoesNotExistError();
       }
 
-      const latestHealthTest = await this.healthTestService.getLatest((device as Device).macAddress);
+      const latestHealthTest = await healthTestService.getLatest((device as Device).macAddress);
 
       if (latestHealthTest === null) {
         return {};
