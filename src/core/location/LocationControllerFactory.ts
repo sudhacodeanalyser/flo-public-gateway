@@ -6,11 +6,13 @@ import { Location, LocationUpdateValidator, LocationUpdate, LocationUserRole, Lo
 import { LocationService } from '../service';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
 import * as t from 'io-ts';
-import { parseExpand, httpController, createMethod, deleteMethod, asyncMethod } from '../api/controllerUtils';
+import { parseExpand, httpController, createMethod, deleteMethod, asyncMethod, withResponseType } from '../api/controllerUtils';
 import { NonEmptyArray } from '../api/validator/NonEmptyArray';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import { DeviceSystemModeServiceFactory } from '../device/DeviceSystemModeService';
 import Request from '../api/Request';
+import * as Responses from '../api/response';
+import { Option, none, some } from 'fp-ts/lib/Option';
 
 
 export function LocationControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
@@ -75,9 +77,15 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
       }))
     )
     @createMethod
-    private async createLocation(@request() req: Request, @requestBody() location: Location): Promise<Location | {}> {
-      
-      return this.locationService.createLocation(location);
+    @withResponseType<Location, Responses.Location>(Responses.Location.fromModel)
+    private async createLocation(@request() req: Request, @requestBody() location: Location): Promise<Option<Location>> {
+      const createdLocation = await this.locationService.createLocation(location);
+
+      if (_.isEmpty(createdLocation)) {
+        return none;
+      }
+
+      return some(createdLocation as Location);
     }
 
     @httpGet(
@@ -92,10 +100,16 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
         })
       }))
     )
-    private async getLocation(@requestParam('id') id: string, @queryParam('expand') expand?: string): Promise<Location | {}> {
+    @withResponseType<Location, Responses.Location>(Responses.Location.fromModel)
+    private async getLocation(@requestParam('id') id: string, @queryParam('expand') expand?: string): Promise<Option<Location>> {
       const expandProps = parseExpand(expand);
+      const location = await this.locationService.getLocation(id, expandProps);
 
-      return this.locationService.getLocation(id, expandProps);
+      if (_.isEmpty(location)) {
+        return none;
+      }
+
+      return some(location as Location);
     }
 
     @httpPost(
@@ -108,9 +122,11 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
         body: LocationUpdateValidator
       }))
     )
-    private async updatePartialLocation(@request() req: Request, @requestParam('id') id: string, @requestBody() locationUpdate: LocationUpdate): Promise<Location> {
+    @withResponseType<Location, Responses.Location>(Responses.Location.fromModel)
+    private async updatePartialLocation(@request() req: Request, @requestParam('id') id: string, @requestBody() locationUpdate: LocationUpdate): Promise<Option<Location>> {
+      const updatedLocation = await this.locationService.updatePartialLocation(id, locationUpdate);
 
-      return this.locationService.updatePartialLocation(id, locationUpdate);
+      return some(updatedLocation);
     }
 
     @httpDelete(
