@@ -1,6 +1,6 @@
 import * as t from 'io-ts';
 import _ from 'lodash';
-import { InternalDevice } from '../../../internal-device-service/models';
+import {InternalConnectivity, InternalDevice, InternalTelemetry} from '../../../internal-device-service/models';
 import { Expandable, Location, NotificationCounts, Omit, SystemModeCodec as DeviceSystemModeCodec, TimestampedModel } from '../../api';
 import { convertEnumtoCodec } from '../../api/enumUtils';
 import { ComputedIrrigationSchedule } from '../../device/IrrigationScheduleService';
@@ -9,7 +9,7 @@ import { NoYesUnsure } from '../NoYesUnsure';
 export enum ValveState {
   OPEN = 'open',
   CLOSED = 'closed',
-  IN_TRANSITION = 'in_transition'
+  IN_TRANSITION = 'inTransition'
 }
 
 export enum ValveStateNumeric {
@@ -112,6 +112,8 @@ export interface Device extends Omit<DeviceUpdate, 'valve'>, TimestampedModel {
     target?: ValveState,
     lastKnown?: ValveState
   };
+  connectivity?: InternalConnectivity;
+  telemetry?: InternalTelemetry;
   irrigationSchedule?: {
     isEnabled: boolean,
     computed?: Omit<ComputedIrrigationSchedule, 'macAddress'>,

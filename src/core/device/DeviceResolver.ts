@@ -33,6 +33,33 @@ class DeviceResolver extends Resolver<Device> {
         return null;
       }
     },
+    connectivity: async (device: Device, shouldExpand = false) => {
+      try {
+        const additionalProperties = await this.internalDeviceService.getDevice(device.macAddress);
+
+        return {
+          ...device.connectivity,
+          rssi: _.get(additionalProperties, 'connectivity.rssi'),
+          ssid: _.get(additionalProperties, 'connectivity.ssid')
+        };
+      } catch (err) {
+        this.logger.error({ err });
+        return null;
+      }
+    },
+    telemetry: async (device: Device, shouldExpand = false) => {
+      try {
+        const additionalProperties = await this.internalDeviceService.getDevice(device.macAddress);
+
+        return {
+          ...device.telemetry,
+          current: _.get(additionalProperties, 'connectivity.current')
+        };
+      } catch (err) {
+        this.logger.error({ err });
+        return null;
+      }
+    },
     systemMode: async (device: Device, shouldExpand = false) => {
       try {
         const [
@@ -46,7 +73,7 @@ class DeviceResolver extends Resolver<Device> {
         return {
           ...device.systemMode,
           isLocked: forcedSystemMode !== null && forcedSystemMode.system_mode !== null,
-          lastKnown: translateNumericToStringEnum(
+          lastKnown: _.get(additionalProperties, 'systemMode.lastKnown') || translateNumericToStringEnum(
             SystemMode,
             DeviceSystemModeNumeric,
             _.get(additionalProperties, 'fwProperties.system_mode')
@@ -59,15 +86,15 @@ class DeviceResolver extends Resolver<Device> {
     },
     valve: async (device: Device, shouldExpand = false) => {
       try {
-        const additionalProperts = await this.internalDeviceService.getDevice(device.macAddress);
+        const additionalProperties = await this.internalDeviceService.getDevice(device.macAddress);
 
         return {
           ...device.valve,
-          lastKnown: translateNumericToStringEnum(
-            ValveState,
-            ValveStateNumeric,
-            _.get(additionalProperts, 'fwProperties.valve_state')
-          )
+          lastKnown: _.get(additionalProperties, 'valveState.lastKnown') || translateNumericToStringEnum(
+          ValveState,
+          ValveStateNumeric,
+          _.get(additionalProperties, 'fwProperties.valve_state')
+        )
         };
       } catch (err) {
         this.logger.error({ err });
