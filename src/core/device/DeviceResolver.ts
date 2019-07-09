@@ -53,7 +53,7 @@ class DeviceResolver extends Resolver<Device> {
 
         return {
           ...device.telemetry,
-          current: _.get(additionalProperties, 'connectivity.current')
+          current: _.get(additionalProperties, 'telemetry.current')
         };
       } catch (err) {
         this.logger.error({ err });
