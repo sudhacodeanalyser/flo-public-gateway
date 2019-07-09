@@ -33,6 +33,28 @@ class DeviceResolver extends Resolver<Device> {
         return null;
       }
     },
+    connectivity: async (device: Device, shouldExpand = false) => {
+      try {
+        const additionalProperties = await this.internalDeviceService.getDevice(device.macAddress);
+
+        return device.connectivity;
+
+      } catch (err) {
+        this.logger.error({ err });
+        return null;
+      }
+    },
+    telemetry: async (device: Device, shouldExpand = false) => {
+      try {
+        const additionalProperties = await this.internalDeviceService.getDevice(device.macAddress);
+
+        return device.telemetry;
+
+      } catch (err) {
+        this.logger.error({ err });
+        return null;
+      }
+    },
     systemMode: async (device: Device, shouldExpand = false) => {
       try {
         const [
@@ -46,7 +68,7 @@ class DeviceResolver extends Resolver<Device> {
         return {
           ...device.systemMode,
           isLocked: forcedSystemMode !== null && forcedSystemMode.system_mode !== null,
-          lastKnown: translateNumericToStringEnum(
+          lastKnown: _.get(additionalProperties, 'systemMode.lastKnown') || translateNumericToStringEnum(
             SystemMode,
             DeviceSystemModeNumeric,
             _.get(additionalProperties, 'fwProperties.system_mode')
@@ -59,14 +81,14 @@ class DeviceResolver extends Resolver<Device> {
     },
     valve: async (device: Device, shouldExpand = false) => {
       try {
-        const additionalProperts = await this.internalDeviceService.getDevice(device.macAddress);
+        const additionalProperties = await this.internalDeviceService.getDevice(device.macAddress);
 
         return {
           ...device.valve,
-          lastKnown: translateNumericToStringEnum(
+          lastKnown: _.get(additionalProperties, 'valveState.lastKnown') || translateNumericToStringEnum(
             ValveState,
             ValveStateNumeric,
-            _.get(additionalProperts, 'fwProperties.valve_state')
+            _.get(additionalProperties, 'fwProperties.valve_state')
           )
         };
       } catch (err) {
