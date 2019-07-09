@@ -82,7 +82,7 @@ export const DeviceUpdateValidator = t.exact(t.intersection([
 ]));
 export interface DeviceUpdate extends t.TypeOf<typeof DeviceUpdateValidator> {
   systemMode?: Partial<SystemModeData>;
-};
+}
 
 interface ThresholdDefinition {
   okMin: number;

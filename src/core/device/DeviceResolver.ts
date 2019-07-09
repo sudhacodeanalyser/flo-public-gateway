@@ -37,11 +37,8 @@ class DeviceResolver extends Resolver<Device> {
       try {
         const additionalProperties = await this.internalDeviceService.getDevice(device.macAddress);
 
-        return {
-          ...device.connectivity,
-          rssi: _.get(additionalProperties, 'connectivity.rssi'),
-          ssid: _.get(additionalProperties, 'connectivity.ssid')
-        };
+        return device.connectivity;
+
       } catch (err) {
         this.logger.error({ err });
         return null;
@@ -51,10 +48,8 @@ class DeviceResolver extends Resolver<Device> {
       try {
         const additionalProperties = await this.internalDeviceService.getDevice(device.macAddress);
 
-        return {
-          ...device.telemetry,
-          current: _.get(additionalProperties, 'telemetry.current')
-        };
+        return device.telemetry;
+
       } catch (err) {
         this.logger.error({ err });
         return null;
@@ -91,10 +86,10 @@ class DeviceResolver extends Resolver<Device> {
         return {
           ...device.valve,
           lastKnown: _.get(additionalProperties, 'valveState.lastKnown') || translateNumericToStringEnum(
-          ValveState,
-          ValveStateNumeric,
-          _.get(additionalProperties, 'fwProperties.valve_state')
-        )
+            ValveState,
+            ValveStateNumeric,
+            _.get(additionalProperties, 'fwProperties.valve_state')
+          )
         };
       } catch (err) {
         this.logger.error({ err });

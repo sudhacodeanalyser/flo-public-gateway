@@ -1,14 +1,14 @@
 import * as t from 'io-ts';
 
-const InternalSystemModeCodec = t.type({
+const InternalSystemModeCodec = t.partial({
   lastKnown: t.string,
 });
 
-const InternalValveStateCodec = t.type({
+const InternalValveStateCodec = t.partial({
   lastKnown: t.string,
 });
 
-const InternalConnectivityCodec = t.type({
+const InternalConnectivityCodec = t.partial({
   rssi: t.number,
 });
 
@@ -19,7 +19,7 @@ const InternalCurrentTelemetryCodec = t.type({
   updated: t.string,
 });
 
-const InternalTelemetryCodec = t.type({
+const InternalTelemetryCodec = t.partial({
   current: InternalCurrentTelemetryCodec,
 });
 
