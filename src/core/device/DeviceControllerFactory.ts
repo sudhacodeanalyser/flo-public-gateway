@@ -16,7 +16,7 @@ import { DeviceService } from '../service';
 import { DeviceSystemModeServiceFactory } from './DeviceSystemModeService';
 import { DirectiveServiceFactory } from './DirectiveService';
 import { HealthTest, HealthTestService } from './HealthTestService';
-import { Option, none, some } from 'fp-ts/lib/Option';
+import { Option, none, some, isNone } from 'fp-ts/lib/Option';
 
 enum HealthTestActions {
   RUN = 'run'
@@ -99,13 +99,8 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     @withResponseType<Device, Responses.Device>(Responses.Device.fromModel)
     private async getDeviceByMacAdress(@queryParam('macAddress') macAddress: string, @queryParam('expand') expand?: string): Promise<Option<Device>> {
       const expandProps = parseExpand(expand);
-      const device = await this.deviceService.getByMacAddress(macAddress, expandProps);
-
-      if (device === null) {
-        return none;
-      }
-
-      return some(device);
+      
+      return this.deviceService.getByMacAddress(macAddress, expandProps);
     }
 
     @httpGet('/:id',
@@ -123,13 +118,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     private async getDevice(@requestParam('id') id: string, @queryParam('expand') expand?: string): Promise<Option<Device>> {
       const expandProps = parseExpand(expand);
 
-      const deviceModel = await this.deviceService.getDeviceById(id, expandProps);
-
-      if (_.isEmpty(deviceModel)) {
-        return none;
-      }
-
-      return some(deviceModel as Device);
+      return this.deviceService.getDeviceById(id, expandProps); 
     }
 
     @httpPost('/:id',
@@ -246,7 +235,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
           })
         }
       });
-      
+
       return some(model);
     }
 
@@ -280,13 +269,13 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     private async healthTest(@requestParam('id') id: string, @requestParam('action') action: string): Promise<void> {
       const device = await this.deviceService.getDeviceById(id);
 
-      if (_.isEmpty(device)) {
+      if (isNone(device)) {
         throw new ResourceDoesNotExistError();
       }
 
       switch (action) {
         case HealthTestActions.RUN: {
-          return this.healthTestService.run((device as Device).macAddress);
+          return this.healthTestService.run(device.value.macAddress);
         }
       }
     }
@@ -303,11 +292,11 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     private async getLatestHealthTest(@requestParam('id') id: string): Promise<HealthTest | {}> {
       const device = await this.deviceService.getDeviceById(id);
 
-      if (_.isEmpty(device)) {
+      if (isNone(device)) {
         throw new ResourceDoesNotExistError();
       }
 
-      const latestHealthTest = await this.healthTestService.getLatest((device as Device).macAddress);
+      const latestHealthTest = await this.healthTestService.getLatest(device.value.macAddress);
 
       if (latestHealthTest === null) {
         return {};
@@ -331,10 +320,10 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     private async mapIcdToMacAddress(icd: string): Promise<string> {
 
       const device = await this.deviceService.getDeviceById(icd);
-      if (_.isEmpty(device)) {
+      if (isNone(device)) {
         throw new ResourceDoesNotExistError('Device does not exist.');
       }
-      return (device as Device).macAddress;
+      return device.value.macAddress;
     }
 
   }

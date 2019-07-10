@@ -39,13 +39,8 @@ export function AccountControllerFactory(container: Container, apiVersion: numbe
     @withResponseType<Account, Responses.AccountResponse>(Responses.Account.fromModel)
     private async getAccount(@requestParam('id') id: string, @queryParam('expand') expand?: string): Promise<Option<Account>> {
       const expandProps = parseExpand(expand);
-      const account = await this.accountService.getAccountById(id, expandProps);
-
-      if (_.isEmpty(account)) {
-        return none;
-      }
-
-      return some(account as Account);
+      
+      return this.accountService.getAccountById(id, expandProps);
     }
 
     @httpDelete('/:id',
