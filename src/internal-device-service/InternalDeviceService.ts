@@ -2,6 +2,7 @@ import {inject, injectable} from 'inversify';
 import InternalDeviceServiceError from "./internalDeviceServiceError";
 import {InternalDeviceServiceHandler} from "./internalDeviceServiceHandler";
 import {InternalDevice, InternalDeviceCodec} from './models';
+import { isLeft } from 'fp-ts/lib/Either';
 
 @injectable()
 class InternalDeviceService extends InternalDeviceServiceHandler {
@@ -18,7 +19,7 @@ class InternalDeviceService extends InternalDeviceServiceHandler {
 
       const response = await this.sendRequest(request);
 
-      if (InternalDeviceCodec.decode(response).isLeft()) {
+      if (isLeft(InternalDeviceCodec.decode(response))) {
         throw new Error('Invalid response.');
       }
 

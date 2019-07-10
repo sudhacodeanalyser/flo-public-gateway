@@ -11,6 +11,7 @@ import { PingControllerFactory } from './ping/PingControllerFactory';
 import { PresenceControllerFactory } from './presence/PresenceControllerFactory';
 import { SubscriptionControllerFactory } from './subscription/SubscriptionControllerFactory';
 import { UserControllerFactory } from './user/UserControllerFactory';
+import { WaterControllerFactory } from './water/WaterControllerFactory';
 
 export default function ControllerFactory(container: Container, apiVersion: number = 2): interfaces.Controller[] {
   return [
@@ -24,6 +25,7 @@ export default function ControllerFactory(container: Container, apiVersion: numb
     LookupControllerFactory,
     LocalizationControllerFactory,
     NotificationControllerFactory,
+    WaterControllerFactory
   ]
   .map(controllerFactory => controllerFactory(container, apiVersion));
 }

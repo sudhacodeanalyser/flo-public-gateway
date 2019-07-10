@@ -11,6 +11,7 @@ export * from './model/Device';
 export * from './model/Subscription';
 export * from './model/Lookup';
 export * from './model/Notification';
+export * from './model/Water';
 
 // Utils
 export type DependencyFactoryFactory = <T>(dep: string) => () => T;

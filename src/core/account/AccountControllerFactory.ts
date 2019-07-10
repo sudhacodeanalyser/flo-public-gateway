@@ -2,12 +2,15 @@ import * as t from 'io-ts';
 import { interfaces, httpGet, httpPost, httpDelete, queryParam, requestParam, requestBody, BaseHttpController } from 'inversify-express-utils';
 import { inject, Container } from 'inversify';
 import { AccountService } from '../service';
-import { parseExpand, httpController, deleteMethod } from '../api/controllerUtils';
+import { parseExpand, httpController, deleteMethod, withResponseType } from '../api/controllerUtils';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
 import { Account, AccountUserRole } from '../api';
 import { NonEmptyArray } from '../api/validator/NonEmptyArray';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import Request from '../api/Request';
+import { Option, some, none } from 'fp-ts/lib/Option';
+import * as Responses from '../api/response';
+import _ from 'lodash';
 
 export function AccountControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
@@ -33,10 +36,16 @@ export function AccountControllerFactory(container: Container, apiVersion: numbe
         })
       }))
     )
-    private async getAccount(@requestParam('id') id: string, @queryParam('expand') expand?: string): Promise<Account | {}> {
+    @withResponseType<Account, Responses.AccountResponse>(Responses.Account.fromModel)
+    private async getAccount(@requestParam('id') id: string, @queryParam('expand') expand?: string): Promise<Option<Account>> {
       const expandProps = parseExpand(expand);
+      const account = await this.accountService.getAccountById(id, expandProps);
 
-      return this.accountService.getAccountById(id, expandProps);
+      if (_.isEmpty(account)) {
+        return none;
+      }
+
+      return some(account as Account);
     }
 
     @httpDelete('/:id',
