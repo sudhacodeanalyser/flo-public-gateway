@@ -1,15 +1,18 @@
-import { AdditionalDeviceProps, Device as DeviceModel, Omit } from '../../api';
+import { AdditionalDeviceProps, Device as DeviceModel, Omit, Expandable } from '../../api';
+import { Response, Location, LocationResponse } from './index';
 
-export interface DeviceResponse extends Omit<DeviceModel, 'additionalProps'>, Partial<AdditionalDeviceProps> {
+export interface DeviceResponse extends Omit<Expandable<DeviceModel>, 'additionalProps' | 'location'>, Partial<AdditionalDeviceProps> {
+  location?: LocationResponse
 }
 
-export class Device {
-  public static fromModel(device: DeviceModel): DeviceResponse {
+export class Device implements Response {
+  public static fromModel(device: Expandable<DeviceModel>): DeviceResponse {
     const {additionalProps, ...deviceData} = device;
 
     return {
       ...additionalProps,
-      ...deviceData
+      ...deviceData,
+      location: device.location && Location.fromModel(device.location)
     } as any as DeviceResponse;
   }
 }

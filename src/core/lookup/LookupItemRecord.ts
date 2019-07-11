@@ -1,5 +1,6 @@
 import * as t from 'io-ts';
 import { LookupItem, LookupItemCodec } from '../api';
+import { either, isLeft } from 'fp-ts/lib/Either';
 
 export const LookupItemRecordCodec = t.type({
   list_id: t.string,
@@ -22,12 +23,11 @@ const LookupItemFromRecord = new t.Type<LookupItem, LookupItemRecord, unknown>(
   'LookupItemFromRecord',
   (u: unknown): u is LookupItem => LookupItemCodec.is(u),
   (u: unknown, context: t.Context) => 
-    LookupItemRecordCodec.validate(u, context)
-      .map(lookupItemRecord => ({
-        key: lookupItemRecord.key_id,
-        shortDisplay: lookupItemRecord.short_display,
-        longDisplay: lookupItemRecord.long_display
-      })),
+    either.map(LookupItemRecordCodec.validate(u, context), lookupItemRecord => ({
+      key: lookupItemRecord.key_id,
+      shortDisplay: lookupItemRecord.short_display,
+      longDisplay: lookupItemRecord.long_display
+    })),
   (lookupItemRecord: LookupItem) => ({
     list_id: '',
     key_id: lookupItemRecord.key,
@@ -41,9 +41,9 @@ const LookupItemFromRecord = new t.Type<LookupItem, LookupItemRecord, unknown>(
 export function fromRecord(lookupItemRecord: LookupItemRecord): LookupItem {
   const result = LookupItemFromRecord.decode(lookupItemRecord);
 
-  if (result.isLeft()) {
+  if (isLeft(result)) {
     throw new Error('Invalid record.');
   }
 
-  return result.value;
+  return result.right;
 }

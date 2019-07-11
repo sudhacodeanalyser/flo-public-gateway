@@ -1,6 +1,7 @@
 import { inject, injectable } from 'inversify';
 import { HttpService } from '../../http/HttpService';
 import { QrData, PairingData, CompletePairingData, PairingDataCodec, QrDataValidator } from './models';
+import { isLeft } from 'fp-ts/lib/Either';
 
 @injectable()
 class PairingService extends HttpService {
@@ -19,7 +20,7 @@ class PairingService extends HttpService {
     };
     const response = await this.sendRequest(request);
 
-    if (PairingDataCodec.decode(response).isLeft()) {
+    if (isLeft(PairingDataCodec.decode(response))) {
 
        throw new Error('Invalid response.');
     }

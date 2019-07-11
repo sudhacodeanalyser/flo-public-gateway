@@ -3,6 +3,7 @@ import { HttpService } from '../../http/HttpService';
 import HttpError from '../../http/HttpError';
 import { EmailAvailabilityCodec } from './models';
 import { UserRegistrationData, EmailAvailability, UserRegistrationService, EmailVerification, OAuth2Response, OAuth2ResponseCodec } from '../../core/user/UserRegistrationService';
+import { isLeft } from 'fp-ts/lib/Either';
 
 import _ from 'lodash';
 
@@ -57,11 +58,11 @@ class ApiV1UserRegistrationService extends HttpService implements UserRegistrati
     const response = await this.sendRequest(request);
     const result = EmailAvailabilityCodec.decode(response);
 
-    if (result.isLeft() || !EmailAvailabilityCodec.is(result.value)) {
+    if (isLeft(result) || !EmailAvailabilityCodec.is(result.right)) {
       throw new Error('Invalid response.');
     }
 
-    return result.value;
+    return result.right;
   }
 
   public async resendVerificationEmail(email: string): Promise<void> {
@@ -89,11 +90,11 @@ class ApiV1UserRegistrationService extends HttpService implements UserRegistrati
     const response = await this.sendRequest(request);
     const result = OAuth2ResponseCodec.decode(response);
 
-    if (result.isLeft()) {
+    if (isLeft(result)) {
       throw new Error('Invalid response.');
     }
 
-    return result.value;
+    return result.right;
   }
 }
 

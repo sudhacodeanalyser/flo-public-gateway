@@ -4,6 +4,7 @@ import { User, UserUpdate, PropExpand } from '../api';
 import { UserResolver } from '../resolver';
 import { AccountService } from '../service';
 import ValidationError from '../api/error/ValidationError';
+import { Option, fromNullable } from 'fp-ts/lib/Option';
 
 @injectable()
 class UserService {
@@ -16,10 +17,10 @@ class UserService {
     return this.userResolver.updatePartialUser(id, userUpdate);
   }
 
-  public async getUserById(id: string, expand?: PropExpand): Promise<User | {}> {
+  public async getUserById(id: string, expand?: PropExpand): Promise<Option<User>> {
     const user: User | null = await this.userResolver.getUserById(id, expand);
 
-    return user === null ? {} : user;
+    return fromNullable(user);
   }
 
   public async removeUser(id: string): Promise<void> {
