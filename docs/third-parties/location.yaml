@@ -22,14 +22,11 @@ paths:
           content:
             application/json:
               schema:
-                oneOf:
-                  - $ref: '#/components/schemas/Location'
-                  - $ref: '#/components/schemas/Empty'
+                $ref: '#/components/schemas/Location'
         401:
           $ref: '#/components/responses/UnauthorizedError'
         403:
           $ref: '#/components/responses/ForbiddenError'
-
   /api/v2/locations/{id}/systemMode:
     parameters:
       - in: path
@@ -43,6 +40,7 @@ paths:
       summary: Set system mode
       tags:
         - Locations
+        - System Mode
       produces:
         - application/json
       requestBody:
@@ -66,7 +64,7 @@ paths:
                     - home
                     - away
                     - sleep
-      responses: 
+      responses:
         200:
           description: System mode will be changed
           schema:
@@ -118,7 +116,7 @@ components:
             type: string
         outdoorAmenities:
           type: array
-          items: 
+          items:
             type: string
         plumbingAppliances:
           type: array
@@ -140,10 +138,10 @@ components:
             - other
         waterSource:
           type: string
-          enum: 
+          enum:
             - utility
             - well
-        locationSize: 
+        locationSize:
           type: string
           enum:
             - lte_700
@@ -180,7 +178,7 @@ components:
               type: boolean
     LocationUpdate:
       $ref: '#/components/schemas/LocationMutable'
- 
+
     LocationCreate:
       required:
         - address
@@ -193,7 +191,7 @@ components:
         - account
       allOf:
         - type: object
-          required: 
+          required:
             - id
           properties:
             account:
@@ -207,6 +205,7 @@ components:
       allOf:
         - $ref: '#/components/schemas/LocationUpdate'
         - $ref: '#/components/schemas/Timestamped'
+        - $ref: '#/components/schemas/Notifications'
         - type: object
           properties:
             id:
@@ -243,7 +242,7 @@ components:
                     - home
                     - away
                     - sleep
-                revertMinutes: 
+                revertMinutes:
                   type: number
                 revertMode:
                   type: string

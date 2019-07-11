@@ -1,0 +1,85 @@
+paths:
+  /api/v2/water/consumption:
+    parameters:
+      - in: query
+        name: startDate
+        required: true
+        schema:
+          type: string
+          format: date-time
+        description: Inclusive start of date range of data. Recommend to round to the closest hour and not specify timezone.
+      - in: query
+        name: endDate
+        schema:
+          type: string
+          format: date-time
+        description: Exclusive end of date range of data. Recommend to round to the closest hour and not specify timezone.
+      - in: query
+        name: macAddress
+        schema:
+          type: string
+        description: MAC address of device to retrieve water consumption for. The param macAddress is exclusive with locationId, only one can be specified
+      - in: query
+        name: locationId
+        schema:
+          type: string
+          format: uuid
+        description: ID of location to retrieve water consumption for. The param locationId is exclusive with macAddress, only one can be specified
+      - in: query
+        name: interval
+        schema:
+          type: string
+          enum:
+            - 1h
+            - 1d
+        description: Time interval to aggregate consumption. Default is 1h.
+      - in: query
+        name: tz
+        schema:
+          type: string
+        description: If timezone is not specified as part of the date range, then this timezone will be applied to the date. Defaults to the location or device's local timezone. 
+    get:
+      summary: Retrieve water consumption data
+      tags:
+        - Water Usage
+      produces:
+        - application/json
+      responses:
+        200:
+          description: Responds with 200 OK if system is up
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  params:
+                    type: object
+                    properties:
+                      startDate:
+                        type: string
+                        format: date-time
+                      endDate:
+                        type: string
+                        format: date-time
+                      interval:
+                        type: string
+                        enum:
+                          - 1h
+                          - 1d
+                      macAddress:
+                        type: string
+                      locationId:
+                        type: string
+                        format: uuid
+                      tz: 
+                        type: string
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        time: 
+                          type: string
+                          format: date-time
+                        gallonsConsumed:
+                          type: number
