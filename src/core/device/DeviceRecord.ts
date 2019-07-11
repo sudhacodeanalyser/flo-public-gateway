@@ -15,7 +15,7 @@ export interface DeviceRecordData {
   created_at?: string;
   updated_at?: string;
   is_paired?: boolean;
-  prv_installed_after?: NoYesUnsure.String;
+  prv_installation?: string;
   irrigation_type?: string;
   should_inherit_system_mode?: boolean;
   target_system_mode?: DeviceSystemMode;
@@ -40,7 +40,7 @@ const RecordToModelSchema: StrictSchema<Device, DeviceRecordData>  = {
   deviceModel: (input: DeviceRecordData) => _.get(input, 'device_model', DeviceType.FLO_DEVICE_V2),
   deviceType: (input: DeviceRecordData) => _.get(input, 'device_type', DeviceModelType.FLO_0_75),
   irrigationType: 'irrigation_type',
-  prvInstalledAfter: 'prv_installed_after',
+  prvInstallation: 'prv_installation',
   systemMode: (input: DeviceRecordData) => ({
     target: input.target_system_mode,
     isLocked: false,
@@ -78,7 +78,7 @@ const ModelToRecordSchema: StrictSchema<DeviceRecordData, Device> = {
   target_valve_state: 'valve.target',
   device_type: 'deviceType',
   device_model: 'deviceModel',
-  prv_installed_after: 'prvInstalledAfter',
+  prv_installation: 'prvInstallation',
   irrigation_type: 'irrigationType'
 };
 
@@ -99,7 +99,7 @@ const PartialModelToRecordSchema: StrictSchema<Partial<DeviceRecordData>, Partia
   target_valve_state: 'valve.target',
   device_type: 'deviceType',
   device_model: 'deviceModel',
-  prv_installed_after: 'prvInstalledAfter',
+  prv_installation: 'prvInstallation',
   irrigation_type: 'irrigationType'
 };
 
