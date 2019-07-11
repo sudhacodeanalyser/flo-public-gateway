@@ -222,6 +222,14 @@ paths:
             $ref: '#/components/schemas/Error'
 
   /api/v2/devices/{id}/fwproperties:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Device ID
     post:
       summary: Updates Device Firmware Properties by ID.
       tags:
@@ -243,6 +251,14 @@ paths:
           $ref: '#/components/responses/ForbiddenError'
 
   /api/v2/devices/{id}/systemMode:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Device ID
     post:
       summary: Sends directive to change device system mode
       tags:
@@ -278,6 +294,14 @@ paths:
           description: Device system mode is locked and cannot be changed
 
   /api/v2/devices/{id}/reset:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Device ID
     post:
       summary: Sends directive to reset the device according to the given target.
       tags:
@@ -311,6 +335,70 @@ paths:
         403:
           $ref: '#/components/responses/ForbiddenError'
 
+  /api/v2/devices/{id}/healthTest/run:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Device ID
+    post:
+      summary: Sends directive to run a Health Test.
+      tags:
+        - Devices
+      produces:
+        - application/json
+      responses:
+        202:
+          description: Directive sent.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Empty'
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        403:
+          $ref: '#/components/responses/ForbiddenError'
+        409:
+          description: A Device with the specified ID was not found.
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  /api/v2/devices/{id}/healthTest:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Device ID
+    get:
+      summary: Retrieves latest Health Test result.
+      tags:
+        - Devices
+      produces:
+        - application/json
+      responses:
+        200:
+          description: The latest Health Test result or an empty object if there is none.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/HealthTest'
+                  - $ref: '#/components/schemas/Empty'
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        403:
+          $ref: '#/components/responses/ForbiddenError'
+        409:
+          description: A Device with the specified ID was not found.
+          schema:
+            $ref: '#/components/schemas/Error'
+
 components:
   schemas:
     DeviceMutable:
@@ -332,12 +420,14 @@ components:
               enum:
                 - open
                 - closed
+
     IrrigationType:
       type: string
       enum:
         - none
         - sprinklers
         - drip
+
     Device:
       allOf:
         - $ref: '#/components/schemas/DeviceMutable'
@@ -420,6 +510,7 @@ components:
               properties:
                 isInstalled:
                   type: boolean
+
     DeviceExpandable:
       oneOf:
         - type: object
@@ -428,9 +519,46 @@ components:
               type: string
               format: uuid
         - $ref: '#/components/schemas/Device'
+
     SystemMode:
       type: string
       enum:
         - home
         - away
         - sleep
+
+    HealthTest:
+      type: object
+      properties:
+        roundId:
+          type: string
+          format: uuid
+        deviceId:
+          type: string
+          format: uuid
+        status:
+          type: string
+        source:
+          type: string
+        leakType:
+          type: number
+        startPressure:
+          type: number
+        endPressure:
+          type: number
+        startRawPayload:
+          type: object
+        endRawPayload:
+          type: object
+        created:
+          type: string
+          format: date-time
+        updated:
+          type: string
+          format: date-time
+        startDate:
+          type: string
+          format: date-time
+        endDate:
+          type: string
+          format: date-time
