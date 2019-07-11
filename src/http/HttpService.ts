@@ -1,13 +1,14 @@
 import axios from 'axios';
-import HttpError from './HttpError';
 import { injectable } from 'inversify';
+import HttpError from './HttpError';
 
 export interface HttpRequest {
-  method: string,
-  url: string,
-  authToken?: string,
-  body?: any,
-  params?: any
+  method: string;
+  url: string;
+  authToken?: string;
+  customHeaders?: any;
+  body?: any;
+  params?: any;
 };
 
 @injectable()
@@ -19,7 +20,8 @@ class HttpService {
         url: request.url,
         headers: {
           'Content-Type': 'application/json',
-          ...(request.authToken && { Authorization: request.authToken })
+          ...(request.authToken && { Authorization: request.authToken }),
+          ...(request.customHeaders)
         },
         ...(request.body && { data: request.body }),
         ...(request.params && { params: request.params })

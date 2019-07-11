@@ -12,7 +12,7 @@ import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import { DeviceSystemModeServiceFactory } from '../device/DeviceSystemModeService';
 import Request from '../api/Request';
 import * as Responses from '../api/response';
-import { Option, none, some } from 'fp-ts/lib/Option';
+import { Option, none, some, isNone } from 'fp-ts/lib/Option';
 
 
 export function LocationControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
@@ -79,13 +79,7 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
     @createMethod
     @withResponseType<Location, Responses.Location>(Responses.Location.fromModel)
     private async createLocation(@request() req: Request, @requestBody() location: Location): Promise<Option<Location>> {
-      const createdLocation = await this.locationService.createLocation(location);
-
-      if (_.isEmpty(createdLocation)) {
-        return none;
-      }
-
-      return some(createdLocation as Location);
+      return this.locationService.createLocation(location);
     }
 
     @httpGet(
@@ -103,13 +97,8 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
     @withResponseType<Location, Responses.Location>(Responses.Location.fromModel)
     private async getLocation(@requestParam('id') id: string, @queryParam('expand') expand?: string): Promise<Option<Location>> {
       const expandProps = parseExpand(expand);
-      const location = await this.locationService.getLocation(id, expandProps);
-
-      if (_.isEmpty(location)) {
-        return none;
-      }
-
-      return some(location as Location);
+      
+      return this.locationService.getLocation(id, expandProps);
     }
 
     @httpPost(

@@ -20,9 +20,7 @@ paths:
           content:
             application/json:
               schema:
-                oneOf:
-                  - $ref: '#/components/schemas/Account'
-                  - $ref: '#/components/schemas/Empty'
+                $ref: '#/components/schemas/Account'
         401:
           $ref: '#/components/responses/UnauthorizedError'
         403:
