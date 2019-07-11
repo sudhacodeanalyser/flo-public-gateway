@@ -16,7 +16,9 @@ export class DefaulthHealthTestService extends HttpService implements HealthTest
     const request = {
       method: 'POST',
       url: `${this.healthTestServiceUrl}/healthtest`,
-      authToken: this.authToken,
+      customHeaders: {
+        "X-User-Authorization": this.authToken
+      },
       body: {
         deviceId: deviceMacAddress,
         icdId
