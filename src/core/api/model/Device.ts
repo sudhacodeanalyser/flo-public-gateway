@@ -37,7 +37,7 @@ export enum DeviceType {
 const DeviceMutableCodec = t.type({
   installationPoint: t.string,
   nickname: t.string,
-  prvInstalledAfter: NoYesUnsure.Codec,
+  prvInstallation: t.string,
   irrigationType: t.string,
   valve: t.partial({
     target: t.keyof(_.pick(ValveStateCodec.keys, ['open', 'closed']))
