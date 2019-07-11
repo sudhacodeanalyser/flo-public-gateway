@@ -5,7 +5,7 @@ import _ from 'lodash';
 import uuid from 'uuid';
 import { fromPartialRecord } from '../../database/Patch';
 import { InternalDeviceService } from "../../internal-device-service/InternalDeviceService";
-import { DependencyFactoryFactory, Device, DeviceCreate, DeviceModelType, DeviceSystemModeNumeric, DeviceType, DeviceUpdate, SystemMode, ValveState, ValveStateNumeric, PropExpand } from '../api';
+import { DependencyFactoryFactory, Device, DeviceCreate, DeviceModelType, DeviceSystemModeNumeric, DeviceType, DeviceUpdate, PropExpand, SystemMode, ValveState, ValveStateNumeric } from '../api';
 import { translateNumericToStringEnum } from '../api/enumUtils';
 import DeviceTable from '../device/DeviceTable';
 import { NotificationService, NotificationServiceFactory } from '../notification/NotificationService';
@@ -133,12 +133,12 @@ class DeviceResolver extends Resolver<Device> {
     hardwareThresholds: async (device: Device, shouldExpand = false) => {
       const gpm = device.deviceType !== 'flo_device_075_v2' ?
         {
-          okMax: 50,
-          maxValue: 80
+          okMax: 16,
+          maxValue: 20
         } :
         {
-          okMax: 30,
-          maxValue: 50
+          okMax: 12,
+          maxValue: 16
         };
 
       return {
