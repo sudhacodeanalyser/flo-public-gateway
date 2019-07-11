@@ -57,6 +57,74 @@ paths:
           $ref: '#/components/responses/UnauthorizedError'
         403:
           $ref: '#/components/responses/ForbiddenError'
+  /api/v2/devices/{id}/systemMode:
+    post:
+      summary: Sends directive to change device system mode
+      tags:
+        - Devices
+        - System Mode
+      produces:
+        application/json
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - target
+              properties:
+                target:
+                  $ref: '#/components/schemas/SystemMode'
+                isLocked:
+                  type: boolean
+                revertMode:
+                  $ref: '#/components/schemas/SystemMode'
+                revertMinutes:
+                  type: number
+      responses:
+        202:
+          description: Directive sent
+          schema:
+            $ref: '#/components/schemas/Device'
+        400:
+          description: Invalid request body
+        409:
+          description: Device system mode is locked and cannot be changed
+
+  /api/v2/devices/{id}/reset:
+    post:
+      summary: Sends directive to reset the device according to the given target.
+      tags:
+        - Devices
+      produces:
+        - application/json
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - target
+              properties:
+                target:
+                  type: string
+                  enum:
+                    - power
+      responses:
+        202:
+          description: Directive sent.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Empty'
+        400:
+          description: Invalid request body
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        403:
+          $ref: '#/components/responses/ForbiddenError'
 
 components:
   schemas:
@@ -76,7 +144,7 @@ components:
           properties:
             target:
               type: string
-              enum: 
+              enum:
                 - open
                 - closed
     IrrigationType:
@@ -89,6 +157,7 @@ components:
       allOf:
         - $ref: '#/components/schemas/DeviceMutable'
         - $ref: '#/components/schemas/Timestamped'
+        - $ref: '#/components/schemas/Notifications'
         - type: object
           properties:
             id:
@@ -113,6 +182,35 @@ components:
               type: object
             irrigationType:
               $ref: '#/components/schemas/IrrigationType'
+            hardwareThresholds:
+              type: object
+              properties:
+                gpm:
+                  $ref: '#/components/schemas/HardwareThresholds'
+                psi:
+                  $ref: '#/components/schemas/HardwareThresholds'
+                temp:
+                  $ref: '#/components/schemas/HardwareThresholds'
+            telemetry:
+              type: object
+              properties:
+                current:
+                  type: object
+                  properties:
+                    gpm:
+                      type: number
+                    psi:
+                      type: number
+                    tempF:
+                      type: number
+                    updated: 
+                      type: string
+                      format: date-time
+            connectivity:
+              type: object
+              properties:
+                rssi:
+                  type: string
             systemMode:
               type: object
               properties:
@@ -127,17 +225,19 @@ components:
                 revertScheduledAt:
                   type: string
                   format: date-time
+                lastKnown:
+                  $ref: '#/components/schemas/SystemMode'
             valve:
               type: object
               properties:
                 target:
                   type: string
-                  enum: 
+                  enum:
                     - open
                     - closed
                 lastKnown:
                   type: string
-                  enum: 
+                  enum:
                     - open
                     - closed
                     - in_transition
@@ -161,6 +261,11 @@ components:
                 updatedAt:
                   type: string
                   format: date-time
+            installStatus:
+              type: object
+              properties:
+                isInstalled:
+                  type: boolean
     DeviceExpandable:
       oneOf:
         - type: object
@@ -175,3 +280,14 @@ components:
         - home
         - away
         - sleep
+    HardwareThresholds:
+        type: object
+        properties:
+          okMin:
+            type: number
+          okMax: 
+            type: number
+          minValue: 
+            type: number
+          maxValue:
+            type: number

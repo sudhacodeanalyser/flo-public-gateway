@@ -136,9 +136,7 @@ paths:
           content:
             application/json:
               schema:
-                oneOf:
-                  - $ref: '#/components/schemas/Device'
-                  - $ref: '#/components/schemas/Empty'
+                $ref: '#/components/schemas/Device'
         401:
           $ref: '#/components/responses/UnauthorizedError'
         403:
@@ -167,9 +165,7 @@ paths:
           content:
             application/json:
               schema:
-                oneOf:
-                  - $ref: '#/components/schemas/Device'
-                  - $ref: '#/components/schemas/Empty'
+                $ref: '#/components/schemas/Device'
         401:
           $ref: '#/components/responses/UnauthorizedError'
         403:
@@ -367,6 +363,35 @@ components:
               type: object
             irrigationType:
               $ref: '#/components/schemas/IrrigationType'
+            hardwareThresholds:
+              type: object
+              properties:
+                gpm:
+                  $ref: '#/components/schemas/HardwareThresholds'
+                psi:
+                  $ref: '#/components/schemas/HardwareThresholds'
+                temp:
+                  $ref: '#/components/schemas/HardwareThresholds'
+            telemetry:
+              type: object
+              properties:
+                current:
+                  type: object
+                  properties:
+                    gpm:
+                      type: number
+                    psi:
+                      type: number
+                    tempF:
+                      type: number
+                    updated: 
+                      type: string
+                      format: date-time
+            connectivity:
+              type: object
+              properties:
+                rssi:
+                  type: string
             systemMode:
               type: object
               properties:
@@ -381,6 +406,8 @@ components:
                 revertScheduledAt:
                   type: string
                   format: date-time
+                lastKnown:
+                  $ref: '#/components/schemas/SystemMode'
             valve:
               type: object
               properties:
@@ -434,3 +461,14 @@ components:
         - home
         - away
         - sleep
+    HardwareThresholds:
+        type: object
+        properties:
+          okMin:
+            type: number
+          okMax: 
+            type: number
+          minValue: 
+            type: number
+          maxValue:
+            type: number
