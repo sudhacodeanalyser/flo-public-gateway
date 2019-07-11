@@ -31,6 +31,7 @@
     "express": "^4.16.4",
     "express-basic-auth": "^1.2.0",
     "fp-ts": "^2.0.1",
+    "fp-ts-contrib": "^0.1.2",
     "helmet": "^3.16.0",
     "influx": "^5.4.0",
     "inversify": "^5.0.1",

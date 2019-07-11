@@ -5,6 +5,7 @@ import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import ValidationError from '../api/error/ValidationError';
 import { LocationService, UserService } from '../service';
 import { SubscriptionResolver } from '../resolver';
+import { isNone, fromNullable, Option } from 'fp-ts/lib/Option';
 
 @injectable()
 class SubscriptionService {
@@ -17,10 +18,10 @@ class SubscriptionService {
 
   public async createSubscription(subscriptionCreate: SubscriptionCreate): Promise<Subscription> {
     const user = await this.userService.getUserById(subscriptionCreate.user.id);
-    if (_.isEmpty(user)) {
+    if (isNone(user)) {
       throw new ResourceDoesNotExistError('User does not exist.');
     }
-    if (!this.userService.isUserAccountOwner(user as User)) {
+    if (!this.userService.isUserAccountOwner(user.value)) {
       throw new ValidationError('User is not the Account Owner.');
     }
 
@@ -40,7 +41,7 @@ class SubscriptionService {
       ...subscriptionCreate
     };
 
-    const providerInfo = await subscriptionProvider.createSubscription(user as User, providerSubscription);
+    const providerInfo = await subscriptionProvider.createSubscription(user.value, providerSubscription);
 
     const subscription = {
       ...subscriptionCreate,
@@ -79,25 +80,17 @@ class SubscriptionService {
     };
   }
 
-  public async getSubscriptionByRelatedEntityId(id: string): Promise<Subscription | {}> {
+  public async getSubscriptionByRelatedEntityId(id: string): Promise<Option<Subscription>> {
     const subscription: Subscription | null = await this.subscriptionResolver.getByRelatedEntityId(id);
 
-    if (subscription === null) {
-      return {};
-    }
-
-    return subscription;
+    return fromNullable(subscription);
   }
 
 
-  public async getSubscriptionByProviderCustomerId(customerId: string): Promise<Subscription | {}> {
+  public async getSubscriptionByProviderCustomerId(customerId: string): Promise<Option<Subscription>> {
     const subscription: Subscription | null = await this.subscriptionResolver.getByProviderCustomerId(customerId);
 
-    if (subscription === null) {
-      return {};
-    }
-
-    return subscription;
+    return fromNullable(subscription);
   }
 
 
@@ -120,10 +113,10 @@ class SubscriptionService {
 
   private async validateLocationExists(locationId: string): Promise<Location> {
     const location = await this.locationService.getLocation(locationId);
-    if (_.isEmpty(location)) {
+    if (isNone(location)) {
       throw new ResourceDoesNotExistError('Location does not exist.');
     }
-    return location as Location;
+    return location.value;
   }
 
   private async validatePlanExists(planId: string): Promise<void> {

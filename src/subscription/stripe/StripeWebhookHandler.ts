@@ -4,6 +4,9 @@ import Stripe from 'stripe';
 import { Subscription, SubscriptionProviderWebhookHandler } from '../../core/api';
 import { SubscriptionService } from '../../core/service';
 import { isSubscriptionActive } from './StripeUtils';
+import * as Option from 'fp-ts/lib/Option';
+import { pipe } from 'fp-ts/lib/pipeable';
+import * as TaskOption from 'fp-ts-contrib/lib/TaskOption';
 
 @injectable()
 class StripeWebhookHandler implements SubscriptionProviderWebhookHandler {
@@ -36,77 +39,83 @@ class StripeWebhookHandler implements SubscriptionProviderWebhookHandler {
   private async handleCustomerDeleted(data: any): Promise<void> {
     const { object: customer } = data;
 
-    const subscription: Subscription | {} = await this.subscriptionService.getSubscriptionByProviderCustomerId(customer.id);
-
-    if (_.isEmpty(subscription)) {
-      return Promise.resolve();
-    }
-
-    return this.makeSubscriptionInactiveByCustomerId(customer.id);
+    return pipe(
+      await this.subscriptionService.getSubscriptionByProviderCustomerId(customer.id),
+      Option.fold(
+        async () => Promise.resolve(),
+        async () => this.makeSubscriptionInactiveByCustomerId(customer.id),
+      )
+    );
   }
 
   private async handleSubscriptionCreated(data: any): Promise<void> {
     const { object: stripeSubscription } = data;
+    
+    await pipe(
+      TaskOption.fromOption(
+        await this.subscriptionService.getSubscriptionByProviderCustomerId(stripeSubscription.customer)
+      ),
+      TaskOption.chain(() =>
+        async () => Option.fromNullable(await this.stripeClient.customers.retrieve(stripeSubscription.customer))
+      ),
+      TaskOption.chain(customer => {
+        const locationId = customer.metadata.location_id;
+        const subscription = {
+          plan: {
+            id: stripeSubscription.plan.id
+          },
+          location: {
+            id: locationId
+          },
+          sourceId: stripeSubscription.metadata.source_id || 'stripe',
+          provider: {
+            name: 'stripe',
+            isActive: isSubscriptionActive(stripeSubscription.status),
+            data: {
+              customerId: stripeSubscription.customer,
+              subscriptionId: stripeSubscription.id
+            }
+          }
+        };
 
-    const maybeSubscription = await this.subscriptionService.getSubscriptionByProviderCustomerId(stripeSubscription.customer);
-    if (!_.isEmpty(maybeSubscription)) {
-      return Promise.resolve();
-    }
-
-    const customer = await this.stripeClient.customers.retrieve(stripeSubscription.customer);
-    const locationId = await customer && customer.metadata.location_id;
-
-    if (!locationId) {
-      return Promise.resolve();
-    }
-
-    const subscription = {
-      plan: {
-        id: stripeSubscription.plan.id
-      },
-      location: {
-        id: locationId
-      },
-      sourceId: stripeSubscription.metadata.source_id || 'stripe',
-      provider: {
-        name: 'stripe',
-        isActive: isSubscriptionActive(stripeSubscription.status),
-        data: {
-          customerId: stripeSubscription.customer,
-          subscriptionId: stripeSubscription.id
-        }
-      }
-    }
-    await this.subscriptionService.createLocalSubscription(subscription);
+        return TaskOption.fromTask(async () => {
+          await this.subscriptionService.createLocalSubscription(subscription);
+        });
+      }),
+      TaskOption.getOrElse(() => async () => Promise.resolve())
+    );
   }
 
   private async handleSubscriptionUpdated(data: any): Promise<void> {
     const { object: stripeSubscription } = data;
 
-    const subscription = await this.subscriptionService.getSubscriptionByProviderCustomerId(stripeSubscription.customer);
+    await pipe(
+      await this.subscriptionService.getSubscriptionByProviderCustomerId(stripeSubscription.customer),
+      Option.fold(
+        async () => Promise.resolve(),
+        async subscription => {
+         const updatedSubscription = {
+            plan: {
+              id: stripeSubscription.plan.id || subscription.plan.id
+            },
+            location: {
+              id: stripeSubscription.metadata.location_id || subscription.location.id
+            },
+            sourceId: stripeSubscription.metadata.source_id || subscription.sourceId,
+            provider: {
+              name: 'stripe',
+              isActive: isSubscriptionActive(stripeSubscription.status),
+              data: {
+                customerId: stripeSubscription.customer,
+                subscriptionId: stripeSubscription.id
+              }
+            }
+          };
 
-    if (_.isEmpty(subscription)) {
-      return Promise.resolve()
-    }
-
-    const updatedSubscription = {
-      plan: {
-        id: stripeSubscription.plan.id || (subscription as Subscription).plan.id
-      },
-      location: {
-        id: stripeSubscription.metadata.location_id || (subscription as Subscription).location.id
-      },
-      sourceId: stripeSubscription.metadata.source_id || (subscription as Subscription).sourceId,
-      provider: {
-        name: 'stripe',
-        isActive: isSubscriptionActive(stripeSubscription.status),
-        data: {
-          customerId: stripeSubscription.customer,
-          subscriptionId: stripeSubscription.id
+          await this.subscriptionService.updateSubscription(subscription.id, updatedSubscription);
         }
-      }
-    }
-    await this.subscriptionService.updateSubscription((subscription as Subscription).id, updatedSubscription);
+      )
+    );
   }
 
   private async handleSubscriptionDeleted(data: any): Promise<void> {
@@ -116,26 +125,28 @@ class StripeWebhookHandler implements SubscriptionProviderWebhookHandler {
   }
 
   private async makeSubscriptionInactiveByCustomerId(customerId: string): Promise<void> {
-    const maybeSubscription = await this.subscriptionService.getSubscriptionByProviderCustomerId(customerId);
 
-    if (_.isEmpty(maybeSubscription)) {
-      return Promise.resolve();
-    }
+    await pipe(
+      await this.subscriptionService.getSubscriptionByProviderCustomerId(customerId),
+      Option.fold(
+        async () => Promise.resolve(),
+        async subscription => {
+          const inactivePartialSubscription = {
+            provider: {
+              name: 'stripe',
+              isActive: false,
+              data: {
+                isActive: false,
+                customerId: subscription.provider.data.customerId,
+                subscriptionId: subscription.provider.data.subscriptionId
+              }
+            }
+          };
 
-    const subscription = (maybeSubscription as Subscription);
-    const inactivePartialSubscription = {
-      provider: {
-        name: 'stripe',
-        isActive: false,
-        data: {
-          isActive: false,
-          customerId: subscription.provider.data.customerId,
-          subscriptionId: subscription.provider.data.subscriptionId
+          await this.subscriptionService.updateSubscription(subscription.id, inactivePartialSubscription);
         }
-      }
-    };
-
-    await this.subscriptionService.updateSubscription(subscription.id, inactivePartialSubscription);
+      )
+    );
   }
 }
 

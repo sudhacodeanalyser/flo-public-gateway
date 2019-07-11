@@ -136,13 +136,8 @@ export function UserControllerFactory(container: Container, apiVersion: number):
     @withResponseType<User, Responses.UserResponse>(Responses.User.fromModel)
     private async getUser(@requestParam('id') id: string, @queryParam('expand') expand?: string): Promise<Option<User>> {
       const expandProps = parseExpand(expand);
-      const user = await this.userService.getUserById(id, expandProps);
-
-      if (_.isEmpty(user)) {
-        return none;
-      }
-
-      return some(user as User);
+      
+      return this.userService.getUserById(id, expandProps);
     }
 
     @httpDelete(
