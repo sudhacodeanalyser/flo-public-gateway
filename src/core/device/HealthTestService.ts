@@ -1,3 +1,5 @@
+import Request from '../api/Request';
+
 export interface HealthTest {
   roundId: string;
   deviceId: string;
@@ -16,7 +18,11 @@ export interface HealthTest {
 
 
 export interface HealthTestService {
-  run(deviceMacAddress: string): Promise<void>;
+  run(deviceMacAddress: string, icdId: string): Promise<void>;
 
   getLatest(deviceMacAddress: string): Promise<HealthTest | null>;
+}
+
+export interface HealthTestServiceFactory {
+  create(req: Request): HealthTestService;
 }

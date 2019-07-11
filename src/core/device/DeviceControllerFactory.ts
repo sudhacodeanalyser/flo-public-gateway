@@ -1,7 +1,7 @@
+import { isNone, Option, some } from 'fp-ts/lib/Option';
 import { Container, inject } from 'inversify';
 import { BaseHttpController, httpDelete, httpGet, httpPost, interfaces, queryParam, request, requestBody, requestParam } from 'inversify-express-utils';
 import * as t from 'io-ts';
-import _ from 'lodash';
 import { PairingData, QrData, QrDataValidator } from '../../api-v1/pairing/PairingService';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import { InternalDeviceService } from '../../internal-device-service/InternalDeviceService';
@@ -15,8 +15,7 @@ import * as Responses from '../api/response';
 import { DeviceService } from '../service';
 import { DeviceSystemModeServiceFactory } from './DeviceSystemModeService';
 import { DirectiveServiceFactory } from './DirectiveService';
-import { HealthTest, HealthTestService } from './HealthTestService';
-import { Option, none, some, isNone } from 'fp-ts/lib/Option';
+import { HealthTest, HealthTestServiceFactory } from './HealthTestService';
 
 enum HealthTestActions {
   RUN = 'run'
@@ -82,7 +81,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       @inject('InternalDeviceService') private internalDeviceService: InternalDeviceService,
       @inject('DeviceSystemModeServiceFactory') private deviceSystemModeServiceFactory: DeviceSystemModeServiceFactory,
       @inject('DirectiveServiceFactory') private directiveServiceFactory: DirectiveServiceFactory,
-      @inject('HealthTestService') private healthTestService: HealthTestService
+      @inject('HealthTestServiceFactory') private healthTestServiceFactory: HealthTestServiceFactory
     ) {
       super();
     }
@@ -99,7 +98,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     @withResponseType<Device, Responses.Device>(Responses.Device.fromModel)
     private async getDeviceByMacAdress(@queryParam('macAddress') macAddress: string, @queryParam('expand') expand?: string): Promise<Option<Device>> {
       const expandProps = parseExpand(expand);
-      
+
       return this.deviceService.getByMacAddress(macAddress, expandProps);
     }
 
@@ -118,7 +117,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     private async getDevice(@requestParam('id') id: string, @queryParam('expand') expand?: string): Promise<Option<Device>> {
       const expandProps = parseExpand(expand);
 
-      return this.deviceService.getDeviceById(id, expandProps); 
+      return this.deviceService.getDeviceById(id, expandProps);
     }
 
     @httpPost('/:id',
@@ -266,7 +265,8 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       }))
     )
     @asyncMethod
-    private async healthTest(@requestParam('id') id: string, @requestParam('action') action: string): Promise<void> {
+    private async healthTest(@request() req: Request, @requestParam('id') id: string, @requestParam('action') action: string): Promise<void> {
+      const healthTestService = this.healthTestServiceFactory.create(req);
       const device = await this.deviceService.getDeviceById(id);
 
       if (isNone(device)) {
@@ -275,7 +275,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
 
       switch (action) {
         case HealthTestActions.RUN: {
-          return this.healthTestService.run(device.value.macAddress);
+          return healthTestService.run(device.value.macAddress, id);
         }
       }
     }
@@ -288,14 +288,15 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
         })
       }))
     )
-    private async getLatestHealthTest(@requestParam('id') id: string): Promise<HealthTest | {}> {
+    private async getLatestHealthTest(@request() req: Request, @requestParam('id') id: string): Promise<HealthTest | {}> {
+      const healthTestService = this.healthTestServiceFactory.create(req);
       const device = await this.deviceService.getDeviceById(id);
 
       if (isNone(device)) {
         throw new ResourceDoesNotExistError();
       }
 
-      const latestHealthTest = await this.healthTestService.getLatest(device.value.macAddress);
+      const latestHealthTest = await healthTestService.getLatest(device.value.macAddress);
 
       if (latestHealthTest === null) {
         return {};
