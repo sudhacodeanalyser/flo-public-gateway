@@ -6,6 +6,8 @@ export interface HealthTest {
   status: string;
   source: string;
   leakType: number;
+  leakLossMinGal: number;
+  leakLossMaxGal: number;
   startPressure: number;
   endPressure: number;
   startRawPayload: any;

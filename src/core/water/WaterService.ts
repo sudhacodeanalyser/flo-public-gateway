@@ -28,8 +28,10 @@ class WaterService {
     const devices = await this.deviceServiceFactory().getAllByLocationId(locationId);
     const location = await (timezone ? undefined : this.locationServiceFactory().getLocation(locationId));
     const tz = _.get(location, 'timezone', timezone);
+    const start = this.formatDate(startDate, tz);
+    const end = this.formatDate(endDate, tz);
     const devicesConsumption = await Promise.all(
-      devices.map(({ macAddress }) => this.queryDeviceConsumption(macAddress, startDate, endDate, tz))
+      devices.map(({ macAddress }) => this.queryDeviceConsumption(macAddress, start, end, tz))
     );
     const results = _.zipWith(
       ...devicesConsumption, 
@@ -40,15 +42,17 @@ class WaterService {
        )
     );
 
-    return this.formatReport(startDate, endDate, interval, tz, results, locationId);
+    return this.formatReport(start, end, interval, tz, results, locationId);
   }
 
   public async getDeviceConsumption(macAddress: string, startDate: string, endDate: string = new Date().toISOString(), interval: string = WaterConsumptionInterval.ONE_HOUR, timezone?: string): Promise<WaterConsumptionReport> {
     const device = await (timezone ? undefined : this.deviceServiceFactory().getByMacAddress(macAddress, ['location']));
     const tz = _.get(device, 'location.timezone', timezone);
-    const results = await this.queryDeviceConsumption(macAddress, startDate, endDate, tz);
+    const start = this.formatDate(startDate, tz);
+    const end = this.formatDate(endDate, tz);
+    const results = await this.queryDeviceConsumption(macAddress, start, end, tz);
 
-    return this.formatReport(startDate, endDate, interval, tz, results, undefined, macAddress);
+    return this.formatReport(start, end, interval, tz, results, undefined, macAddress);
   }
 
   private formatQuery(macAddress: string, column: string, measurement: string, startDate: string, endDate: string, timezone: string): string {
@@ -57,11 +61,14 @@ class WaterService {
       throw new Error('Invalid date range');
     }
 
+    const start = (hasUTCOffset(startDate) ? moment(startDate) : moment.tz(startDate, timezone)).toISOString();
+    const end = (hasUTCOffset(endDate) ? moment(endDate) : moment.tz(endDate, timezone)).toISOString();
+
     return `
       SELECT sum(${ column }) FROM ${ measurement }
       WHERE did::tag = '${ macAddress }'
-      AND time >= '${ startDate }'
-      AND time < '${ endDate }'
+      AND time >= '${ start }'
+      AND time < '${ end }'
       GROUP BY time(1h) fill(0) tz('${ timezone }')
     `.replace(/\s/, ' ');
   }
@@ -174,6 +181,14 @@ class WaterService {
 
     return zeros;
   }
+
+  private formatDate(date: string, timezone: string = 'Etc/UTC'): string {
+    return (hasUTCOffset(date) ? moment(date) : moment.tz(date, timezone)).toISOString();
+  }
+}
+
+function hasUTCOffset(date: string): boolean {
+  return /T.+(Z|([-+](\d{2}:?(\d{2})?)))$/.test(date);
 }
 
 export { WaterService };

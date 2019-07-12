@@ -2,12 +2,13 @@ import * as t from 'io-ts';
 import moment from 'moment';
 import { either } from 'fp-ts/lib/Either';
 
-const DateFromISOString = new t.Type<Date, string, unknown>(
+const DateFromURIEncodedISOString = new t.Type<Date, string, unknown>(
   'DateFromISOString',
   (u): u is Date => u instanceof Date,
   (u, c) => {
     return either.chain(t.string.validate(u, c), str => {
-      const date = new Date(str);
+      const decoded = decodeURIComponent(str);
+      const date = new Date(decoded);
       return isNaN(date.getTime()) ? t.failure(str, c) : t.success(date);
     });
   },
@@ -15,8 +16,8 @@ const DateFromISOString = new t.Type<Date, string, unknown>(
 );
 
 const DateRangeCodec = t.type({
-  startDate: DateFromISOString,
-  endDate: t.union([t.undefined, DateFromISOString])
+  startDate: DateFromURIEncodedISOString,
+  endDate: t.union([t.undefined, DateFromURIEncodedISOString])
 });
 type DateRange = t.TypeOf<typeof DateRangeCodec>;
 
