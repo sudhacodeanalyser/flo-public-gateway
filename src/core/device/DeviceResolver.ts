@@ -131,35 +131,72 @@ class DeviceResolver extends Resolver<Device> {
       return this.notificationService.getAlarmCounts({});
     },
     hardwareThresholds: async (device: Device, shouldExpand = false) => {
+      const minZero = {
+        okMin: 0,
+        minValue: 0
+      };
+
       const gpm = device.deviceType !== 'flo_device_075_v2' ?
         {
+          ...minZero,
           okMax: 16,
           maxValue: 20
         } :
         {
+          ...minZero,
           okMax: 12,
           maxValue: 16
         };
 
+      const lpm = device.deviceType !== 'flo_device_075_v2' ?
+        {
+          ...minZero,
+          okMax: 60,
+          maxValue: 75
+        } :
+        {
+          ...minZero,
+          okMax: 45,
+          maxValue: 60
+        };
+
+      const psi = {
+        okMin: 30,
+        okMax: 80,
+        minValue: 0,
+        maxValue: 100
+      };
+
+      const kPa = {
+        okMin: 210,
+        okMax: 550,
+        minValue: 0,
+        maxValue: 700
+      };
+
+      const tempF = {
+        okMin: 50,
+        okMax: 80,
+        minValue: 0,
+        maxValue: 100
+      };
+
+      const tempC = {
+        okMin: 10,
+        okMax: 30,
+        minValue: 0,
+        maxValue: 40
+      };
+
       return {
-        gpm: {
-          okMin: 0,
-          minValue: 0,
-          ...gpm
-        },
-        psi: {
-          okMin: 30,
-          okMax: 80,
-          minValue: 0,
-          maxValue: 100
-        },
-        temp: {
-          okMin: 50,
-          okMax: 80,
-          minValue: 0,
-          maxValue: 100
-        }
-      }
+        gpm,
+        lpm,
+        psi,
+        kPa,
+        temp: tempF,
+        tempF,
+        tempC
+      };
     }
   };
   private locationResolverFactory: () => LocationResolver;
