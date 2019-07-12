@@ -383,9 +383,7 @@ paths:
           content:
             application/json:
               schema:
-                oneOf:
-                  - $ref: '#/components/schemas/HealthTest'
-                  - $ref: '#/components/schemas/Empty'
+                $ref: '#/components/schemas/HealthTest'
         401:
           $ref: '#/components/responses/UnauthorizedError'
         403:
@@ -577,6 +575,19 @@ components:
           format: uuid
         status:
           type: string
+          enum:
+            - pending
+            - running
+            - completed
+            - cancelled
+            - timeout
+          description: >
+            Health Test Status:
+              * `pending` - Health test request was initiated and the device has not responded yet
+              * `running` - Health test is running
+              * `completed` - Health test completed
+              * `cancelled` - Health test was cancelled either by the device or user. Check results
+              * `timeout` - Health test timed out. Device did not respond in time
         source:
           type: string
         leakType:
