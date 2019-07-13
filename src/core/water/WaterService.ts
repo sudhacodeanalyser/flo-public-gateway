@@ -4,6 +4,8 @@ import moment from 'moment-timezone';
 import _ from 'lodash';
 import { DeviceService, LocationService } from '../service';
 import { DependencyFactoryFactory, WaterConsumptionItem, WaterConsumptionReport, WaterConsumptionInterval } from '../api';
+import * as Option from 'fp-ts/lib/Option';
+import { pipe } from 'fp-ts/lib/pipeable';
 
 type InfluxRow = { time: Date, sum: number };
 
@@ -26,8 +28,13 @@ class WaterService {
 
   public async getLocationConsumption(locationId: string, startDate: string, endDate: string = new Date().toISOString(), interval: string = WaterConsumptionInterval.ONE_HOUR, timezone?: string): Promise<WaterConsumptionReport> {
     const devices = await this.deviceServiceFactory().getAllByLocationId(locationId);
-    const location = await (timezone ? undefined : this.locationServiceFactory().getLocation(locationId));
-    const tz = _.get(location, 'timezone', timezone);
+    const tz = timezone || pipe(
+      await this.locationServiceFactory().getLocation(locationId),
+      Option.fold(
+        () => 'Etc/UTC',
+        location => location.timezone || 'Etc/UTC'
+      )
+    );
     const start = this.formatDate(startDate, tz);
     const end = this.formatDate(endDate, tz);
     const devicesConsumption = await Promise.all(
@@ -46,8 +53,13 @@ class WaterService {
   }
 
   public async getDeviceConsumption(macAddress: string, startDate: string, endDate: string = new Date().toISOString(), interval: string = WaterConsumptionInterval.ONE_HOUR, timezone?: string): Promise<WaterConsumptionReport> {
-    const device = await (timezone ? undefined : this.deviceServiceFactory().getByMacAddress(macAddress, ['location']));
-    const tz = _.get(device, 'location.timezone', timezone);
+    const tz = timezone || pipe(
+      await this.deviceServiceFactory().getByMacAddress(macAddress, ['location']),
+      Option.fold(
+        () => 'Etc/UTC',
+        device => device.location.timezone || 'Etc/UTC'
+      )
+    );
     const start = this.formatDate(startDate, tz);
     const end = this.formatDate(endDate, tz);
     const results = await this.queryDeviceConsumption(macAddress, start, end, tz);
