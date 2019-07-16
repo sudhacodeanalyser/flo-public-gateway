@@ -12,6 +12,7 @@ import { PresenceControllerFactory } from './presence/PresenceControllerFactory'
 import { SubscriptionControllerFactory } from './subscription/SubscriptionControllerFactory';
 import { UserControllerFactory } from './user/UserControllerFactory';
 import { WaterControllerFactory } from './water/WaterControllerFactory';
+import { SessionControllerFactory } from './session/SessionControllerFactory';
 
 export default function ControllerFactory(container: Container, apiVersion: number = 2): interfaces.Controller[] {
   return [
@@ -25,7 +26,8 @@ export default function ControllerFactory(container: Container, apiVersion: numb
     LookupControllerFactory,
     LocalizationControllerFactory,
     NotificationControllerFactory,
-    WaterControllerFactory
+    WaterControllerFactory,
+    SessionControllerFactory
   ]
   .map(controllerFactory => controllerFactory(container, apiVersion));
 }
