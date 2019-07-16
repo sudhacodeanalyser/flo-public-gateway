@@ -588,8 +588,15 @@ components:
               * `completed` - Health test completed
               * `cancelled` - Health test was cancelled either by the device or user. Check results
               * `timeout` - Health test timed out. Device did not respond in time
-        source:
+        type:
           type: string
+          enum:
+            - auto
+            - manual
+          description: >
+            Health Test Type:
+              * `auto` - Initiated by a schedule or device
+              * `manual` - Initiated by user or admin
         leakType:
           type: number
         leakLossMinGal:
