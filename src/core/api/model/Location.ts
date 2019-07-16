@@ -208,7 +208,7 @@ export const LocationCodec = t.intersection([
       id: t.string,
       users: t.array(ExpandableCodec),
       userRoles: t.array(LocationUserRoleCodec),
-      devices: t.array(ExpandableCodec),
+      devices: t.array(t.intersection([ExpandableCodec, t.partial({ macAddress: t.string })])),
       subscription: t.union([ExpandableCodec, t.undefined])
     })
   ])

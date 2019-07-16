@@ -8,3 +8,4 @@ export * from './lookup/LookupService';
 export * from './localization/LocalizationService';
 export * from './notification/NotificationService';
 export * from './water/WaterService';
+export * from './session/SessionService';

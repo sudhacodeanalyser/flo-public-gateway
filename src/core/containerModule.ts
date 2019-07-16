@@ -9,6 +9,7 @@ import subscriptionContainerModule from './subscription/containerModule';
 import userContainerModule from './user/containerModule';
 import notificationContainerModule from './notification/containerModule';
 import waterContainerModule from './water/containerModule';
+import sessionContainerModule from './session/containerModule';
 
 export default [
   pingContainerModule,
@@ -21,5 +22,6 @@ export default [
   presenceContainerModule,
   lookupContainerModule,
   notificationContainerModule,
-  waterContainerModule
+  waterContainerModule,
+  sessionContainerModule
 ];
