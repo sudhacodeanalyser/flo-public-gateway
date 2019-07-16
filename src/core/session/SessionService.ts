@@ -7,6 +7,7 @@ import { pipe } from 'fp-ts/lib/pipeable';
 import * as TaskEither from 'fp-ts/lib/TaskEither';
 import * as Option from 'fp-ts/lib/Option';
 import _ from 'lodash';
+import * as TaskEitherOption from '../../util/TaskEitherOption';
 
 @injectable()
 class SessionService {
@@ -20,30 +21,27 @@ class SessionService {
   }
 
   public async issueFirestoreToken(userId: string): Promise<FirestoreTokenResponse> {
-    // TODO: Create a TaskEitherOption monad
-    const task = pipe(
-      TaskEither.tryCatch(
-        async () => pipe(
-          await this.userServiceFactory().getUserById(userId, ['locations']),
-          Option.fold(
-            () => Promise.reject(new ForbiddenError()),
-            user => Promise.resolve(user)
-          )
-        ),
+    const task =  pipe(
+      TaskEitherOption.tryCatchOption(
+        () => this.userServiceFactory().getUserById(userId, ['locations']),
         err => err
       ),
-      TaskEither.chain(user => {
+      TaskEitherOption.chain(user => {
         const devicesAsset = _.flatMap(
           user.locations,
           ({ devices }) => (devices || []).map(({ macAddress }) => macAddress).filter(_.identity) as string[]
         );
 
-        return TaskEither.tryCatch(
+        return TaskEitherOption.tryCatch(
           () => this.firestoreAuthService.issueToken({ devices: devicesAsset }),
           err => err
-        )
+        );    
       }),
-      TaskEither.getOrElse(err => async () => Promise.reject(err))
+      TaskEitherOption.fold(
+        err => async () => Promise.reject(err),
+        () => async () => Promise.reject(new ForbiddenError()),
+        tokenResponse => async () => tokenResponse
+      )
     );
 
     return task();
