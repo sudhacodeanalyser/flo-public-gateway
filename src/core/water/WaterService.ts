@@ -115,11 +115,11 @@ class WaterService {
   }
 
   private combineResults(startDate: string, endDate: string, hourlyResults?: IResults<InfluxRow>, secondResults?: IResults<InfluxRow>): InfluxRow[] {
-    const hourlyConsumption =this.zeroFillHours(startDate, endDate, hourlyResults);
+    const hourlyConsumption = this.zeroFillHours(startDate, endDate, hourlyResults);
     const lastHourConsumption = this.combineLastHourResults(endDate, hourlyConsumption, secondResults);
 
     return [
-      ...hourlyConsumption.slice(0, hourlyConsumption.length - 1),
+      ...hourlyConsumption.filter(({ time }) => time !== lastHourConsumption.time),
      lastHourConsumption
     ];
   }
@@ -149,7 +149,7 @@ class WaterService {
         moment(hourlyResult.time).startOf('hour').toISOString() === lastHour
     );
     return {
-      time: moment(lastSecondResult ? lastSecondResult.time : endDate).startOf('hour').toDate(),
+      time: new Date(lastHour),
       sum: (lastSecondResult ? lastSecondResult.sum : 0) + (matchingHourlyResult ? matchingHourlyResult.sum : 0)
     };
     
