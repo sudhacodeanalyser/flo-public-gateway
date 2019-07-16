@@ -29,7 +29,9 @@ class SessionService {
       TaskEitherOption.chain(user => {
         const devicesAsset = _.flatMap(
           user.locations,
-          ({ devices }) => (devices || []).map(({ macAddress }) => macAddress).filter(_.identity) as string[]
+          ({ devices }) => (devices || [])
+            .map(({ macAddress }) => macAddress)
+            .filter(_.identity) as string[]
         );
 
         return TaskEitherOption.tryCatch(
