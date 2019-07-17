@@ -554,7 +554,8 @@ components:
                   type: string
                 websocketKey:
                   type: string
-
+            serialNumber:
+              type: string
     DeviceExpandable:
       oneOf:
         - type: object
