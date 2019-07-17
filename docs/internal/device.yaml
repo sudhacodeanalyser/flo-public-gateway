@@ -535,6 +535,25 @@ components:
               properties:
                 isInstalled:
                   type: boolean
+            pairingData:
+              type: object
+              properties:
+                apName:
+                  type: string
+                loginToken:
+                  type: string
+                clientCert:
+                  type: string
+                clientKey:
+                  type: string
+                serverCert:
+                  type: string
+                websocketCert:
+                  type: string
+                websocketCertDer:
+                  type: string
+                websocketKey:
+                  type: string
 
     DeviceExpandable:
       oneOf:

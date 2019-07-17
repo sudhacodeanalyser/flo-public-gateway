@@ -14,6 +14,8 @@ import DeviceForcedSystemModeTable from './DeviceForcedSystemModeTable';
 import { DeviceRecord, DeviceRecordData } from './DeviceRecord';
 import { IrrigationScheduleService, IrrigationScheduleServiceFactory } from './IrrigationScheduleService';
 import OnboardingLogTable from './OnboardingLogTable';
+import * as Option from 'fp-ts/lib/Option';
+import { PairingService } from '../../api-v1/pairing/PairingService';
 
 @injectable()
 class DeviceResolver extends Resolver<Device> {
@@ -197,6 +199,35 @@ class DeviceResolver extends Resolver<Device> {
         tempF,
         tempC
       };
+    },
+    pairingData: async (device: Device, shouldExpand = false) => {
+      try {
+        const authToken = shouldExpand && this.httpContext.request.get('Authorization');
+
+        if (!shouldExpand || !authToken) {
+          return null;
+        }
+
+        const pairingData = await this.pairingService.retrievePairingData(authToken, device.id);
+
+        if (Option.isNone(pairingData)) {
+          return null;
+        }
+
+        return {
+          apName: pairingData.value.ap_name,
+          loginToken: pairingData.value.login_token,
+          clientCert: pairingData.value.client_cert,
+          clientKey: pairingData.value.client_key,
+          serverCert: pairingData.value.server_cert,
+          websocketCert: pairingData.value.websocket_cert,
+          websocketCertDer: pairingData.value.websocket_cert_der,
+          websocketKey: pairingData.value.websocket_key
+        };  
+      } catch (err) {
+        this.logger.error({ err });
+        return null;
+      }
     }
   };
   private locationResolverFactory: () => LocationResolver;
@@ -212,6 +243,7 @@ class DeviceResolver extends Resolver<Device> {
    @inject('Logger') private readonly logger: Logger,
    @inject('IrrigationScheduleServiceFactory') irrigationScheduleServiceFactory: IrrigationScheduleServiceFactory,
    @inject('NotificationServiceFactory') notificationServiceFactory: NotificationServiceFactory,
+   @inject('PairingService') private pairingService: PairingService,
    @injectHttpContext private readonly httpContext: interfaces.HttpContext
   ) {
     super();
