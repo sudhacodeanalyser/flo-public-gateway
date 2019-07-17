@@ -233,7 +233,7 @@ class DeviceResolver extends Resolver<Device> {
       try {
         const additionalProperties = await this.internalDeviceService.getDevice(device.macAddress);
 
-        return _.get(additionalProperties, 'fwProperties.serial_number', null);
+        return (additionalProperties && additionalProperties.fwProperties && additionalProperties.fwProperties.serialNumber) || null
       } catch (err) {
         this.logger.error({ err });
         return null;
