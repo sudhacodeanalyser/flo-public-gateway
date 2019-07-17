@@ -133,6 +133,7 @@ export interface Device extends Omit<DeviceUpdate, 'valve'>, TimestampedModel {
   notifications?: NotificationCounts;
   hardwareThresholds?: HardwareThresholds;
   pairingData?: PairingData;
+  serialNumber?: string;
 }
 
 interface FwProperties {

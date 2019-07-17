@@ -59,7 +59,8 @@ const RecordToModelSchema: StrictSchema<Device, DeviceRecordData>  = {
   }),
   notifications: () => undefined,
   hardwareThresholds: () => undefined,
-  pairingData: () => undefined
+  pairingData: () => undefined,
+  serialNumber: () => undefined
 };
 
 const ModelToRecordSchema: StrictSchema<DeviceRecordData, Device> = {

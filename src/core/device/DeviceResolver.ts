@@ -228,6 +228,16 @@ class DeviceResolver extends Resolver<Device> {
         this.logger.error({ err });
         return null;
       }
+    },
+    serialNumber: async (device: Device, shouldExpand = false) => {
+      try {
+        const additionalProperties = await this.internalDeviceService.getDevice(device.macAddress);
+
+        return _.get(additionalProperties, 'fwProperties.serial_number', null);
+      } catch (err) {
+        this.logger.error({ err });
+        return null;
+      }      
     }
   };
   private locationResolverFactory: () => LocationResolver;
