@@ -3,6 +3,16 @@ FROM node:10-alpine
 RUN mkdir -p /app
 WORKDIR /app
 COPY . /app
+RUN rm -rf /var/cache/apk/* && \
+    rm -rf /tmp/* && \
+    apk add --no-cache \
+      bash \
+      gcc \
+      g++ \
+      make \
+      python \
+      py-pip \
+      git 
 
 RUN npm install
 
