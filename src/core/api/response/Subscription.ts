@@ -1,5 +1,6 @@
 import _ from 'lodash';
 import { Expandable, Omit, Subscription as SubscriptionModel, SubscriptionProviderData } from '../../api';
+import { SubscriptionProviderInfo } from '../model/Subscription';
 import { Location, LocationResponse, Response } from './index';
 
 type IsActive = {
@@ -35,16 +36,18 @@ const mapProviderStatus = (provider: string, status: string): string => {
 export class Subscription implements Response {
   public static fromModel(subscription: Expandable<SubscriptionModel>): SubscriptionResponse {
     // TODO: Figure out a better way of doing this.
-    const providerName = _.get(subscription, 'provider.name') as string | '';
-    const providerStatus = _.get(subscription, 'provider.data.status') as string | '';
+    const safeProvider = (subscription && subscription.provider) || {};
+    const safeProviderData = (safeProvider as SubscriptionProviderInfo).data || {};
+
+    const providerName = (safeProvider as SubscriptionProviderInfo).name || '';
+    const providerStatus = safeProviderData.status || '';
 
     return {
       ...(_.pickBy(subscription, (value, key) => key !== 'provider')),
       isActive: _.get(subscription, 'provider.isActive') as boolean | undefined,
       status: mapProviderStatus(providerName, providerStatus),
-      providerInfo: subscription && subscription.provider && subscription.provider.data && _.pickBy(
-        subscription.provider.data,
-        (value, key) => key !== 'customerId' && key !== 'subscriptionId'
+      providerInfo: _.pickBy(safeProviderData, (value, key) =>
+        key !== 'customerId' && key !== 'subscriptionId'
       ),
       location: subscription.location && Location.fromModel(subscription.location)
     } as any as SubscriptionResponse;
