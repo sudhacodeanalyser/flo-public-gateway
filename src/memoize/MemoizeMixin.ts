@@ -3,9 +3,10 @@ import { inject, injectable } from 'inversify';
 
 export type Loaders = Record<string | symbol, Dataloader<any, any>>;
 
-export type LoadFn = <K, T>(method: (key: K) => Promise<T>, ...args: any[]) => Promise<T>;
+export type ExtractKey = <K>(...args: any[]) => K;
+export type LoadFn = <K, T>(method: (...args: any) => Promise<T>, ...args: any[]) => Dataloader.BatchLoadFn<K, T>;
 
-export function memoized<K, T>(load?: LoadFn): MethodDecorator {
+export function memoized<K, T>(extractKey?: ExtractKey, load?: LoadFn): MethodDecorator {
   return (target: any, propertyName: string | symbol, propertyDescriptor: PropertyDescriptor): void => {
     const method = propertyDescriptor.value;
 
@@ -14,15 +15,15 @@ export function memoized<K, T>(load?: LoadFn): MethodDecorator {
 
       if (!self.loaders[propertyName]) {
         self.loaders[propertyName] = new Dataloader<K, T>(
-          async (keys: K[]) => keys.map(key => 
-            load ? 
-              load(method.bind(self), ...args) :
-              method.call(self, key)
-          )
-        )
+          load ?
+            load(method.bind(self), ...args) :
+            async (keys: K[]) => keys.map(key => 
+              method.call(self, keys)
+            )
+        );
       }
 
-      const key = args[0];
+      const key = extractKey ? extractKey(args) : args[0];
 
       return self.loaders[propertyName].load(key);
     };
@@ -31,7 +32,8 @@ export function memoized<K, T>(load?: LoadFn): MethodDecorator {
 
 type Newable = new(...args: any[]) => any;
 
-export function MemoizeMixin(baseClass: Newable): Newable {
+// tslint:disable:max-classes-per-file
+export function MemoizeMixin(baseClass: Newable = class {}): Newable {
   @injectable()
   class MemoizedClass extends baseClass {
     @inject('Loaders') protected loaders: Loaders;
