@@ -20,7 +20,7 @@ export default function ControllerFactory(container: Container, apiVersion: numb
     UserControllerFactory,
     SubscriptionControllerFactory,
     PresenceControllerFactory,
-    LookupControllerFactory
+    LookupControllerFactory,
     NotificationControllerFactory
   ]
   .map(controllerFactory => controllerFactory(container, apiVersion));
