@@ -1,6 +1,6 @@
 import _ from 'lodash';
-import { Omit, Subscription as SubscriptionModel, SubscriptionProviderData, Expandable} from '../../api';
-import { Response, Location, LocationResponse } from './index';
+import { Expandable, Omit, Subscription as SubscriptionModel, SubscriptionProviderData } from '../../api';
+import { Location, LocationResponse, Response } from './index';
 
 type IsActive = {
   isActive?: boolean
@@ -14,14 +14,36 @@ export interface SubscriptionResponse extends SubscriptionSansProvider, IsActive
   location?: LocationResponse
 }
 
+// TODO: Find a better place for this.
+const statusMap: { [key: string]: { [key: string]: string } } = {
+  stripe: {
+    active: 'active',
+    trialing: 'trial',
+    canceled: 'canceled',
+    unpaid: 'delinquent',
+    past_due: 'delinquent',
+    incomplete: 'unknown',
+    incomplete_expired: 'unknown'
+  }
+}
+
+const mapProviderStatus = (provider: string, status: string): string => {
+  const providerStatuses: { [key: string]: string } = statusMap[provider] || {};
+  return providerStatuses[status] || 'unknown';
+}
+
 export class Subscription implements Response {
   public static fromModel(subscription: Expandable<SubscriptionModel>): SubscriptionResponse {
     // TODO: Figure out a better way of doing this.
+    const providerName = _.get(subscription, 'provider.name') as string | '';
+    const providerStatus = _.get(subscription, 'provider.data.status') as string | '';
+
     return {
       ...(_.pickBy(subscription, (value, key) => key !== 'provider')),
       isActive: _.get(subscription, 'provider.isActive') as boolean | undefined,
+      status: mapProviderStatus(providerName, providerStatus),
       providerInfo: subscription && subscription.provider && subscription.provider.data && _.pickBy(
-        subscription.provider.data, 
+        subscription.provider.data,
         (value, key) => key !== 'customerId' && key !== 'subscriptionId'
       ),
       location: subscription.location && Location.fromModel(subscription.location)
