@@ -97,6 +97,17 @@ interface HardwareThresholds {
   temp: ThresholdDefinition;
 }
 
+export interface PairingData {
+  apName: string;
+  loginToken: string;
+  clientCert: string;
+  clientKey: string;
+  serverCert: string;
+  websocketCert?: string;
+  websocketCertDer?: string;
+  websocketKey: string;  
+}
+
 export interface Device extends Omit<DeviceUpdate, 'valve'>, TimestampedModel {
   id: string,
   macAddress: string;
@@ -121,6 +132,8 @@ export interface Device extends Omit<DeviceUpdate, 'valve'>, TimestampedModel {
   };
   notifications?: NotificationCounts;
   hardwareThresholds?: HardwareThresholds;
+  pairingData?: PairingData;
+  serialNumber?: string;
 }
 
 interface FwProperties {

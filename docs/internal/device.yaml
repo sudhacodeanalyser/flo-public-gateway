@@ -352,7 +352,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Empty'
+                $ref: '#/components/schemas/HealthTest'
         401:
           $ref: '#/components/responses/UnauthorizedError'
         403:
@@ -535,7 +535,27 @@ components:
               properties:
                 isInstalled:
                   type: boolean
-
+            pairingData:
+              type: object
+              properties:
+                apName:
+                  type: string
+                loginToken:
+                  type: string
+                clientCert:
+                  type: string
+                clientKey:
+                  type: string
+                serverCert:
+                  type: string
+                websocketCert:
+                  type: string
+                websocketCertDer:
+                  type: string
+                websocketKey:
+                  type: string
+            serialNumber:
+              type: string
     DeviceExpandable:
       oneOf:
         - type: object
