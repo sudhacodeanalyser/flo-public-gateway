@@ -12,7 +12,7 @@ export class DefaulthHealthTestService extends HttpService implements HealthTest
     super();
   }
 
-  public async run(deviceMacAddress: string, icdId: string): Promise<HealthTest> {
+  public async run(deviceMacAddress: string, icdId: string): Promise<void> {
     const request = {
       method: 'POST',
       url: `${this.healthTestServiceUrl}/healthtest`,
@@ -25,7 +25,7 @@ export class DefaulthHealthTestService extends HttpService implements HealthTest
       }
     };
 
-    return this.sendRequest(request);
+    await this.sendRequest(request);
   }
 
   public async getLatest(deviceMacAddress: string): Promise<HealthTest | null> {
