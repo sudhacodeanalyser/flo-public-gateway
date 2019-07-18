@@ -4,13 +4,14 @@ import {InternalDeviceServiceHandler} from "./internalDeviceServiceHandler";
 import {InternalDevice, InternalDeviceCodec} from './models';
 import { isLeft } from 'fp-ts/lib/Either';
 import { FirestoreAuthService, FirestoreAssests, FirestoreTokenResponse } from '../core/session/FirestoreAuthService';
+import { memoized, MemoizeMixin } from '../memoize/MemoizeMixin';
 
 @injectable()
-class InternalDeviceService extends InternalDeviceServiceHandler implements FirestoreAuthService {
+class InternalDeviceService extends MemoizeMixin(InternalDeviceServiceHandler) implements FirestoreAuthService {
   @inject('InternalDeviceServiceBaseUrl') private internalDeviceServiceBaseUrl: string;
 
+  @memoized<string, InternalDevice | null>()
   public async getDevice(macAddress: string): Promise<InternalDevice | null> {
-
     try {
       const request = {
         method: 'get',
