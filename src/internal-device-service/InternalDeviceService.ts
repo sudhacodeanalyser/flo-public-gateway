@@ -10,7 +10,7 @@ import { memoized, MemoizeMixin } from '../memoize/MemoizeMixin';
 class InternalDeviceService extends MemoizeMixin(InternalDeviceServiceHandler) implements FirestoreAuthService {
   @inject('InternalDeviceServiceBaseUrl') private internalDeviceServiceBaseUrl: string;
 
-  @memoized<string, InternalDevice | null>()
+  @memoized()
   public async getDevice(macAddress: string): Promise<InternalDevice | null> {
     try {
       const request = {
