@@ -1,9 +1,7 @@
-FROM registry.gitlab.com/flotechnologies/flo-public-gateway:build AS build
+FROM node:10-alpine
 
 RUN mkdir -p /app
 WORKDIR /app
 COPY . /app
-
-RUN npm install
 
 CMD ["npm", "start"]
