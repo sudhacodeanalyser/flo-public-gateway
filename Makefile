@@ -73,7 +73,7 @@ deploy:
 	#$(EB_INIT)
 	#$(EB_DEPLOY)
 	$(HELM) init --upgrade --wait --force-upgrade
-	$(HELM) template ./k8s/flo-public-gateway -f ./k8s/pipeline.yaml
+	#$(HELM) template ./k8s/flo-public-gateway -f ./k8s/pipeline.yaml
 	$(HELM) ls
 	$(HELM) install --name flo-public-gateway ./k8s/flo-public-gateway -f ./k8s/pipeline.yaml  --set environment=${params.environment} --namespace=flo-public-gateway
 environment:
