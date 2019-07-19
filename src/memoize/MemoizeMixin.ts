@@ -7,7 +7,7 @@ export type Loaders = Record<string | symbol, Dataloader<any, any>>;
 
 export type ExtractKey = (...args: any[]) => any;
 
-function formatLoaderURI(className: string, methodName: string): string {
+function formatLoaderKey(className: string, methodName: string): string {
   return `${ className }.${ methodName }`;
 }
 
@@ -18,9 +18,9 @@ function DataloaderFactory(self: any, method: (...args: any[]) => any): Dataload
 export function memoized(extractKey?: ExtractKey): MethodDecorator {
   return (target: any, propertyName: string | symbol, propertyDescriptor: PropertyDescriptor): void => {
     const method = propertyDescriptor.value;
-    const loaderURI = formatLoaderURI(target.constructor.name, String(propertyName));
+    const loaderKey = formatLoaderKey(target.constructor.name, String(propertyName));
     
-    Reflect.defineMetadata('unmemoized', method, target, loaderURI);
+    Reflect.defineMetadata('unmemoized', method, target, loaderKey);
 
     propertyDescriptor.value = async function(...args: any[]): Promise<any> {
       const self = this as any;
@@ -52,7 +52,7 @@ export function MemoizeMixin<C extends Newable>(baseClass: C) {
     protected memoizedClassName: string = this.constructor.name || uuid.v4();
 
     protected getMethodLoader(methodName: string): Dataloader<any, any> | undefined {
-      return this.loaders[formatLoaderURI(this.memoizedClassName, methodName)];
+      return this.loaders[formatLoaderKey(this.memoizedClassName, methodName)];
     }
 
     protected ensureMethodLoader(methodName: string): Dataloader<any, any> | undefined {
@@ -62,12 +62,12 @@ export function MemoizeMixin<C extends Newable>(baseClass: C) {
         return loader;
       }
 
-      const method = Reflect.getMetadata('unmemoized', this.constructor.prototype, formatLoaderURI(this.memoizedClassName, methodName));
+      const method = Reflect.getMetadata('unmemoized', this.constructor.prototype, formatLoaderKey(this.memoizedClassName, methodName));
 
       if (method) {
         const newLoader = DataloaderFactory(this, method);
 
-        this.loaders[formatLoaderURI(this.memoizedClassName, methodName)] = newLoader;
+        this.loaders[formatLoaderKey(this.memoizedClassName, methodName)] = newLoader;
 
         return newLoader;
       } else {
