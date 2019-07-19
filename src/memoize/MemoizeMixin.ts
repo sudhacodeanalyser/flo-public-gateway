@@ -7,8 +7,8 @@ export type Loaders = Record<string | symbol, Dataloader<any, any>>;
 
 export type ExtractKey = (...args: any[]) => any;
 
-function formatLoaderURI(classURI: string, methodName: string): string {
-  return `${ classURI }.${ methodName }`;
+function formatLoaderURI(className: string, methodName: string): string {
+  return `${ className }.${ methodName }`;
 }
 
 function DataloaderFactory(self: any, method: (...args: any[]) => any): Dataloader<any, any> {
@@ -49,10 +49,10 @@ export function MemoizeMixin<C extends Newable>(baseClass: C) {
   @injectable()
   class MemoizedClass extends baseClass {
     @inject('Loaders') protected loaders: Loaders;
-    protected URI: string = this.constructor.name || uuid.v4();
+    protected memoizedClassName: string = this.constructor.name || uuid.v4();
 
     protected getMethodLoader(methodName: string): Dataloader<any, any> | undefined {
-      return this.loaders[formatLoaderURI(this.URI, methodName)];
+      return this.loaders[formatLoaderURI(this.memoizedClassName, methodName)];
     }
 
     protected ensureMethodLoader(methodName: string): Dataloader<any, any> | undefined {
@@ -62,12 +62,12 @@ export function MemoizeMixin<C extends Newable>(baseClass: C) {
         return loader;
       }
 
-      const method = Reflect.getMetadata('unmemoized', this.constructor.prototype, formatLoaderURI(this.URI, methodName));
+      const method = Reflect.getMetadata('unmemoized', this.constructor.prototype, formatLoaderURI(this.memoizedClassName, methodName));
 
       if (method) {
         const newLoader = DataloaderFactory(this, method);
 
-        this.loaders[formatLoaderURI(this.URI, methodName)] = newLoader;
+        this.loaders[formatLoaderURI(this.memoizedClassName, methodName)] = newLoader;
 
         return newLoader;
       } else {
