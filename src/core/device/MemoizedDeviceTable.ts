@@ -12,7 +12,7 @@ class MemoizedDeviceTable extends MemoizeMixin(DeviceTable) {
     const result = await super.get(key);
 
     if (result) {
-      this.primeMethodLoader('getByMacAddress', { id: result.id }, result);
+      this.primeMethodLoader('getByMacAddress', result.device_id, result);
     }
 
     return result;
@@ -23,7 +23,7 @@ class MemoizedDeviceTable extends MemoizeMixin(DeviceTable) {
     const results = await super.getAllByLocationId(locationId);
 
     results.forEach(result => {
-      this.primeMethodLoader('getByMacAddress', { id: result.id }, result);
+      this.primeMethodLoader('getByMacAddress', result.device_id, result);
       this.primeMethodLoader('get', { id: result.id }, result);
     });  
 
