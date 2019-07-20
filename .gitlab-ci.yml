@@ -107,7 +107,7 @@ K8sProd:
     - make environment-prod
     - make deploy-k8s
   tags:
-    - prod
+    - deploy-prod
 
 Prod:
   variables:
