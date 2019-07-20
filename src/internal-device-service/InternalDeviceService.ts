@@ -2,9 +2,11 @@ import {inject, injectable} from 'inversify';
 import InternalDeviceServiceError from "./internalDeviceServiceError";
 import {InternalDeviceServiceHandler} from "./internalDeviceServiceHandler";
 import {InternalDevice, InternalDeviceCodec} from './models';
+import { isLeft } from 'fp-ts/lib/Either';
+import { FirestoreAuthService, FirestoreAssests, FirestoreTokenResponse } from '../core/session/FirestoreAuthService';
 
 @injectable()
-class InternalDeviceService extends InternalDeviceServiceHandler {
+class InternalDeviceService extends InternalDeviceServiceHandler implements FirestoreAuthService {
   @inject('InternalDeviceServiceBaseUrl') private internalDeviceServiceBaseUrl: string;
 
   public async getDevice(macAddress: string): Promise<InternalDevice | null> {
@@ -18,7 +20,7 @@ class InternalDeviceService extends InternalDeviceServiceHandler {
 
       const response = await this.sendRequest(request);
 
-      if (InternalDeviceCodec.decode(response).isLeft()) {
+      if (isLeft(InternalDeviceCodec.decode(response))) {
         throw new Error('Invalid response.');
       }
 
@@ -40,6 +42,16 @@ class InternalDeviceService extends InternalDeviceServiceHandler {
     };
 
     await this.sendRequest(request);
+  }
+
+  public async issueToken(assets: FirestoreAssests): Promise<FirestoreTokenResponse> {
+    const request = {
+      method: 'POST',
+      url: `${ this.internalDeviceServiceBaseUrl }/firestore/auth`,
+      body: assets
+    };
+
+    return this.sendRequest(request);
   }
 }
 

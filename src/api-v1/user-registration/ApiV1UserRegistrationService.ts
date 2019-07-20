@@ -1,13 +1,14 @@
 import { inject, injectable } from 'inversify';
-import { ApiV1Service } from '../ApiV1Service';
-import ApiV1Error from '../ApiV1Error';
+import { HttpService } from '../../http/HttpService';
+import HttpError from '../../http/HttpError';
 import { EmailAvailabilityCodec } from './models';
 import { UserRegistrationData, EmailAvailability, UserRegistrationService, EmailVerification, OAuth2Response, OAuth2ResponseCodec } from '../../core/user/UserRegistrationService';
+import { isLeft } from 'fp-ts/lib/Either';
 
 import _ from 'lodash';
 
 @injectable()
-class ApiV1UserRegistrationService extends ApiV1Service implements UserRegistrationService {
+class ApiV1UserRegistrationService extends HttpService implements UserRegistrationService {
   constructor(
     @inject('ApiV1Url') private readonly apiV1Url: string
   ) {
@@ -38,8 +39,8 @@ class ApiV1UserRegistrationService extends ApiV1Service implements UserRegistrat
       await this.sendRequest(request);
     } catch (err) {
       // Translate HTTP 400 'Email already registered.' error into a 409 for consistency
-      if (err instanceof ApiV1Error && err.statusCode === 400 && /email already registered/i.test(err.message)) {
-        throw new ApiV1Error(409, err.message);
+      if (err instanceof HttpError && err.statusCode === 400 && /email already registered/i.test(err.message)) {
+        throw new HttpError(409, err.message);
       } else {
         throw err;
       }
@@ -57,11 +58,11 @@ class ApiV1UserRegistrationService extends ApiV1Service implements UserRegistrat
     const response = await this.sendRequest(request);
     const result = EmailAvailabilityCodec.decode(response);
 
-    if (result.isLeft() || !EmailAvailabilityCodec.is(result.value)) {
+    if (isLeft(result) || !EmailAvailabilityCodec.is(result.right)) {
       throw new Error('Invalid response.');
     }
 
-    return result.value;
+    return result.right;
   }
 
   public async resendVerificationEmail(email: string): Promise<void> {
@@ -89,11 +90,11 @@ class ApiV1UserRegistrationService extends ApiV1Service implements UserRegistrat
     const response = await this.sendRequest(request);
     const result = OAuth2ResponseCodec.decode(response);
 
-    if (result.isLeft()) {
+    if (isLeft(result)) {
       throw new Error('Invalid response.');
     }
 
-    return result.value;
+    return result.right;
   }
 }
 

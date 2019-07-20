@@ -1,9 +1,12 @@
 import { inject, injectable } from 'inversify';
-import { ApiV1Service } from '../ApiV1Service';
+import { HttpService, HttpError } from '../../http/HttpService';
 import { QrData, PairingData, CompletePairingData, PairingDataCodec, QrDataValidator } from './models';
+import { isLeft } from 'fp-ts/lib/Either';
+import * as Option from 'fp-ts/lib/Option';
+import _ from 'lodash';
 
 @injectable()
-class PairingService extends ApiV1Service {
+class PairingService extends HttpService {
   constructor(
     @inject('ApiV1Url') private readonly apiV1Url: string
   ) {
@@ -19,7 +22,7 @@ class PairingService extends ApiV1Service {
     };
     const response = await this.sendRequest(request);
 
-    if (PairingDataCodec.decode(response).isLeft()) {
+    if (isLeft(PairingDataCodec.decode(response))) {
 
        throw new Error('Invalid response.');
     }
@@ -39,6 +42,31 @@ class PairingService extends ApiV1Service {
     };
 
     await this.sendRequest(request);
+  }
+
+  public async retrievePairingData(authToken: string, id: string): Promise<Option.Option<PairingData>> {
+    try {
+      const request = {
+        method: 'GET',
+        url: `${ this.apiV1Url }/pairing/qr/icd/${ id }`,
+        authToken
+      };
+      const response = await this.sendRequest(request);
+
+      if (_.isEmpty(response)) {
+        return Option.none;
+      } else if (isLeft(PairingDataCodec.decode(response))) {
+        throw new Error('Invalid response.');
+      } else {
+        return Option.some(response);
+      }
+    } catch (err) {
+      if (err instanceof HttpError && err.statusCode === 404) {
+        return Option.none;
+      } else {
+        throw err;
+      }
+    }
   }
 }
 

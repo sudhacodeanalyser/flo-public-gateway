@@ -1,19 +1,27 @@
+import { isNone, Option, some } from 'fp-ts/lib/Option';
 import { Container, inject } from 'inversify';
-import { BaseHttpController, httpDelete, httpGet, httpPost, interfaces, queryParam, requestBody, requestParam, request } from 'inversify-express-utils';
+import { BaseHttpController, httpDelete, httpGet, httpPost, interfaces, queryParam, request, requestBody, requestParam } from 'inversify-express-utils';
 import * as t from 'io-ts';
-import _ from 'lodash';
 import { PairingData, QrData, QrDataValidator } from '../../api-v1/pairing/PairingService';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import { InternalDeviceService } from '../../internal-device-service/InternalDeviceService';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
-import { Device, SystemMode as DeviceSystemMode, SystemModeCodec as DeviceSystemModeCodec, DeviceCreate, DeviceCreateValidator, DeviceUpdate, DeviceUpdateValidator } from '../api';
-import { authorizationHeader, createMethod, deleteMethod, asyncMethod, httpController, parseExpand } from '../api/controllerUtils';
+import { Device, DeviceCreate, DeviceCreateValidator, DeviceUpdate, DeviceUpdateValidator, SystemMode as DeviceSystemMode, SystemModeCodec as DeviceSystemModeCodec } from '../api';
+import { asyncMethod, authorizationHeader, createMethod, deleteMethod, httpController, parseExpand, withResponseType } from '../api/controllerUtils';
+import { convertEnumtoCodec } from '../api/enumUtils';
+import ResourceDoesNotExistError from "../api/error/ResourceDoesNotExistError";
 import Request from '../api/Request';
 import * as Responses from '../api/response';
 import { DeviceService } from '../service';
 import { DeviceSystemModeServiceFactory } from './DeviceSystemModeService';
 import { DirectiveServiceFactory } from './DirectiveService';
-import ResourceDoesNotExistError from "../api/error/ResourceDoesNotExistError";
+import { HealthTest, HealthTestServiceFactory } from './HealthTestService';
+
+enum HealthTestActions {
+  RUN = 'run'
+}
+
+const HealthTestActionsCodec = convertEnumtoCodec(HealthTestActions);
 
 export function DeviceControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
@@ -54,7 +62,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       } else if (
         (revertMinutes !== undefined && revertMode === undefined) ||
         (revertMode !== undefined && revertMinutes === undefined) ||
-        (revertMinutes !== undefined && revertMode !== undefined && target !== DeviceSystemMode.SLEEP) 
+        (revertMinutes !== undefined && revertMode !== undefined && target !== DeviceSystemMode.SLEEP)
       ) {
         return false;
       } else {
@@ -72,7 +80,8 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       @inject('DeviceService') private deviceService: DeviceService,
       @inject('InternalDeviceService') private internalDeviceService: InternalDeviceService,
       @inject('DeviceSystemModeServiceFactory') private deviceSystemModeServiceFactory: DeviceSystemModeServiceFactory,
-      @inject('DirectiveServiceFactory') private directiveServiceFactory: DirectiveServiceFactory
+      @inject('DirectiveServiceFactory') private directiveServiceFactory: DirectiveServiceFactory,
+      @inject('HealthTestServiceFactory') private healthTestServiceFactory: HealthTestServiceFactory
     ) {
       super();
     }
@@ -86,15 +95,11 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
         })
       }))
     )
-    private async getDeviceByMacAdress(@queryParam('macAddress') macAddress: string, @queryParam('expand') expand?: string): Promise<Responses.DeviceResponse | {}> {
+    @withResponseType<Device, Responses.Device>(Responses.Device.fromModel)
+    private async getDeviceByMacAdress(@queryParam('macAddress') macAddress: string, @queryParam('expand') expand?: string): Promise<Option<Device>> {
       const expandProps = parseExpand(expand);
-      const deviceModel = await this.deviceService.getByMacAddress(macAddress, expandProps);
 
-      if (deviceModel === null) {
-        return {};
-      }
-
-      return Responses.Device.fromModel(deviceModel);
+      return this.deviceService.getByMacAddress(macAddress, expandProps);
     }
 
     @httpGet('/:id',
@@ -108,16 +113,11 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
         })
       }))
     )
-    private async getDevice(@requestParam('id') id: string, @queryParam('expand') expand?: string): Promise<Responses.DeviceResponse | {}> {
+    @withResponseType<Device, Responses.Device>(Responses.Device.fromModel)
+    private async getDevice(@requestParam('id') id: string, @queryParam('expand') expand?: string): Promise<Option<Device>> {
       const expandProps = parseExpand(expand);
 
-      const deviceModel = await this.deviceService.getDeviceById(id, expandProps);
-
-      if (_.isEmpty(deviceModel)) {
-        return {};
-      }
-
-      return Responses.Device.fromModel(deviceModel as Device);
+      return this.deviceService.getDeviceById(id, expandProps);
     }
 
     @httpPost('/:id',
@@ -130,10 +130,11 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
         body: DeviceUpdateValidator
       }))
     )
-    private async updatePartialDevice(@request() req: Request, @requestParam('id') id: string, @requestBody() deviceUpdate: DeviceUpdate): Promise<Responses.DeviceResponse> {
+    @withResponseType<Device, Responses.Device>(Responses.Device.fromModel)
+    private async updatePartialDevice(@request() req: Request, @requestParam('id') id: string, @requestBody() deviceUpdate: DeviceUpdate): Promise<Option<Device>> {
       const directiveService = this.directiveServiceFactory.create(req);
 
-      return Responses.Device.fromModel(await this.deviceService.updatePartialDevice(id, deviceUpdate, directiveService));
+      return some(await this.deviceService.updatePartialDevice(id, deviceUpdate, directiveService));
     }
 
     @httpPost('/:id/fwproperties',
@@ -184,9 +185,10 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       }))
     )
     @createMethod
-    private async pairDevice(@authorizationHeader() authToken: string, @requestBody() deviceCreate: DeviceCreate): Promise<Device> {
+    @withResponseType<Device, Responses.Device>(Responses.Device.fromModel)
+    private async pairDevice(@authorizationHeader() authToken: string, @requestBody() deviceCreate: DeviceCreate): Promise<Option<Device>> {
 
-      return this.deviceService.pairDevice(authToken, deviceCreate);
+      return some(await this.deviceService.pairDevice(authToken, deviceCreate));
     }
 
     @httpPost('/:id/systemMode',
@@ -199,11 +201,12 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       }))
     )
     @asyncMethod
+    @withResponseType<Device, Responses.Device>(Responses.Device.fromModel)
     private async setDeviceSystemMode(
-      @request() req: Request, 
-      @requestParam('id') id: string, 
+      @request() req: Request,
+      @requestParam('id') id: string,
       @requestBody() data: SystemModeRequest
-    ): Promise<Responses.DeviceResponse> {
+    ): Promise<Option<Device>> {
       const deviceSystemModeService = this.deviceSystemModeServiceFactory.create(req);
       const isSleep = this.isSleep(data);
       const now = isSleep ? new Date().toISOString() : 'undefined';
@@ -218,9 +221,9 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
         await deviceSystemModeService.setSystemMode(id, data.target)
       }
 
-      // API v1 call needs to be made first to make sure we have permission to modify the 
+      // API v1 call needs to be made first to make sure we have permission to modify the
       // device record
-      const model = await this.deviceService.updatePartialDevice(id, { 
+      const model = await this.deviceService.updatePartialDevice(id, {
         systemMode: {
           shouldInherit: data.isLocked || data.shouldInherit === undefined ? false : data.shouldInherit,
           target: data.target,
@@ -229,9 +232,78 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
             revertMinutes: data.revertMinutes,
             revertScheduledAt: now
           })
-        } 
+        }
       });
-      return Responses.Device.fromModel(model);
+
+      return some(model);
+    }
+
+    @httpPost('/:id/reset',
+      // Auth is deferred to  API v1 call
+      reqValidator.create(t.type({
+        params: t.type({
+          id: t.string
+        }),
+        body: t.type({
+          target: t.literal('power')
+        })
+      }))
+    )
+    @asyncMethod
+    private async rebootDevice(@request() req: Request, @requestParam('id') id: string): Promise<void> {
+      const directiveService = this.directiveServiceFactory.create(req);
+      return directiveService.reboot(id);
+    }
+
+    @httpPost('/:id/healthTest/:action',
+      authWithId,
+      reqValidator.create(t.type({
+        params: t.type({
+          id: t.string,
+          action: HealthTestActionsCodec
+        })
+      }))
+    )
+    @asyncMethod
+    private async healthTest(@request() req: Request, @requestParam('id') id: string, @requestParam('action') action: string): Promise<HealthTest> {
+      const healthTestService = this.healthTestServiceFactory.create(req);
+      const device = await this.deviceService.getDeviceById(id);
+
+      if (isNone(device)) {
+        throw new ResourceDoesNotExistError();
+      }
+
+      switch (action) {
+        case HealthTestActions.RUN:
+        default: {
+          return healthTestService.run(device.value.macAddress, id);
+        }
+      }
+    }
+
+    @httpGet('/:id/healthTest',
+      authWithId,
+      reqValidator.create(t.type({
+        params: t.type({
+          id: t.string
+        })
+      }))
+    )
+    private async getLatestHealthTest(@request() req: Request, @requestParam('id') id: string): Promise<HealthTest | {}> {
+      const healthTestService = this.healthTestServiceFactory.create(req);
+      const device = await this.deviceService.getDeviceById(id);
+
+      if (isNone(device)) {
+        throw new ResourceDoesNotExistError();
+      }
+
+      const latestHealthTest = await healthTestService.getLatest(device.value.macAddress);
+
+      if (latestHealthTest === null) {
+        return {};
+      }
+
+      return latestHealthTest;
     }
 
     private isSleep({ target, revertMinutes, revertMode }: SystemModeRequest): boolean {
@@ -249,10 +321,10 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     private async mapIcdToMacAddress(icd: string): Promise<string> {
 
       const device = await this.deviceService.getDeviceById(icd);
-      if (_.isEmpty(device)) {
+      if (isNone(device)) {
         throw new ResourceDoesNotExistError('Device does not exist.');
       }
-      return (device as Device).macAddress;
+      return device.value.macAddress;
     }
 
   }

@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import { injectable, inject } from 'inversify';
-import { DependencyFactoryFactory, Device, DeviceUpdate, DeviceCreate, Location, ValveState } from '../api';
+import { DependencyFactoryFactory, Device, DeviceUpdate, DeviceCreate, Location, ValveState, PropExpand } from '../api';
 import { DeviceResolver } from '../resolver';
 import { LocationService } from '../service';
 import { PairingService, PairingData, QrData } from '../../api-v1/pairing/PairingService';
@@ -8,6 +8,7 @@ import ConflictError from '../api/error/ConflictError';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import Logger from 'bunyan';
 import { DirectiveService } from './DirectiveService';
+import { Option, some, none, isNone, fromNullable } from 'fp-ts/lib/Option';
 
 @injectable()
 class DeviceService {
@@ -22,14 +23,16 @@ class DeviceService {
     this.locationServiceFactory = depFactoryFactory<LocationService>('LocationService');
   }
 
-  public async getDeviceById(id: string, expand?: string[]): Promise<Device | {}> {
+  public async getDeviceById(id: string, expand?: PropExpand): Promise<Option<Device>> {
     const device: Device | null = await this.deviceResolver.get(id, expand);
 
-    return device === null ? {} : device;
+    return fromNullable(device);
   }
 
-  public async getByMacAddress(macAddress: string, expand?: string[]): Promise<Device | null> {
-    return this.deviceResolver.getByMacAddress(macAddress, expand);
+  public async getByMacAddress(macAddress: string, expand?: PropExpand): Promise<Option<Device>> {
+    const device = await this.deviceResolver.getByMacAddress(macAddress, expand);
+
+    return fromNullable(device);
   }
 
   public async updatePartialDevice(id: string, deviceUpdate: DeviceUpdate, directiveService?: DirectiveService): Promise<Device> {
@@ -63,7 +66,7 @@ class DeviceService {
 
     if (device !== null && !_.isEmpty(device) && !device.isPaired) {
       throw new ConflictError('Device already paired.');
-    } else if (_.isEmpty(location)) {
+    } else if (isNone(location)) {
       throw new ResourceDoesNotExistError('Location does not exist');
     }
 
@@ -74,7 +77,7 @@ class DeviceService {
     try {
       await this.apiV1PairingService.completePairing(authToken, createdDevice.id, { 
         macAddress: createdDevice.macAddress, 
-        timezone: (location as Location).timezone 
+        timezone: location.value.timezone 
       });
     } catch (err) {
       // Failure to complete the pairing process should not cause the pairing to completely fail.
@@ -85,7 +88,7 @@ class DeviceService {
     return createdDevice;
   }
 
-  public async getAllByLocationId(locationId: string, expand?: string[]): Promise<Device[]> {
+  public async getAllByLocationId(locationId: string, expand?: PropExpand): Promise<Device[]> {
     return this.deviceResolver.getAllByLocationId(locationId, expand);
   }
 }

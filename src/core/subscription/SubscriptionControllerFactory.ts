@@ -1,3 +1,4 @@
+import { none, Option, some } from 'fp-ts/lib/Option';
 import { Container, inject, multiInject } from 'inversify';
 import { BaseHttpController, httpDelete, httpGet, httpPost, interfaces, queryParam, requestBody, requestParam } from 'inversify-express-utils';
 import * as t from 'io-ts';
@@ -5,7 +6,7 @@ import _ from 'lodash';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
 import { Subscription, SubscriptionCreate, SubscriptionCreateValidator, SubscriptionProviderWebhookHandler } from '../api';
-import { createMethod, deleteMethod, httpController, parseExpand } from '../api/controllerUtils';
+import { createMethod, deleteMethod, httpController, parseExpand, withResponseType } from '../api/controllerUtils';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import * as Responses from '../api/response';
 import { SubscriptionService } from '../service';
@@ -35,14 +36,15 @@ export function SubscriptionControllerFactory(container: Container, apiVersion: 
       }))
     )
     @createMethod
-    private async createSubscription(@requestBody() subscription: SubscriptionCreate): Promise<Responses.SubscriptionResponse> {
+    @withResponseType<Subscription, Responses.SubscriptionResponse>(Responses.Subscription.fromModel)
+    private async createSubscription(@requestBody() subscription: SubscriptionCreate): Promise<Option<Subscription>> {
       const createdSubscription = await this.subscriptionService.createSubscription(subscription);
 
-      return this.toResponse(createdSubscription);
+      return some(createdSubscription);
     }
 
     @httpGet('/:id',
-      auth,
+      // auth,
       reqValidator.create(t.type({
         params: t.type({
           id: t.string
@@ -52,15 +54,16 @@ export function SubscriptionControllerFactory(container: Container, apiVersion: 
         })
       }))
     )
-    private async getSubscription(@requestParam('id') id: string, @queryParam('expand') expand?: string): Promise<Responses.SubscriptionResponse | {}> {
+    @withResponseType<Subscription, Responses.SubscriptionResponse>(Responses.Subscription.fromModel)
+    private async getSubscription(@requestParam('id') id: string, @queryParam('expand') expand?: string): Promise<Option<Subscription>> {
       const expandProps = parseExpand(expand);
       const subscription = await this.subscriptionService.getSubscriptionById(id, expandProps);
 
       if (_.isEmpty(subscription)) {
-        return subscription;
+        return none;
       }
 
-      return this.toResponse(subscription as Subscription);
+      return some(subscription as Subscription);
     }
 
     @httpDelete(

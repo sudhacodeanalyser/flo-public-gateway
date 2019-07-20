@@ -1,11 +1,8 @@
-import { $enum } from 'ts-enum-util';
 import _ from 'lodash';
-// These should likely go into a lookup table
-import { Device, SystemMode as DeviceSystemMode, ValveState, DeviceType, DeviceModelType } from '../api';
-import { NoYesUnsure } from '../api/NoYesUnsure';
-import { translateNumericToStringEnum, translateStringToNumericEnum } from '../api/enumUtils';
 import { morphism, StrictSchema } from 'morphism';
-import * as t from 'io-ts';
+// These should likely go into a lookup table
+import { Device, DeviceModelType, DeviceType, SystemMode as DeviceSystemMode, ValveState } from '../api';
+import { NoYesUnsure } from '../api/NoYesUnsure';
 
 export interface DeviceRecordData {
   id: string;
@@ -18,7 +15,7 @@ export interface DeviceRecordData {
   created_at?: string;
   updated_at?: string;
   is_paired?: boolean;
-  prv_installed_after?: NoYesUnsure.String;
+  prv_installation?: string;
   irrigation_type?: string;
   should_inherit_system_mode?: boolean;
   target_system_mode?: DeviceSystemMode;
@@ -43,7 +40,7 @@ const RecordToModelSchema: StrictSchema<Device, DeviceRecordData>  = {
   deviceModel: (input: DeviceRecordData) => _.get(input, 'device_model', DeviceType.FLO_DEVICE_V2),
   deviceType: (input: DeviceRecordData) => _.get(input, 'device_type', DeviceModelType.FLO_0_75),
   irrigationType: 'irrigation_type',
-  prvInstalledAfter: 'prv_installed_after',
+  prvInstallation: 'prv_installation',
   systemMode: (input: DeviceRecordData) => ({
     target: input.target_system_mode,
     isLocked: false,
@@ -56,7 +53,14 @@ const RecordToModelSchema: StrictSchema<Device, DeviceRecordData>  = {
   valve: (input: DeviceRecordData) => ({
     target: input.target_valve_state
   }),
-  irrigationSchedule: () => undefined
+  irrigationSchedule: () => undefined,
+  installStatus: () => ({
+    isInstalled: false
+  }),
+  notifications: () => undefined,
+  hardwareThresholds: () => undefined,
+  pairingData: () => undefined,
+  serialNumber: () => undefined
 };
 
 const ModelToRecordSchema: StrictSchema<DeviceRecordData, Device> = {
@@ -76,7 +80,7 @@ const ModelToRecordSchema: StrictSchema<DeviceRecordData, Device> = {
   target_valve_state: 'valve.target',
   device_type: 'deviceType',
   device_model: 'deviceModel',
-  prv_installed_after: 'prvInstalledAfter',
+  prv_installation: 'prvInstallation',
   irrigation_type: 'irrigationType'
 };
 
@@ -97,7 +101,7 @@ const PartialModelToRecordSchema: StrictSchema<Partial<DeviceRecordData>, Partia
   target_valve_state: 'valve.target',
   device_type: 'deviceType',
   device_model: 'deviceModel',
-  prv_installed_after: 'prvInstalledAfter',
+  prv_installation: 'prvInstallation',
   irrigation_type: 'irrigationType'
 };
 

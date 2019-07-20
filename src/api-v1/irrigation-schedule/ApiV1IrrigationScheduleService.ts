@@ -1,8 +1,9 @@
-import { ApiV1Service } from '../ApiV1Service';
+import { HttpService } from '../../http/HttpService';
 import { IrrigationScheduleService, ComputedIrrigationSchedule, DeviceIrrigationAllowedState } from '../../core/device/IrrigationScheduleService';
 import { ResponseToComputedIrrigationSchedule, ResponseToDeviceIrrigationAllowedState } from './models';
+import { isLeft } from 'fp-ts/lib/Either';
 
-class ApiV1IrrigationScheduleService extends ApiV1Service implements IrrigationScheduleService {
+class ApiV1IrrigationScheduleService extends HttpService implements IrrigationScheduleService {
   constructor(
     private readonly apiV1Url: string,
     private readonly authToken: string
@@ -19,11 +20,11 @@ class ApiV1IrrigationScheduleService extends ApiV1Service implements IrrigationS
     const response = await this.sendRequest(request);
     const result = ResponseToComputedIrrigationSchedule.decode(response);
 
-    if (result.isLeft()) {
+    if (isLeft(result)) {
       throw new Error('Invalid response.')
     }
 
-    return result.value;
+    return result.right;
   }
 
   public async enableDeviceIrrigationAllowedInAwayMode(id: string, times: string[][]): Promise<void> {
@@ -58,11 +59,11 @@ class ApiV1IrrigationScheduleService extends ApiV1Service implements IrrigationS
     const response = await this.sendRequest(request);
     const result = ResponseToDeviceIrrigationAllowedState.decode(response);
 
-    if (result.isLeft()) {
+    if (isLeft(result)) {
       throw new Error('Invalid response.');
     }
 
-    return result.value;
+    return result.right;
   }
 }
 

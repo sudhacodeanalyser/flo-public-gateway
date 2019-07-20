@@ -1,9 +1,9 @@
-import { ApiV1Service } from '../ApiV1Service';
+import { HttpService } from '../../http/HttpService';
 import { DeviceSystemModeServiceFactory, DeviceSystemModeService } from '../../core/device/DeviceSystemModeService';
 import { SystemMode, DeviceSystemModeNumeric } from '../../core/api';
 import { translateStringToNumericEnum } from '../../core/api/enumUtils';
 
-class ApiV1DeviceSystemModeService extends ApiV1Service implements DeviceSystemModeService {
+class ApiV1DeviceSystemModeService extends HttpService implements DeviceSystemModeService {
 
   constructor(
     private readonly apiV1Url: string,

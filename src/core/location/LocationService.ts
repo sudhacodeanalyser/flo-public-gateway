@@ -1,11 +1,12 @@
 import { inject, injectable } from 'inversify';
 import { LocationResolver } from '../resolver';
-import { DependencyFactoryFactory, Location, LocationUpdate, LocationUserRole, SystemMode, Account } from '../api';
+import { DependencyFactoryFactory, Location, LocationUpdate, LocationUserRole, SystemMode, Account, PropExpand } from '../api';
 import { DeviceSystemModeService } from '../device/DeviceSystemModeService';
 import { DeviceService, AccountService } from '../service';
 import { IrrigationScheduleService, IrrigationScheduleServiceFactory } from '../device/IrrigationScheduleService';
 import { injectHttpContext, interfaces } from 'inversify-express-utils';
 import _ from 'lodash';
+import { Option, fromNullable, isNone } from 'fp-ts/lib/Option';
 
 @injectable()
 class LocationService {
@@ -27,23 +28,23 @@ class LocationService {
     }
   }
 
-  public async createLocation(location: Location): Promise<Location | {}> {
+  public async createLocation(location: Location): Promise<Option<Location>> {
     const createdLocation: Location | null = await this.locationResolver.createLocation(location);
     const accountId = location.account.id;
     const account = await this.accountServiceFactory().getAccountById(accountId);
 
-    if (!_.isEmpty(account) && createdLocation !== null) {
-      const ownerUserId = (account as Account).owner.id;
+    if (!isNone(account) && createdLocation !== null) {
+      const ownerUserId = account.value.owner.id;
       await this.locationResolver.addLocationUserRole(createdLocation.id, ownerUserId, ['owner']);
     }
 
-    return createdLocation === null ? {} : createdLocation;
+    return fromNullable(createdLocation);
   }
 
-  public async getLocation(id: string, expand?: string[]): Promise<Location | {}> {
+  public async getLocation(id: string, expand?: PropExpand): Promise<Option<Location>> {
     const location: Location | null = await this.locationResolver.get(id, expand);
 
-    return location === null ? {} : location;
+    return fromNullable(location);
   }
 
   public async updatePartialLocation(id: string, locationUpdate: LocationUpdate): Promise<Location> {

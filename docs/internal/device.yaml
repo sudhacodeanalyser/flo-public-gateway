@@ -15,10 +15,10 @@ paths:
               type: object
               properties:
                 data:
-                  oneOf: 
+                  oneOf:
                     - type: object
                       properties:
-                        i: 
+                        i:
                           type: string
                           format: uuid
                         e:
@@ -136,9 +136,7 @@ paths:
           content:
             application/json:
               schema:
-                oneOf:
-                  - $ref: '#/components/schemas/Device'
-                  - $ref: '#/components/schemas/Empty'
+                $ref: '#/components/schemas/Device'
         401:
           $ref: '#/components/responses/UnauthorizedError'
         403:
@@ -167,9 +165,7 @@ paths:
           content:
             application/json:
               schema:
-                oneOf:
-                  - $ref: '#/components/schemas/Device'
-                  - $ref: '#/components/schemas/Empty'
+                $ref: '#/components/schemas/Device'
         401:
           $ref: '#/components/responses/UnauthorizedError'
         403:
@@ -222,6 +218,14 @@ paths:
             $ref: '#/components/schemas/Error'
 
   /api/v2/devices/{id}/fwproperties:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Device ID
     post:
       summary: Updates Device Firmware Properties by ID.
       tags:
@@ -241,7 +245,16 @@ paths:
           $ref: '#/components/responses/UnauthorizedError'
         403:
           $ref: '#/components/responses/ForbiddenError'
+
   /api/v2/devices/{id}/systemMode:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Device ID
     post:
       summary: Sends directive to change device system mode
       tags:
@@ -251,7 +264,7 @@ paths:
         application/json
       requestBody:
         required: true
-        content: 
+        content:
           application/json:
             schema:
               type: object
@@ -275,13 +288,118 @@ paths:
           description: Invalid request body
         409:
           description: Device system mode is locked and cannot be changed
+
+  /api/v2/devices/{id}/reset:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Device ID
+    post:
+      summary: Sends directive to reset the device according to the given target.
+      tags:
+        - Devices
+      produces:
+        - application/json
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - target
+              properties:
+                target:
+                  type: string
+                  enum:
+                    - power
+      responses:
+        202:
+          description: Directive sent.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Empty'
+        400:
+          description: Invalid request body
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        403:
+          $ref: '#/components/responses/ForbiddenError'
+
+  /api/v2/devices/{id}/healthTest/run:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Device ID
+    post:
+      summary: Sends directive to run a Health Test.
+      tags:
+        - Devices
+      produces:
+        - application/json
+      responses:
+        202:
+          description: Directive sent.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthTest'
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        403:
+          $ref: '#/components/responses/ForbiddenError'
+        409:
+          description: A Device with the specified ID was not found.
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  /api/v2/devices/{id}/healthTest:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Device ID
+    get:
+      summary: Retrieves latest Health Test result.
+      tags:
+        - Devices
+      produces:
+        - application/json
+      responses:
+        200:
+          description: The latest Health Test result or an empty object if there is none.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthTest'
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        403:
+          $ref: '#/components/responses/ForbiddenError'
+        409:
+          description: A Device with the specified ID was not found.
+          schema:
+            $ref: '#/components/schemas/Error'
+
 components:
   schemas:
     DeviceMutable:
       type: object
       properties:
-        prvInstalledAfter:
-          type: boolean
+        prvInstallation:
+          type: string
         irrigationType:
           $ref: '#/components/schemas/IrrigationType'
         installationPoint:
@@ -293,19 +411,22 @@ components:
           properties:
             target:
               type: string
-              enum: 
+              enum:
                 - open
                 - closed
+
     IrrigationType:
       type: string
       enum:
         - none
         - sprinklers
         - drip
+
     Device:
       allOf:
         - $ref: '#/components/schemas/DeviceMutable'
         - $ref: '#/components/schemas/Timestamped'
+        - $ref: '#/components/schemas/Notifications'
         - type: object
           properties:
             id:
@@ -330,6 +451,35 @@ components:
               type: object
             irrigationType:
               $ref: '#/components/schemas/IrrigationType'
+            hardwareThresholds:
+              type: object
+              properties:
+                gpm:
+                  $ref: '#/components/schemas/HardwareThresholds'
+                psi:
+                  $ref: '#/components/schemas/HardwareThresholds'
+                temp:
+                  $ref: '#/components/schemas/HardwareThresholds'
+            telemetry:
+              type: object
+              properties:
+                current:
+                  type: object
+                  properties:
+                    gpm:
+                      type: number
+                    psi:
+                      type: number
+                    tempF:
+                      type: number
+                    updated:
+                      type: string
+                      format: date-time
+            connectivity:
+              type: object
+              properties:
+                rssi:
+                  type: string
             systemMode:
               type: object
               properties:
@@ -344,17 +494,19 @@ components:
                 revertScheduledAt:
                   type: string
                   format: date-time
+                lastKnown:
+                  $ref: '#/components/schemas/SystemMode'
             valve:
               type: object
               properties:
                 target:
                   type: string
-                  enum: 
+                  enum:
                     - open
                     - closed
                 lastKnown:
                   type: string
-                  enum: 
+                  enum:
                     - open
                     - closed
                     - in_transition
@@ -378,6 +530,32 @@ components:
                 updatedAt:
                   type: string
                   format: date-time
+            installStatus:
+              type: object
+              properties:
+                isInstalled:
+                  type: boolean
+            pairingData:
+              type: object
+              properties:
+                apName:
+                  type: string
+                loginToken:
+                  type: string
+                clientCert:
+                  type: string
+                clientKey:
+                  type: string
+                serverCert:
+                  type: string
+                websocketCert:
+                  type: string
+                websocketCertDer:
+                  type: string
+                websocketKey:
+                  type: string
+            serialNumber:
+              type: string
     DeviceExpandable:
       oneOf:
         - type: object
@@ -386,9 +564,82 @@ components:
               type: string
               format: uuid
         - $ref: '#/components/schemas/Device'
+
     SystemMode:
       type: string
       enum:
         - home
         - away
         - sleep
+
+    HardwareThresholds:
+      type: object
+      properties:
+        okMin:
+          type: number
+        okMax:
+          type: number
+        minValue:
+          type: number
+        maxValue:
+          type: number
+
+    HealthTest:
+      type: object
+      properties:
+        roundId:
+          type: string
+          format: uuid
+        deviceId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum:
+            - pending
+            - running
+            - completed
+            - cancelled
+            - timeout
+          description: >
+            Health Test Status:
+              * `pending` - Health test request was initiated and the device has not responded yet
+              * `running` - Health test is running
+              * `completed` - Health test completed
+              * `cancelled` - Health test was cancelled either by the device or user. Check results
+              * `timeout` - Health test timed out. Device did not respond in time
+        type:
+          type: string
+          enum:
+            - auto
+            - manual
+          description: >
+            Health Test Type:
+              * `auto` - Initiated by a schedule or device
+              * `manual` - Initiated by user or admin
+        leakType:
+          type: number
+        leakLossMinGal:
+          type: number
+        leakLossMaxGal:
+          type: number
+        startPressure:
+          type: number
+        endPressure:
+          type: number
+        startRawPayload:
+          type: object
+        endRawPayload:
+          type: object
+        created:
+          type: string
+          format: date-time
+        updated:
+          type: string
+          format: date-time
+        startDate:
+          type: string
+          format: date-time
+        endDate:
+          type: string
+          format: date-time

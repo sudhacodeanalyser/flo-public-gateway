@@ -1,15 +1,15 @@
 import * as t from 'io-ts';
-import { InternalDevice } from '../../../internal-device-service/models';
-import { Omit, Expandable, Location, TimestampedModel, SystemMode as DeviceSystemMode, SystemModeCodec as DeviceSystemModeCodec } from '../../api';
-import { convertEnumtoCodec } from '../../api/enumUtils';
-import { NoYesUnsure } from '../NoYesUnsure';
 import _ from 'lodash';
+import {InternalConnectivity, InternalDevice, InternalTelemetry} from '../../../internal-device-service/models';
+import { Expandable, Location, NotificationCounts, Omit, SystemModeCodec as DeviceSystemModeCodec, TimestampedModel } from '../../api';
+import { convertEnumtoCodec } from '../../api/enumUtils';
 import { ComputedIrrigationSchedule } from '../../device/IrrigationScheduleService';
+import { NoYesUnsure } from '../NoYesUnsure';
 
 export enum ValveState {
   OPEN = 'open',
   CLOSED = 'closed',
-  IN_TRANSITION = 'in_transition'
+  IN_TRANSITION = 'inTransition'
 }
 
 export enum ValveStateNumeric {
@@ -37,7 +37,7 @@ export enum DeviceType {
 const DeviceMutableCodec = t.type({
   installationPoint: t.string,
   nickname: t.string,
-  prvInstalledAfter: NoYesUnsure.Codec,
+  prvInstallation: t.string,
   irrigationType: t.string,
   valve: t.partial({
     target: t.keyof(_.pick(ValveStateCodec.keys, ['open', 'closed']))
@@ -82,31 +82,64 @@ export const DeviceUpdateValidator = t.exact(t.intersection([
 ]));
 export interface DeviceUpdate extends t.TypeOf<typeof DeviceUpdateValidator> {
   systemMode?: Partial<SystemModeData>;
-};
+}
+
+interface ThresholdDefinition {
+  okMin: number;
+  okMax: number;
+  maxValue: number;
+  minValue: number;
+}
+
+interface HardwareThresholds {
+  gpm: ThresholdDefinition;
+  psi: ThresholdDefinition;
+  temp: ThresholdDefinition;
+}
+
+export interface PairingData {
+  apName: string;
+  loginToken: string;
+  clientCert: string;
+  clientKey: string;
+  serverCert: string;
+  websocketCert?: string;
+  websocketCertDer?: string;
+  websocketKey: string;  
+}
 
 export interface Device extends Omit<DeviceUpdate, 'valve'>, TimestampedModel {
   id: string,
-  macAddress: string,
-  location: Expandable<Location>,
-  deviceType: string,
-  deviceModel: string,
-  isPaired: boolean,
-  additionalProps: AdditionalDeviceProps | null | undefined,
+  macAddress: string;
+  location: Expandable<Location>;
+  deviceType: string;
+  deviceModel: string;
+  isPaired: boolean;
+  additionalProps: AdditionalDeviceProps | null | undefined;
+  installStatus: {
+    isInstalled: boolean
+  };
   valve?: {
     target?: ValveState,
     lastKnown?: ValveState
-  },
+  };
+  connectivity?: InternalConnectivity;
+  telemetry?: InternalTelemetry;
   irrigationSchedule?: {
     isEnabled: boolean,
     computed?: Omit<ComputedIrrigationSchedule, 'macAddress'>,
     updatedAt?: string
-  }
+  };
+  notifications?: NotificationCounts;
+  hardwareThresholds?: HardwareThresholds;
+  pairingData?: PairingData;
+  serialNumber?: string;
 }
 
 interface FwProperties {
-  [prop: string]: any
+  [prop: string]: any;
 }
 
 export interface AdditionalDeviceProps extends Pick<InternalDevice, 'isConnected' | 'lastHeardFromTime' | 'fwVersion'> {
-  fwProperties: FwProperties | null | undefined
+  fwProperties: FwProperties | null | undefined;
 }

@@ -1,0 +1,37 @@
+paths:
+  /api/v2/presence/me:
+    post:
+      summary: Notified backend of user's active presence on apps or websites
+      description: >-
+        Sets presence in the system based on JWT token.
+        This is required for any realtime data streaming to the mobile apps and user portal.
+        Expires after 60s, unless called again. Suggested interval to call is every 30s.
+      tags:
+        - Presence
+      produces:
+        - application/json
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PresencePost'
+      responses:
+        202:
+          description: Presence has been queued up
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        403:
+          $ref: '#/components/responses/ForbiddenError'
+
+components:
+  schemas:
+    PresencePost:
+      type: object
+      properties:
+        appName:
+          type: string
+          example: flo-swagger-example/ios
+        appVersion:
+          type: string
+          example: 3.0.1-r1234

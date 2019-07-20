@@ -1,11 +1,12 @@
 import { inject, injectable } from 'inversify';
 import uuid from 'uuid';
 import { fromPartialRecord } from '../../database/Patch';
-import { DependencyFactoryFactory, PartialBy, Subscription } from '../api';
+import { DependencyFactoryFactory, PartialBy, Subscription, PropExpand } from '../api';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import { LocationResolver, PropertyResolverMap, Resolver } from '../resolver';
 import SubscriptionPlanTable from '../subscription/SubscriptionPlanTable';
 import SubscriptionTable from '../subscription/SubscriptionTable';
+import OldSubscriptionTable from './OldSubscriptionTable';
 import { SubscriptionPlanRecord, SubscriptionPlanRecordData } from './SubscriptionPlanRecord';
 import { SubscriptionRecord, SubscriptionRecordData } from './SubscriptionRecord';
 
@@ -35,6 +36,8 @@ class SubscriptionResolver extends Resolver<Subscription> {
   private locationResolverFactory: () => LocationResolver;
 
   constructor(
+   // TODO: Remove this dependency once data migration is completed.
+   @inject('OldSubscriptionTable') private oldSubscriptionTable: OldSubscriptionTable,
    @inject('SubscriptionTable') private subscriptionTable: SubscriptionTable,
    @inject('SubscriptionPlanTable') private subscriptionPlanTable: SubscriptionPlanTable,
    @inject('DependencyFactoryFactory') depFactoryFactory: DependencyFactoryFactory
@@ -69,7 +72,7 @@ class SubscriptionResolver extends Resolver<Subscription> {
     return new SubscriptionRecord(createdSubscriptionRecordData).toModel();
   }
 
-  public async get(id: string, expandProps: string[] = []): Promise<Subscription | null> {
+  public async get(id: string, expandProps: PropExpand = []): Promise<Subscription | null> {
     const subscriptionRecordData: SubscriptionRecordData | null = await this.subscriptionTable.get({ id });
 
     if (subscriptionRecordData === null) {
@@ -87,6 +90,26 @@ class SubscriptionResolver extends Resolver<Subscription> {
     }
 
     return this.toModel(subscriptionRecordData);
+  }
+
+  // TODO: Remove me once data migration is completed.
+  public async getByAccountId(accountId: string): Promise<any | null> {
+    const subscriptionRecordData: any | null = await this.oldSubscriptionTable.get({ account_id: accountId });
+
+    if (subscriptionRecordData === null) {
+      return null;
+    }
+
+    return {
+      id: subscriptionRecordData.account_id,
+      provider: {
+        isActive: subscriptionRecordData.status === 'active'
+      },
+      plan: {
+        id: subscriptionRecordData.plan_id
+      },
+      sourceId: subscriptionRecordData.source_id
+    };
   }
 
   public async getByProviderCustomerId(customerId: string): Promise<Subscription | null> {
@@ -115,7 +138,7 @@ class SubscriptionResolver extends Resolver<Subscription> {
     return this.subscriptionPlanTable.get({ plan_id: planId });
   }
 
-  private async toModel(subscriptionRecordData: SubscriptionRecordData, expandProps: string[] = []): Promise<Subscription> {
+  private async toModel(subscriptionRecordData: SubscriptionRecordData, expandProps: PropExpand = []): Promise<Subscription> {
     const subscription = new SubscriptionRecord(subscriptionRecordData).toModel();
     const expandedProps = await this.resolveProps(subscription, expandProps);
 
@@ -127,3 +150,4 @@ class SubscriptionResolver extends Resolver<Subscription> {
 }
 
 export { SubscriptionResolver };
+

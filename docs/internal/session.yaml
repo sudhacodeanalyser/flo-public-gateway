@@ -1,0 +1,33 @@
+paths:
+  /api/v2/session/firestore:
+    post:
+      summary: Issue Firestore token based on user's current valid JWT Token
+      description: >-
+        Provides token to use with Firestore for realtime data. Token expires after 24 hours. A new token needs to be
+        requested to gain access to new devices
+      tags:
+        - Session
+      produces:
+        - application/json
+      responses:
+        200:
+          description: Issued valid Firestore token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        403:
+          $ref: '#/components/responses/ForbiddenError'
+
+components:
+  schemas:
+    SessionFirestoreTokenResponse:
+      type: object
+      properties:
+        token:
+          type: string

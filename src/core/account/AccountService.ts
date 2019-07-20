@@ -1,6 +1,7 @@
 import { injectable, inject } from 'inversify';
-import { Account, AccountUserRole } from '../api';
+import { Account, AccountUserRole, PropExpand } from '../api';
 import { AccountResolver } from '../resolver';
+import { Option, fromNullable } from 'fp-ts/lib/Option';
 
 @injectable()
 class AccountService {
@@ -8,10 +9,10 @@ class AccountService {
     @inject('AccountResolver') private accountResolver: AccountResolver
   ) {}
 
-  public async getAccountById(id: string, expandProps?: string[]): Promise<Account | {}> {
+  public async getAccountById(id: string, expandProps?: PropExpand): Promise<Option<Account>> {
     const account: Account | null = await this.accountResolver.getAccount(id, expandProps);
 
-    return account === null ? {} : account;
+    return fromNullable(account);
   }
 
   public async removeAccount(id: string): Promise<void> {

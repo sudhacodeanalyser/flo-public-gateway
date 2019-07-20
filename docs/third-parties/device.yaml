@@ -1,0 +1,295 @@
+paths:
+  /api/v2/devices:
+    get:
+      summary: Retrieves a Device by MAC address.
+      tags:
+        - Devices
+      produces:
+        - application/json
+      parameters:
+        - in: query
+          name: macAddress
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/ExpandParam'
+      responses:
+        200:
+          description: A Device with the specified MAC address or an empty object if not found.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/Device'
+                  - $ref: '#/components/schemas/Empty'
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        403:
+          $ref: '#/components/responses/ForbiddenError'
+
+  /api/v2/devices/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Device ID
+    get:
+      summary: Retrieves a Device by ID.
+      tags:
+        - Devices
+      produces:
+        - application/json
+      parameters:
+        - $ref: '#/components/parameters/ExpandParam'
+      responses:
+        200:
+          description: A Device with the specified ID or an empty object if not found.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/Device'
+                  - $ref: '#/components/schemas/Empty'
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        403:
+          $ref: '#/components/responses/ForbiddenError'
+  /api/v2/devices/{id}/systemMode:
+    post:
+      summary: Sends directive to change device system mode
+      tags:
+        - Devices
+        - System Mode
+      produces:
+        application/json
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - target
+              properties:
+                target:
+                  $ref: '#/components/schemas/SystemMode'
+                isLocked:
+                  type: boolean
+                revertMode:
+                  $ref: '#/components/schemas/SystemMode'
+                revertMinutes:
+                  type: number
+      responses:
+        202:
+          description: Directive sent
+          schema:
+            $ref: '#/components/schemas/Device'
+        400:
+          description: Invalid request body
+        409:
+          description: Device system mode is locked and cannot be changed
+
+  /api/v2/devices/{id}/reset:
+    post:
+      summary: Sends directive to reset the device according to the given target.
+      tags:
+        - Devices
+      produces:
+        - application/json
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - target
+              properties:
+                target:
+                  type: string
+                  enum:
+                    - power
+      responses:
+        202:
+          description: Directive sent.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Empty'
+        400:
+          description: Invalid request body
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        403:
+          $ref: '#/components/responses/ForbiddenError'
+
+components:
+  schemas:
+    DeviceMutable:
+      type: object
+      properties:
+        prvInstallation:
+          type: string
+        irrigationType:
+          $ref: '#/components/schemas/IrrigationType'
+        installationPoint:
+          type: string
+        nickname:
+          type: string
+        valve:
+          type: object
+          properties:
+            target:
+              type: string
+              enum:
+                - open
+                - closed
+    IrrigationType:
+      type: string
+      enum:
+        - none
+        - sprinklers
+        - drip
+    Device:
+      allOf:
+        - $ref: '#/components/schemas/DeviceMutable'
+        - $ref: '#/components/schemas/Timestamped'
+        - $ref: '#/components/schemas/Notifications'
+        - type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            macAddress:
+              type: string
+            location:
+              $ref: '#/components/schemas/LocationExpandable'
+            deviceType:
+              type: string
+            deviceModel:
+              type: string
+            isConnected:
+              type: boolean
+            lastHeardFromTime:
+              type: string
+              format: date-time
+            fwVersion:
+              type: string
+            fwProperties:
+              type: object
+            irrigationType:
+              $ref: '#/components/schemas/IrrigationType'
+            hardwareThresholds:
+              type: object
+              properties:
+                gpm:
+                  $ref: '#/components/schemas/HardwareThresholds'
+                psi:
+                  $ref: '#/components/schemas/HardwareThresholds'
+                temp:
+                  $ref: '#/components/schemas/HardwareThresholds'
+            telemetry:
+              type: object
+              properties:
+                current:
+                  type: object
+                  properties:
+                    gpm:
+                      type: number
+                    psi:
+                      type: number
+                    tempF:
+                      type: number
+                    updated: 
+                      type: string
+                      format: date-time
+            connectivity:
+              type: object
+              properties:
+                rssi:
+                  type: string
+            systemMode:
+              type: object
+              properties:
+                target:
+                  $ref: '#/components/schemas/SystemMode'
+                shouldInhert:
+                  type: boolean
+                revertMinutes:
+                  type: number
+                revertMode:
+                  $ref: '#/components/schemas/SystemMode'
+                revertScheduledAt:
+                  type: string
+                  format: date-time
+                lastKnown:
+                  $ref: '#/components/schemas/SystemMode'
+            valve:
+              type: object
+              properties:
+                target:
+                  type: string
+                  enum:
+                    - open
+                    - closed
+                lastKnown:
+                  type: string
+                  enum:
+                    - open
+                    - closed
+                    - in_transition
+            irrigationSchedule:
+              type: object
+              properties:
+                computed:
+                  type: object
+                  properties:
+                    status:
+                      type: string
+                    times:
+                      type: array
+                      items:
+                        type: array
+                        items:
+                          type: string
+                          pattern: '^\d{2}:\d{2}:\d{2}$'
+                isEnabled:
+                  type: boolean
+                updatedAt:
+                  type: string
+                  format: date-time
+            installStatus:
+              type: object
+              properties:
+                isInstalled:
+                  type: boolean
+            serialNumber:
+              type: string
+    DeviceExpandable:
+      oneOf:
+        - type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+        - $ref: '#/components/schemas/Device'
+    SystemMode:
+      type: string
+      enum:
+        - home
+        - away
+        - sleep
+    HardwareThresholds:
+        type: object
+        properties:
+          okMin:
+            type: number
+          okMax: 
+            type: number
+          minValue: 
+            type: number
+          maxValue:
+            type: number
