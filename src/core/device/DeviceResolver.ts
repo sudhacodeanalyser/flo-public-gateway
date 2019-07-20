@@ -124,10 +124,21 @@ class DeviceResolver extends Resolver<Device> {
       }
     },
     installStatus: async (device: Device, shouldExpand = false) => {
-      const onboardingLog = await this.onboardingLogTable.getCurrentState(device.id);
+      const onboardingLog = await this.onboardingLogTable.getInstallEvent(device.id);
+
       return {
-        isInstalled: onboardingLog !== null
-      }
+        isInstalled: Option.isSome(onboardingLog),
+        installDate: Option.isSome(onboardingLog) ? onboardingLog.value.created_at : undefined
+      };
+    },
+    learning: async (device: Device, shouldExpand = false) => {
+      const onboardingLog = await this.onboardingLogTable.getOutOfForcedSleepEvent(device.id);
+
+      return Option.isNone(onboardingLog) ?
+        null :
+        {
+          outOfLearningDate: onboardingLog.value.created_at
+        };
     },
     notifications: async (device: Device, shouldExpand = false) => {
       return this.notificationService.getAlarmCounts({});

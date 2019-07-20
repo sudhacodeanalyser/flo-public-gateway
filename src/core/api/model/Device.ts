@@ -117,7 +117,11 @@ export interface Device extends Omit<DeviceUpdate, 'valve'>, TimestampedModel {
   isPaired: boolean;
   additionalProps: AdditionalDeviceProps | null | undefined;
   installStatus: {
-    isInstalled: boolean
+    isInstalled: boolean,
+    installDate?: string
+  };
+  learning?: {
+    outOfLearningDate?: string
   };
   valve?: {
     target?: ValveState,
