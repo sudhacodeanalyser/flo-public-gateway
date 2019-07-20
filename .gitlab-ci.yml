@@ -70,7 +70,7 @@ Sanity:
   tags:
       - test
 
-Dev:
+K8sDev:
   variables:
     AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID_DEV}"
     AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY_DEV}"
@@ -85,13 +85,12 @@ Dev:
     name: dev
     url: https://flo-public-gateway.flocloud.co/ping
   script:
-    - make environment
-    #- make pull
-    - make deploy ENV=dev
+    - make environment-dev
+    - make deploy-k8s
   tags:
-      - dev
+    - dev
 
-Prod:
+K8sProd:
   variables:
     AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID_PROD}"
     AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY_PROD}"
@@ -105,6 +104,23 @@ Prod:
     name: prod
     url: https://flo-public-gateway.flosecurecloud.co/ping
   script:
+    - make environment-prod
+    - make deploy-k8s
+  tags:
+    - prod
+
+Prod:
+  variables:
+    AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID_PROD}"
+    AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY_PROD}"
+  stage: deploy
+  dependencies:
+    - Compile
+  only:
+    - master
+  environment:
+    name: prod
+    url: https://flo-public-gateway.flosecurecloud.co/ping
+  script:
     - make pull
     - make deploy ENV=prod
-

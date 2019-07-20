@@ -68,18 +68,23 @@ push: docker
 	$(COMPOSE) -f build-tools.yml $(@) || true
 
 deploy:
-	#$(GRADLE) preDeploy
-	#$(GIT) add .
-	#$(EB_INIT)
-	#$(EB_DEPLOY)
+	$(GRADLE) preDeploy
+	$(GIT) add .
+	$(EB_INIT)
+	$(EB_DEPLOY)
+
+deploy-k8s:
 	$(HELM) init --upgrade --wait --force-upgrade
-	#$(HELM) template ./k8s/flo-public-gateway -f ./k8s/pipeline.yaml
 	$(HELM) ls
 	$(HELM) install --name flo-public-gateway ./k8s/flo-public-gateway -f ./k8s/pipeline.yaml  --set environment=${params.environment} --namespace=flo-public-gateway
-environment:
-	chmod +x ./k8s/env.sh
-	./k8s/env.sh
 
+environment-dev:
+	chmod +x ./k8s/env-dev.sh
+	./k8s/env-dev.sh
+
+environment-prod:
+	chmod +x ./k8s/env-prod.sh
+	./k8s/env-prod.sh
 
 clean: down ## Remove build arifacts & related images
 	rm -rf node_modules
