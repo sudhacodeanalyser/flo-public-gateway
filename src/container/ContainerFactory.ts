@@ -15,7 +15,7 @@ import influxContainerModule from '../database/influx/containerModule';
 import loggerFactoryContainerModule from '../logging/containerModule';
 import subscriptionProviderModule from '../subscription/containerModule';
 import validationContainerModule from '../validation/containerModule';
-
+import memoizeContainerModule from '../memoize/containerModule';
 
 
 export default function ContainerFactory(container: Container = new Container()): Container {
@@ -35,6 +35,7 @@ export default function ContainerFactory(container: Container = new Container())
     postgresContainerModule,
     healthTestServiceContainerModule,
     influxContainerModule,
+    memoizeContainerModule,
     ...coreContainerModules
   );
 
