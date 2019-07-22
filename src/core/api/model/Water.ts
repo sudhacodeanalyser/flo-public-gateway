@@ -12,6 +12,9 @@ export interface WaterConsumptionReport {
     locationId?: string;
     macAddress?: string;
   },
+  aggregations?: {
+    sumTotalGallonsConsumed?: number
+  };
   items: WaterConsumptionItem[]
 }
 
