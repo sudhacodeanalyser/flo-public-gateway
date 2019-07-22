@@ -15,6 +15,7 @@ import { DeviceRecord, DeviceRecordData } from './DeviceRecord';
 import { IrrigationScheduleService, IrrigationScheduleServiceFactory } from './IrrigationScheduleService';
 import OnboardingLogTable from './OnboardingLogTable';
 import * as Option from 'fp-ts/lib/Option';
+import { pipe } from 'fp-ts/lib/pipeable';
 import { PairingService } from '../../api-v1/pairing/PairingService';
 
 @injectable()
@@ -124,21 +125,30 @@ class DeviceResolver extends Resolver<Device> {
       }
     },
     installStatus: async (device: Device, shouldExpand = false) => {
-      const onboardingLog = await this.onboardingLogTable.getInstallEvent(device.id);
+      const maybeOnboardingLog = await this.onboardingLogTable.getInstallEvent(device.id);
 
       return {
-        isInstalled: Option.isSome(onboardingLog),
-        installDate: Option.isSome(onboardingLog) ? onboardingLog.value.created_at : undefined
+        isInstalled: pipe(
+          maybeOnboardingLog, 
+          Option.fold(() => false, () => true)
+        ),
+        installDate: pipe(
+          maybeOnboardingLog,
+          Option.map(({ created_at }) => created_at),
+          Option.toUndefined
+        )
       };
     },
     learning: async (device: Device, shouldExpand = false) => {
-      const onboardingLog = await this.onboardingLogTable.getOutOfForcedSleepEvent(device.id);
+      const maybeOnboardingLog = await this.onboardingLogTable.getOutOfForcedSleepEvent(device.id);
 
-      return Option.isNone(onboardingLog) ?
-        null :
-        {
-          outOfLearningDate: onboardingLog.value.created_at
-        };
+      return pipe(
+        maybeOnboardingLog,
+        Option.map(({ created_at }) => ({
+          outOfLearningDate: created_at
+        })),
+        Option.toNullable
+      );
     },
     notifications: async (device: Device, shouldExpand = false) => {
       return this.notificationService.getAlarmCounts({});
