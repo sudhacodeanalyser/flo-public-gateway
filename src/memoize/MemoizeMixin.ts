@@ -3,12 +3,24 @@ import { inject, injectable } from 'inversify';
 import uuid from 'uuid';
 import 'reflect-metadata';
 
-export type Loaders = Record<string | symbol, Dataloader<any, any>>;
+export type Loaders = Map<any, Dataloader<any, any>>;
 
 export type ExtractKey = (...args: any[]) => any;
 
-function formatLoaderKey(className: string, methodName: string): string {
-  return `${ className }.${ methodName }`;
+type Fn = (...args: any[]) => any;
+
+function saveUnmemoizedMethod(prototype: any, methodName: string | symbol, method: (...args: any[]) => any): void {
+  const unmemoizedMethods: Map<string | symbol, any> = Reflect.getMetadata('unmemoized', prototype) || new Map();
+
+  unmemoizedMethods.set(methodName, method);
+
+  Reflect.defineMetadata('unmemoized', unmemoizedMethods, prototype);
+}
+
+function getUmemoizedMethod(prototype: any, methodName: string | symbol): undefined | Fn {
+   const unmemoizedMethods: Map<string | symbol, any> | undefined = Reflect.getMetadata('unmemoized', prototype);
+   
+   return unmemoizedMethods && unmemoizedMethods.get(methodName);
 }
 
 function DataloaderFactory(self: any, method: (...args: any[]) => any): Dataloader<any, any> {
@@ -18,9 +30,8 @@ function DataloaderFactory(self: any, method: (...args: any[]) => any): Dataload
 export function memoized(extractKey?: ExtractKey): MethodDecorator {
   return (target: any, propertyName: string | symbol, propertyDescriptor: PropertyDescriptor): void => {
     const method = propertyDescriptor.value;
-    const loaderKey = formatLoaderKey(target.constructor.name, String(propertyName));
-    
-    Reflect.defineMetadata('unmemoized', method, target, loaderKey);
+
+    saveUnmemoizedMethod(target, propertyName, method);
 
     propertyDescriptor.value = async function(...args: any[]): Promise<any> {
       const self = this as any;
@@ -52,7 +63,7 @@ export function MemoizeMixin<C extends Newable>(baseClass: C) {
     protected memoizedClassName: string = this.constructor.name || uuid.v4();
 
     protected getMethodLoader(methodName: string): Dataloader<any, any> | undefined {
-      return this.loaders[formatLoaderKey(this.memoizedClassName, methodName)];
+      return this.loaders.get((this as any)[methodName]);
     }
 
     protected ensureMethodLoader(methodName: string): Dataloader<any, any> | undefined {
@@ -62,12 +73,12 @@ export function MemoizeMixin<C extends Newable>(baseClass: C) {
         return loader;
       }
 
-      const method = Reflect.getMetadata('unmemoized', this.constructor.prototype, formatLoaderKey(this.memoizedClassName, methodName));
-
+      const method = getUmemoizedMethod(this.constructor.prototype, methodName);
+      
       if (method) {
         const newLoader = DataloaderFactory(this, method);
 
-        this.loaders[formatLoaderKey(this.memoizedClassName, methodName)] = newLoader;
+        this.loaders.set((this as any)[methodName], newLoader);
 
         return newLoader;
       } else {

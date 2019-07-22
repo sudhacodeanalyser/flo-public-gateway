@@ -63,7 +63,7 @@ function ServerConfigurationFactory(container: Container): (app: express.Applica
       next();
     });
 
-    container.bind<Loaders>('Loaders').toConstantValue({});
+    container.bind<Loaders>('Loaders').toConstantValue(new Map());
 
     const loggerFactory = container.get<LoggerFactory>('LoggerFactory');
     const logger = loggerFactory.createLogger();

@@ -9,7 +9,7 @@ class MemoizeMiddleware extends BaseMiddleware {
 
   public handler(req: Request, res: express.Response, next: express.NextFunction): void {
 
-    this.bind<Loaders>('Loaders').toConstantValue({});
+    this.bind<Loaders>('Loaders').toConstantValue(new Map());
 
     next();
   }
