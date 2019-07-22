@@ -8,8 +8,8 @@ import AWS from 'aws-sdk';
 
 @injectable()
 class OnboardingLogTable extends DatabaseTable<OnboardingLogRecord> {
-  constructor(@inject('DynamoDbClient') private dyanmoClient: DynamoDbClient) {
-    super(dyanmoClient, 'OnboardingLog');
+  constructor(@inject('DynamoDbClient') private dynamoClient: DynamoDbClient) {
+    super(dynamoClient, 'OnboardingLog');
   }
 
   public async getCurrentState(icdId: string): Promise<OnboardingLogRecord | null> {
@@ -64,7 +64,7 @@ class OnboardingLogTable extends DatabaseTable<OnboardingLogRecord> {
   }
 
   private async pageThruFullLog(icdId: string, ExclusiveStartKey?: AWS.DynamoDB.DocumentClient.Key): Promise<OnboardingLogRecord[]> {
-    const { Items = [], LastEvaluatedKey } = await this.dyanmoClient._query(this.tableName, {
+    const { Items = [], LastEvaluatedKey } = await this.dynamoClient._query(this.tableName, {
       KeyConditionExpression: '#icd_id = :icd_id',
       ExpressionAttributeNames: {
         '#icd_id': 'icd_id'
