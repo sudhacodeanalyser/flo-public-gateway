@@ -57,6 +57,7 @@ const RecordToModelSchema: StrictSchema<Device, DeviceRecordData>  = {
   installStatus: () => ({
     isInstalled: false
   }),
+  learning: () => undefined,
   notifications: () => undefined,
   hardwareThresholds: () => undefined,
   pairingData: () => undefined,
