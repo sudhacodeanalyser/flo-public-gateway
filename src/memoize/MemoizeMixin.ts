@@ -17,7 +17,7 @@ function saveUnmemoizedMethod(prototype: any, methodName: string | symbol, metho
   Reflect.defineMetadata('unmemoized', unmemoizedMethods, prototype);
 }
 
-function getUmemoizedMethod(prototype: any, methodName: string | symbol): undefined | Fn {
+function getUnmemoizedMethod(prototype: any, methodName: string | symbol): undefined | Fn {
    const unmemoizedMethods: Map<string | symbol, any> | undefined = Reflect.getMetadata('unmemoized', prototype);
    
    return unmemoizedMethods && unmemoizedMethods.get(methodName);
@@ -73,7 +73,7 @@ export function MemoizeMixin<C extends Newable>(baseClass: C) {
         return loader;
       }
 
-      const method = getUmemoizedMethod(this.constructor.prototype, methodName);
+      const method = getUnmemoizedMethod(this.constructor.prototype, methodName);
       
       if (method) {
         const newLoader = DataloaderFactory(this, method);
