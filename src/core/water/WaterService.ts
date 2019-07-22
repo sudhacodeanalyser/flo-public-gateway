@@ -107,6 +107,9 @@ class WaterService {
         locationId,
         macAddress
       },
+      aggregations: {
+        sumTotalGallonsConsumed: _.sumBy(items, 'sum')
+      },
       items: items.map(({ time, sum }) => ({
         time: moment(time).tz(timezone).format(),
         gallonsConsumed: sum
