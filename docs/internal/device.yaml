@@ -352,7 +352,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Empty'
+                $ref: '#/components/schemas/HealthTest'
         401:
           $ref: '#/components/responses/UnauthorizedError'
         403:

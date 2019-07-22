@@ -265,7 +265,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       }))
     )
     @asyncMethod
-    private async healthTest(@request() req: Request, @requestParam('id') id: string, @requestParam('action') action: string): Promise<void> {
+    private async healthTest(@request() req: Request, @requestParam('id') id: string, @requestParam('action') action: string): Promise<HealthTest> {
       const healthTestService = this.healthTestServiceFactory.create(req);
       const device = await this.deviceService.getDeviceById(id);
 
@@ -274,7 +274,8 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       }
 
       switch (action) {
-        case HealthTestActions.RUN: {
+        case HealthTestActions.RUN:
+        default: {
           return healthTestService.run(device.value.macAddress, id);
         }
       }

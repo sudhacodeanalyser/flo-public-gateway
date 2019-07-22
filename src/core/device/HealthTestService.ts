@@ -20,7 +20,7 @@ export interface HealthTest {
 
 
 export interface HealthTestService {
-  run(deviceMacAddress: string, icdId: string): Promise<void>;
+  run(deviceMacAddress: string, icdId: string): Promise<HealthTest>;
 
   getLatest(deviceMacAddress: string): Promise<HealthTest | null>;
 }
