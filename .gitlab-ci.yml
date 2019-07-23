@@ -105,7 +105,7 @@ Dev:
     - make pull
     - make deploy ENV=dev
   tags:
-    - docker
+    - kubernetes
 
 K8sProd:
   variables:
@@ -142,4 +142,4 @@ Prod:
     - make pull
     - make deploy ENV=prod
   tags:
-    - docker
+    - kubernetes
