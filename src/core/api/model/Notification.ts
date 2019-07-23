@@ -1,3 +1,4 @@
+import * as t from 'io-ts';
 import { TimestampedModel } from '../../api';
 
 export interface AlertEvent extends TimestampedModel {
@@ -26,23 +27,24 @@ export interface ClearAlertResponse {
   cleared: number;
 }
 
-export interface AlertSettings {
-  userId: string;
-  icdId?: string;
-  info?: GetAlarmConfig[];
-  warning: GetAlarmConfig[];
-  critical: GetAlarmConfig[];
-}
+export const GetAlarmSettingsCodec = t.type({
+  alarmId: t.number,
+  name: t.string,
+  systemMode: t.string,
+  smsEnabled: t.union([t.boolean, t.undefined]),
+  emailEnabled: t.union([t.boolean, t.undefined]),
+  pushEnabled: t.union([t.boolean, t.undefined]),
+  callEnabled: t.union([t.boolean, t.undefined])
+});
 
-export interface GetAlarmConfig {
-  alarmId: number;
-  name: string;
-  systemMode: number;
-  smsEnabled?: boolean;
-  emailEnabled?: boolean;
-  pushEnabled?: boolean;
-  callEnabled?: boolean;
-}
+export const GetDeviceAlarmSettingsCodec = t.type({
+  deviceId: t.string,
+  info: t.array(GetAlarmSettingsCodec),
+  warning: t.array(GetAlarmSettingsCodec),
+  critical: t.array(GetAlarmSettingsCodec)
+});
+
+export interface GetDeviceAlarmSettings extends t.TypeOf<typeof GetDeviceAlarmSettingsCodec> {}
 
 export interface ActionSupport {
   alarmId: number,

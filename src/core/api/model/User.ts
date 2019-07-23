@@ -1,5 +1,5 @@
 import * as t from 'io-ts';
-import { Account, Expandable, Location, TimestampedModel } from '../../api';
+import { Account, Expandable, Location, GetDeviceAlarmSettings, TimestampedModel } from '../../api';
 
 export interface UserLocationRole {
   locationId: string;
@@ -41,6 +41,7 @@ export interface User extends UserUpdate, TimestampedModel {
   password?: string,
   isActive?: boolean,
   locations: Array<Expandable<Location>>,
+  alarmSettings: Array<Expandable<GetDeviceAlarmSettings>>,
   account: Expandable<Account>,
   locationRoles: UserLocationRole[],
   accountRole: UserAccountRole

@@ -1,8 +1,8 @@
 import { inject, injectable } from 'inversify';
 import { fromPartialRecord } from '../../database/Patch';
-import { DependencyFactoryFactory, User, PropExpand } from '../api';
+import {DependencyFactoryFactory, User, PropExpand} from '../api';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
-import { AccountResolver, LocationResolver, PropertyResolverMap, Resolver } from '../resolver';
+import {AccountResolver, LocationResolver, PropertyResolverMap, Resolver} from '../resolver';
 import { UserAccountRoleRecord } from './UserAccountRoleRecord';
 import UserAccountRoleTable from './UserAccountRoleTable';
 import { UserDetailRecord } from './UserDetailRecord';
@@ -11,6 +11,9 @@ import { UserLocationRoleRecord, UserLocationRoleRecordData } from './UserLocati
 import UserLocationRoleTable from './UserLocationRoleTable';
 import { UserRecord } from './UserRecord';
 import UserTable from './UserTable';
+import {NotificationService, NotificationServiceFactory} from "../notification/NotificationService";
+import _ from 'lodash';
+import { injectHttpContext, interfaces } from 'inversify-express-utils';
 
 @injectable()
 class UserResolver extends Resolver<User> {
@@ -54,17 +57,36 @@ class UserResolver extends Resolver<User> {
         null :
         new UserAccountRoleRecord(userAccountRoleRecordData).toUserAccountRole();
     },
-   locationRoles: async (model: User, shouldExpand = false) => {
+    locationRoles: async (model: User, shouldExpand = false) => {
       const userLocationRoleRecordData: UserLocationRoleRecordData[] = await this.userLocationRoleTable.getAllByUserId(model.id);
 
       return userLocationRoleRecordData.map(userLocationRoleRecordDatum =>
         new UserLocationRoleRecord(userLocationRoleRecordDatum).toUserLocationRole()
       );
+    },
+    alarmSettings: async (model: User, shouldExpand = false) => {
+
+      if (!shouldExpand) {
+        return null;
+      }
+
+      const userLocationRoleRecordData: UserLocationRoleRecordData[] = await this.userLocationRoleTable.getAllByUserId(model.id);
+      const locationResolver = this.locationResolverFactory();
+      const devices = _.flatten(await Promise.all(
+          userLocationRoleRecordData
+              .map(async ({ location_id }) => {
+                const location = await locationResolver.get(location_id);
+                return location ? location.devices: [];
+              })
+      ));
+
+      return this.notificationService.getAlarmSettingsInBulk(model.id, devices.map(x => x.id));
     }
-  }
+  };
 
   private locationResolverFactory: () => LocationResolver;
   private accountResolverFactory: () => AccountResolver;
+  private notificationService: NotificationService;
 
   constructor(
     @inject('UserTable') private userTable: UserTable,
@@ -72,12 +94,18 @@ class UserResolver extends Resolver<User> {
     @inject('UserLocationRoleTable') private userLocationRoleTable: UserLocationRoleTable,
     @inject('UserAccountRoleTable') private userAccountRoleTable: UserAccountRoleTable,
     @inject('DependencyFactoryFactory') depFactoryFactory: DependencyFactoryFactory,
-    @inject('DefaultUserLocale') private defaultUserLocale: string
+    @inject('DefaultUserLocale') private defaultUserLocale: string,
+    @inject('NotificationServiceFactory') notificationServiceFactory: NotificationServiceFactory,
+    @injectHttpContext private readonly httpContext: interfaces.HttpContext,
   ) {
     super();
 
     this.locationResolverFactory = depFactoryFactory<LocationResolver>('LocationResolver');
     this.accountResolverFactory = depFactoryFactory<AccountResolver>('AccountResolver');
+
+    if (!_.isEmpty(this.httpContext)) {
+      this.notificationService = notificationServiceFactory.create(this.httpContext.request);
+    }
   }
 
   public async updatePartialUser(id: string, partialUser: Partial<User>): Promise<User> {
