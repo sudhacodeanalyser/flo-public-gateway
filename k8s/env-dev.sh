@@ -17,3 +17,4 @@ sed -i  "s/    postgres_host:.*/    postgres_host: $POSTGRES_HOST/g" k8s/pipelin
 sed -i  "s/    postgres_password:.*/    postgres_password: $POSTGRES_PASSWORD/g" k8s/pipeline.yaml
 sed -i  "s/    postgres_port:.*/    postgres_port: '$POSTGRES_PORT'/g" k8s/pipeline.yaml
 sed -i  "s/    postgres_user:.*/    postgres_user: $POSTGRES_USER/g" k8s/pipeline.yaml
+sed -i  "s/    localization_url:.*/    localization_url: $LOCALIZATION_API_URL/g" k8s/pipeline.yaml
