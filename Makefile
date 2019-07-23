@@ -15,6 +15,7 @@ GIT ?= $(COMPOSE) -f build-tools.yml run --rm git
 RUN ?= $(COMPOSE) -f build-tools.yml run --rm --service-ports run --node-env=$(NODE_ENV) run
 EB_INIT ?= $(COMPOSE) -f build-tools.yml run --rm eb init $(APP) --region=${AWS_REGION} --platform docker-18.06.1-ce
 EB_DEPLOY ?= $(COMPOSE) -f build-tools.yml run --rm eb deploy $(APP)-$(ENV) --staged
+HELM ?= $(shell which helm)
 
 .PHONY: help auth
 help: ## Display this help screen (default)
@@ -33,7 +34,7 @@ install: docker ## Install npm packages using docker-based npm
 	$(NPM) $(@)
 
 audit: docker ## Install npm packages using docker-based npm
-	-$(NPM) $(@)
+	-$(NPM) $(@) fix
 
 test: docker ## Run test task using docker-based npm
 	$(NPM) run $(@)
@@ -71,6 +72,19 @@ deploy:
 	$(GIT) add .
 	$(EB_INIT)
 	$(EB_DEPLOY)
+
+deploy-k8s:
+	$(HELM) init --upgrade --wait --force-upgrade
+	$(HELM) ls
+	$(HELM) upgrade --install flo-public-gateway ./k8s/flo-public-gateway -f ./k8s/pipeline.yaml  --set environment=${params.environment} --namespace=flo-public-gateway
+
+environment-dev:
+	chmod +x ./k8s/env-dev.sh
+	./k8s/env-dev.sh
+
+environment-prod:
+	chmod +x ./k8s/env-prod.sh
+	./k8s/env-prod.sh
 
 clean: down ## Remove build arifacts & related images
 	rm -rf node_modules

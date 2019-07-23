@@ -1,0 +1,21 @@
+apiVersion: autoscaling/v2beta1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ template "flo-public-gateway.fullname" . }}-hpa
+spec:
+{{ if eq .Values.environment "production" }}
+  minReplicas: 3
+  maxReplicas: 8
+{{ else  }}
+  minReplicas: 1
+  maxReplicas: 2
+{{ end }}
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      targetAverageUtilization: 70
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ template "flo-public-gateway.fullname" . }}
