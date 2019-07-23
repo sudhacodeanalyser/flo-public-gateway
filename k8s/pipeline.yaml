@@ -16,3 +16,4 @@ secrets:
     postgres_password:
     postgres_port:
     postgres_user:
+    localization_url:
