@@ -3,7 +3,7 @@ import {
   ActionsSupportResponse,
   AlertEvent,
   ClearAlertResponse,
-  GetDeviceAlarmSettings,
+  DeviceAlarmSettings,
   NotificationCounts,
   PaginatedResult
 } from '../core/api';
@@ -64,13 +64,13 @@ class ApiNotificationService {
     });
   }
 
-  public async getAlarmSettings(userId: string, deviceId: string): Promise<Option<GetDeviceAlarmSettings>> {
+  public async getAlarmSettings(userId: string, deviceId: string): Promise<Option<DeviceAlarmSettings>> {
     const settings = await this.getAlarmSettingsInBulk(userId,[deviceId]);
 
     return fromNullable(settings[0]);
   }
 
-  public async getAlarmSettingsInBulk(userId: string, deviceIds: string[]): Promise<GetDeviceAlarmSettings[]> {
+  public async getAlarmSettingsInBulk(userId: string, deviceIds: string[]): Promise<DeviceAlarmSettings[]> {
     const devices = deviceIds.join(',');
 
     return this.notificationApi.sendRequest({
@@ -79,11 +79,11 @@ class ApiNotificationService {
     });
   }
 
-  public async updateAlarmSettings(userId: string, data: any): Promise<void> {
+  public async updateAlarmSettings(userId: string, settings: DeviceAlarmSettings[]): Promise<void> {
     return this.notificationApi.sendRequest({
       method: 'post',
       url: `/settings/${userId}`,
-      body: data
+      body: settings
     });
   }
 

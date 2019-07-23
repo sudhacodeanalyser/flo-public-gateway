@@ -2,7 +2,7 @@ import {
   ActionsSupportResponse,
   AlertEvent,
   ClearAlertResponse,
-  GetDeviceAlarmSettings,
+  DeviceAlarmSettings,
   NotificationCounts,
   PaginatedResult
 } from '../api';
@@ -21,9 +21,9 @@ export interface NotificationService {
   getAlertEventsByFilter(filters: string): Promise<PaginatedResult<AlertEvent>>;
   clearAlarm(alarmId: string | number, data: any): Promise<ClearAlertResponse>;
   clearAlarms(data: any): Promise<ClearAlertResponse>;
-  getAlarmSettings(userId: string, deviceId: string): Promise<Option<GetDeviceAlarmSettings>>;
-  getAlarmSettingsInBulk(userId: string, deviceIds: string[]): Promise<GetDeviceAlarmSettings[]>;
-  updateAlarmSettings(userId: string, data: any): Promise<void>;
+  getAlarmSettings(userId: string, deviceId: string): Promise<Option<DeviceAlarmSettings>>;
+  getAlarmSettingsInBulk(userId: string, deviceIds: string[]): Promise<DeviceAlarmSettings[]>;
+  updateAlarmSettings(userId: string, settings: DeviceAlarmSettings[]): Promise<void>;
   generateEventsSample(data: any): Promise<void>;
   getActions(data: any): Promise<ActionsSupportResponse>;
   getAlarmCounts(data: any): Promise<NotificationCounts>;

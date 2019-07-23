@@ -27,9 +27,9 @@ export interface ClearAlertResponse {
   cleared: number;
 }
 
-export const GetAlarmSettingsCodec = t.type({
-  alarmId: t.number,
-  name: t.string,
+export const AlarmSettingsCodec = t.type({
+  alarmId: t.number, // TODO: Ask Alex if this should be just id
+  name: t.union([t.string, t.undefined]),
   systemMode: t.string,
   smsEnabled: t.union([t.boolean, t.undefined]),
   emailEnabled: t.union([t.boolean, t.undefined]),
@@ -37,15 +37,21 @@ export const GetAlarmSettingsCodec = t.type({
   callEnabled: t.union([t.boolean, t.undefined])
 });
 
-export const GetDeviceAlarmSettingsCodec = t.type({
+export const DeviceAlarmSettingsCodec = t.type({
   id: t.string, // TODO: This is just needed to use then Expandable, can we avoid this?
   deviceId: t.string,
-  info: t.array(GetAlarmSettingsCodec),
-  warning: t.array(GetAlarmSettingsCodec),
-  critical: t.array(GetAlarmSettingsCodec)
+  info: t.array(AlarmSettingsCodec),
+  warning: t.array(AlarmSettingsCodec),
+  critical: t.array(AlarmSettingsCodec)
 });
 
-export interface GetDeviceAlarmSettings extends t.TypeOf<typeof GetDeviceAlarmSettingsCodec> {}
+export const UpdateDeviceAlarmSettingsCodec = t.type({
+  items: t.array(DeviceAlarmSettingsCodec)
+});
+
+export interface UpdateDeviceAlarmSettings extends t.TypeOf<typeof UpdateDeviceAlarmSettingsCodec> {}
+
+export interface DeviceAlarmSettings extends t.TypeOf<typeof DeviceAlarmSettingsCodec> {}
 
 export interface ActionSupport {
   alarmId: number,
