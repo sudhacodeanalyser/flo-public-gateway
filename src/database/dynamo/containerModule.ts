@@ -10,4 +10,5 @@ export default new ContainerModule((bind: interfaces.Bind) => {
   bind<string>('TablePrefix').toConstantValue(config.dynamoTablePrefix);
   bind<AWS.DynamoDB.DocumentClient>('DynamoDbDocumentClient').toConstantValue(dynamoDbDocClient);
   bind<DatabaseClient>('DatabaseClient').to(DynamoDbClient);
+  bind<DynamoDbClient>('DynamoDbClient').to(DynamoDbClient);
 });

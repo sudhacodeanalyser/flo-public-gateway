@@ -73,6 +73,11 @@ paths:
                         format: uuid
                       tz: 
                         type: string
+                  aggregations:
+                    type: object
+                    properties:
+                      sumTotalGallonsConsumed: 
+                        type: number
                   items:
                     type: array
                     items:

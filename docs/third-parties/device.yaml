@@ -266,6 +266,15 @@ components:
               properties:
                 isInstalled:
                   type: boolean
+                installDate:
+                  type: string
+                  format: date-time
+            learning:
+              type: object
+              properties:
+                outOfLearningDate:
+                  type: string
+                  format: date-time
             serialNumber:
               type: string
     DeviceExpandable:
