@@ -15,13 +15,15 @@ service:
   port: 3000
 
 ingress:
-  enabled: false
+  enabled: true
   annotations: {}
-    # kubernetes.io/ingress.class: nginx
+    kubernetes.io/ingress.class: nginx
     # kubernetes.io/tls-acme: "true"
-  paths: []
+  paths: /
   hosts:
-    - chart-example.local
+    - api.meetflo.com
+    - flo-public-gateway.flosecurecloud.com
+    - flo-public-gateway-prod.flosecurecloud.com
   tls: []
   #  - secretName: chart-example-tls
   #    hosts:

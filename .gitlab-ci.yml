@@ -99,7 +99,7 @@ K8sProd:
   dependencies:
     - Compile
   only:
-    - kloia-helmchart-deployment
+    #- kloia-helmchart-deployment
     - master
   environment:
     name: prod
