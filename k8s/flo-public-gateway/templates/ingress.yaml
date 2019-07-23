@@ -5,7 +5,7 @@
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: {{ $fullName }}
+  name: {{ include "flo-public-gateway.name" . }}
   labels:
     app.kubernetes.io/name: {{ include "flo-public-gateway.name" . }}
     helm.sh/chart: {{ include "flo-public-gateway.chart" . }}
@@ -31,9 +31,9 @@ spec:
     - host: {{ . }}
       http:
         paths:
-          - path: {{ $ingressPath }}
+          - path: {{ $.Values.ingress.paths }}
             backend:
-              serviceName: {{ $fullName }}
+              serviceName: {{ include "flo-public-gateway.name" . }}
               servicePort: http
   {{- end }}
 {{- end }}
