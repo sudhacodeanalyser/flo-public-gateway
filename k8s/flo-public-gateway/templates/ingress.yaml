@@ -1,7 +1,8 @@
 {{- if .Values.ingress.enabled -}}
 {{- $fullName := include "flo-public-gateway.fullname" . -}}
 {{- $servicePort := .Values.service.port -}}
-{{- $ingressPaths := .Values.ingress.paths -}}
+{{- $fullName := include "flo-public-gateway.fullname" . -}}
+{{- $ingressPath := .Values.ingress.path -}}
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
@@ -31,9 +32,9 @@ spec:
     - host: {{ . }}
       http:
         paths:
-          - path: {{ $.Values.ingress.paths }}
+          - path: {{ $ingressPath  }}
             backend:
-              serviceName: {{ include "flo-public-gateway.name" . }}
+              serviceName: {{ $fullName }}
               servicePort: http
   {{- end }}
 {{- end }}
