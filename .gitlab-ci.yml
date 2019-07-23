@@ -26,9 +26,7 @@ Compile:
   except:
     - tags
   tags:
-      - build
-  only:
-    - kloia-helmchart-deployment      
+    - build
   artifacts:
     paths:
       - logs/
@@ -60,8 +58,6 @@ Sanity:
       # Collect logs
       - build.log
       - /root/.npm/_logs
-  only:
-    - kloia-helmchart-deployment
   dependencies:
     - Compile
   script:
@@ -80,6 +76,7 @@ K8sDev:
   dependencies:
     - Compile
   only:
+    - dev
     - kloia-helmchart-deployment
   environment:
     name: dev
@@ -87,6 +84,26 @@ K8sDev:
   script:
     - make environment-dev
     - make deploy-k8s
+  tags:
+    - dev
+
+
+Dev:
+  variables:
+    AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID_DEV}"
+    AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY_DEV}"
+  stage: deploy
+  dependencies:
+    - Compile
+  only:
+    - dev
+    - kloia-helmchart-deployment
+  environment:
+    name: dev
+    url: https://flo-public-gateway.flocloud.co/ping
+  script:
+    - make pull
+    - make deploy ENV=dev
   tags:
     - dev
 
@@ -99,7 +116,6 @@ K8sProd:
   dependencies:
     - Compile
   only:
-    #- kloia-helmchart-deployment
     - master
   environment:
     name: prod
