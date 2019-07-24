@@ -7,7 +7,7 @@ import {
   NotificationCounts,
   PaginatedResult
 } from '../core/api';
-import {Option, fromNullable} from "fp-ts/lib/Option";
+import {Option, fromNullable} from 'fp-ts/lib/Option';
 
 class ApiNotificationService {
   constructor(private notificationApi: ApiService) {}

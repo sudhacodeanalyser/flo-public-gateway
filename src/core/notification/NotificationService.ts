@@ -7,7 +7,7 @@ import {
   PaginatedResult
 } from '../api';
 import Request from '../api/Request';
-import {Option} from "fp-ts/lib/Option";
+import {Option} from 'fp-ts/lib/Option';
 
 export interface NotificationServiceFactory {
   create(req: Request): NotificationService;

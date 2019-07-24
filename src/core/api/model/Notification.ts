@@ -38,7 +38,6 @@ export const AlarmSettingsCodec = t.type({
 });
 
 export const DeviceAlarmSettingsCodec = t.type({
-  id: t.string, // TODO: This is just needed to use then Expandable, can we avoid this?
   deviceId: t.string,
   info: t.array(AlarmSettingsCodec),
   warning: t.array(AlarmSettingsCodec),

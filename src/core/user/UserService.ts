@@ -2,10 +2,9 @@ import _ from 'lodash';
 import { injectable, inject } from 'inversify';
 import {User, UserUpdate, PropExpand, DeviceAlarmSettings} from '../api';
 import { UserResolver } from '../resolver';
-import {AccountService, NotificationService, NotificationServiceFactory} from '../service';
+import {AccountService} from '../service';
 import ValidationError from '../api/error/ValidationError';
 import { Option, fromNullable } from 'fp-ts/lib/Option';
-import {injectHttpContext, interfaces} from "inversify-express-utils";
 
 @injectable()
 class UserService {

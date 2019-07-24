@@ -11,7 +11,7 @@ import { UserLocationRoleRecord, UserLocationRoleRecordData } from './UserLocati
 import UserLocationRoleTable from './UserLocationRoleTable';
 import { UserRecord } from './UserRecord';
 import UserTable from './UserTable';
-import {NotificationService, NotificationServiceFactory} from "../notification/NotificationService";
+import {NotificationService, NotificationServiceFactory} from '../notification/NotificationService';
 import _ from 'lodash';
 import { injectHttpContext, interfaces } from 'inversify-express-utils';
 
@@ -65,7 +65,7 @@ class UserResolver extends Resolver<User> {
       );
     },
     alarmSettings: async (model: User, shouldExpand = false) => {
-      if (!shouldExpand) {
+      if (!shouldExpand || !this.notificationService) {
         return null;
       }
 
@@ -79,7 +79,7 @@ class UserResolver extends Resolver<User> {
               })
       ));
 
-      return this.notificationService.getAlarmSettingsInBulk(model.id, devices.map(x => x.id));
+      return this.notificationService.getAlarmSettingsInBulk(model.id, devices.map(device => device.id));
     }
   };
 

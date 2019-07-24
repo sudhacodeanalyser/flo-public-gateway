@@ -16,7 +16,7 @@ import {
   AlertEvent, ClearAlertResponse, PaginatedResult
 } from '../api';
 import {asyncMethod, httpController} from '../api/controllerUtils';
-import Request from "../api/Request";
+import Request from '../api/Request';
 import { NotificationServiceFactory } from './NotificationService';
 import basicAuth from 'express-basic-auth';
 

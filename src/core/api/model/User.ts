@@ -41,7 +41,7 @@ export interface User extends UserUpdate, TimestampedModel {
   password?: string,
   isActive?: boolean,
   locations: Array<Expandable<Location>>,
-  alarmSettings: Array<Expandable<DeviceAlarmSettings>>,
+  alarmSettings: Array<Expandable<DeviceAlarmSettings, 'deviceId'>>,
   account: Expandable<Account>,
   locationRoles: UserLocationRole[],
   accountRole: UserAccountRole
