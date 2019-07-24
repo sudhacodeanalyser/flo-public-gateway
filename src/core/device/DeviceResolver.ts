@@ -18,7 +18,6 @@ import * as Option from 'fp-ts/lib/Option';
 import { pipe } from 'fp-ts/lib/pipeable';
 import { PairingService } from '../../api-v1/pairing/PairingService';
 import * as t from 'io-ts';
-import { pipe } from 'fp-ts/lib/pipeable';
 import * as Either from 'fp-ts/lib/Either';
 
 @injectable()
