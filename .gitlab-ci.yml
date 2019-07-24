@@ -3,7 +3,7 @@
 image: registry.gitlab.com/flotechnologies/gitlabci-docker-compose:18.06-fat
 
 services:
-  - docker:dind
+  - docker:18.09-dind
 
 stages:
   - build
