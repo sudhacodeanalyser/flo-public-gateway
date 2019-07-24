@@ -5,7 +5,7 @@ import _ from 'lodash';
 import uuid from 'uuid';
 import { fromPartialRecord } from '../../database/Patch';
 import { InternalDeviceService } from "../../internal-device-service/InternalDeviceService";
-import { DependencyFactoryFactory, Device, DeviceCreate, DeviceModelType, DeviceSystemModeNumeric, DeviceType, DeviceUpdate, PropExpand, SystemMode, ValveState, ValveStateNumeric } from '../api';
+import { DependencyFactoryFactory, Device, DeviceCreate, DeviceModelType, DeviceSystemModeNumeric, DeviceType, DeviceUpdate, PropExpand, SystemMode, ValveState, ValveStateNumeric, AdditionalDevicePropsCodec } from '../api';
 import { translateNumericToStringEnum } from '../api/enumUtils';
 import DeviceTable from '../device/DeviceTable';
 import { NotificationService, NotificationServiceFactory } from '../notification/NotificationService';
@@ -16,6 +16,9 @@ import { IrrigationScheduleService, IrrigationScheduleServiceFactory } from './I
 import OnboardingLogTable from './OnboardingLogTable';
 import * as Option from 'fp-ts/lib/Option';
 import { PairingService } from '../../api-v1/pairing/PairingService';
+import * as t from 'io-ts';
+import { pipe } from 'fp-ts/lib/pipeable';
+import * as Either from 'fp-ts/lib/Either';
 
 @injectable()
 class DeviceResolver extends Resolver<Device> {
@@ -29,7 +32,18 @@ class DeviceResolver extends Resolver<Device> {
     },
     additionalProps: async (device: Device, shouldExpand = false) => {
       try {
-        return (await this.internalDeviceService.getDevice(device.macAddress));
+        const additionalProps = await this.internalDeviceService.getDevice(device.macAddress);
+
+        if (additionalProps) {
+          // Strip properties not exposed to on Device model
+          return pipe(
+            t.exact(AdditionalDevicePropsCodec).decode(additionalProps),
+            Either.fold(() => null, result => result)
+          );
+        } 
+
+        return null;
+
       } catch (err) {
         this.logger.error({ err });
         return null;

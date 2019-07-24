@@ -1,6 +1,6 @@
 import * as t from 'io-ts';
 import _ from 'lodash';
-import {InternalConnectivity, InternalDevice, InternalTelemetry} from '../../../internal-device-service/models';
+import {InternalConnectivity, InternalDevice, InternalTelemetry, InternalDeviceCodec} from '../../../internal-device-service/models';
 import { Expandable, Location, NotificationCounts, Omit, SystemModeCodec as DeviceSystemModeCodec, TimestampedModel } from '../../api';
 import { convertEnumtoCodec } from '../../api/enumUtils';
 import { ComputedIrrigationSchedule } from '../../device/IrrigationScheduleService';
@@ -140,6 +140,17 @@ interface FwProperties {
   [prop: string]: any;
 }
 
-export interface AdditionalDeviceProps extends Pick<InternalDevice, 'isConnected' | 'lastHeardFromTime' | 'fwVersion'> {
-  fwProperties: FwProperties | null | undefined;
-}
+const {
+  isConnected,
+  lastHeardFromTime,
+  fwVersion,
+  fwProperties
+} = InternalDeviceCodec.props;
+
+export const AdditionalDevicePropsCodec  = t.type({
+  isConnected,
+  lastHeardFromTime,
+  fwProperties
+});
+
+export interface AdditionalDeviceProps extends t.TypeOf<typeof AdditionalDevicePropsCodec> {}
