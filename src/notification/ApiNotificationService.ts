@@ -1,5 +1,13 @@
 import { ApiService } from '../ApiService';
-import { ActionsSupportResponse, AlertEvent, AlertSettings, ClearAlertResponse, NotificationCounts, PaginatedResult } from '../core/api';
+import {
+  ActionsSupportResponse,
+  AlertEvent,
+  ClearAlertResponse,
+  DeviceAlarmSettings,
+  NotificationCounts,
+  PaginatedResult, UpdateDeviceAlarmSettings
+} from '../core/api';
+import {Option, fromNullable} from 'fp-ts/lib/Option';
 
 class ApiNotificationService {
   constructor(private notificationApi: ApiService) {}
@@ -56,20 +64,26 @@ class ApiNotificationService {
     });
   }
 
-  public async getAlarmSettings(userId: string, icdId?: string): Promise<AlertSettings> {
-    const query = icdId ? `?icdId=${icdId}` : '';
+  public async getAlarmSettings(userId: string, deviceId: string): Promise<Option<DeviceAlarmSettings>> {
+    const settings = await this.getAlarmSettingsInBulk(userId,[deviceId]);
+
+    return fromNullable(settings[0]);
+  }
+
+  public async getAlarmSettingsInBulk(userId: string, deviceIds: string[]): Promise<DeviceAlarmSettings[]> {
+    const devices = deviceIds.join(',');
 
     return this.notificationApi.sendRequest({
       method: 'get',
-      url: `/settings/${userId}${query}`
+      url: `/settings/${userId}?devices=${devices}`
     });
   }
 
-  public async updateAlarmSettings(userId: string, data: any): Promise<void> {
+  public async updateAlarmSettings(userId: string, settings: UpdateDeviceAlarmSettings): Promise<void> {
     return this.notificationApi.sendRequest({
       method: 'post',
       url: `/settings/${userId}`,
-      body: data
+      body: settings
     });
   }
 

@@ -1,8 +1,8 @@
 import _ from 'lodash';
 import { injectable, inject } from 'inversify';
-import { User, UserUpdate, PropExpand } from '../api';
+import {User, UserUpdate, PropExpand, UpdateDeviceAlarmSettings} from '../api';
 import { UserResolver } from '../resolver';
-import { AccountService } from '../service';
+import {AccountService} from '../service';
 import ValidationError from '../api/error/ValidationError';
 import { Option, fromNullable } from 'fp-ts/lib/Option';
 
@@ -34,6 +34,10 @@ class UserService {
 
   public isUserAccountOwner(user: User): boolean {
     return _.includes(user.accountRole.roles, 'owner');
+  }
+
+  public async updateAlarmSettings(id: string, settings: UpdateDeviceAlarmSettings): Promise<void> {
+    return this.userResolver.updateAlarmSettings(id, settings);
   }
 }
 
