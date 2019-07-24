@@ -28,7 +28,7 @@ export interface ClearAlertResponse {
 }
 
 export const AlarmSettingsCodec = t.type({
-  alarmId: t.number, // TODO: Ask Alex if this should be just id
+  alarmId: t.number,
   name: t.union([t.string, t.undefined]),
   systemMode: t.string,
   smsEnabled: t.union([t.boolean, t.undefined]),
