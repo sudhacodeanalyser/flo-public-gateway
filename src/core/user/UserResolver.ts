@@ -65,7 +65,6 @@ class UserResolver extends Resolver<User> {
       );
     },
     alarmSettings: async (model: User, shouldExpand = false) => {
-
       if (!shouldExpand) {
         return null;
       }
@@ -138,6 +137,7 @@ class UserResolver extends Resolver<User> {
       ...userDetailRecord,
       locale: userDetailRecord.locale || this.defaultUserLocale
     }).toModel();
+
     const expandedProps = await this.resolveProps(user, expandProps);
 
     return {

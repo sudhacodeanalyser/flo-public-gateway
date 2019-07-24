@@ -13,7 +13,7 @@ import {
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import {
   ActionsSupportResponse,
-  AlertEvent, AlertSettings, ClearAlertResponse, PaginatedResult
+  AlertEvent, ClearAlertResponse, PaginatedResult
 } from '../api';
 import {asyncMethod, httpController} from '../api/controllerUtils';
 import Request from "../api/Request";
@@ -116,15 +116,6 @@ export function NotificationControllerFactory(container: Container, apiVersion: 
         .notificationServiceFactory
         .create(req)
         .clearAlarms(data);
-    }
-
-    @httpGet('/settings/:userId', authWithUser)
-    @asyncMethod
-    private async getAlarmSettings(@request() req: Request, @requestParam('userId') userId: string, @queryParam('icdId') icdId?: string): Promise<AlertSettings> {
-      return this
-        .notificationServiceFactory
-        .create(req)
-        .getAlarmSettings(userId, icdId);
     }
 
     @httpPost('/settings/:userId', authWithUser)
