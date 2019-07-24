@@ -24,6 +24,7 @@ const RecordToModelSchema: StrictSchema<User, UserRecordData & UserDetailRecordD
   phoneMobile: 'phone_mobile',
   locale: 'locale',
   locations: () => [],
+  alarmSettings: () => [],
   locationRoles: () => [],
   accountRole: () => ({
     accountId: '',
