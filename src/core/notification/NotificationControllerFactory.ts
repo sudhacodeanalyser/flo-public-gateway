@@ -118,15 +118,6 @@ export function NotificationControllerFactory(container: Container, apiVersion: 
         .clearAlarms(data);
     }
 
-    @httpPost('/settings/:userId', authWithUser)
-    @asyncMethod
-    private async updateAlarmSettings(@request() req: Request, @requestParam('userId') userId: string, @requestBody() data: any): Promise<void> {
-      return this
-        .notificationServiceFactory
-        .create(req)
-        .updateAlarmSettings(userId, data);
-    }
-
     @httpPost('/events/sample', authWithIcd)
     @asyncMethod
     private async generateRandomEvents(@request() req: Request, @requestBody() data: any): Promise<void> {

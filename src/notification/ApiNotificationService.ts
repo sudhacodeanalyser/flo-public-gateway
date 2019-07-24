@@ -5,7 +5,7 @@ import {
   ClearAlertResponse,
   DeviceAlarmSettings,
   NotificationCounts,
-  PaginatedResult
+  PaginatedResult, UpdateDeviceAlarmSettings
 } from '../core/api';
 import {Option, fromNullable} from 'fp-ts/lib/Option';
 
@@ -79,7 +79,7 @@ class ApiNotificationService {
     });
   }
 
-  public async updateAlarmSettings(userId: string, settings: DeviceAlarmSettings[]): Promise<void> {
+  public async updateAlarmSettings(userId: string, settings: UpdateDeviceAlarmSettings): Promise<void> {
     return this.notificationApi.sendRequest({
       method: 'post',
       url: `/settings/${userId}`,

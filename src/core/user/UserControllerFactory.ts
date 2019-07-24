@@ -164,7 +164,7 @@ export function UserControllerFactory(container: Container, apiVersion: number):
       }))
     )
     private async updateAlarmSettings(@requestParam('id') id: string, @requestBody() data: UpdateDeviceAlarmSettings): Promise<void> {
-      return this.userService.updateAlarmSettings(id, data.items);
+      return this.userService.updateAlarmSettings(id, data);
     }
   }
 

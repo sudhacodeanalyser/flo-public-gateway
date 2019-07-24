@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import { injectable, inject } from 'inversify';
-import {User, UserUpdate, PropExpand, DeviceAlarmSettings} from '../api';
+import {User, UserUpdate, PropExpand, UpdateDeviceAlarmSettings} from '../api';
 import { UserResolver } from '../resolver';
 import {AccountService} from '../service';
 import ValidationError from '../api/error/ValidationError';
@@ -36,7 +36,7 @@ class UserService {
     return _.includes(user.accountRole.roles, 'owner');
   }
 
-  public async updateAlarmSettings(id: string, settings: DeviceAlarmSettings[]): Promise<void> {
+  public async updateAlarmSettings(id: string, settings: UpdateDeviceAlarmSettings): Promise<void> {
     return this.userResolver.updateAlarmSettings(id, settings);
   }
 }

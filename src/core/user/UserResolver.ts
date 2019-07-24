@@ -1,6 +1,6 @@
 import { inject, injectable } from 'inversify';
 import { fromPartialRecord } from '../../database/Patch';
-import {DependencyFactoryFactory, User, PropExpand, DeviceAlarmSettings} from '../api';
+import {DependencyFactoryFactory, User, PropExpand, UpdateDeviceAlarmSettings} from '../api';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import {AccountResolver, LocationResolver, PropertyResolverMap, Resolver} from '../resolver';
 import { UserAccountRoleRecord } from './UserAccountRoleRecord';
@@ -166,7 +166,7 @@ class UserResolver extends Resolver<User> {
     ]);
   }
 
-  public async updateAlarmSettings(id: string, settings: DeviceAlarmSettings[]): Promise<void> {
+  public async updateAlarmSettings(id: string, settings: UpdateDeviceAlarmSettings): Promise<void> {
     return this.notificationService.updateAlarmSettings(id, settings);
   }
 }
