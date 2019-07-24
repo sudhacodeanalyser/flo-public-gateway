@@ -23,6 +23,6 @@ RUN rm -rf /var/cache/apk/* && \
       direnv \
       pipenv \
     && \
-    pip install PyYAML==3.12
+    pip install PyYAML==3.13
 
 WORKDIR /app
