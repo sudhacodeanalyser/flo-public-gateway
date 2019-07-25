@@ -66,7 +66,7 @@ class UserResolver extends Resolver<User> {
       );
     },
     alarmSettings: async (model: User, shouldExpand = false) => {
-      if (!shouldExpand || !this.notificationService) {
+      if (!shouldExpand || !this.notificationServiceFactory) {
         return null;
       }
 
@@ -81,7 +81,7 @@ class UserResolver extends Resolver<User> {
                 })
         ));
 
-        return (await this.notificationService.getAlarmSettingsInBulk(model.id, devices.map(device => device.id)));
+        return (await this.notificationServiceFactory().getAlarmSettingsInBulk(model.id, devices.map(device => device.id)));
       } catch (err) {
         this.logger.error({ err });
 
@@ -92,7 +92,7 @@ class UserResolver extends Resolver<User> {
 
   private locationResolverFactory: () => LocationResolver;
   private accountResolverFactory: () => AccountResolver;
-  private notificationService: NotificationService;
+  private notificationServiceFactory: () => NotificationService;
 
   constructor(
     @inject('UserTable') private userTable: UserTable,
@@ -111,7 +111,7 @@ class UserResolver extends Resolver<User> {
     this.accountResolverFactory = depFactoryFactory<AccountResolver>('AccountResolver');
 
     if (!_.isEmpty(this.httpContext)) {
-      this.notificationService = notificationServiceFactory.create(this.httpContext.request);
+      this.notificationServiceFactory = () => notificationServiceFactory.create(this.httpContext.request);
     }
   }
 
@@ -175,7 +175,7 @@ class UserResolver extends Resolver<User> {
   }
 
   public async updateAlarmSettings(id: string, settings: UpdateDeviceAlarmSettings): Promise<void> {
-    return this.notificationService.updateAlarmSettings(id, settings);
+    return this.notificationServiceFactory().updateAlarmSettings(id, settings);
   }
 }
 
