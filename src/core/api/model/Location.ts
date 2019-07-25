@@ -1,5 +1,6 @@
 import * as t from 'io-ts';
 import { NotificationCounts, Omit, TimestampedModel } from '../../api';
+import { NonEmptyString } from '../../api/validator/NonEmptyString';
 import { convertEnumtoCodec } from '../enumUtils';
 import { NoYesUnsure } from '../NoYesUnsure';
 
@@ -113,13 +114,13 @@ const LocationProfileCodec = t.type({
 });
 
 const AddressCodec = t.type({
-  address: t.string,
+  address: NonEmptyString,
   address2: t.union([t.string, t.undefined]),
-  city: t.string,
-  state: t.string,
-  country: t.string,
-  postalCode: t.string,
-  timezone: t.string
+  city: NonEmptyString,
+  state: NonEmptyString,
+  country: NonEmptyString,
+  postalCode: NonEmptyString,
+  timezone: NonEmptyString
 });
 
 export enum SystemMode {

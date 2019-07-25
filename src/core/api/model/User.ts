@@ -1,5 +1,6 @@
 import * as t from 'io-ts';
 import { Account, Expandable, Location, DeviceAlarmSettings, TimestampedModel } from '../../api';
+import { NonEmptyString } from '../../api/validator/NonEmptyString';
 
 export interface UserLocationRole {
   locationId: string;
@@ -22,14 +23,14 @@ const UnitSystemCodec = t.keyof({
 });
 
 const UserMutableCodec = t.type({
-  firstName: t.string,
+  firstName: NonEmptyString,
   middleName: t.string,
-  lastName: t.string,
+  lastName: NonEmptyString,
   prefixName: t.string,
   suffixName: t.string,
   unitSystem: UnitSystemCodec,
-  phoneMobile: t.string,
-  locale: t.string
+  phoneMobile: NonEmptyString,
+  locale: NonEmptyString
 });
 
 export const UserUpdateValidator = t.exact(t.partial(UserMutableCodec.props));

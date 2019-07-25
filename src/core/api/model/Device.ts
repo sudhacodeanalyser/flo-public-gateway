@@ -2,6 +2,7 @@ import * as t from 'io-ts';
 import _ from 'lodash';
 import {InternalConnectivity, InternalDevice, InternalTelemetry, InternalDeviceCodec} from '../../../internal-device-service/models';
 import { Expandable, Location, NotificationCounts, Omit, SystemModeCodec as DeviceSystemModeCodec, TimestampedModel } from '../../api';
+import { NonEmptyString } from '../../api/validator/NonEmptyString';
 import { convertEnumtoCodec } from '../../api/enumUtils';
 import { ComputedIrrigationSchedule } from '../../device/IrrigationScheduleService';
 import { NoYesUnsure } from '../NoYesUnsure';
@@ -35,10 +36,10 @@ export enum DeviceType {
 }
 
 const DeviceMutableCodec = t.type({
-  installationPoint: t.string,
+  installationPoint: NonEmptyString,
   nickname: t.string,
-  prvInstallation: t.string,
-  irrigationType: t.string,
+  prvInstallation: NonEmptyString,
+  irrigationType: NonEmptyString,
   valve: t.partial({
     target: t.keyof(_.pick(ValveStateCodec.keys, ['open', 'closed']))
   })
@@ -63,11 +64,11 @@ const SystemModeCodec = t.intersection([
 type SystemModeData = t.TypeOf<typeof SystemModeCodec>;
 
 const DeviceCreateCodec = t.type({
-  macAddress: t.string,
+  macAddress: NonEmptyString,
   nickname: t.string,
-  location: t.strict({ id: t.string }),
-  deviceType: t.string,
-  deviceModel: t.string
+  location: t.strict({ id: NonEmptyString }),
+  deviceType: NonEmptyString,
+  deviceModel: NonEmptyString
 });
 export const DeviceCreateValidator = t.exact(DeviceCreateCodec);
 export type DeviceCreate = t.TypeOf<typeof DeviceCreateValidator>;
