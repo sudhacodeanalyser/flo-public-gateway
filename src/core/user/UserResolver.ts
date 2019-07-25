@@ -81,7 +81,7 @@ class UserResolver extends Resolver<User> {
                 })
         ));
 
-        return this.notificationService.getAlarmSettingsInBulk(model.id, devices.map(device => device.id));
+        return (await this.notificationService.getAlarmSettingsInBulk(model.id, devices.map(device => device.id)));
       } catch (err) {
         this.logger.error({ err });
 
