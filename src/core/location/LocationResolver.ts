@@ -81,7 +81,7 @@ class LocationResolver extends Resolver<Location> {
     },
     systemMode: async (location: Location, shouldExpand = false) => {
 
-      if (location.systemMode !== undefined) {
+      if (!_.isEmpty(_.pickBy(location.systemMode, _.identity))) {
         return location.systemMode;
       }
 
