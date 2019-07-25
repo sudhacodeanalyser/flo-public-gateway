@@ -28,10 +28,13 @@ class DynamoDbClient implements DatabaseClient {
    @inject('TablePrefix') public tablePrefix: string
   ) {}
 
-  public async put<T>(tableName: string, item: T): Promise<T> {
+
+  public async put<T>(tableName: string, rawItem: T): Promise<T> {
+    const item = this.sanitizeWrite(rawItem);
+
     await this._put<T>(tableName, item).promise();
 
-    return item;
+    return rawItem;
   }
 
   public _put<T>(tableName: string, item: T): AWS.Request<AWS.DynamoDB.DocumentClient.PutItemOutput, AWS.AWSError> {
@@ -52,7 +55,7 @@ class DynamoDbClient implements DatabaseClient {
   public async get<T>(tableName: string, key: KeyMap): Promise<T | null> {
     const { Item } = await this._get<T>(tableName, key).promise();
 
-    return _.isEmpty(Item) ? null : Item as T;
+    return _.isEmpty(Item) ? null : this.sanitizeRead(Item  as T) as T;
   }
 
   public _update<T>(tableName: string, key: KeyMap, patch: Patch, flattenNestedProps: boolean = true): AWS.Request<AWS.DynamoDB.DocumentClient.UpdateItemOutput, AWS.AWSError> {
@@ -80,7 +83,15 @@ class DynamoDbClient implements DatabaseClient {
     });
   }
 
-  public async update<T>(tableName: string, key: KeyMap, patch: Patch, flattenNestedProps: boolean = true): Promise<T> {
+  public async update<T>(tableName: string, key: KeyMap, rawPatch: Patch, flattenNestedProps: boolean = true): Promise<T> {
+    const setOps = rawPatch.setOps && rawPatch.setOps.map(setOp => this.sanitizeWrite(setOp.value));
+    const appendOps = rawPatch.appendOps && rawPatch.appendOps.map(appendOp => this.sanitizeWrite(appendOp.value));
+    const patch = {
+      ...rawPatch,
+      setOps,
+      appendOps
+    };
+
     try {
       if (_.isEmpty(patch) || (_.isEmpty(patch.setOps) && _.isEmpty(patch.appendOps) && _.isEmpty(patch.removeOps))) {
         throw new Error('Cannot apply an empty patch');
@@ -130,9 +141,9 @@ class DynamoDbClient implements DatabaseClient {
   }
 
   public async query<T>(tableName: string, queryOptions: DynamoDbQuery): Promise<T[]> {
-    const { Items } = await this._query(tableName, queryOptions).promise();
+    const { Items = [] } = await this._query(tableName, queryOptions).promise();
 
-    return Items as T[];
+    return Items.map(item => this.sanitizeRead(item as T)) as T[];
   }
 
   private createCondition(key: KeyMap): Partial<AWS.DynamoDB.DocumentClient.UpdateItemInput> {
@@ -307,6 +318,32 @@ class DynamoDbClient implements DatabaseClient {
       },
       opStrs: appendStrs
     };
+  }
+
+  private sanitizeWrite<T extends {}>(data: T): T {
+    return _.mapValues(data, value => {
+      if (value === '') {
+        return ' ';
+      } else if (_.isString(value)) {
+        return value.trim();
+      } else if (_.isObject(value) && Object.keys(value).length) {
+        return this.sanitizeWrite(data);
+      } else {
+        return value;
+      }
+    }) as T;
+  }
+
+  private sanitizeRead<T extends {}>(data: T): T {
+    return _.mapValues(data, value => {
+      if (_.isString(value)) {
+        return value.trim();
+      } else if (_.isObject(value) && Object.keys(value).length) {
+        return this.sanitizeRead(value);
+      } else {
+        return value;
+      }
+    }) as T;
   }
 }
 
