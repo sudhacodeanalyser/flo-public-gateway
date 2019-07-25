@@ -53,7 +53,7 @@ class DeviceResolver extends Resolver<Device> {
       try {
         const additionalProperties = await this.internalDeviceService.getDevice(device.macAddress);
 
-        return device.connectivity;
+        return additionalProperties && (additionalProperties.connectivity || null);
 
       } catch (err) {
         this.logger.error({ err });
@@ -64,7 +64,7 @@ class DeviceResolver extends Resolver<Device> {
       try {
         const additionalProperties = await this.internalDeviceService.getDevice(device.macAddress);
 
-        return device.telemetry;
+        return additionalProperties && (additionalProperties.telemetry || null);
 
       } catch (err) {
         this.logger.error({ err });
