@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { injectable } from 'inversify';
 import HttpError from './HttpError';
+import config from '../config/config';
 
 export interface HttpRequest {
   method: string;
@@ -24,7 +25,8 @@ class HttpService {
           ...(request.customHeaders)
         },
         ...(request.body && { data: request.body }),
-        ...(request.params && { params: request.params })
+        ...(request.params && { params: request.params }),
+        timeout: config.externalServiceHttpTimeoutMs
       });
 
       return response.data;
