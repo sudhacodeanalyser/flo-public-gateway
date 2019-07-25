@@ -154,7 +154,8 @@ const {
 export const AdditionalDevicePropsCodec  = t.type({
   isConnected,
   lastHeardFromTime,
-  fwProperties
+  fwProperties,
+  fwVersion
 });
 
 export interface AdditionalDeviceProps extends t.TypeOf<typeof AdditionalDevicePropsCodec> {}
