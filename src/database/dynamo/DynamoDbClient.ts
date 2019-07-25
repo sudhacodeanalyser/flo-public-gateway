@@ -84,8 +84,8 @@ class DynamoDbClient implements DatabaseClient {
   }
 
   public async update<T>(tableName: string, key: KeyMap, rawPatch: Patch, flattenNestedProps: boolean = true): Promise<T> {
-    const setOps = rawPatch.setOps && rawPatch.setOps.map(setOp => this.sanitizeWrite(setOp.value));
-    const appendOps = rawPatch.appendOps && rawPatch.appendOps.map(appendOp => this.sanitizeWrite(appendOp.value));
+    const setOps = rawPatch.setOps && rawPatch.setOps.map(setOp => ({ ...setOp, value: this.sanitizeWrite(setOp.value) }));
+    const appendOps = rawPatch.appendOps && rawPatch.appendOps.map(appendOp => ({ ...appendOp, value: this.sanitizeWrite(appendOp.value) }));
     const patch = {
       ...rawPatch,
       setOps,
@@ -99,7 +99,7 @@ class DynamoDbClient implements DatabaseClient {
 
       const { Attributes } = await this._update<T>(tableName, key, patch, flattenNestedProps).promise();
 
-      return Attributes as T;
+      return this.sanitizeRead(Attributes) as T;
     } catch (err) {
       // There's no type defined for this, so we check the name string
       if (err.name === 'ConditionalCheckFailedException') {
@@ -320,30 +320,31 @@ class DynamoDbClient implements DatabaseClient {
     };
   }
 
-  private sanitizeWrite<T extends {}>(data: T): T {
-    return _.mapValues(data, value => {
-      if (value === '') {
+  private sanitizeWrite(data: any): any {
+      if (data === '') {
         return ' ';
-      } else if (_.isString(value)) {
-        return value.trim();
-      } else if (_.isObject(value) && Object.keys(value).length) {
-        return this.sanitizeWrite(data);
+      } else if (_.isString(data)) {
+        return data.trim();
+      } else if (_.isArray(data)) {
+        return data.map(item => this.sanitizeWrite(item));
+      } else if (_.isObject(data) && Object.keys(data).length) {
+        return _.mapValues(data, value => this.sanitizeWrite(value));
       } else {
-        return value;
+        return data;
       }
-    }) as T;
   }
 
-  private sanitizeRead<T extends {}>(data: T): T {
-    return _.mapValues(data, value => {
-      if (_.isString(value)) {
-        return value.trim();
-      } else if (_.isObject(value) && Object.keys(value).length) {
-        return this.sanitizeRead(value);
-      } else {
-        return value;
-      }
-    }) as T;
+  private sanitizeRead(data: any): any {
+
+    if (_.isString(data)) {
+      return data.trim();
+    } else if (_.isArray(data)) {
+      return data.map(item => this.sanitizeRead(item));
+    } else if (_.isObject(data) && Object.keys(data).length) {
+      return _.mapValues(data, value => this.sanitizeRead(value));
+    } else {
+      return data;
+    }
   }
 }
 
