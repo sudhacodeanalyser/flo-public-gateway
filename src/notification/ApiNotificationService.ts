@@ -1,7 +1,7 @@
 import { ApiService } from '../ApiService';
 import {
   Alarm,
-  AlarmEvent,
+  AlarmEvent, AlarmListResult,
   ClearAlertResponse,
   DeviceAlarmSettings,
   NotificationCounts,
@@ -19,10 +19,10 @@ class ApiNotificationService {
     });
   }
 
-  public async getAlarms(): Promise<Alarm[]> {
+  public async getAlarms(filters: string): Promise<AlarmListResult> {
     return this.notificationApi.sendRequest({
       method: 'get',
-      url: '/alarms'
+      url: `/alarms?${filters}`
     });
   }
 

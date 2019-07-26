@@ -8,7 +8,7 @@ import {
   requestParam
 } from 'inversify-express-utils';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
-import {Alarm, ClearAlertResponse} from '../api';
+import {Alarm, AlarmListResult, ClearAlertResponse} from '../api';
 import {asyncMethod, httpController} from '../api/controllerUtils';
 import Request from '../api/Request';
 import { NotificationServiceFactory } from '../notification/NotificationService';
@@ -38,11 +38,13 @@ export function AlarmControllerFactory(container: Container, apiVersion: number)
 
     @httpGet('/:id', auth)
     @asyncMethod
-    private async getAlarms(@request() req: Request): Promise<Alarm> {
+    private async getAlarms(@request() req: Request): Promise<AlarmListResult> {
+      const filters = req.url.split('?')[1] || '';
+
       return this
         .notificationServiceFactory
         .create(req)
-        .getAlarms();
+        .getAlarms(filters);
     }
 
     @httpPut('/:id/clear', authWithIcd)

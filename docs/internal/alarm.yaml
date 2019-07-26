@@ -1,0 +1,107 @@
+paths:
+  /api/v2/alarms:
+    get:
+      summary: Retrieve alarm list by filters
+      tags:
+        - Alarms
+      produces:
+        - application/json
+      parameters:
+        - in: query
+          name: isInternal
+          required: false
+          schema:
+            type: boolean
+          description: Indicates if alarms should be internal or not
+        - in: query
+          name: enabled
+          required: false
+          schema:
+            type: boolean
+          description: Indicates if alarms are enabled in the whole system or not
+      responses:
+        200:
+          description: Alarms list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Alarm'
+  /api/v2/alarms/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Alarm ID
+    get:
+      summary: Retrieve alarm list by filters
+      tags:
+        - Alarms
+      produces:
+        - application/json
+      responses:
+        200:
+          description: Alarm detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Alarm'
+
+components:
+  schemas:
+    Alarm:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        isInternal:
+          type: boolean
+        actions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Action'
+        supportOptions:
+          type: array
+          items:
+            $ref: '#/components/schemas/SupportOption'
+        active:
+          type: boolean
+    Action:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        text:
+          type: string
+        displayOnStatus:
+          type: integer
+        sort:
+          type: integer
+    SupportOption:
+      type: object
+      properties:
+        id:
+          type: integer
+        text:
+          type: string
+        alarmId:
+          type: integer
+        actionPath:
+          type: string
+        actionType:
+          type: integer
+        sort:
+          type: integer

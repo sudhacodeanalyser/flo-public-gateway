@@ -1,8 +1,18 @@
 import * as t from 'io-ts';
 import { TimestampedModel } from '../../api';
 
+export interface AlarmListResult {
+  items: Alarm[]
+}
+
 export interface Alarm {
-  
+  id: number;
+  name: string;
+  description: string;
+  isInternal: boolean;
+  actions: Action[];
+  supportOptions: SupportOption[];
+  active: boolean;
 }
 
 export interface AlarmEvent extends TimestampedModel {
@@ -56,16 +66,6 @@ export const UpdateDeviceAlarmSettingsCodec = t.type({
 export interface UpdateDeviceAlarmSettings extends t.TypeOf<typeof UpdateDeviceAlarmSettingsCodec> {}
 
 export interface DeviceAlarmSettings extends t.TypeOf<typeof DeviceAlarmSettingsCodec> {}
-
-export interface ActionSupport {
-  alarmId: number,
-  actions: Action[],
-  supportOptions: SupportOption[]
-}
-
-export interface ActionsSupportResponse {
-  items: ActionSupport[];
-}
 
 export interface Action {
   id: number;

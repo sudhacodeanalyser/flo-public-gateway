@@ -1,5 +1,6 @@
 import {
   Alarm,
+  AlarmListResult,
   AlarmEvent,
   ClearAlertResponse,
   DeviceAlarmSettings,
@@ -15,7 +16,7 @@ export interface NotificationServiceFactory {
 
 export interface NotificationService {
   getAlarmById(id: string): Promise<Alarm>;
-  getAlarms(): Promise<Alarm[]>;
+  getAlarms(filters: string): Promise<AlarmListResult>;
   sendAlarm(alertInfo: any): Promise<string>;
   getAlarmEvent(id: string): Promise<AlarmEvent>;
   deleteAlarmEvent(id: string): Promise<void>;
