@@ -9,6 +9,7 @@ export interface Alarm {
   id: number;
   name: string;
   description: string;
+  severity: number;
   isInternal: boolean;
   actions: Action[];
   supportOptions: SupportOption[];
