@@ -245,7 +245,6 @@ paths:
           schema:
             $ref: '#/components/schemas/Error'
 
-
   /api/v2/users/{id}/alarmSettings:
     parameters:
       - in: path
@@ -256,25 +255,31 @@ paths:
           format: uuid
         description: User ID
 
-    get:
-      summary: Retrieves a User by ID.
+    post:
+      summary: Updates user alarm settings
       tags:
         - Users
       produces:
         - application/json
-      parameters:
-        - $ref: '#/components/parameters/ExpandParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                items:
+                  - $ref: '#/components/schemas/DeviceAlarmSettings'
+
       responses:
         200:
-          description: A User with the specified ID or an empty object if not found.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/User'
+          description: 'User alarm settings were updated'
+        400:
+          description: 'Invalid request body, invalid token, or expired token'
         401:
-          $ref: '#/components/responses/UnauthorizedError'
+          description: 'Invalid client'
         403:
-          $ref: '#/components/responses/ForbiddenError'
+          description: 'Unauthorized client'
 
 components:
   schemas:
@@ -360,23 +365,8 @@ components:
             alarmSettings:
               type: array
               items:
-                - type: object
-                  properties:
-                    deviceId:
-                      type: string
-                      format: uuid
-                    info:
-                      type: array
-                      items:
-                        $ref: '#/components/schemas/AlarmSettings'
-                    warning:
-                      type: array
-                      items:
-                        $ref: '#/components/schemas/AlarmSettings'
-                    critical:
-                      type: array
-                      items:
-                        $ref: '#/components/schemas/AlarmSettings'
+                $ref: '#/components/schemas/DeviceAlarmSettings'
+
     UserExpandable:
       oneOf:
         - type: object
@@ -385,6 +375,25 @@ components:
               type: string
               format: uuid
         - $ref: '#/components/schemas/User'
+
+    DeviceAlarmSettings:
+      type: object
+      properties:
+        deviceId:
+          type: string
+          format: uuid
+        info:
+          type: array
+          items:
+            $ref: '#/components/schemas/AlarmSettings'
+        warning:
+          type: array
+          items:
+            $ref: '#/components/schemas/AlarmSettings'
+        critical:
+          type: array
+          items:
+            $ref: '#/components/schemas/AlarmSettings'
 
     AlarmSettings:
       type: object
