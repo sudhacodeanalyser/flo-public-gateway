@@ -1,7 +1,11 @@
 import * as t from 'io-ts';
 import { TimestampedModel } from '../../api';
 
-export interface AlertEvent extends TimestampedModel {
+export interface Alarm {
+  
+}
+
+export interface AlarmEvent extends TimestampedModel {
   id: string;
   alarm: SimpleAlarm,
   icdId: string;
@@ -19,7 +23,8 @@ export interface SimpleAlarm {
 
 export interface PaginatedResult<T> {
   items: T[];
-  page: string;
+  page: number;
+  pageSize: number;
   total: number;
 }
 

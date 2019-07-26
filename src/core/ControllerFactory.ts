@@ -6,13 +6,14 @@ import { DeviceControllerFactory } from './device/DeviceControllerFactory';
 import { LocationControllerFactory } from './location/LocationControllerFactory';
 import { LookupControllerFactory } from './lookup/LookupControllerFactory';
 import { LocalizationControllerFactory } from './localization/LocalizationControllerFactory';
-import { NotificationControllerFactory } from './notification/NotificationControllerFactory';
+import { AlarmControllerFactory } from './alarm/AlarmControllerFactory';
 import { PingControllerFactory } from './ping/PingControllerFactory';
 import { PresenceControllerFactory } from './presence/PresenceControllerFactory';
 import { SubscriptionControllerFactory } from './subscription/SubscriptionControllerFactory';
 import { UserControllerFactory } from './user/UserControllerFactory';
 import { WaterControllerFactory } from './water/WaterControllerFactory';
 import { SessionControllerFactory } from './session/SessionControllerFactory';
+import { EventControllerFactory } from './event/EventControllerFactory';
 
 export default function ControllerFactory(container: Container, apiVersion: number = 2): interfaces.Controller[] {
   return [
@@ -25,9 +26,10 @@ export default function ControllerFactory(container: Container, apiVersion: numb
     PresenceControllerFactory,
     LookupControllerFactory,
     LocalizationControllerFactory,
-    NotificationControllerFactory,
     WaterControllerFactory,
-    SessionControllerFactory
+    SessionControllerFactory,
+    AlarmControllerFactory,
+    EventControllerFactory
   ]
   .map(controllerFactory => controllerFactory(container, apiVersion));
 }

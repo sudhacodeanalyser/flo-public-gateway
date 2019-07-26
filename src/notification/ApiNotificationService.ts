@@ -1,7 +1,7 @@
 import { ApiService } from '../ApiService';
 import {
-  ActionsSupportResponse,
-  AlertEvent,
+  Alarm,
+  AlarmEvent,
   ClearAlertResponse,
   DeviceAlarmSettings,
   NotificationCounts,
@@ -12,14 +12,21 @@ import {Option, fromNullable} from 'fp-ts/lib/Option';
 class ApiNotificationService {
   constructor(private notificationApi: ApiService) {}
 
-  public async getDocs(): Promise<string> {
+  public async getAlarmById(id: string): Promise<Alarm> {
     return this.notificationApi.sendRequest({
       method: 'get',
-      url: '/docs'
+      url: `/alarms/${id}`
     });
   }
 
-  public async sendAlert(alertInfo: any): Promise<string> {
+  public async getAlarms(): Promise<Alarm[]> {
+    return this.notificationApi.sendRequest({
+      method: 'get',
+      url: '/alarms'
+    });
+  }
+
+  public async sendAlarm(alertInfo: any): Promise<string> {
     return this.notificationApi.sendRequest({
       method: 'post',
       url: '/events',
@@ -27,21 +34,21 @@ class ApiNotificationService {
     });
   }
 
-  public async getAlertEvent(id: string): Promise<AlertEvent> {
+  public async getAlarmEvent(id: string): Promise<AlarmEvent> {
     return this.notificationApi.sendRequest({
       method: 'get',
       url: `/events/${id}`
     });
   }
 
-  public async deleteAlertEvent(id: string): Promise<void> {
+  public async deleteAlarmEvent(id: string): Promise<void> {
     return this.notificationApi.sendRequest({
       method: 'delete',
       url: `/events/${id}`
     });
   }
 
-  public async getAlertEventsByFilter(filters: string): Promise<PaginatedResult<AlertEvent>> {
+  public async getAlarmEventsByFilter(filters: string): Promise<PaginatedResult<AlarmEvent>> {
     return this.notificationApi.sendRequest({
       method: 'get',
       url: `/events?${filters}`
@@ -91,14 +98,6 @@ class ApiNotificationService {
     return this.notificationApi.sendRequest({
       method: 'post',
       url: '/events/sample',
-      body: data
-    });
-  }
-
-  public async getActions(data: any): Promise<ActionsSupportResponse> {
-    return this.notificationApi.sendRequest({
-      method: 'get',
-      url: '/actions',
       body: data
     });
   }
