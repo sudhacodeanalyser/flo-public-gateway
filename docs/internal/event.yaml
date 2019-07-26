@@ -1,0 +1,197 @@
+paths:
+  /api/v2/events/alarms:
+    post:
+      summary: Creates an Alarm Event
+      tags:
+        - Alarm Events
+      produces:
+        - application/json
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AlarmInfo'
+      responses:
+        200:
+          description: The ID of the created Alarm Event
+          content:
+            application/json:
+              schema:
+                type: string
+
+    get:
+      summary: Retrieves all Alarm Events according to the given filters.
+      tags:
+        - Alarm Events
+      produces:
+        - application/json
+      parameters:
+        - in: query
+          name: locationId
+          schema:
+            type: string
+        - in: query
+          name: icdId
+          schema:
+            type: string
+        - in: query
+          name: createdAt
+          schema:
+            type: string
+            example: gt:2019-10-01T22:03:09
+          description: 'Date on which events were created. Multiple filters are allowed. The date should be in UTC. Allowed operators: eq, lt, let, gt, get.'
+        - in: query
+          name: status
+          schema:
+            type: string
+            example: gt:2
+          description: 'Alarm event status. Multiple filters are allowed. Allowed operators: eq, lt, let, gt, get.'
+        - in: query
+          name: severity
+          schema:
+            type: string
+            example: gt:2
+          description: 'Alarm severity. Multiple filters are allowed. Allowed operators: eq, lt, let, gt, get.'
+        - in: query
+          name: lang
+          schema:
+            type: string
+          description: Language
+        - in: query
+          name: page
+          schema:
+            type: number
+          description: Page number
+        - in: query
+          name: size
+          schema:
+            type: number
+          description: Page size
+      responses:
+        200:
+          description: A list of matching Alarm Events.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlarmEventList'
+
+  /api/v2/events/alarms/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Alarm Event ID
+
+    get:
+      summary: Retrieves an Alarm Event by ID.
+      tags:
+        - Alarm Events
+      produces:
+        - application/json
+      responses:
+        200:
+          description: The Alarm Event with the given ID.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlarmEvent'
+
+    delete:
+      summary: Deletes an Alarm Event by ID.
+      tags:
+        - Alarm Events
+      produces:
+        - application/json
+      responses:
+        200:
+          description: The Alarm Event was successfully deleted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Empty'
+
+components:
+  schemas:
+    AlarmInfo:
+      type: object
+      properties:
+        macAddress:
+          type: string
+        alertId:
+          type: number
+        telemetry:
+          type: object
+          properties:
+            wf:
+              type: number
+            t:
+              type: number
+            p:
+              type: number
+            sw1:
+              type: number
+            sw2:
+              type: number
+            did:
+              type: string
+            ts:
+              type: number
+            sm:
+              type: number
+            f:
+              type: number
+            v:
+              type: number
+            rssi:
+              type: number
+
+    AlarmEvent:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        alarm:
+          type: object
+          properties:
+            id:
+              type: number
+            name:
+              type: string
+            description:
+              type: string
+        icdId:
+          type: string
+          format: uuid
+        status:
+          type: string
+        snoozeTo:
+          type: string
+          format: date-time
+        locationId:
+          type: string
+          format: uuid
+        systemMode:
+          type: string
+        updateAt:
+          type: string
+          format: date-time
+        createAt:
+          type: string
+          format: date-time
+
+    AlarmEventList:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AlarmEvent'
+        page:
+          type: number
+        total:
+          type: number
