@@ -1,5 +1,6 @@
 import axios from 'axios';
 import ExternalApiError from './ExternalApiError';
+import config from './config/config';
 
 export interface ApiRequest {
   method: string,
@@ -22,7 +23,8 @@ class ApiService {
           'Content-Type': 'application/json',
           ...(this.authToken && { Authorization: this.authToken })
         },
-        ...(request.body && { data: request.body })
+        ...(request.body && { data: request.body }),
+        timeout: config.externalServiceHttpTimeoutMs
       });
 
       return response.data;

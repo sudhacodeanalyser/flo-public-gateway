@@ -17,7 +17,7 @@ import ExtendableError from '../core/api/error/ExtendableError';
 import Request from '../core/api/Request';
 import { internalSwaggerJsDoc, legacySwaggerJsDoc, swaggerOpts, thirdPartiesSwaggerJsDoc } from '../docs/swagger';
 import LoggerFactory from '../logging/LoggerFactory';
-
+import { Loaders } from '../memoize/MemoizeMixin';
 
 function ServerConfigurationFactory(container: Container): (app: express.Application) => void {
   return (app: express.Application) => {
@@ -62,6 +62,8 @@ function ServerConfigurationFactory(container: Container): (app: express.Applica
       res.setHeader('x-request-id', uuid.v4());
       next();
     });
+
+    container.bind<Loaders>('Loaders').toConstantValue(new Map());
 
     const loggerFactory = container.get<LoggerFactory>('LoggerFactory');
     const logger = loggerFactory.createLogger();

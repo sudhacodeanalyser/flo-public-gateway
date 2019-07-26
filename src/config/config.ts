@@ -27,7 +27,8 @@ function getDefaults(): { [key: string]: any } {
         influxAnalyticsDb: 'telemetry_analytics_dev',
         influxHourlyMeasurement: 'telemetry_hourly',
         influxTelemetryDb: 'telemetry_dev',
-        influxSecondMeasurement: 'telemetry_raw'
+        influxSecondMeasurement: 'telemetry_raw',
+        externalServiceHttpTimeoutMs: 5000
       };
   }
 }
@@ -67,7 +68,8 @@ const config = {
   influxAnalyticsDb: process.env.INFLUX_ANALYTICS_DB,
   influxHourlyMeasurement: process.env.INFLUX_HOURLY_MEASUREMENT,
   influxTelemetryDb: process.env.INFLUX_TELEMETRY_DB,
-  influxSecondMeasurement: process.env.INFLUX_SECOND_MEASUREMNT
+  influxSecondMeasurement: process.env.INFLUX_SECOND_MEASUREMNT,
+  externalServiceHttpTimeoutMs: process.env.EXTERNAL_SERVICE_HTTP_TIMEOUT_MS
 };
 
 export default {

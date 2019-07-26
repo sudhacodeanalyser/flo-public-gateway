@@ -57,10 +57,13 @@ const RecordToModelSchema: StrictSchema<Device, DeviceRecordData>  = {
   installStatus: () => ({
     isInstalled: false
   }),
+  learning: () => undefined,
   notifications: () => undefined,
   hardwareThresholds: () => undefined,
   pairingData: () => undefined,
-  serialNumber: () => undefined
+  serialNumber: () => undefined,
+  connectivity: () => undefined,
+  telemetry: () => undefined
 };
 
 const ModelToRecordSchema: StrictSchema<DeviceRecordData, Device> = {

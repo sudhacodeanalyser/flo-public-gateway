@@ -5,7 +5,7 @@ import _ from 'lodash';
 import uuid from 'uuid';
 import { fromPartialRecord } from '../../database/Patch';
 import { InternalDeviceService } from "../../internal-device-service/InternalDeviceService";
-import { DependencyFactoryFactory, Device, DeviceCreate, DeviceModelType, DeviceSystemModeNumeric, DeviceType, DeviceUpdate, PropExpand, SystemMode, ValveState, ValveStateNumeric } from '../api';
+import { DependencyFactoryFactory, Device, DeviceCreate, DeviceModelType, DeviceSystemModeNumeric, DeviceType, DeviceUpdate, PropExpand, SystemMode, ValveState, ValveStateNumeric, AdditionalDevicePropsCodec } from '../api';
 import { translateNumericToStringEnum } from '../api/enumUtils';
 import DeviceTable from '../device/DeviceTable';
 import { NotificationService, NotificationServiceFactory } from '../notification/NotificationService';
@@ -15,7 +15,10 @@ import { DeviceRecord, DeviceRecordData } from './DeviceRecord';
 import { IrrigationScheduleService, IrrigationScheduleServiceFactory } from './IrrigationScheduleService';
 import OnboardingLogTable from './OnboardingLogTable';
 import * as Option from 'fp-ts/lib/Option';
+import { pipe } from 'fp-ts/lib/pipeable';
 import { PairingService } from '../../api-v1/pairing/PairingService';
+import * as t from 'io-ts';
+import * as Either from 'fp-ts/lib/Either';
 
 @injectable()
 class DeviceResolver extends Resolver<Device> {
@@ -29,7 +32,18 @@ class DeviceResolver extends Resolver<Device> {
     },
     additionalProps: async (device: Device, shouldExpand = false) => {
       try {
-        return (await this.internalDeviceService.getDevice(device.macAddress));
+        const additionalProps = await this.internalDeviceService.getDevice(device.macAddress);
+
+        if (additionalProps) {
+          // Strip properties not exposed to on Device model
+          return pipe(
+            t.exact(AdditionalDevicePropsCodec).decode(additionalProps),
+            Either.fold(() => null, result => result)
+          );
+        } 
+
+        return null;
+
       } catch (err) {
         this.logger.error({ err });
         return null;
@@ -39,7 +53,7 @@ class DeviceResolver extends Resolver<Device> {
       try {
         const additionalProperties = await this.internalDeviceService.getDevice(device.macAddress);
 
-        return device.connectivity;
+        return additionalProperties && (additionalProperties.connectivity || null);
 
       } catch (err) {
         this.logger.error({ err });
@@ -50,7 +64,7 @@ class DeviceResolver extends Resolver<Device> {
       try {
         const additionalProperties = await this.internalDeviceService.getDevice(device.macAddress);
 
-        return device.telemetry;
+        return additionalProperties && (additionalProperties.telemetry || null);
 
       } catch (err) {
         this.logger.error({ err });
@@ -124,10 +138,30 @@ class DeviceResolver extends Resolver<Device> {
       }
     },
     installStatus: async (device: Device, shouldExpand = false) => {
-      const onboardingLog = await this.onboardingLogTable.getCurrentState(device.id);
+      const maybeOnboardingLog = await this.onboardingLogTable.getInstallEvent(device.id);
+
       return {
-        isInstalled: onboardingLog !== null
-      }
+        isInstalled: pipe(
+          maybeOnboardingLog, 
+          Option.fold(() => false, () => true)
+        ),
+        installDate: pipe(
+          maybeOnboardingLog,
+          Option.map(({ created_at }) => created_at),
+          Option.toUndefined
+        )
+      };
+    },
+    learning: async (device: Device, shouldExpand = false) => {
+      const maybeOnboardingLog = await this.onboardingLogTable.getOutOfForcedSleepEvent(device.id);
+
+      return pipe(
+        maybeOnboardingLog,
+        Option.map(({ created_at }) => ({
+          outOfLearningDate: created_at
+        })),
+        Option.toNullable
+      );
     },
     notifications: async (device: Device, shouldExpand = false) => {
       return this.notificationService.getAlarmCounts({});
@@ -233,7 +267,7 @@ class DeviceResolver extends Resolver<Device> {
       try {
         const additionalProperties = await this.internalDeviceService.getDevice(device.macAddress);
 
-        return (additionalProperties && additionalProperties.fwProperties && additionalProperties.fwProperties.serialNumber) || null
+        return (additionalProperties && additionalProperties.fwProperties && additionalProperties.fwProperties.serial_number) || null
       } catch (err) {
         this.logger.error({ err });
         return null;

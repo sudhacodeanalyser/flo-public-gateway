@@ -1,3 +1,4 @@
+import { none, Option, some } from 'fp-ts/lib/Option';
 import { Container, inject, multiInject } from 'inversify';
 import { BaseHttpController, httpDelete, httpGet, httpPost, interfaces, queryParam, requestBody, requestParam } from 'inversify-express-utils';
 import * as t from 'io-ts';
@@ -9,7 +10,6 @@ import { createMethod, deleteMethod, httpController, parseExpand, withResponseTy
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import * as Responses from '../api/response';
 import { SubscriptionService } from '../service';
-import { Option, some, none } from 'fp-ts/lib/Option';
 
 export function SubscriptionControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
@@ -36,7 +36,7 @@ export function SubscriptionControllerFactory(container: Container, apiVersion: 
       }))
     )
     @createMethod
-    @withResponseType<Subscription, Responses.SubscriptionResponse>(Responses.Account.fromModel)
+    @withResponseType<Subscription, Responses.SubscriptionResponse>(Responses.Subscription.fromModel)
     private async createSubscription(@requestBody() subscription: SubscriptionCreate): Promise<Option<Subscription>> {
       const createdSubscription = await this.subscriptionService.createSubscription(subscription);
 
@@ -44,7 +44,7 @@ export function SubscriptionControllerFactory(container: Container, apiVersion: 
     }
 
     @httpGet('/:id',
-      auth,
+      // auth,
       reqValidator.create(t.type({
         params: t.type({
           id: t.string
@@ -54,7 +54,7 @@ export function SubscriptionControllerFactory(container: Container, apiVersion: 
         })
       }))
     )
-    @withResponseType<Subscription, Responses.SubscriptionResponse>(Responses.Account.fromModel)
+    @withResponseType<Subscription, Responses.SubscriptionResponse>(Responses.Subscription.fromModel)
     private async getSubscription(@requestParam('id') id: string, @queryParam('expand') expand?: string): Promise<Option<Subscription>> {
       const expandProps = parseExpand(expand);
       const subscription = await this.subscriptionService.getSubscriptionById(id, expandProps);

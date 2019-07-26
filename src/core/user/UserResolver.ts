@@ -14,6 +14,7 @@ import UserTable from './UserTable';
 import {NotificationService, NotificationServiceFactory} from '../notification/NotificationService';
 import _ from 'lodash';
 import { injectHttpContext, interfaces } from 'inversify-express-utils';
+import Logger from 'bunyan';
 
 @injectable()
 class UserResolver extends Resolver<User> {
@@ -65,27 +66,33 @@ class UserResolver extends Resolver<User> {
       );
     },
     alarmSettings: async (model: User, shouldExpand = false) => {
-      if (!shouldExpand || !this.notificationService) {
+      if (!shouldExpand || !this.notificationServiceFactory) {
         return null;
       }
 
-      const userLocationRoleRecordData: UserLocationRoleRecordData[] = await this.userLocationRoleTable.getAllByUserId(model.id);
-      const locationResolver = this.locationResolverFactory();
-      const devices = _.flatten(await Promise.all(
-          userLocationRoleRecordData
-              .map(async ({ location_id }) => {
-                const location = await locationResolver.get(location_id);
-                return location ? location.devices: [];
-              })
-      ));
+      try {
+        const userLocationRoleRecordData: UserLocationRoleRecordData[] = await this.userLocationRoleTable.getAllByUserId(model.id);
+        const locationResolver = this.locationResolverFactory();
+        const devices = _.flatten(await Promise.all(
+            userLocationRoleRecordData
+                .map(async ({ location_id }) => {
+                  const location = await locationResolver.get(location_id);
+                  return location ? location.devices: [];
+                })
+        ));
 
-      return this.notificationService.getAlarmSettingsInBulk(model.id, devices.map(device => device.id));
+        return (await this.notificationServiceFactory().getAlarmSettingsInBulk(model.id, devices.map(device => device.id)));
+      } catch (err) {
+        this.logger.error({ err });
+
+        return null;
+      }
     }
   };
 
   private locationResolverFactory: () => LocationResolver;
   private accountResolverFactory: () => AccountResolver;
-  private notificationService: NotificationService;
+  private notificationServiceFactory: () => NotificationService;
 
   constructor(
     @inject('UserTable') private userTable: UserTable,
@@ -96,6 +103,7 @@ class UserResolver extends Resolver<User> {
     @inject('DefaultUserLocale') private defaultUserLocale: string,
     @inject('NotificationServiceFactory') notificationServiceFactory: NotificationServiceFactory,
     @injectHttpContext private readonly httpContext: interfaces.HttpContext,
+    @inject('Logger') private readonly logger: Logger
   ) {
     super();
 
@@ -103,7 +111,7 @@ class UserResolver extends Resolver<User> {
     this.accountResolverFactory = depFactoryFactory<AccountResolver>('AccountResolver');
 
     if (!_.isEmpty(this.httpContext)) {
-      this.notificationService = notificationServiceFactory.create(this.httpContext.request);
+      this.notificationServiceFactory = () => notificationServiceFactory.create(this.httpContext.request);
     }
   }
 
@@ -167,7 +175,7 @@ class UserResolver extends Resolver<User> {
   }
 
   public async updateAlarmSettings(id: string, settings: UpdateDeviceAlarmSettings): Promise<void> {
-    return this.notificationService.updateAlarmSettings(id, settings);
+    return this.notificationServiceFactory().updateAlarmSettings(id, settings);
   }
 }
 

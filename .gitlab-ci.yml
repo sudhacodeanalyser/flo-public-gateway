@@ -3,7 +3,7 @@
 image: registry.gitlab.com/flotechnologies/gitlabci-docker-compose:18.06-fat
 
 services:
-  - docker:dind
+  - docker:18.09-dind
 
 stages:
   - build
@@ -12,18 +12,21 @@ stages:
 
 before_script:
   - export DOCKER_HOST=tcp://localhost:2375
+  - export CI_REGISTRY=registry.gitlab.com
   - apk add --no-cache make bash # TODO: this should be part of the compose image
-  - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
+  - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY
   - |
     if [[ -f Dockerrun.aws.json ]]; then
       sed -i "s/:latest/:${CI_PIPELINE_ID}/g" Dockerrun.aws.json
     fi
+  - export CI_REGISTRY_IMAGE="registry.gitlab.com/flotechnologies/flo-public-gateway"
 
 Compile:
   stage: build
   except:
     - tags
-
+  tags:
+    - build
   artifacts:
     paths:
       - logs/
@@ -55,12 +58,35 @@ Sanity:
       # Collect logs
       - build.log
       - /root/.npm/_logs
-
   dependencies:
     - Compile
   script:
     - make pull
     - make test | tee build.log
+  tags:
+      - test
+
+K8sDev:
+  variables:
+    AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID_DEV}"
+    AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY_DEV}"
+    KUBERNETES_SERVICE_ACCOUNT_OVERWRITE: tiller
+  image: kloiadocker/kloiahelm:0.0.1
+  stage: deploy
+  dependencies:
+    - Compile
+  only:
+    - dev
+    - kloia-helmchart-deployment
+  environment:
+    name: dev
+    url: https://flo-public-gateway.flocloud.co/ping
+  script:
+    - make environment-dev
+    - make deploy-k8s
+  tags:
+    - dev
+
 
 Dev:
   variables:
@@ -71,12 +97,34 @@ Dev:
     - Compile
   only:
     - dev
+    - kloia-helmchart-deployment
   environment:
     name: dev
     url: https://flo-public-gateway.flocloud.co/ping
   script:
     - make pull
     - make deploy ENV=dev
+  tags:
+    - kubernetes
+
+K8sProd:
+  variables:
+    AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID_PROD}"
+    AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY_PROD}"
+  image: kloiadocker/kloiahelm:0.0.1
+  stage: deploy
+  dependencies:
+    - Compile
+  only:
+    - master
+  environment:
+    name: prod
+    url: https://flo-public-gateway.flosecurecloud.co/ping
+  script:
+    - make environment-prod
+    - make deploy-k8s
+  tags:
+    - deploy-prod
 
 Prod:
   variables:
@@ -93,4 +141,5 @@ Prod:
   script:
     - make pull
     - make deploy ENV=prod
-
+  tags:
+    - kubernetes
