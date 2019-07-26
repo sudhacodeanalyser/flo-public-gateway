@@ -326,6 +326,25 @@ components:
                       type: string
                       format: uuid
                 - $ref: '#/components/schemas/Roles'
+            alarmSettings:
+              allOf:
+                - type: object
+                  properties:
+                    deviceId:
+                      type: string
+                      format: uuid
+                    info:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/AlarmSettings'
+                    warning:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/AlarmSettings'
+                    critical:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/AlarmSettings'
     UserExpandable:
       oneOf:
         - type: object
@@ -334,3 +353,14 @@ components:
               type: string
               format: uuid
         - $ref: '#/components/schemas/User'
+
+    AlarmSettings:
+      type: object
+      properties:
+        alarmId: integer
+        name: string
+        systemMode: string
+        smsEnabled: boolean
+        emailEnabled: boolean
+        pushEnabled: boolean
+        callEnabled: boolean

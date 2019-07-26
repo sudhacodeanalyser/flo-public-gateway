@@ -1,6 +1,6 @@
 import { ContainerModule, interfaces } from 'inversify';
 import config from '../../config/config';
-import {NotificationServiceFactory} from "./NotificationService";
+import {NotificationServiceFactory} from "./AlarmService";
 import {ApiNotificationServiceFactory} from "../../notification/ApiNotificationServiceFactory";
 
 export default new ContainerModule((bind: interfaces.Bind) => {
