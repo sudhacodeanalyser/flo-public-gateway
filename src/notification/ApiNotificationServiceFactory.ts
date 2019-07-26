@@ -1,9 +1,9 @@
 import { inject, injectable } from 'inversify';
-import { NotificationServiceFactory, NotificationService } from '../core/notification/NotificationService';
-import Request from '../core/api/Request';
+import { ApiService } from "../ApiService";
 import UnauthorizedError from '../auth/UnauthorizedError';
+import Request from '../core/api/Request';
+import { NotificationService, NotificationServiceFactory } from '../core/notification/NotificationService';
 import { ApiNotificationService } from './ApiNotificationService';
-import {ApiService} from "../ApiService";
 
 @injectable()
 class ApiNotificationServiceFactory implements NotificationServiceFactory  {
@@ -24,3 +24,4 @@ class ApiNotificationServiceFactory implements NotificationServiceFactory  {
 }
 
 export { ApiNotificationServiceFactory };
+

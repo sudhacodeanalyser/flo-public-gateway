@@ -245,6 +245,44 @@ paths:
           schema:
             $ref: '#/components/schemas/Error'
 
+  /api/v2/users/{id}/alarmSettings:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: User ID
+
+    post:
+      summary: Updates user alarm settings
+      tags:
+        - Users
+      produces:
+        - application/json
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                items:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/DeviceAlarmSettings'
+
+      responses:
+        200:
+          description: 'User alarm settings were updated'
+        400:
+          description: 'Invalid request body, invalid token, or expired token'
+        401:
+          description: 'Invalid client'
+        403:
+          description: 'Unauthorized client'
+
 components:
   schemas:
     UserRegistration:
@@ -326,6 +364,11 @@ components:
                       type: string
                       format: uuid
                 - $ref: '#/components/schemas/Roles'
+            alarmSettings:
+              type: array
+              items:
+                $ref: '#/components/schemas/DeviceAlarmSettings'
+
     UserExpandable:
       oneOf:
         - type: object
@@ -334,3 +377,40 @@ components:
               type: string
               format: uuid
         - $ref: '#/components/schemas/User'
+
+    DeviceAlarmSettings:
+      type: object
+      properties:
+        deviceId:
+          type: string
+          format: uuid
+        info:
+          type: array
+          items:
+            $ref: '#/components/schemas/AlarmSettings'
+        warning:
+          type: array
+          items:
+            $ref: '#/components/schemas/AlarmSettings'
+        critical:
+          type: array
+          items:
+            $ref: '#/components/schemas/AlarmSettings'
+
+    AlarmSettings:
+      type: object
+      properties:
+        alarmId:
+          type: integer
+        name:
+          type: string
+        systemMode:
+          type: string
+        smsEnabled:
+          type: boolean
+        emailEnabled:
+          type: boolean
+        pushEnabled:
+          type: boolean
+        callEnabled:
+          type: boolean
