@@ -20,10 +20,6 @@ class ApiNotificationServiceFactory implements NotificationServiceFactory  {
       throw new UnauthorizedError();
     }
 
-    // tslint:disable
-    console.log("####### ApiNotificationServiceFactory notificationApiUrl");
-    console.log(this.notificationApiUrl);
-
     return new ApiNotificationService(new ApiService(this.notificationApiUrl, authToken));
   }
 }
