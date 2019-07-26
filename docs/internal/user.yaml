@@ -245,6 +245,37 @@ paths:
           schema:
             $ref: '#/components/schemas/Error'
 
+
+  /api/v2/users/{id}/alarmSettings:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: User ID
+
+    get:
+      summary: Retrieves a User by ID.
+      tags:
+        - Users
+      produces:
+        - application/json
+      parameters:
+        - $ref: '#/components/parameters/ExpandParam'
+      responses:
+        200:
+          description: A User with the specified ID or an empty object if not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        403:
+          $ref: '#/components/responses/ForbiddenError'
+
 components:
   schemas:
     UserRegistration:
@@ -327,7 +358,8 @@ components:
                       format: uuid
                 - $ref: '#/components/schemas/Roles'
             alarmSettings:
-              allOf:
+              type: array
+              items:
                 - type: object
                   properties:
                     deviceId:
@@ -357,10 +389,17 @@ components:
     AlarmSettings:
       type: object
       properties:
-        alarmId: integer
-        name: string
-        systemMode: string
-        smsEnabled: boolean
-        emailEnabled: boolean
-        pushEnabled: boolean
-        callEnabled: boolean
+        alarmId:
+          type: integer
+        name:
+          type: string
+        systemMode:
+          type: string
+        smsEnabled:
+          type: boolean
+        emailEnabled:
+          type: boolean
+        pushEnabled:
+          type: boolean
+        callEnabled:
+          type: boolean
