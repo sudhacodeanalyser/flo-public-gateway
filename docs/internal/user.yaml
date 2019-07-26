@@ -269,7 +269,9 @@ paths:
               type: object
               properties:
                 items:
-                  - $ref: '#/components/schemas/DeviceAlarmSettings'
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/DeviceAlarmSettings'
 
       responses:
         200:
