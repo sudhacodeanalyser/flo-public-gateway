@@ -1,19 +1,15 @@
 import { Container, inject } from 'inversify';
-import {
-  BaseHttpController, httpGet,
-  httpPut,
-  interfaces,
-  request,
-  requestBody,
-  requestParam
-} from 'inversify-express-utils';
+import { BaseHttpController, httpGet, httpPut, interfaces, request, requestBody, requestParam } from 'inversify-express-utils';
+import * as t from 'io-ts';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
-import {Alarm, AlarmListResult, ClearAlertResponse} from '../api';
-import {asyncMethod, httpController} from '../api/controllerUtils';
+import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
+import { Alarm, AlarmListResult, ClearAlertResponse } from '../api';
+import { httpController } from '../api/controllerUtils';
 import Request from '../api/Request';
 import { NotificationServiceFactory } from '../notification/NotificationService';
 
 export function AlarmControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
+  const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
   const authMiddlewareFactory = container.get<AuthMiddlewareFactory>('AuthMiddlewareFactory');
   const auth = authMiddlewareFactory.create();
   const authWithIcd = authMiddlewareFactory.create(async ({ body: { icdId } }) => ({icd_id: icdId}));
@@ -27,8 +23,14 @@ export function AlarmControllerFactory(container: Container, apiVersion: number)
       super();
     }
 
-    @httpGet('/', auth)
-    @asyncMethod
+    @httpGet('/:id',
+      auth,
+      reqValidator.create(t.type({
+        params: t.type({
+          id: t.string
+        })
+      }))
+    )
     private async getAlarmById(@request() req: Request, @requestParam('id') id: string): Promise<Alarm> {
       return this
         .notificationServiceFactory
@@ -36,8 +38,7 @@ export function AlarmControllerFactory(container: Container, apiVersion: number)
         .getAlarmById(id);
     }
 
-    @httpGet('/:id', auth)
-    @asyncMethod
+    @httpGet('/', auth)
     private async getAlarms(@request() req: Request): Promise<AlarmListResult> {
       const filters = req.url.split('?')[1] || '';
 
@@ -47,8 +48,14 @@ export function AlarmControllerFactory(container: Container, apiVersion: number)
         .getAlarms(filters);
     }
 
-    @httpPut('/:id/clear', authWithIcd)
-    @asyncMethod
+    @httpPut('/:id/clear',
+      authWithIcd,
+      reqValidator.create(t.type({
+        params: t.type({
+          id: t.string
+        })
+      }))
+    )
     private async clearAlarm(@request() req: Request, @requestParam('id') id: string, @requestBody() data: any): Promise<ClearAlertResponse> {
       return this
         .notificationServiceFactory
@@ -57,7 +64,6 @@ export function AlarmControllerFactory(container: Container, apiVersion: number)
     }
 
     @httpPut('/clear', authWithLocation)
-    @asyncMethod
     private async clearAlarms(@request() req: Request, @requestBody() data: any): Promise<ClearAlertResponse> {
       return this
         .notificationServiceFactory
