@@ -34,36 +34,37 @@ paths:
                 type: object
                 required:
                   - id
-                  - ap_name
-                  - device_id
-                  - login_token
-                  - client_cert
-                  - client_key
-                  - server_cert
-                  - websocket_key
+                  - apName
+                  - deviceId
+                  - macAddress
+                  - loginToken
+                  - clientCert
+                  - clientKey
+                  - serverCert
+                  - websocketKey
                 properties:
                   id:
                     type: string
                     format: uuid
-                  ap_name:
+                  apName:
                     type: string
-                  ap_password:
+                  deviceId:
                     type: string
-                  device_id:
+                  macAddress:
                     type: string
-                  login_token:
+                  loginToken:
                     type: string
-                  client_cert:
+                  clientCert:
                     type: string
-                  client_key:
+                  clientKey:
                     type: string
-                  server_cert:
+                  serverCert:
                     type: string
-                  websocket_cert:
+                  websocketCert:
                     type: string
-                  websocket_cert_der:
+                  websocketCertDer:
                     type: string
-                  websocket_key:
+                  websocketKey:
                     type: string
         400:
           description: Invalid request body
