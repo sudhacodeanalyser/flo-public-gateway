@@ -1,8 +1,9 @@
 import { inject, injectable } from 'inversify';
 import { HttpService, HttpError } from '../../http/HttpService';
-import { QrData, PairingData, CompletePairingData, PairingDataCodec, QrDataValidator } from './models';
-import { isLeft } from 'fp-ts/lib/Either';
+import { QrData, PairingData, CompletePairingData, PairingDataFromResponse, QrDataValidator } from './models';
+import * as Either from 'fp-ts/lib/Either';
 import * as Option from 'fp-ts/lib/Option';
+import { pipe } from 'fp-ts/lib/pipeable';
 import _ from 'lodash';
 
 @injectable()
@@ -22,12 +23,13 @@ class PairingService extends HttpService {
     };
     const response = await this.sendRequest(request);
 
-    if (isLeft(PairingDataCodec.decode(response))) {
-
-       throw new Error('Invalid response.');
-    }
-
-    return response as PairingData;
+    return pipe(
+      PairingDataFromResponse.decode(response),
+      Either.fold(
+        async () => Promise.reject(new Error('Invalid response.')),
+        async data => data
+      )
+    );
   }
 
   public async completePairing(authToken: string, pairingId: string, data: CompletePairingData): Promise<void> {
@@ -55,11 +57,15 @@ class PairingService extends HttpService {
 
       if (_.isEmpty(response)) {
         return Option.none;
-      } else if (isLeft(PairingDataCodec.decode(response))) {
-        throw new Error('Invalid response.');
-      } else {
-        return Option.some(response);
-      }
+      } 
+
+      return pipe(
+        PairingDataFromResponse.decode(response),
+        Either.fold(
+          async () => Promise.reject(new Error('Invalid response.')),
+          async data => Option.some(data)
+        )
+      );
     } catch (err) {
       if (err instanceof HttpError && err.statusCode === 404) {
         return Option.none;

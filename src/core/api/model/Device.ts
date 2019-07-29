@@ -98,16 +98,18 @@ interface HardwareThresholds {
   temp: ThresholdDefinition;
 }
 
-export interface PairingData {
-  apName: string;
-  loginToken: string;
-  clientCert: string;
-  clientKey: string;
-  serverCert: string;
-  websocketCert?: string;
-  websocketCertDer?: string;
-  websocketKey: string;  
-}
+export const PairingDataCodec = t.type({
+  apName: t.string,
+  loginToken: t.string,
+  clientCert: t.string,
+  clientKey: t.string,
+  serverCert: t.string,
+  websocketCert: t.union([t.undefined, t.string]),
+  websocketCertDer: t.union([t.undefined, t.string]),
+  websocketKey: t.string
+});
+
+export type PairingData = t.TypeOf<typeof PairingDataCodec>;
 
 export interface Device extends Omit<DeviceUpdate, 'valve'>, TimestampedModel {
   id: string,
