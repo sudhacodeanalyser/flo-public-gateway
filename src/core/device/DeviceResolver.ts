@@ -5,7 +5,7 @@ import _ from 'lodash';
 import uuid from 'uuid';
 import { fromPartialRecord } from '../../database/Patch';
 import { InternalDeviceService } from "../../internal-device-service/InternalDeviceService";
-import { DependencyFactoryFactory, Device, DeviceCreate, DeviceModelType, DeviceSystemModeNumeric, DeviceType, DeviceUpdate, PropExpand, SystemMode, ValveState, ValveStateNumeric, AdditionalDevicePropsCodec } from '../api';
+import { DependencyFactoryFactory, Device, DeviceCreate, DeviceModelType, DeviceSystemModeNumeric, DeviceType, DeviceUpdate, PropExpand, SystemMode, ValveState, ValveStateNumeric, AdditionalDevicePropsCodec, PairingDataCodec } from '../api';
 import { translateNumericToStringEnum } from '../api/enumUtils';
 import DeviceTable from '../device/DeviceTable';
 import { NotificationService, NotificationServiceFactory } from '../notification/NotificationService';
@@ -244,20 +244,17 @@ class DeviceResolver extends Resolver<Device> {
 
         const pairingData = await this.pairingService.retrievePairingData(authToken, device.id);
 
-        if (Option.isNone(pairingData)) {
-          return null;
-        }
-
-        return {
-          apName: pairingData.value.ap_name,
-          loginToken: pairingData.value.login_token,
-          clientCert: pairingData.value.client_cert,
-          clientKey: pairingData.value.client_key,
-          serverCert: pairingData.value.server_cert,
-          websocketCert: pairingData.value.websocket_cert,
-          websocketCertDer: pairingData.value.websocket_cert_der,
-          websocketKey: pairingData.value.websocket_key
-        };  
+        return pipe(
+          pairingData,
+          Option.chain(result => pipe(
+            t.exact(PairingDataCodec).decode(result),
+            Either.fold(
+              () => Option.none,
+              data => Option.some(data)
+            )
+          )),
+          Option.toNullable
+        );
       } catch (err) {
         this.logger.error({ err });
         return null;
