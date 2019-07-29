@@ -7,6 +7,7 @@ import { IrrigationScheduleService, IrrigationScheduleServiceFactory } from '../
 import { injectHttpContext, interfaces } from 'inversify-express-utils';
 import _ from 'lodash';
 import { Option, fromNullable, isNone } from 'fp-ts/lib/Option';
+import ConflictError from '../api/error/ConflictError';
 
 @injectable()
 class LocationService {
@@ -105,20 +106,19 @@ class LocationService {
     const deviceService = this.deviceServiceFactory();
     const devices = await deviceService.getAllByLocationId(id);
 
-    if (target === SystemMode.SLEEP) {
+    if (devices.every(({ systemMode }) => systemMode && systemMode.isLocked)) {
+
+      throw new ConflictError();
+
+    } else if (target === SystemMode.SLEEP) {
       const now = new Date().toISOString();
-      const promises = devices.map(device =>
-        Promise.all([
-          this.locationResolver.updatePartialLocation(id, {
-            systemMode: {
-              target,
-              revertMinutes,
-              revertMode,
-              revertScheduledAt: now
-            }
-          }),
-          deviceSystemModeService.sleep(device.id, revertMinutes || 0, revertMode || SystemMode.HOME),
-          deviceService.updatePartialDevice(device.id, {
+      const promises = devices
+        .filter(({ systemMode }) => !(systemMode && systemMode.isLocked))
+        .map(async device => {
+
+          await deviceSystemModeService.sleep(device.id, revertMinutes || 0, revertMode || SystemMode.HOME);
+
+          return deviceService.updatePartialDevice(device.id, {
             systemMode: {
               target,
               revertMinutes,
@@ -126,30 +126,40 @@ class LocationService {
               revertScheduledAt: now,
               shouldInherit: true
             }
-          })
-        ])
-      );
+          });
+        });
 
       await Promise.all(promises);
+      await this.locationResolver.updatePartialLocation(id, {
+        systemMode: {
+          target,
+          revertMinutes,
+          revertMode,
+          revertScheduledAt: now
+        }
+      });
+
     } else {
-      const promises = devices.map(device => 
-        Promise.all([
-          this.locationResolver.updatePartialLocation(id, {
-            systemMode: {
-              target
-            }
-          }),
-          deviceSystemModeService.setSystemMode(device.id, target),
-          deviceService.updatePartialDevice(device.id, {
+      const promises = devices
+        .filter(({ systemMode }) => !(systemMode && systemMode.isLocked))
+        .map(async device => {
+          
+          await deviceSystemModeService.setSystemMode(device.id, target);
+
+          return deviceService.updatePartialDevice(device.id, {
             systemMode: {
               target,
               shouldInherit: true
             }
-          })
-        ])
-      );
+          });
+        });
 
       await Promise.all(promises);
+      await this.locationResolver.updatePartialLocation(id, {
+        systemMode: {
+          target
+        }
+      });
     }
   }
 }
