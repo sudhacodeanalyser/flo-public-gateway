@@ -32,7 +32,7 @@ class ApiService {
       if (!err.response) {
         throw err;
       } else if (err.response.status >= 400 && err.response.status < 500) {
-        throw new ExternalApiError(err.response.status, err.response.data.message);
+        throw new ExternalApiError(err.response.status, err.response.data.errors);
       } else {
         throw err;
       }

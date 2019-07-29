@@ -55,9 +55,9 @@ export const AlarmSettingsCodec = t.type({
 
 export const DeviceAlarmSettingsCodec = t.type({
   deviceId: t.string,
-  info: t.array(AlarmSettingsCodec),
-  warning: t.array(AlarmSettingsCodec),
-  critical: t.array(AlarmSettingsCodec)
+  info: t.union([t.array(AlarmSettingsCodec), t.undefined]),
+  warning: t.union([t.array(AlarmSettingsCodec), t.undefined]),
+  critical: t.union([t.array(AlarmSettingsCodec), t.undefined])
 });
 
 export const UpdateDeviceAlarmSettingsCodec = t.type({
