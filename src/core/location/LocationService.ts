@@ -105,15 +105,15 @@ class LocationService {
   public async setSystemMode(id: string, deviceSystemModeService: DeviceSystemModeService, { target, revertMinutes, revertMode }: { target: SystemMode, revertMinutes?: number, revertMode?: SystemMode }): Promise<void> {
     const deviceService = this.deviceServiceFactory();
     const devices = await deviceService.getAllByLocationId(id);
+    const unlockedDevices = devices.filter(({ systemMode }) => !(systemMode && systemMode.isLocked));
 
-    if (devices.every(({ systemMode }) => systemMode && systemMode.isLocked)) {
+    if (devices.length && !unlockedDevices.length) {
 
       throw new ConflictError();
 
     } else if (target === SystemMode.SLEEP) {
       const now = new Date().toISOString();
-      const promises = devices
-        .filter(({ systemMode }) => !(systemMode && systemMode.isLocked))
+      const promises = unlockedDevices
         .map(async device => {
 
           await deviceSystemModeService.sleep(device.id, revertMinutes || 0, revertMode || SystemMode.HOME);
@@ -140,10 +140,9 @@ class LocationService {
       });
 
     } else {
-      const promises = devices
-        .filter(({ systemMode }) => !(systemMode && systemMode.isLocked))
+      const promises = unlockedDevices
         .map(async device => {
-          
+
           await deviceSystemModeService.setSystemMode(device.id, target);
 
           return deviceService.updatePartialDevice(device.id, {
