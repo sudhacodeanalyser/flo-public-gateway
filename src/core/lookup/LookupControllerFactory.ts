@@ -47,7 +47,7 @@ export function LookupControllerFactory(container: Container, apiVersion: number
       const lookups = await this.lookupService.getByIds(ids);
 
       if (!_.isEmpty(lookups)) {
-        const result: any = ids.reduce((map, id) => {
+        const result: any = ids.reduce((map: any, id) => {
           const item = lookups[id];
           const byLang = _.groupBy(item, 'lang');
           map[id] = byLang[cleanLang] || byLang[LookupController.defaultLang];
