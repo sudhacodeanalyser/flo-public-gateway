@@ -46,7 +46,7 @@ export function LookupControllerFactory(container: Container, apiVersion: number
       const ids = idString.split(',');
       const lookups = await this.lookupService.getByIds(ids);
 
-      if (lookups) {
+      if (!_.isEmpty(lookups)) {
         const result: any = {};
         ids.forEach(id => {
           const item = lookups[id];
