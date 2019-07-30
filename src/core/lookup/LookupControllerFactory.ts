@@ -79,7 +79,7 @@ export function LookupControllerFactory(container: Container, apiVersion: number
         const item = lookups[id];
         const byLang = _.groupBy(item, 'lang');
         const filtered = byLang[cleanLang] || byLang[LookupController.defaultLang];
-        const result = {...lookups,[id]:filtered};
+        const result = { [id]:filtered };
 
         return Lookup.fromModel(result);
       }
