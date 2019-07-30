@@ -19,7 +19,7 @@ export function LookupControllerFactory(container: Container, apiVersion: number
 
     private static fixLang(lang: string): string {
       // Return default if empty
-      if (lang === undefined || lang === "") {
+      if (_.isEmpty(lang)) {
         return LookupController.defaultLang
       }
 
