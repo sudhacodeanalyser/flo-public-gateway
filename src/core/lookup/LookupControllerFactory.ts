@@ -23,11 +23,7 @@ export function LookupControllerFactory(container: Container, apiVersion: number
         return LookupController.defaultLang
       }
 
-      if (lang.indexOf("-") < 0) {
-        return lang.toLowerCase()
-      } else {
-        return lang.substr(0,lang.indexOf("-")).toLowerCase();
-      }
+      return _.head(lang.split('-')).toLowerCase();
     }
 
     constructor(
