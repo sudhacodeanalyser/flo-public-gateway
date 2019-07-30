@@ -1,13 +1,11 @@
 import _ from 'lodash';
-import express from 'express';
-import { interfaces, httpGet, queryParam, requestParam, requestBody, request, BaseHttpController } from 'inversify-express-utils';
-import { inject, Container } from 'inversify';
-import { LookupService } from '../service';
+import {BaseHttpController, httpGet, interfaces, queryParam, requestParam} from 'inversify-express-utils';
+import {Container, inject} from 'inversify';
+import {LookupService} from '../service';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
 import * as t from 'io-ts';
-import { httpController } from '../api/controllerUtils';
-import Request from '../api/Request';
-import { LookupResponse, MultiLookupResponse, Lookup } from '../api/response';
+import {httpController} from '../api/controllerUtils';
+import {Lookup, LookupResponse, MultiLookupResponse} from '../api/response';
 
 
 export function LookupControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
@@ -17,6 +15,21 @@ export function LookupControllerFactory(container: Container, apiVersion: number
   // and release it upon sending the response
   @httpController({ version: apiVersion }, '/lists', 'PostgresConnectionMiddleware')
   class LookupController extends BaseHttpController {
+    private static defaultLang = "en";
+
+    private static fixLang(lang: string): string {
+      // Return default if empty
+      if (lang === undefined || lang === "") {
+        return LookupController.defaultLang
+      }
+
+      if (lang.indexOf("-") < 0) {
+        return lang.toLowerCase()
+      } else {
+        return lang.substr(0,lang.indexOf("-")).toLowerCase();
+      }
+    }
+
     constructor(
       @inject('LookupService') private lookupService: LookupService,
     ) {
@@ -27,13 +40,26 @@ export function LookupControllerFactory(container: Container, apiVersion: number
       '/',
       reqValidator.create(t.type({
         query: t.type({
-          id: t.string
+          id: t.string,
+          lang: t.union([t.undefined, t.string])
         })
       }))
     )
-    private async getByIds(@queryParam('id') idString: string): Promise<MultiLookupResponse> {
+    private async getByIds(@queryParam('id') idString: string, @queryParam('lang') lang: string = LookupController.defaultLang): Promise<MultiLookupResponse> {
+      const cleanLang = LookupController.fixLang(lang);
       const ids = idString.split(',');
       const lookups = await this.lookupService.getByIds(ids);
+
+      if (lookups) {
+        const result: any = {};
+        ids.forEach(id => {
+          const item = lookups[id];
+          const byLang = _.groupBy(item, 'lang');
+          result[id] = byLang[cleanLang] || byLang[LookupController.defaultLang];
+        });
+
+        return Lookup.fromModelToMulti(result);
+      }
 
       return Lookup.fromModelToMulti(lookups);
     }
@@ -43,13 +69,26 @@ export function LookupControllerFactory(container: Container, apiVersion: number
       reqValidator.create(t.type({
         params: t.type({
           id: t.string
+        }),
+        query: t.type({
+          lang: t.union([t.undefined, t.string])
         })
       }))
     )
-    private async getById(@requestParam('id') id: string): Promise<LookupResponse> {
-      const lookup = await this.lookupService.getByIds([id]);
+    private async getById(@requestParam('id') id: string, @queryParam('lang') lang: string = LookupController.defaultLang): Promise<LookupResponse> {
+      const cleanLang = LookupController.fixLang(lang);
+      const lookups = await this.lookupService.getByIds([id]);
 
-      return Lookup.fromModel(lookup);
+      if (lookups && lookups[id]) {
+        const item = lookups[id];
+        const byLang = _.groupBy(item, 'lang');
+        const filtered = byLang[cleanLang] || byLang[LookupController.defaultLang];
+        const result = {...lookups,[id]:filtered};
+
+        return Lookup.fromModel(result);
+      }
+
+      return Lookup.fromModel(lookups);
     }
   }
 

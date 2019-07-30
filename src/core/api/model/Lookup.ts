@@ -2,6 +2,7 @@ import * as t from 'io-ts';
 
 export const LookupItemCodec = t.type({
   key: t.string,
+  lang: t.string,
   shortDisplay: t.string,
   longDisplay: t.string
 });
