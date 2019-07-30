@@ -47,12 +47,12 @@ export function LookupControllerFactory(container: Container, apiVersion: number
       const lookups = await this.lookupService.getByIds(ids);
 
       if (!_.isEmpty(lookups)) {
-        const result: any = {};
-        ids.forEach(id => {
+        const result: any = ids.reduce((map, id) => {
           const item = lookups[id];
           const byLang = _.groupBy(item, 'lang');
-          result[id] = byLang[cleanLang] || byLang[LookupController.defaultLang];
-        });
+          map[id] = byLang[cleanLang] || byLang[LookupController.defaultLang];
+          return map;
+        }, {});
 
         return Lookup.fromModelToMulti(result);
       }
