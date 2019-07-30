@@ -15,7 +15,7 @@ export function LookupControllerFactory(container: Container, apiVersion: number
   // and release it upon sending the response
   @httpController({ version: apiVersion }, '/lists', 'PostgresConnectionMiddleware')
   class LookupController extends BaseHttpController {
-    private static defaultLang = "en";
+    private static defaultLang = 'en';
 
     private static fixLang(lang: string): string {
       // Return default if empty
@@ -50,7 +50,7 @@ export function LookupControllerFactory(container: Container, apiVersion: number
         const result: any = ids.reduce((map: any, id) => {
           const item = lookups[id];
           const byLang = _.groupBy(item, 'lang');
-          return byLang[cleanLang] || byLang[LookupController.defaultLang];
+          map[id] = byLang[cleanLang] || byLang[LookupController.defaultLang];
           return map;
         }, {});
 
