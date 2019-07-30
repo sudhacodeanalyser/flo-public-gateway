@@ -4,6 +4,7 @@ import { either, isLeft } from 'fp-ts/lib/Either';
 
 export const LookupItemRecordCodec = t.type({
   list_id: t.string,
+  lang: t.string,
   key_id: t.string,
   short_display: t.string,
   long_display: t.string,
@@ -25,11 +26,13 @@ const LookupItemFromRecord = new t.Type<LookupItem, LookupItemRecord, unknown>(
   (u: unknown, context: t.Context) => 
     either.map(LookupItemRecordCodec.validate(u, context), lookupItemRecord => ({
       key: lookupItemRecord.key_id,
+      lang: lookupItemRecord.lang,
       shortDisplay: lookupItemRecord.short_display,
       longDisplay: lookupItemRecord.long_display
     })),
   (lookupItemRecord: LookupItem) => ({
     list_id: '',
+    lang: lookupItemRecord.lang,
     key_id: lookupItemRecord.key,
     short_display: lookupItemRecord.shortDisplay,
     long_display: lookupItemRecord.longDisplay,
