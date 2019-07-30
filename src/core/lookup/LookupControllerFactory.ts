@@ -23,7 +23,7 @@ export function LookupControllerFactory(container: Container, apiVersion: number
         return LookupController.defaultLang
       }
 
-      return _.head(lang.split('-')).toLowerCase();
+      return _.head(lang.split('-'))!.toLowerCase();
     }
 
     constructor(
