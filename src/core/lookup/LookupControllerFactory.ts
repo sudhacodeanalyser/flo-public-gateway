@@ -75,7 +75,7 @@ export function LookupControllerFactory(container: Container, apiVersion: number
       const cleanLang = LookupController.fixLang(lang);
       const lookups = await this.lookupService.getByIds([id]);
 
-      if (lookups && lookups[id]) {
+      if (lookups[id]) {
         const item = lookups[id];
         const byLang = _.groupBy(item, 'lang');
         const filtered = byLang[cleanLang] || byLang[LookupController.defaultLang];
