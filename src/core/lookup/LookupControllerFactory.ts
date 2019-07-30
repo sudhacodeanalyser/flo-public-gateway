@@ -50,7 +50,7 @@ export function LookupControllerFactory(container: Container, apiVersion: number
         const result: any = ids.reduce((map: any, id) => {
           const item = lookups[id];
           const byLang = _.groupBy(item, 'lang');
-          map[id] = byLang[cleanLang] || byLang[LookupController.defaultLang];
+          return byLang[cleanLang] || byLang[LookupController.defaultLang];
           return map;
         }, {});
 
