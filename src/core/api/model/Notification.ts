@@ -11,9 +11,15 @@ export interface Alarm {
   description: string;
   severity: number;
   isInternal: boolean;
+  isShutoff: boolean;
+  triggersAlarm?: TriggersAlarmResponse,
   actions: Action[];
   supportOptions: SupportOption[];
   active: boolean;
+}
+
+export interface TriggersAlarmResponse {
+  id: number
 }
 
 export interface AlarmEvent extends TimestampedModel {
