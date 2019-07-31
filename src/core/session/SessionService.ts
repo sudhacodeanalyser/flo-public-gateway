@@ -30,8 +30,14 @@ class SessionService {
         .map(({ macAddress }) => macAddress)
         .filter(_.identity) as string[]
     );
+    const locationsAsset = user.value.locations
+      .map(({ id }) => id);
 
-    return this.firestoreAuthService.issueToken({ devices: devicesAsset });
+    return this.firestoreAuthService.issueToken({ 
+      devices: devicesAsset,
+      locations: locationsAsset,
+      users: [user.value.id]
+    });
   }
 }
 

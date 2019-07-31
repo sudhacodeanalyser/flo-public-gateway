@@ -45,7 +45,6 @@ export interface ClearAlertResponse {
 
 export const AlarmSettingsCodec = t.type({
   alarmId: t.number,
-  name: t.union([t.string, t.undefined]),
   systemMode: t.string,
   smsEnabled: t.union([t.boolean, t.undefined]),
   emailEnabled: t.union([t.boolean, t.undefined]),
@@ -55,9 +54,7 @@ export const AlarmSettingsCodec = t.type({
 
 export const DeviceAlarmSettingsCodec = t.type({
   deviceId: t.string,
-  info: t.union([t.array(AlarmSettingsCodec), t.undefined]),
-  warning: t.union([t.array(AlarmSettingsCodec), t.undefined]),
-  critical: t.union([t.array(AlarmSettingsCodec), t.undefined])
+  settings: t.array(AlarmSettingsCodec)
 });
 
 export const UpdateDeviceAlarmSettingsCodec = t.type({
