@@ -69,6 +69,13 @@ components:
           type: number
         isInternal:
           type: boolean
+        isShutoff:
+          type: boolean
+        triggersAlarm:
+          type: object
+          properties:
+            id:
+              type: integer
         actions:
           type: array
           items:

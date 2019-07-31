@@ -38,7 +38,7 @@ export function AlarmControllerFactory(container: Container, apiVersion: number)
         .getAlarmById(id);
     }
 
-    @httpGet('/', auth)
+    @httpGet('/') // , auth)
     private async getAlarms(@request() req: Request): Promise<AlarmListResult> {
       const filters = req.url.split('?')[1] || '';
 
