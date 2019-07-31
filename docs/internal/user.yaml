@@ -384,15 +384,7 @@ components:
         deviceId:
           type: string
           format: uuid
-        info:
-          type: array
-          items:
-            $ref: '#/components/schemas/AlarmSettings'
-        warning:
-          type: array
-          items:
-            $ref: '#/components/schemas/AlarmSettings'
-        critical:
+        settings:
           type: array
           items:
             $ref: '#/components/schemas/AlarmSettings'
@@ -402,8 +394,6 @@ components:
       properties:
         alarmId:
           type: integer
-        name:
-          type: string
         systemMode:
           type: string
         smsEnabled:
