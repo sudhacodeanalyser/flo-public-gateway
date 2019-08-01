@@ -311,7 +311,8 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       authWithId,
       reqValidator.create(t.type({
         params: t.type({
-          id: t.string
+          id: t.string,
+          roundId: t.string
         })
       }))
     )
