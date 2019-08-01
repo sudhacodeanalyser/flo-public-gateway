@@ -52,3 +52,19 @@ export const getConsumption = t.type({
     ])
   ])
 });
+
+export const getAverages = t.type({
+  query: t.intersection([
+    t.partial({
+      tz: t.string
+    }),
+    t.union([
+      t.type({
+        macAddress: t.string
+      }),
+      t.type({
+        locationId: t.string
+      })
+    ])
+  ])
+});
