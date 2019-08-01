@@ -5,10 +5,12 @@ import {InternalDevice, InternalDeviceCodec} from './models';
 import { isLeft } from 'fp-ts/lib/Either';
 import { FirestoreAuthService, FirestoreAssests, FirestoreTokenResponse } from '../core/session/FirestoreAuthService';
 import { memoized, MemoizeMixin } from '../memoize/MemoizeMixin';
+import Logger from 'bunyan';
 
 @injectable()
 class InternalDeviceService extends MemoizeMixin(InternalDeviceServiceHandler) implements FirestoreAuthService {
   @inject('InternalDeviceServiceBaseUrl') private internalDeviceServiceBaseUrl: string;
+  @inject('Logger') private readonly logger: Logger;
 
   @memoized()
   public async getDevice(macAddress: string): Promise<InternalDevice | null> {
@@ -53,6 +55,27 @@ class InternalDeviceService extends MemoizeMixin(InternalDeviceServiceHandler) i
     };
 
     return this.sendRequest(request);
+  }
+
+  public async cleanup(deviceId: string): Promise<void> {
+    try {
+      const request = {
+        method: 'DELETE',
+        url: `${this.internalDeviceServiceBaseUrl}/firestore/devices/${deviceId}`,
+        body: null,
+      };
+      // TODO: do the same ^^ for locations
+      await this.sendRequest(request);
+    } catch (err) {
+      if (err instanceof InternalDeviceServiceError) {
+        // Failure to complete the deletion of the firestore document should not cause the unpairing to completely fail.
+        const errMsg = `failed to delete ${deviceId} document from devices collection in the Firestore`;
+        this.logger.error( errMsg, err );
+        return;
+      } else {
+        throw err;
+      }
+    }
   }
 }
 
