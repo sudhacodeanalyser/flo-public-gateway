@@ -16,6 +16,7 @@ import { DeviceService } from '../service';
 import { DeviceSystemModeServiceFactory } from './DeviceSystemModeService';
 import { DirectiveServiceFactory } from './DirectiveService';
 import { HealthTest, HealthTestServiceFactory } from './HealthTestService';
+import ForbiddenError from '../api/error/ForbiddenError';
 
 enum HealthTestActions {
   RUN = 'run'
@@ -304,6 +305,39 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       }
 
       return latestHealthTest;
+    }
+
+    @httpGet('/:id/healthTest/:roundId',
+      authWithId,
+      reqValidator.create(t.type({
+        params: t.type({
+          id: t.string,
+          roundId: t.string
+        })
+      }))
+    )
+    private async getHealthTestByRoundId(@request() req: Request, @requestParam('id') id: string,
+                                         @requestParam('roundId') roundId: string): Promise<HealthTest | {}> {
+
+      const healthTestService = this.healthTestServiceFactory.create(req);
+      const device = await this.deviceService.getDeviceById(id);
+
+      if (isNone(device)) {
+        throw new ResourceDoesNotExistError();
+
+      }
+
+      const healthTest = await healthTestService.getTestResultByRoundId(roundId);
+
+      if (healthTest === null) {
+        return {};
+      }
+
+      if (healthTest.deviceId !== device.value.macAddress) {
+        throw new ForbiddenError();
+      }
+
+      return healthTest;
     }
 
     private isSleep({ target, revertMinutes, revertMode }: SystemModeRequest): boolean {

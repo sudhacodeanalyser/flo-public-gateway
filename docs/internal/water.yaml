@@ -1,4 +1,71 @@
 paths:
+  /api/v2/water/averages:
+    parameters:
+      - in: query
+        name: macAddress
+        schema:
+          type: string
+        description: MAC address of device to retrieve water consumption averages for. The param macAddress is exclusive with locationId, only one can be specified
+      - in: query
+        name: locationId
+        schema:
+          type: string
+          format: uuid
+        description: ID of location to retrieve water consumption averages for. The param locationId is exclusive with macAddress, only one can be specified
+      - in: query
+        name: tz
+        schema:
+          type: string
+        description: If timezone is not specified as part of the date range, then this timezone will be applied to the date. Defaults to the location or device's local timezone. 
+    get:
+      summary: Retrieve water consumption averages
+      tags:
+        - Water Usage
+      produces:
+        - application/json
+      responses:
+        200:
+          description: Responds with 200 OK if system is up
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  params:
+                    type: object
+                    properties:
+                      macAddress:
+                        type: string
+                      locationId:
+                        type: string
+                        format: uuid
+                      tz: 
+                        type: string                      
+                  aggregations:
+                    type: object
+                    properties:
+                      dayOfWeekAvg:
+                        type: object
+                        nullable: true
+                        properties:
+                          value:
+                            type: number
+                          dayOfWeek:
+                            type: number
+                      prevCalendarWeekDailyAvg:
+                        type: object
+                        nullable: true
+                        properties:
+                          value:
+                            type: number
+                          startDate:
+                            type: string
+                            format: date-time
+                          endDate:
+                            type: string
+                            format: date-time
+        400:
+          description: Invalid query parameters
   /api/v2/water/consumption:
     parameters:
       - in: query

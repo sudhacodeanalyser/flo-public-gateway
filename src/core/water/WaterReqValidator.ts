@@ -30,7 +30,8 @@ const RestrictedDateRangeCodec = t.brand(
   (dateRange): dateRange is t.Branded<DateRange, RestrictedDateRangeBrand> => {
     const endDate = dateRange.endDate || new Date().toISOString();
     const diff = moment(endDate).diff(dateRange.startDate, 'days');
-    return diff > 0 && diff <= 31;
+
+    return diff >= 0 && diff <= 31;
   },
   'RestrictedDateRange'
 );
@@ -40,6 +41,22 @@ export const getConsumption = t.type({
     RestrictedDateRangeCodec,
     t.partial({
       interval: t.union([t.literal('1h'), t.literal('1d')]),
+      tz: t.string
+    }),
+    t.union([
+      t.type({
+        macAddress: t.string
+      }),
+      t.type({
+        locationId: t.string
+      })
+    ])
+  ])
+});
+
+export const getAverages = t.type({
+  query: t.intersection([
+    t.partial({
       tz: t.string
     }),
     t.union([
