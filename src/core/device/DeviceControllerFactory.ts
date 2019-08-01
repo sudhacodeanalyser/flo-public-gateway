@@ -318,7 +318,14 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     )
     private async getHealthTestByRoundId(@request() req: Request, @requestParam('id') id: string,
                                          @requestParam('roundId') roundId: string): Promise<HealthTest | {}> {
+
       const healthTestService = this.healthTestServiceFactory.create(req);
+      const device = await this.deviceService.getDeviceById(id);
+
+      if (isNone(device)) {
+        throw new ResourceDoesNotExistError();
+
+      }
 
       const healthTest = await healthTestService.getTestResultByRoundId(roundId);
 
@@ -326,7 +333,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
         return {};
       }
 
-      if (healthTest.deviceId !== id) {
+      if (healthTest.deviceId !== device.value.macAddress) {
         throw new ForbiddenError();
       }
 
