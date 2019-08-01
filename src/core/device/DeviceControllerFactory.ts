@@ -164,7 +164,8 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     )
     @deleteMethod
     private async removeDevice(@requestParam('id') id: string): Promise<void> {
-
+      const deviceId = await this.mapIcdToMacAddress(id);
+      await this.internalDeviceService.cleanup(deviceId);
       return this.deviceService.removeDevice(id);
     }
 
