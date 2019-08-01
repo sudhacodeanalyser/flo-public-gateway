@@ -46,7 +46,7 @@ export function WaterControllerFactory(container: Container, apiVersion: number)
 
     @httpGet('/averages',
       authWithMacAddressOrLocationId,
-      reqValidator.create(reqValidator.getAverages)
+      reqValidator.create(ReqValidator.getAverages)
     )
     private async getAverages(
       @queryParam('locationId') locationId?: string,
