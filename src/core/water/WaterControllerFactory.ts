@@ -1,7 +1,7 @@
 import { interfaces, controller, httpGet, requestParam, queryParam } from 'inversify-express-utils';
 import { inject, Container } from 'inversify';
 import { WaterService } from '../service';
-import { WaterConsumptionReport } from '../api';
+import { WaterConsumptionReport, WaterAveragesReport } from '../api';
 import { httpController } from '../api/controllerUtils';
 import moment from 'moment';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
@@ -41,6 +41,19 @@ export function WaterControllerFactory(container: Container, apiVersion: number)
         return this.waterService.getLocationConsumption(locationId, startDate, endDate, interval, timezone);        
       } else if (macAddress) {
         return this.waterService.getDeviceConsumption(macAddress, startDate, endDate, interval, timezone);
+      }
+    }
+
+    @httpGet('/averages')
+    private async getAverages(
+      @queryParam('locationId') locationId?: string,
+      @queryParam('macAddress') macAddress?: string,
+      @queryParam('tz') timezone?: string
+    ): Promise<WaterAveragesReport | void> {
+      if (locationId) {
+        return this.waterService.getDailyAverageConsumptionByLocationId(locationId, timezone);
+      } else if (macAddress) {
+        return this.waterService.getDailyAverageConsumptionByDevice(macAddress, timezone);
       }
     }
   }
