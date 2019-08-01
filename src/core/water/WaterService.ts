@@ -292,7 +292,7 @@ class WaterService {
     const lastHourConsumption = this.combineLastHourResults(endDate, hourlyConsumption, secondResults);
 
     return [
-      ...hourlyConsumption.filter(({ time }) => time !== lastHourConsumption.time),
+      ...hourlyConsumption.filter(({ time }) => time < lastHourConsumption.time),
      lastHourConsumption
     ];
   }

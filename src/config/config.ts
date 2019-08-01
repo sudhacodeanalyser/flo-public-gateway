@@ -27,7 +27,7 @@ function getDefaults(): { [key: string]: any } {
         influxAnalyticsDb: 'telemetry_analytics_dev',
         influxHourlyMeasurement: 'telemetry_hourly',
         influxTelemetryDb: 'telemetry_dev',
-        influxSecondMeasurement: 'telemetry_raw',
+        influxSecondMeasurement: '"twelve_weeks".telemetry_raw',
         externalServiceHttpTimeoutMs: 10000
       };
   }
