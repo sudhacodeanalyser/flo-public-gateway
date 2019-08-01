@@ -16,6 +16,7 @@ import { DeviceService } from '../service';
 import { DeviceSystemModeServiceFactory } from './DeviceSystemModeService';
 import { DirectiveServiceFactory } from './DirectiveService';
 import { HealthTest, HealthTestServiceFactory } from './HealthTestService';
+import ForbiddenError from '../api/error/ForbiddenError';
 
 enum HealthTestActions {
   RUN = 'run'
@@ -325,8 +326,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       }
 
       if (healthTest.deviceId !== id) {
-        // FIXME: respond with 403
-        return {};
+        throw new ForbiddenError();
       }
 
       return healthTest;
