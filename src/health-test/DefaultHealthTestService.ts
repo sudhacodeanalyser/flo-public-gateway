@@ -38,4 +38,15 @@ export class DefaulthHealthTestService extends HttpService implements HealthTest
 
     return _.first(items) || null;
   }
+
+  public async getTestResultByRoundId(roundId: string): Promise<HealthTest | null> {
+    const request = {
+      method: 'GET',
+      url: `${this.healthTestServiceUrl}/healthtest/${roundId}`
+    };
+
+    const item = await this.sendRequest(request);
+
+    return item || null;
+  }
 }

@@ -306,6 +306,32 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       return latestHealthTest;
     }
 
+    @httpGet('/:id/healthTest/:roundId',
+      authWithId,
+      reqValidator.create(t.type({
+        params: t.type({
+          id: t.string
+        })
+      }))
+    )
+    private async getHealthTestByRoundId(@request() req: Request, @requestParam('id') id: string,
+                                         @requestParam('roundId') roundId: string): Promise<HealthTest | {}> {
+      const healthTestService = this.healthTestServiceFactory.create(req);
+
+      const healthTest = await healthTestService.getTestResultByRoundId(roundId);
+
+      if (healthTest === null) {
+        return {};
+      }
+
+      if (healthTest.deviceId !== id) {
+        // FIXME: respond with 403
+        return {};
+      }
+
+      return healthTest;
+    }
+
     private isSleep({ target, revertMinutes, revertMode }: SystemModeRequest): boolean {
       return revertMinutes !== undefined && revertMode !== undefined && target === DeviceSystemMode.SLEEP;
     }

@@ -23,6 +23,8 @@ export interface HealthTestService {
   run(deviceMacAddress: string, icdId: string): Promise<HealthTest>;
 
   getLatest(deviceMacAddress: string): Promise<HealthTest | null>;
+
+  getTestResultByRoundId(roundId: string): Promise<HealthTest | null>;
 }
 
 export interface HealthTestServiceFactory {
