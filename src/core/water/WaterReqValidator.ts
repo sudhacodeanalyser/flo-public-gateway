@@ -30,7 +30,8 @@ const RestrictedDateRangeCodec = t.brand(
   (dateRange): dateRange is t.Branded<DateRange, RestrictedDateRangeBrand> => {
     const endDate = dateRange.endDate || new Date().toISOString();
     const diff = moment(endDate).diff(dateRange.startDate, 'days');
-    return diff > 0 && diff <= 31;
+
+    return diff >= 0 && diff <= 31;
   },
   'RestrictedDateRange'
 );
