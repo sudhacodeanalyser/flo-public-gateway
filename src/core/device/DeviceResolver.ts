@@ -164,7 +164,7 @@ class DeviceResolver extends Resolver<Device> {
       );
     },
     notifications: async (device: Device, shouldExpand = false) => {
-      return this.notificationService.getAlarmCounts({});
+      return this.notificationService.retrieveStatistics(`deviceId=${device.id}`);
     },
     hardwareThresholds: async (device: Device, shouldExpand = false) => {
       const minZero = {

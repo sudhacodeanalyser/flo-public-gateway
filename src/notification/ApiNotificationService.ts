@@ -4,8 +4,7 @@ import {
   AlarmEvent, AlarmListResult,
   ClearAlertResponse,
   DeviceAlarmSettings,
-  NotificationCounts,
-  PaginatedResult, UpdateDeviceAlarmSettings
+  PaginatedResult, NotificationCounts, UpdateDeviceAlarmSettings
 } from '../core/api';
 import {Option, fromNullable} from 'fp-ts/lib/Option';
 
@@ -102,12 +101,11 @@ class ApiNotificationService {
     });
   }
 
-  public async getAlarmCounts(tbd: any): Promise<NotificationCounts> {
-    return Promise.resolve({
-      criticalCount: 12,
-      warningCount: 9,
-      infoCount: 3
-    })
+  public async retrieveStatistics(filters: string): Promise<NotificationCounts> {
+    return this.notificationApi.sendRequest({
+      method: 'get',
+      url: `/statistics?${filters}`
+    });
   }
 }
 
