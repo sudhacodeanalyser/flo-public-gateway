@@ -12,7 +12,7 @@ export function EventControllerFactory(container: Container, apiVersion: number)
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
   const authMiddlewareFactory = container.get<AuthMiddlewareFactory>('AuthMiddlewareFactory');
   const auth = authMiddlewareFactory.create();
-  const authWithIcd = authMiddlewareFactory.create(async ({ body: { icdId } }) => ({icd_id: icdId}));
+  const authWithIcd = authMiddlewareFactory.create(async ({ body: { deviceId } }) => ({icd_id: deviceId}));
 
   @httpController({ version: apiVersion }, '/events')
   class EventController extends BaseHttpController {
@@ -61,8 +61,8 @@ export function EventControllerFactory(container: Container, apiVersion: number)
     }
 
     @httpGet('/alarms',
-      authMiddlewareFactory.create(async ({ query: { icdId } }) => ({icd_id: icdId}))
-      // TODO: icdId is optional, how I can ask for admin role if is not present or customer role if has icdId
+      authMiddlewareFactory.create(async ({ query: { deviceId } }) => ({icd_id: deviceId}))
+      // TODO: deviceId is optional, how I can ask for admin role if is not present or customer role if has deviceId
       // TODO: Is not possible to do right now with the auth system, we may need to split this in 2 endpoints
     )
     private async getAlarmEventsByFilter(@request() req: Request): Promise<PaginatedResult<AlarmEvent>> {
