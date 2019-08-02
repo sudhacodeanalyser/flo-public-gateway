@@ -120,7 +120,7 @@ class LocationResolver extends Resolver<Location> {
       };
     },
     notifications: async (location: Location, shouldExpand = false) => {
-      return this.notificationService.getAlarmCounts({});
+      return this.notificationService.retrieveStatistics(`locationId=${location.id}`);
     }
   };
 

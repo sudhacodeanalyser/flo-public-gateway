@@ -3,7 +3,7 @@ import { BaseHttpController, httpDelete, httpGet, httpPost, interfaces, request,
 import * as t from 'io-ts';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
-import { AlarmEvent, PaginatedResult } from '../api';
+import {AlarmEvent, PaginatedResult, NotificationCounts} from '../api';
 import { httpController } from '../api/controllerUtils';
 import Request from '../api/Request';
 import { NotificationServiceFactory } from '../notification/NotificationService';
@@ -20,6 +20,16 @@ export function EventControllerFactory(container: Container, apiVersion: number)
       @inject('NotificationServiceFactory') private notificationServiceFactory: NotificationServiceFactory
     ) {
       super();
+    }
+
+    @httpGet('/alarms/statistics', auth)
+    private async retrieveStatistics(@request() req: Request): Promise<NotificationCounts> {
+      const filters = req.url.split('?')[1] || '';
+
+      return this
+        .notificationServiceFactory
+        .create(req)
+        .retrieveStatistics(filters);
     }
 
     @httpPost('/alarms', auth)
