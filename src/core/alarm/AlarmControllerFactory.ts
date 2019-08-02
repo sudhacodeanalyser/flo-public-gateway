@@ -12,7 +12,7 @@ export function AlarmControllerFactory(container: Container, apiVersion: number)
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
   const authMiddlewareFactory = container.get<AuthMiddlewareFactory>('AuthMiddlewareFactory');
   const auth = authMiddlewareFactory.create();
-  const authWithIcd = authMiddlewareFactory.create(async ({ body: { icdId } }) => ({icd_id: icdId}));
+  const authWithIcd = authMiddlewareFactory.create(async ({ body: { deviceId } }) => ({icd_id: deviceId}));
   const authWithLocation = authMiddlewareFactory.create(async ({ body: { locationId } }) => ({ location_id: locationId }));
 
   @httpController({ version: apiVersion }, '/alarms')
@@ -53,7 +53,11 @@ export function AlarmControllerFactory(container: Container, apiVersion: number)
       reqValidator.create(t.type({
         params: t.type({
           id: t.string
-        })
+        }),
+        body: t.type({
+          deviceId: t.string,
+          snooze: t.union([t.number, t.undefined])
+        }),
       }))
     )
     private async clearAlarm(@request() req: Request, @requestParam('id') id: string, @requestBody() data: any): Promise<ClearAlertResponse> {
