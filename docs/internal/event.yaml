@@ -121,7 +121,7 @@ components:
       properties:
         macAddress:
           type: string
-        alertId:
+        alarmId:
           type: number
         telemetry:
           type: object
