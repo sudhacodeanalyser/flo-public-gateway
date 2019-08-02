@@ -4,8 +4,7 @@ import {
   AlarmEvent,
   ClearAlertResponse,
   DeviceAlarmSettings,
-  NotificationCounts,
-  PaginatedResult, UpdateDeviceAlarmSettings
+  PaginatedResult, UpdateDeviceAlarmSettings, NotificationCounts
 } from '../api';
 import Request from '../api/Request';
 import {Option} from 'fp-ts/lib/Option';
@@ -27,5 +26,5 @@ export interface NotificationService {
   getAlarmSettingsInBulk(userId: string, deviceIds: string[]): Promise<DeviceAlarmSettings[]>;
   updateAlarmSettings(userId: string, settings: UpdateDeviceAlarmSettings): Promise<void>;
   generateEventsSample(data: any): Promise<void>;
-  getAlarmCounts(data: any): Promise<NotificationCounts>;
+  retrieveStatistics(filters: string): Promise<NotificationCounts>
 }
