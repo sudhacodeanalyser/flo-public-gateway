@@ -8,12 +8,18 @@ import * as Option from 'fp-ts/lib/Option';
 import { pipe } from 'fp-ts/lib/pipeable';
 
 type InfluxRow = { time: Date, sum: number };
-type AveragesResult = { averageConsumption: number, numHours: number, startDate: moment.Moment, endDate?: moment.Moment };
+type AveragesResult = { 
+  averageConsumption: number, 
+  numRecords: number, 
+  startDate: moment.Moment, 
+  endDate?: moment.Moment
+};
 
 @injectable()
 class WaterService {
   private static readonly MIN_DAY_OF_WEEK_AVG_NUM_HOURS = Math.floor(72 * 0.8); // Must be > 80% of 3 days of hourly data
   private static readonly MIN_WEEKLY_AVG_NUM_HOURS = Math.floor(168 * 0.8); // Must be > 80% of 7 days of hourly data
+  private static readonly MIN_MONTHLY_AVG_NUM_DAYS = 28 * 24;
   private deviceServiceFactory: () => DeviceService;
   private locationServiceFactory: () => LocationService;
 
@@ -77,15 +83,18 @@ class WaterService {
     const macAddresses = devices.map(({ macAddress }) => macAddress);
     const [
       dayOfTheWeekAverage,
-      lastWeekDailyAverageConsumption
+      lastWeekDailyAverageConsumption,
+      monthlyAverageConsumption
     ] = await Promise.all([
       this.getDayOfWeekAverageConsumption(macAddresses, timezone, now),
-      this.getlastWeekDailyAverageConsumption(macAddresses, timezone, now)
+      this.getlastWeekDailyAverageConsumption(macAddresses, timezone, now),
+      this.getMonthlyAverageConsumption(macAddresses, timezone, now)
     ]);
 
     return this.formatAveragesReport(
       dayOfTheWeekAverage,
       lastWeekDailyAverageConsumption,
+      monthlyAverageConsumption,
       timezone,
       undefined,
       locationId
@@ -104,7 +113,8 @@ class WaterService {
     const now = moment.tz(timezone);
     const [
       dayOfTheWeekAverage,
-      lastWeekDailyAverageConsumption
+      lastWeekDailyAverageConsumption,
+      monthlyAverageConsumption
     ] = await Promise.all([
       pipe(
         device,
@@ -119,12 +129,20 @@ class WaterService {
           async () => null as AveragesResult | null,
           async () => this.getlastWeekDailyAverageConsumption([macAddress], timezone, now)
         )
+      ),
+      pipe(
+        device,
+        Option.fold(
+          async () => null as AveragesResult | null,
+          async () => this.getMonthlyAverageConsumption([macAddress], timezone, now)
+        )
       )
     ]);
 
     return this.formatAveragesReport(
       dayOfTheWeekAverage,
       lastWeekDailyAverageConsumption,
+      monthlyAverageConsumption,
       timezone,
       macAddress
     );
@@ -133,6 +151,7 @@ class WaterService {
   private formatAveragesReport(
     dayOfTheWeekAverage: AveragesResult | null, 
     lastWeekDailyAverageConsumption: AveragesResult | null,
+    monthlyAverageConsumption: AveragesResult | null,
     timezone: string, 
     macAddress?: string, 
     locationId?: string
@@ -144,19 +163,26 @@ class WaterService {
        timezone
      },
      aggregations: {
-        dayOfWeekAvg: dayOfTheWeekAverage === null || _.isEmpty(dayOfTheWeekAverage) || dayOfTheWeekAverage.numHours < WaterService.MIN_DAY_OF_WEEK_AVG_NUM_HOURS ? 
+        dayOfWeekAvg: dayOfTheWeekAverage === null || _.isEmpty(dayOfTheWeekAverage) || dayOfTheWeekAverage.numRecords < WaterService.MIN_DAY_OF_WEEK_AVG_NUM_HOURS ? 
           null : 
           {
             value: dayOfTheWeekAverage.averageConsumption,
             dayOfWeek: dayOfTheWeekAverage.startDate.day()
           },
-        prevCalendarWeekDailyAvg: lastWeekDailyAverageConsumption === null || _.isEmpty(lastWeekDailyAverageConsumption) || lastWeekDailyAverageConsumption.numHours < WaterService.MIN_WEEKLY_AVG_NUM_HOURS ? 
+        prevCalendarWeekDailyAvg: lastWeekDailyAverageConsumption === null || _.isEmpty(lastWeekDailyAverageConsumption) || lastWeekDailyAverageConsumption.numRecords < WaterService.MIN_WEEKLY_AVG_NUM_HOURS ? 
           null : 
           {
             value: lastWeekDailyAverageConsumption.averageConsumption,
             startDate: lastWeekDailyAverageConsumption.startDate.format(),
             endDate: lastWeekDailyAverageConsumption.endDate && lastWeekDailyAverageConsumption.endDate.format()
-        }
+        },
+        fourWeekAvg: monthlyAverageConsumption === null || _.isEmpty(monthlyAverageConsumption) || monthlyAverageConsumption.numRecords < WaterService.MIN_MONTHLY_AVG_NUM_DAYS ?
+          null :
+          {
+            value: monthlyAverageConsumption.averageConsumption,
+            startDate: monthlyAverageConsumption.startDate.format(),
+            endDate: monthlyAverageConsumption.endDate && monthlyAverageConsumption.endDate.format()
+          }
       }
     };    
   }
@@ -166,7 +192,7 @@ class WaterService {
     if (!macAddresses.length) {
       return {
         averageConsumption: -1,
-        numHours: 0,
+        numRecords: 0,
         startDate: now
       };
     }
@@ -195,7 +221,7 @@ class WaterService {
     if (!macAddresses.length) {
       return {
         averageConsumption: -1,
-        numHours: 0,
+        numRecords: 0,
         startDate: now
       };
     }
@@ -206,6 +232,26 @@ class WaterService {
     const results = await this.influxClient.query<AveragesResult>(query, { database: this.influxAnalyticsDb });
 
     return { 
+      startDate,
+      endDate,
+      ...results[0]
+    };
+  }
+
+  private async getMonthlyAverageConsumption(macAddresses: string[], timezone: string, now: moment.Moment): Promise<AveragesResult> {
+    const endDate = moment(now).startOf('month');
+    const startDate = moment(now).subtract(3, 'months').startOf('month');
+    const query = this.formatAveragesQuery(
+      macAddresses,
+      'total_flow',
+      this.influxHourlyMeasurement,
+      [{ startDate: startDate.toISOString(), endDate: endDate.toISOString() }],
+      timezone,
+      '4w' // Influx does not support a calendar month interval
+    );
+    const results = await this.influxClient.query<AveragesResult>(query, { database: this.influxAnalyticsDb });
+
+    return {
       startDate,
       endDate,
       ...results[0]
@@ -230,7 +276,7 @@ class WaterService {
     `.replace(/\s+/g, ' ');
   }
 
-  private formatAveragesQuery(macAddresses: string[], column: string, measurement: string, ranges: Array<{ startDate: string, endDate: string }>, timezone: string): string {
+  private formatAveragesQuery(macAddresses: string[], column: string, measurement: string, ranges: Array<{ startDate: string, endDate: string }>, timezone: string, interval: string = '1d'): string {
     const devices = macAddresses.map(macAddress => `did::tag = '${ macAddress }'`).join(' OR ');
     const dateSubQueries = ranges
       .map(({ startDate, endDate }) => {
@@ -240,17 +286,18 @@ class WaterService {
         }
 
         return `(
-          SELECT sum(${ column }) as gallonsConsumed, count(${ column }) as numHours FROM ${ measurement }
+          SELECT sum(${ column }) as gallonsConsumed, count(${ column }) as numRecords FROM ${ measurement }
           WHERE (${ devices })
           AND time >= '${ startDate }' 
           AND time < '${ endDate }'
-          GROUP BY time(1d) fill(none) tz('${ timezone }')
+          GROUP BY time(${ interval }) fill(none) tz('${ timezone }')
         )`;
       })
+      .reverse()
       .join(', ');
 
     return `
-      SELECT mean(gallonsConsumed) as averageConsumption, sum(numHours) as numHours FROM
+      SELECT mean(gallonsConsumed) as averageConsumption, sum(numRecords) as numRecords FROM
       ${ dateSubQueries }
     `.replace(/\s+/g, ' ');    
   }
