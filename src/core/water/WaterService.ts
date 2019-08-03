@@ -239,6 +239,15 @@ class WaterService {
   }
 
   private async getMonthlyAverageConsumption(macAddresses: string[], timezone: string, now: moment.Moment): Promise<AveragesResult> {
+    
+    if (!macAddresses.length) {
+      return {
+        averageConsumption: -1,
+        numRecords: 0,
+        startDate: now
+      };
+    }
+
     const endDate = moment(now).startOf('month');
     const startDate = moment(now).subtract(3, 'months').startOf('month');
     const query = this.formatAveragesQuery(
