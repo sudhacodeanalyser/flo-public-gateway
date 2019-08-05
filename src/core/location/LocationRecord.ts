@@ -187,7 +187,7 @@ const RecordToModelSchema: StrictSchema<Location, LocationRecordData> = {
   postalCode: 'postalcode',
   timezone: (input: LocationRecordData) =>
     pipe(
-      NonEmptyString.decode(input.timezone || 'America/Port-au-Prince'), // For Sebastien
+      NonEmptyString.decode(input.timezone || 'America/New_York'), // For Sebastien
       Either.fold(
         () => { throw Error('Invalid timezone value.'); }, // Theoretically unreachable
         result => result
