@@ -64,7 +64,7 @@ paths:
                           endDate:
                             type: string
                             format: date-time
-                      fourWeekAvg:
+                      monthlyAvg:
                         type: object
                         properties:
                           value:

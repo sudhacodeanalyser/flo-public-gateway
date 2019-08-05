@@ -176,7 +176,7 @@ class WaterService {
             startDate: lastWeekDailyAverageConsumption.startDate.format(),
             endDate: lastWeekDailyAverageConsumption.endDate && lastWeekDailyAverageConsumption.endDate.format()
         },
-        fourWeekAvg: monthlyAverageConsumption === null || _.isEmpty(monthlyAverageConsumption) || monthlyAverageConsumption.numRecords < WaterService.MIN_MONTHLY_AVG_NUM_DAYS ?
+        monthlyAvg: monthlyAverageConsumption === null || _.isEmpty(monthlyAverageConsumption) || monthlyAverageConsumption.numRecords < WaterService.MIN_MONTHLY_AVG_NUM_DAYS ?
           null :
           {
             value: monthlyAverageConsumption.averageConsumption,

@@ -39,7 +39,7 @@ export interface WaterAveragesReport {
       startDate: string;
       endDate: string;
     };
-    fourWeekAvg: null | {
+    monthlyAvg: null | {
       value: number;
       startDate: string;
       endDate: string;
