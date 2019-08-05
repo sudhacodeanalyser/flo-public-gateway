@@ -64,6 +64,17 @@ paths:
                           endDate:
                             type: string
                             format: date-time
+                      fourWeekAvg:
+                        type: object
+                        properties:
+                          value:
+                            type: number
+                          startDate:
+                            type: string
+                            format: date-time
+                          endDate:
+                            type: string
+                            format: date-time
         400:
           description: Invalid query parameters
   /api/v2/water/consumption:

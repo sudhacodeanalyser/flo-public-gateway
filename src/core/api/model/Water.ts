@@ -28,7 +28,7 @@ export interface WaterAveragesReport {
     tz: string;
     locationId?: string;
     macAddress?: string;
-  },
+  };
   aggregations: {
     dayOfWeekAvg: null | { 
       value: number;
@@ -39,5 +39,10 @@ export interface WaterAveragesReport {
       startDate: string;
       endDate: string;
     };
+    fourWeekAvg: null | {
+      value: number;
+      startDate: string;
+      endDate: string;
+    }
   }
 }
