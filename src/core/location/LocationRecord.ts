@@ -1,8 +1,11 @@
 import _ from 'lodash';
 import { morphism, StrictSchema } from 'morphism';
 import { IndoorAmenity, Location, LocationSize, LocationType, Omit, OutdoorAmenity, PlumbingAppliance, PlumbingType, SystemMode, Timestamped } from '../api';
+import { NonEmptyString } from '../api/validator/NonEmptyString';
 import { translateNumericToStringEnum, translateStringToNumericEnum } from '../api/enumUtils';
 import { NoYesUnsure } from '../api/NoYesUnsure';
+import * as Either from 'fp-ts/lib/Either';
+import { pipe } from 'fp-ts/lib/pipeable';
 
 export enum LegacyLocationSizeCategory {
   LTE_700 = 0,
@@ -182,7 +185,15 @@ const RecordToModelSchema: StrictSchema<Location, LocationRecordData> = {
   state: 'state',
   country: 'country',
   postalCode: 'postalcode',
-  timezone: 'timezone',
+  timezone: (input: LocationRecordData) =>
+    pipe(
+      NonEmptyString.decode(input.timezone || 'America/Port-au-Prince'), // For Sebastien
+      Either.fold(
+        () => { throw Error('Invalid timezone value.'); }, // Theoretically unreachable
+        result => result
+      )
+    )
+  , 
   gallonsPerDayGoal: 'gallons_per_day_goal',
   occupants: 'occupants',
   stories: 'stories',
