@@ -19,7 +19,7 @@ function getDefaults(): { [key: string]: any } {
         apiV1Url: 'https://api-dev.flocloud.co/api/v1',
         defaultUserLocale: 'en-US',
         localizationApiUrl: 'https://flo-localization-service-dev.flocloud.co/v1',
-        notificationApiUrl: 'https://flo-notification-api-dev.et89cag4sw.us-west-2.elasticbeanstalk.com',
+        notificationApiUrl: 'https://flo-notification-api.flocloud.co',
         healthTestServiceUrl: 'http://flo-device-manager-dev.flocloud.co',
         influxPort: 8086,
         influxHost: 'mcfly-da662558.influxcloud.net',
