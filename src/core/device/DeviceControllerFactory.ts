@@ -17,6 +17,8 @@ import { DeviceSystemModeServiceFactory } from './DeviceSystemModeService';
 import { DirectiveServiceFactory } from './DirectiveService';
 import { HealthTest, HealthTestServiceFactory } from './HealthTestService';
 import ForbiddenError from '../api/error/ForbiddenError';
+import UnauthorizedError  from '../api/error/UnauthorizedError';
+import { PairingResponse } from './PairingService';
 
 enum HealthTestActions {
   RUN = 'run'
@@ -175,9 +177,16 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
         body: QrDataValidator
       }))
     )
-    private async scanQrCode(@authorizationHeader() authToken: string, @requestBody() qrData: QrData): Promise<PairingData> {
+    private async scanQrCode(@authorizationHeader() authToken: string, @request() req: Request, @requestBody() qrData: QrData): Promise<PairingResponse> {
+      const tokenMetadata = req.token;
 
-      return this.deviceService.scanQrCode(authToken, qrData);
+      if (!tokenMetadata) {
+        throw new UnauthorizedError();
+      } else if (!tokenMetadata.user_id && !tokenMetadata.client_id) {
+        throw new ForbiddenError();
+      }
+
+      return this.deviceService.scanQrCode(authToken, tokenMetadata.user_id || tokenMetadata.client_id, qrData);
     }
 
     @httpPost('/pair/complete',
