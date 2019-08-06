@@ -271,8 +271,8 @@ class LocationResolver extends Resolver<Location> {
     // https://aws.amazon.com/blogs/aws/new-amazon-dynamodb-transactions/
     await Promise.all(
       userLocationRoleRecordData
-        .map(datum =>
-          this.removeLocationUserRole(datum.user_id, datum.location_id)
+        .map(async datum =>
+          this.removeLocationUserRole(datum.location_id, datum.user_id)
         )
     );
   }
