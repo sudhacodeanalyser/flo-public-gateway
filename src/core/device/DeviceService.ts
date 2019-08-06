@@ -9,6 +9,7 @@ import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import Logger from 'bunyan';
 import { DirectiveService } from './DirectiveService';
 import { Option, some, none, isNone, fromNullable } from 'fp-ts/lib/Option';
+import { InternalDeviceService } from '../../internal-device-service/InternalDeviceService';
 
 @injectable()
 class DeviceService {
@@ -18,7 +19,8 @@ class DeviceService {
     @inject('DeviceResolver') private deviceResolver: DeviceResolver,
     @inject('PairingService') private apiV1PairingService: PairingService,
     @inject('Logger') private readonly logger: Logger,
-    @inject('DependencyFactoryFactory') depFactoryFactory: DependencyFactoryFactory
+    @inject('DependencyFactoryFactory') depFactoryFactory: DependencyFactoryFactory,
+    @inject('InternalDeviceService') private internalDeviceService: InternalDeviceService
   ) {
     this.locationServiceFactory = depFactoryFactory<LocationService>('LocationService');
   }
@@ -54,8 +56,12 @@ class DeviceService {
   }
 
   public async scanQrCode(authToken: string, qrData: QrData): Promise<PairingData> {
-    
-    return this.apiV1PairingService.initPairing(authToken, qrData);
+    const pairingData = await this.apiV1PairingService.initPairing(authToken, qrData);
+    const { deviceId } = pairingData;
+
+    await this.internalDeviceService.createFirestoreStubDevice(deviceId);
+
+    return pairingData;
   }
 
   public async pairDevice(authToken: string, deviceCreate: DeviceCreate): Promise<Device> {
