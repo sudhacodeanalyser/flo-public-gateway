@@ -2,7 +2,7 @@ import { inject, injectable } from 'inversify';
 import { UserService } from '../service';
 import { DependencyFactoryFactory } from '../api';
 import ForbiddenError from '../api/error/ForbiddenError';
-import { FirestoreAuthService, FirestoreTokenResponse } from './FirestoreAuthService';
+import { FirestoreAuthService, FirestoreTokenResponse, FirestoreAssests } from './FirestoreAuthService';
 import * as Option from 'fp-ts/lib/Option';
 import _ from 'lodash';
 
@@ -17,26 +17,23 @@ class SessionService {
     this.userServiceFactory = depFactoryFactory<UserService>('UserService');
   }
 
-  public async issueFirestoreToken(userId: string): Promise<FirestoreTokenResponse> {
+  public async issueFirestoreToken(userId: string, additionalAssets?: FirestoreAssests): Promise<FirestoreTokenResponse> {
     const user = await this.userServiceFactory().getUserById(userId, ['locations']);
 
-    if (Option.isNone(user)) {
-      throw new ForbiddenError();
-    }
-
-    const devicesAsset = _.flatMap(
+    const devicesAsset = Option.isNone(user) ? [] : _.flatMap(
       user.value.locations,
       ({ devices }) => (devices || [])
         .map(({ macAddress }) => macAddress)
         .filter(_.identity) as string[]
     );
-    const locationsAsset = user.value.locations
+    const locationsAsset = Option.isNone(user) ? [] : user.value.locations
       .map(({ id }) => id);
 
     return this.firestoreAuthService.issueToken({ 
-      devices: devicesAsset,
-      locations: locationsAsset,
-      users: [user.value.id]
+      ...additionalAssets,
+      devices: [...devicesAsset, ..._.get(additionalAssets, 'devices', [])] ,
+      locations: [...locationsAsset, ..._.get(additionalAssets, 'locations', [])],
+      users: [userId, ..._.get(additionalAssets, 'users', [])]
     });
   }
 }

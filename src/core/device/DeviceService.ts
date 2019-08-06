@@ -10,10 +10,13 @@ import Logger from 'bunyan';
 import { DirectiveService } from './DirectiveService';
 import { Option, some, none, isNone, fromNullable } from 'fp-ts/lib/Option';
 import { InternalDeviceService } from '../../internal-device-service/InternalDeviceService';
+import { SessionService } from '../session/SessionService';
+import { PairingResponse } from './PairingService';
 
 @injectable()
 class DeviceService {
   private locationServiceFactory: () => LocationService;
+  private sessionServiceFactory: () => SessionService;
 
   constructor(
     @inject('DeviceResolver') private deviceResolver: DeviceResolver,
@@ -23,6 +26,7 @@ class DeviceService {
     @inject('InternalDeviceService') private internalDeviceService: InternalDeviceService
   ) {
     this.locationServiceFactory = depFactoryFactory<LocationService>('LocationService');
+    this.sessionServiceFactory = depFactoryFactory<SessionService>('SessionService');
   }
 
   public async getDeviceById(id: string, expand?: PropExpand): Promise<Option<Device>> {
@@ -55,13 +59,20 @@ class DeviceService {
     return this.deviceResolver.remove(id);
   }
 
-  public async scanQrCode(authToken: string, qrData: QrData): Promise<PairingData> {
+  public async scanQrCode(authToken: string, userId: string, qrData: QrData): Promise<PairingResponse> {
     const pairingData = await this.apiV1PairingService.initPairing(authToken, qrData);
     const { deviceId } = pairingData;
 
     await this.internalDeviceService.createFirestoreStubDevice(deviceId);
 
-    return pairingData;
+    const { token } = await this.sessionServiceFactory().issueFirestoreToken(userId, { devices: [deviceId] });
+
+    return {
+      ...pairingData,
+      firestore: {
+        token
+      }
+     };
   }
 
   public async pairDevice(authToken: string, deviceCreate: DeviceCreate): Promise<Device> {
