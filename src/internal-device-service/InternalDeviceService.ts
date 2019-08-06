@@ -77,6 +77,25 @@ class InternalDeviceService extends MemoizeMixin(InternalDeviceServiceHandler) i
       }
     }
   }
+
+  public async createFirestoreStubDevice(deviceId: string): Promise<void> {
+    try {
+      const request = {
+        method: 'POST',
+        url: `${ this.internalDeviceServiceBaseUrl }/firestore/devices/${ deviceId }`,
+        body: {
+          value: {
+            deviceId
+          }
+        }
+      };
+
+      await this.sendRequest(request);
+    } catch (err) {
+      // Error should not break pairing
+      this.logger.error({ err });
+    }
+  }
 }
 
 export {InternalDeviceService};
