@@ -66,6 +66,11 @@ paths:
                     type: string
                   websocketKey:
                     type: string
+                  firestore:
+                    type: object
+                    properties:
+                      token:
+                        type: string
         400:
           description: Invalid request body
         409:
