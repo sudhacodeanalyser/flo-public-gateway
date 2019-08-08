@@ -40,11 +40,7 @@ class LocationService {
       const ownerUserId = account.value.owner.id;
       await this.locationResolver.addLocationUserRole(createdLocation.id, ownerUserId, ['owner']);
 
-      const authToken = this.httpContext.request && this.httpContext.request.get('Authorization');
-
-      if (authToken) {
-        await this.accessControlService.refreshUser(authToken, ownerUserId);
-      }
+      await this.refreshUserACL(ownerUserId);
     }
 
     return fromNullable(createdLocation);
@@ -104,11 +100,8 @@ class LocationService {
 
   public async addLocationUserRole(locationId: string, userId: string, roles: string[]): Promise<LocationUserRole> {
     const locationUserRole = await this.locationResolver.addLocationUserRole(locationId, userId, roles);
-    const authToken = this.httpContext.request && this.httpContext.request.get('Authorization');
-
-    if (authToken) {
-      await this.accessControlService.refreshUser(authToken, userId);
-    }
+    
+    await this.refreshUserACL(userId);
 
     return locationUserRole;
   }
@@ -116,7 +109,7 @@ class LocationService {
   public async removeLocationUserRole(locationId: string, userId: string): Promise<void> {
     await this.locationResolver.removeLocationUserRole(locationId, userId);
 
-    const authToken = this.httpContext.request && this.httpContext.request.get('Authorization');
+    const authToken = this.extractAuthToken();
 
     if (authToken) {
       await this.accessControlService.refreshUser(authToken, userId);
@@ -181,6 +174,14 @@ class LocationService {
         }
       });
     }
+  }
+
+  private async refreshUserACL(userId: string): Promise<void> {
+    const authToken = this.httpContext.request && this.httpContext.request.get('Authorization');
+
+    if (authToken) {
+      await this.accessControlService.refreshUser(authToken, userId);
+    }  
   }
 }
 
