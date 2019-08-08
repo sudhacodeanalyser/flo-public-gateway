@@ -15,6 +15,7 @@ function getDefaults(): { [key: string]: any } {
         dynamoTablePrefix: 'dev_',
         apiVersion: 2,
         authUrl: 'https://api-dev.flocloud.co/api/v1/accesscontrol/authorize',
+        aclUrl: 'https://api-dev.flocloud.co/api/v1/accesscontrol/refresh',
         internalDeviceServiceBaseUrl: 'https://flo-device-service.flocloud.co/v1',
         apiV1Url: 'https://api-dev.flocloud.co/api/v1',
         defaultUserLocale: 'en-US',
@@ -43,6 +44,7 @@ const config = {
   stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
   apiVersion: process.env.API_VERSION,
   authUrl: process.env.AUTH_URL,
+  aclUrl: process.env.
   kafkaHost: process.env.KAFKA_HOST,
   kafkaTimeout: process.env.KAFKA_TIMEOUT_MS,
   presenceKafkaTopic: 'presence-activity-v1', // Should not change across environments

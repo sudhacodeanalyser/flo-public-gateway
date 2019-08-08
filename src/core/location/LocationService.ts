@@ -8,6 +8,7 @@ import { injectHttpContext, interfaces } from 'inversify-express-utils';
 import _ from 'lodash';
 import { Option, fromNullable, isNone } from 'fp-ts/lib/Option';
 import ConflictError from '../api/error/ConflictError';
+import { AccessControlService } from '../../auth/AccessControlService';
 
 @injectable()
 class LocationService {
@@ -19,7 +20,8 @@ class LocationService {
     @inject('LocationResolver') private locationResolver: LocationResolver,
     @inject('DependencyFactoryFactory') depFactoryFactory: DependencyFactoryFactory,
     @inject('IrrigationScheduleServiceFactory') irrigationScheduleServiceFactory: IrrigationScheduleServiceFactory,
-    @injectHttpContext private readonly httpContext: interfaces.HttpContext
+    @injectHttpContext private readonly httpContext: interfaces.HttpContext,
+    @inject('AccessControlService') private accessControlService: AccessControlService
   ) {
     this.deviceServiceFactory = depFactoryFactory<DeviceService>('DeviceService');
     this.accountServiceFactory = depFactoryFactory<AccountService>('AccountService');
@@ -37,6 +39,12 @@ class LocationService {
     if (!isNone(account) && createdLocation !== null) {
       const ownerUserId = account.value.owner.id;
       await this.locationResolver.addLocationUserRole(createdLocation.id, ownerUserId, ['owner']);
+
+      const authToken = this.httpContext.request && this.httpContext.request.get('Authorization');
+
+      if (authToken) {
+        await this.accessControlService.refreshUser(authToken, ownerUserId);
+      }
     }
 
     return fromNullable(createdLocation);
@@ -95,11 +103,24 @@ class LocationService {
   }
 
   public async addLocationUserRole(locationId: string, userId: string, roles: string[]): Promise<LocationUserRole> {
-    return this.locationResolver.addLocationUserRole(locationId, userId, roles);
+    const locationUserRole = await this.locationResolver.addLocationUserRole(locationId, userId, roles);
+    const authToken = this.httpContext.request && this.httpContext.request.get('Authorization');
+
+    if (authToken) {
+      await this.accessControlService.refreshUser(authToken, userId);
+    }
+
+    return locationUserRole;
   }
 
   public async removeLocationUserRole(locationId: string, userId: string): Promise<void> {
-    return this.locationResolver.removeLocationUserRole(locationId, userId);
+    await this.locationResolver.removeLocationUserRole(locationId, userId);
+
+    const authToken = this.httpContext.request && this.httpContext.request.get('Authorization');
+
+    if (authToken) {
+      await this.accessControlService.refreshUser(authToken, userId);
+    }
   }
 
   public async setSystemMode(id: string, deviceSystemModeService: DeviceSystemModeService, { target, revertMinutes, revertMode }: { target: SystemMode, revertMinutes?: number, revertMode?: SystemMode }): Promise<void> {
