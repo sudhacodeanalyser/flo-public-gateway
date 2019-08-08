@@ -44,7 +44,7 @@ const config = {
   stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
   apiVersion: process.env.API_VERSION,
   authUrl: process.env.AUTH_URL,
-  aclUrl: process.env.
+  aclUrl: process.env.ACL_URL,
   kafkaHost: process.env.KAFKA_HOST,
   kafkaTimeout: process.env.KAFKA_TIMEOUT_MS,
   presenceKafkaTopic: 'presence-activity-v1', // Should not change across environments
