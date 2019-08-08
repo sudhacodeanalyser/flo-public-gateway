@@ -109,7 +109,7 @@ class LocationService {
   public async removeLocationUserRole(locationId: string, userId: string): Promise<void> {
     await this.locationResolver.removeLocationUserRole(locationId, userId);
 
-    const authToken = this.extractAuthToken();
+    const authToken = this.httpContext.request && this.httpContext.request.get('Authorization');
 
     if (authToken) {
       await this.accessControlService.refreshUser(authToken, userId);
