@@ -12,7 +12,7 @@ export interface Id<T> {
 type DeliveryMedium = 'sms' | 'push' | 'email' | 'call';
 
 export interface AlarmDefaultSettings {
-  systemMode: number;
+  systemMode: string;
   enabled: boolean;
 }
 
