@@ -5,9 +5,26 @@ export interface AlarmListResult {
   items: Alarm[]
 }
 
+export interface Id<T> {
+  id: T;
+}
+
+type DeliveryMedium = 'sms' | 'push' | 'email' | 'call';
+
+export interface AlarmDefaultSettings {
+  systemMode: number;
+  enabled: boolean;
+}
+
+export interface DeliveryMediumSettings {
+  supported: boolean;
+  defaultSettings: AlarmDefaultSettings[]
+}
+
 export interface Alarm {
   id: number;
   name: string;
+  displayName: string;
   description: string;
   severity: number;
   isInternal: boolean;
@@ -16,6 +33,9 @@ export interface Alarm {
   actions: Action[];
   supportOptions: SupportOption[];
   active: boolean;
+  parent?: Id<number>;
+  children: Array<Id<number>>;
+  deliveryMedium: Record<DeliveryMedium, DeliveryMediumSettings>;
 }
 
 export interface TriggersAlarmResponse {
