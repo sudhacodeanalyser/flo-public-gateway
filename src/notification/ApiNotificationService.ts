@@ -92,13 +92,15 @@ class ApiNotificationService {
   }
 
   public async updateAlarmSettings(userId: string, settings: UpdateDeviceAlarmSettings): Promise<void> {
-    const normalizedSettings = {
-      items: settings.items.map(s => this.normalizeDeviceAlarmSettings(userId, s))
-    }
+    const normalizedSettings = await Promise.all(settings.items.map(async s =>
+      this.normalizeDeviceAlarmSettings(userId, s))
+    );
     return this.notificationApi.sendRequest({
       method: 'post',
       url: `/settings/${userId}`,
-      body: normalizedSettings
+      body: {
+        items: normalizedSettings
+      }
     });
   }
 
