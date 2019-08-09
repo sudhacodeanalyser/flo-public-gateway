@@ -80,12 +80,15 @@ export const AlarmSettingsCodec = t.type({
 
 export const DeviceAlarmSettingsCodec = t.type({
   deviceId: t.string,
+  smallDripSensitivity: t.union([t.number, t.undefined]),
   settings: t.array(AlarmSettingsCodec)
 });
 
 export const UpdateDeviceAlarmSettingsCodec = t.type({
   items: t.array(DeviceAlarmSettingsCodec)
 });
+
+export interface AlarmSettings extends t.TypeOf<typeof AlarmSettingsCodec> {}
 
 export interface UpdateDeviceAlarmSettings extends t.TypeOf<typeof UpdateDeviceAlarmSettingsCodec> {}
 
