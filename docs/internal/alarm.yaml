@@ -167,6 +167,10 @@ components:
             $ref: '#/components/schemas/SupportOption'
         active:
           type: boolean
+        userFeedbackFlow:
+          type: array
+          items:
+            $ref: '#/components/schemas/AlertFeedbackFlow'
     Action:
       type: object
       properties:
@@ -195,3 +199,60 @@ components:
           type: integer
         sort:
           type: integer
+    AlertFeedbackStep:
+      type: object
+      properties:
+        titleText:
+          type: string
+        type:
+          enum: 
+            - list
+            - text
+        options:
+          array:
+            items:
+              $ref '#/components/schemas/AlertFeedbackStepOption'
+    AlertFeedbackStepOption:
+      type: object
+      required:
+        - property
+      properties:
+        property:
+          type: string
+        displayText:
+          type: string
+        sortOrder:
+          type: string
+        action: 
+          enum:
+            - sleep_2h
+            - sleep_24h
+        value:
+          oneOf:
+            - type: string
+            - type: boolean
+            - type: number
+        flow:
+          oneOf:
+            - $ref '#/components/schemas/AlertFeedbackStep'
+            - type: object
+              properties:
+                tag:
+                  type: string
+    AlertFeedbackFlow:
+      type: object
+      required:
+        - systemMode
+        - flow
+      properties:
+        systemMode:
+          enum:
+            - home
+            - away
+            - sleep
+        flow: 
+          $ref: '#/components/schemas/AlertFeedbackStep'
+        flowTags:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/AlertFeedbackStep'

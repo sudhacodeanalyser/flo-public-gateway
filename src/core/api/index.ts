@@ -12,6 +12,7 @@ export * from './model/Subscription';
 export * from './model/Lookup';
 export * from './model/Notification';
 export * from './model/Water';
+export * from './model/AlertFeedbackFlow';
 
 // Utils
 export type DependencyFactoryFactory = <T>(dep: string) => () => T;
