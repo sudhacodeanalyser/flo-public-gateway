@@ -1,5 +1,5 @@
 import * as t from 'io-ts';
-import { TimestampedModel } from '../../api';
+import { TimestampedModel, AlertFeedbackFlow } from '../../api';
 
 export interface AlarmListResult {
   items: Alarm[]
@@ -36,6 +36,7 @@ export interface Alarm {
   parent?: Id<number>;
   children: Array<Id<number>>;
   deliveryMedium: Record<DeliveryMedium, DeliveryMediumSettings>;
+  userFeedbackFlow?: AlertFeedbackFlow[];
 }
 
 export interface TriggersAlarmResponse {
