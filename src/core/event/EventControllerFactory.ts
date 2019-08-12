@@ -71,7 +71,7 @@ export function EventControllerFactory(container: Container, apiVersion: number)
     }
 
     @httpGet('/alarms',
-      authMiddlewareFactory.create(async ({ query: { deviceId } }) => ({icd_id: deviceId}))
+      authMiddlewareFactory.create(async ({ query: { deviceId, locationId } }) => ({ icd_id: deviceId, location_id: locationId }))
       // TODO: deviceId is optional, how I can ask for admin role if is not present or customer role if has deviceId
       // TODO: Is not possible to do right now with the auth system, we may need to split this in 2 endpoints
     )
