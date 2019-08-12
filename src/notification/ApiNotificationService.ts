@@ -170,10 +170,8 @@ class ApiNotificationService {
       )
     );
 
-    return defaultSettings.map(s => {
-      const overriddenSetting = _.find(smallDripCat1Settings, ['systemMode', s.systemMode]);
-      return overriddenSetting ? overriddenSetting : s;
-    })
+    return defaultSettings
+      .filter(s => !_.find(smallDripCat1Settings, ['systemMode', s.systemMode]));
   }
 
   private getMissingSettings(alarmSettings: AlarmSettings[]): AlarmSettings[] {
@@ -259,9 +257,10 @@ class ApiNotificationService {
       case 2:
         return alarmSettings.map(s => {
           if (s.alarmId === 29) {
-            return _.find(alarmSettingsByAlarmId[28], (smallDripCat1Settings) =>
-              smallDripCat1Settings.systemMode === s.systemMode
-            ) || s;
+            return {
+              ...(_.find(alarmSettingsByAlarmId[28], ['systemMode', s.systemMode]) || s),
+              alarmId: s.alarmId
+            }
           }
           if (s.alarmId === 30 || s.alarmId === 31) {
             return {
@@ -278,9 +277,10 @@ class ApiNotificationService {
       case 3:
         return alarmSettings.map(s => {
           if (s.alarmId === 29 || s.alarmId === 30) {
-            return _.find(alarmSettingsByAlarmId[28], (smallDripCat1Settings) =>
-              smallDripCat1Settings.systemMode === s.systemMode
-            ) || s;
+            return {
+              ...(_.find(alarmSettingsByAlarmId[28], ['systemMode', s.systemMode]) || s),
+              alarmId: s.alarmId
+            }
           }
           if (s.alarmId === 31) {
             return {
@@ -300,9 +300,10 @@ class ApiNotificationService {
             return s;
           }
 
-          return _.find(alarmSettingsByAlarmId[28], (smallDripCat1Settings) =>
-              smallDripCat1Settings.systemMode === s.systemMode
-            ) || s;
+          return {
+            ...(_.find(alarmSettingsByAlarmId[28], ['systemMode', s.systemMode]) || s),
+            alarmId: s.alarmId
+          }
         });
 
       default:
