@@ -7,6 +7,7 @@ import { Alarm, AlarmListResult, ClearAlertResponse } from '../api';
 import { httpController } from '../api/controllerUtils';
 import Request from '../api/Request';
 import { NotificationServiceFactory } from '../notification/NotificationService';
+import { AlarmService } from '../service';
 
 export function AlarmControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
@@ -18,7 +19,8 @@ export function AlarmControllerFactory(container: Container, apiVersion: number)
   @httpController({ version: apiVersion }, '/alarms')
   class AlarmController extends BaseHttpController {
     constructor(
-      @inject('NotificationServiceFactory') private notificationServiceFactory: NotificationServiceFactory
+      @inject('NotificationServiceFactory') private notificationServiceFactory: NotificationServiceFactory,
+      @inject('AlarmService') private alarmService: AlarmService
     ) {
       super();
     }
@@ -32,20 +34,14 @@ export function AlarmControllerFactory(container: Container, apiVersion: number)
       }))
     )
     private async getAlarmById(@request() req: Request, @requestParam('id') id: string): Promise<Alarm> {
-      return this
-        .notificationServiceFactory
-        .create(req)
-        .getAlarmById(id);
+      return this.alarmService.getAlarmById(id);
     }
 
     @httpGet('/', auth)
     private async getAlarms(@request() req: Request): Promise<AlarmListResult> {
       const filters = req.url.split('?')[1] || '';
 
-      return this
-        .notificationServiceFactory
-        .create(req)
-        .getAlarms(filters);
+      return this.alarmService.getAlarms(filters);
     }
 
     @httpPut('/:id/clear',
