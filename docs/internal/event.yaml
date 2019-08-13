@@ -1,5 +1,5 @@
 paths:
-  /api/v2/events/alarms/{id}/feeback:
+  /api/v2/events/alarms/{id}/feedback:
     parameters:
       - in: path
         name: id
