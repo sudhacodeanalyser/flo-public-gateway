@@ -13,6 +13,7 @@ export * from './model/Lookup';
 export * from './model/Notification';
 export * from './model/Water';
 export * from './model/AlertFeedbackFlow';
+export * from './model/AlertFeedback';
 
 // Utils
 export type DependencyFactoryFactory = <T>(dep: string) => () => T;

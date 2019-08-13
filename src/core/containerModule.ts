@@ -11,6 +11,7 @@ import notificationContainerModule from './notification/containerModule';
 import waterContainerModule from './water/containerModule';
 import sessionContainerModule from './session/containerModule';
 import alarmContainerModule from './alarm/containerModule';
+import eventContainerModule from './event/containerModule';
 
 export default [
   pingContainerModule,
@@ -25,5 +26,6 @@ export default [
   notificationContainerModule,
   waterContainerModule,
   sessionContainerModule,
-  alarmContainerModule
+  alarmContainerModule,
+  eventContainerModule
 ];
