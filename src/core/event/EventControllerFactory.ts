@@ -90,7 +90,7 @@ export function EventControllerFactory(container: Container, apiVersion: number)
         .generateEventsSample(data);
     }
 
-    @httpPost('/incidents/:id/feedback', 
+    @httpPost('/alarms/:id/feedback', 
       authWithIcd,
       reqValidator.create(t.type({
         params: t.type({
