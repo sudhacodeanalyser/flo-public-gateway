@@ -147,17 +147,17 @@ class ApiNotificationService {
     }
 
     const defaultSmallDripCat1Settings: AlarmSettings[] = await this.getDefaultSmallDripCat1Settings(userId, deviceSettings);
-    const missingSettings = this.getMissingSettings(deviceSettings.settings)
+    const missingSettings = this.getMissingSettings(deviceSettings.settings || [])
 
     return {
       deviceId: deviceSettings.deviceId,
       smallDripSensitivity: deviceSettings.smallDripSensitivity,
-      settings: this.normalizeSmallDripSettings(_.concat(deviceSettings.settings, defaultSmallDripCat1Settings, missingSettings), deviceSettings.smallDripSensitivity)
+      settings: this.normalizeSmallDripSettings(_.concat(deviceSettings.settings || [], defaultSmallDripCat1Settings, missingSettings), deviceSettings.smallDripSensitivity)
     }
   }
 
   private async getDefaultSmallDripCat1Settings(userId: string, deviceSettings: DeviceAlarmSettings): Promise<AlarmSettings[]> {
-    const smallDripCat1Settings = deviceSettings.settings.filter(s => s.alarmId === 28);
+    const smallDripCat1Settings = (deviceSettings.settings || []).filter(s => s.alarmId === 28);
     if (smallDripCat1Settings.length === 3) {
       return Promise.resolve([]);
     }
@@ -166,7 +166,7 @@ class ApiNotificationService {
       maybeAlarmSettings,
       fold(
         async () => this.getAlarmSettingsFromAlarm(await this.getAlarmById('28')),
-        (alarmSettings) => Promise.resolve(alarmSettings.settings.filter(s => s.alarmId === 28))
+        (alarmSettings) => Promise.resolve((alarmSettings.settings || []).filter(s => s.alarmId === 28))
       )
     );
 
