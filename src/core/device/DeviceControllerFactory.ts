@@ -337,7 +337,9 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
 
       }
 
-      const healthTest = await healthTestService.getTestResultByRoundId(roundId);
+      const healthTest = await (id === 'latest' ?
+          healthTestService.getLatest(device.value.macAddress) :
+          healthTestService.getTestResultByRoundId(roundId));
 
       if (healthTest === null) {
         return {};
