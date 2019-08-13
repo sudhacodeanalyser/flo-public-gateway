@@ -146,28 +146,63 @@ class ApiNotificationService {
       return Promise.resolve(deviceSettings);
     }
 
-    const hasSmallDripCat1Settings = _.some(deviceSettings.settings, (s) => s.alarmId === 28);
-    const defaultSmallDripCat1Settings: AlarmSettings[] =
-      hasSmallDripCat1Settings
-      ? []
-      : await this.getDefaultSmallDripCat1Settings(userId, deviceSettings.deviceId);
+    const defaultSmallDripCat1Settings: AlarmSettings[] = await this.getDefaultSmallDripCat1Settings(userId, deviceSettings);
+    const missingSettings = this.getMissingSettings(deviceSettings.settings || [])
 
     return {
       deviceId: deviceSettings.deviceId,
       smallDripSensitivity: deviceSettings.smallDripSensitivity,
-      settings: this.normalizeSmallDripSettings(_.concat(deviceSettings.settings, defaultSmallDripCat1Settings), deviceSettings.smallDripSensitivity)
+      settings: this.normalizeSmallDripSettings(_.concat(deviceSettings.settings || [], defaultSmallDripCat1Settings, missingSettings), deviceSettings.smallDripSensitivity)
     }
   }
 
-  private async getDefaultSmallDripCat1Settings(userId: string, deviceId: string): Promise<AlarmSettings[]> {
-    const maybeAlarmSettings = await this.getAlarmSettings(userId, deviceId);
-    return pipe(
+  private async getDefaultSmallDripCat1Settings(userId: string, deviceSettings: DeviceAlarmSettings): Promise<AlarmSettings[]> {
+    const smallDripCat1Settings = (deviceSettings.settings || []).filter(s => s.alarmId === 28);
+    if (smallDripCat1Settings.length === 3) {
+      return Promise.resolve([]);
+    }
+    const maybeAlarmSettings = await this.getAlarmSettings(userId, deviceSettings.deviceId);
+    const defaultSettings = await pipe(
       maybeAlarmSettings,
       fold(
         async () => this.getAlarmSettingsFromAlarm(await this.getAlarmById('28')),
-        (s) => Promise.resolve(s.settings)
+        (alarmSettings) => Promise.resolve((alarmSettings.settings || []).filter(s => s.alarmId === 28))
       )
     );
+
+    return defaultSettings
+      .filter(s => !_.find(smallDripCat1Settings, ['systemMode', s.systemMode]));
+  }
+
+  private getMissingSettings(alarmSettings: AlarmSettings[]): AlarmSettings[] {
+    const alarmSettingsByAlarmId: _.Dictionary<AlarmSettings[]> = _.groupBy(alarmSettings, 'alarmId');
+
+    return _.concat(
+      this.getMissingSettingsForAlarmId(alarmSettingsByAlarmId, 29),
+      this.getMissingSettingsForAlarmId(alarmSettingsByAlarmId, 30),
+      this.getMissingSettingsForAlarmId(alarmSettingsByAlarmId, 31)
+    );
+  }
+
+  private getMissingSettingsForAlarmId(alarmSettingsByAlarmId: _.Dictionary<AlarmSettings[]>, alarmId: number): AlarmSettings[] {
+    const allSystemModes = [ 'home', 'sleep', 'away' ];
+    const systemModes = new Set((alarmSettingsByAlarmId[alarmId] || []).map(s => s.systemMode));
+    return allSystemModes
+      .filter(systemMode => !systemModes.has(systemMode))
+      .reduce((missingSettings: AlarmSettings[], systemMode: string) => (
+        missingSettings.concat(this.getDisabledSettingForSystemMode(alarmId, systemMode))
+      ), []);
+  }
+
+  private getDisabledSettingForSystemMode(alarmId: number, systemMode: string): AlarmSettings {
+    return {
+      alarmId,
+      systemMode,
+      smsEnabled: false,
+      emailEnabled: false,
+      pushEnabled: false,
+      callEnabled: false
+    }
   }
 
   private getAlarmSettingsFromAlarm(alarm: Alarm): AlarmSettings[] {
@@ -222,9 +257,10 @@ class ApiNotificationService {
       case 2:
         return alarmSettings.map(s => {
           if (s.alarmId === 29) {
-            return _.find(alarmSettingsByAlarmId[28], (smallDripCat1Settings) =>
-              smallDripCat1Settings.systemMode === s.systemMode
-            ) || s;
+            return {
+              ...(_.find(alarmSettingsByAlarmId[28], ['systemMode', s.systemMode]) || s),
+              alarmId: s.alarmId
+            }
           }
           if (s.alarmId === 30 || s.alarmId === 31) {
             return {
@@ -241,9 +277,10 @@ class ApiNotificationService {
       case 3:
         return alarmSettings.map(s => {
           if (s.alarmId === 29 || s.alarmId === 30) {
-            return _.find(alarmSettingsByAlarmId[28], (smallDripCat1Settings) =>
-              smallDripCat1Settings.systemMode === s.systemMode
-            ) || s;
+            return {
+              ...(_.find(alarmSettingsByAlarmId[28], ['systemMode', s.systemMode]) || s),
+              alarmId: s.alarmId
+            }
           }
           if (s.alarmId === 31) {
             return {
@@ -263,9 +300,10 @@ class ApiNotificationService {
             return s;
           }
 
-          return _.find(alarmSettingsByAlarmId[28], (smallDripCat1Settings) =>
-              smallDripCat1Settings.systemMode === s.systemMode
-            ) || s;
+          return {
+            ...(_.find(alarmSettingsByAlarmId[28], ['systemMode', s.systemMode]) || s),
+            alarmId: s.alarmId
+          }
         });
 
       default:

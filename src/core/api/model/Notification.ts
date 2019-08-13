@@ -1,5 +1,5 @@
 import * as t from 'io-ts';
-import { TimestampedModel, AlertFeedbackFlow } from '../../api';
+import { AlertFeedbackFlow, TimestampedModel } from '../../api';
 import { AlertFeedbackCodec } from './AlertFeedback'; // Necessary otherwise codec is undefined when imported form '../../api'
 
 export interface AlarmListResult {
@@ -96,7 +96,7 @@ export const AlarmSettingsCodec = t.type({
 export const DeviceAlarmSettingsCodec = t.type({
   deviceId: t.string,
   smallDripSensitivity: t.union([t.number, t.undefined]),
-  settings: t.array(AlarmSettingsCodec)
+  settings: t.union([t.array(AlarmSettingsCodec), t.undefined])
 });
 
 export const UpdateDeviceAlarmSettingsCodec = t.type({
