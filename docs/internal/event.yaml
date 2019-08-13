@@ -1,4 +1,38 @@
 paths:
+  /api/v2/events/alarms/{id}/feeback:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Alarm Event ID
+    post:
+      summary: Submit feedback for an incident
+      tags:
+        - Alarm Events
+      produces:
+        - application/json
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FeedbackSubmission'
+      responses:
+        201:
+          description: Feedback successfully submitted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FeedbackSubmission'
+        400:
+          description: Invalid request request body
+        403:
+          description: Unauthorized or device ID does not match incident
+        404:
+          description: Alarm event not found
   /api/v2/events/alarms:
     post:
       summary: Creates an Alarm Event
@@ -162,6 +196,7 @@ paths:
                   criticalCount:
                     type: number
 
+
 components:
   schemas:
     AlarmInfo:
@@ -227,6 +262,10 @@ components:
         createAt:
           type: string
           format: date-time
+        userFeedback:
+          type: array
+          items: 
+            $ref: '#/components/schemas/UserFeedback'
 
     AlarmEventList:
       type: object
@@ -239,3 +278,48 @@ components:
           type: number
         total:
           type: number
+    UserFeedback:
+      type: object
+      required:
+        - shouldAcceptAsNormal
+        - cause
+        - createdAt
+      properties:
+        cause:
+          type: number
+        shouldAcceptAsNormal:
+          type: boolean
+        plumbingFailure:
+          type: number
+        fixture:
+          type: string
+        causeOther:
+          type: string
+        plumbingFailureOther:
+          type: string
+        userId:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+    FeedbackSubmission:
+      type: object
+      required:
+        - deviceId
+        - shouldAcceptAsNormal
+        - cause
+      properties:
+        deviceId: 
+          type: string
+          format: uuid
+        shouldAcceptAsNormal:
+          type: boolean
+        plumbingFailure:
+          type: number
+        fixture:
+          type: string
+        causeOther:
+          type: string
+        plumbingFailureOther:
+          type: string
