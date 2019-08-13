@@ -3,10 +3,13 @@ import { BaseHttpController, httpDelete, httpGet, httpPost, interfaces, request,
 import * as t from 'io-ts';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
-import {AlarmEvent, PaginatedResult, NotificationCounts} from '../api';
-import { httpController } from '../api/controllerUtils';
+import { AlarmEvent, PaginatedResult, NotificationCounts, UserFeedback, UserFeedbackCodec, AlertFeedback } from '../api';
+import { httpController, createMethod } from '../api/controllerUtils';
 import Request from '../api/Request';
 import { NotificationServiceFactory } from '../notification/NotificationService';
+import * as Either from 'fp-ts/lib/Either';
+import { pipe } from 'fp-ts/lib/pipeable';
+import { EventService } from '../service';
 
 export function EventControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
@@ -17,7 +20,8 @@ export function EventControllerFactory(container: Container, apiVersion: number)
   @httpController({ version: apiVersion }, '/events')
   class EventController extends BaseHttpController {
     constructor(
-      @inject('NotificationServiceFactory') private notificationServiceFactory: NotificationServiceFactory
+      @inject('NotificationServiceFactory') private notificationServiceFactory: NotificationServiceFactory,
+      @inject('EventService') private eventService: EventService
     ) {
       super();
     }
@@ -48,11 +52,8 @@ export function EventControllerFactory(container: Container, apiVersion: number)
         })
       }))
     )
-    private async getAlarmEvent(@request() req: Request, @requestParam('id') id: string): Promise<AlarmEvent> {
-      return this
-        .notificationServiceFactory
-        .create(req)
-        .getAlarmEvent(id);
+    private async getAlarmEvent(@requestParam('id') id: string): Promise<AlarmEvent> {
+      return this.eventService.getAlarmEvent(id);
     }
 
     @httpDelete('/alarms/:id',
@@ -78,10 +79,7 @@ export function EventControllerFactory(container: Container, apiVersion: number)
     private async getAlarmEventsByFilter(@request() req: Request): Promise<PaginatedResult<AlarmEvent>> {
       const filters = req.url.split('?')[1] || '';
 
-      return this
-        .notificationServiceFactory
-        .create(req)
-        .getAlarmEventsByFilter(filters);
+      return this.eventService.getAlarmEventsByFilter(filters);
     }
 
     @httpPost('/alarms/sample', authWithIcd)
@@ -90,6 +88,36 @@ export function EventControllerFactory(container: Container, apiVersion: number)
         .notificationServiceFactory
         .create(req)
         .generateEventsSample(data);
+    }
+
+    @httpPost('/alarms/:id/feedback', 
+      authWithIcd,
+      reqValidator.create(t.type({
+        params: t.type({
+          id: t.string,
+        }),
+        body: t.intersection([
+          UserFeedbackCodec, 
+          t.type({ deviceId: t.string }), 
+          t.partial({ alarmId: t.number, systemMode: t.string })
+        ])
+      }))
+    )
+    @createMethod
+    private async submitIncidentFeedback(@request() req: Request, @requestParam('id') incidentId: string, @requestBody() userFeedback: UserFeedback & { deviceId: string, alarmId: number | undefined, systemMode: string | undefined }): Promise<AlertFeedback> {
+      const tokenMetadata = req.token;
+      const alertFeedback: AlertFeedback = {
+        ...userFeedback,
+        incidentId
+      }
+
+      return pipe(
+        await this.eventService.submitFeedback(alertFeedback, tokenMetadata && tokenMetadata.user_id),
+        Either.fold(
+          forbiddenError => { throw forbiddenError },
+          createdAlertFeedback => createdAlertFeedback
+        )
+      );
     }
   }
 
