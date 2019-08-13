@@ -32,7 +32,10 @@ const RecordToModelSchema: StrictSchema<User, UserRecordData & UserDetailRecordD
   }),
   account: () => ({
     id: ''
-  })
+  }),
+  enabledFeatures: (input: UserRecordData & UserDetailRecordData) => {
+    return input.enabled_features ? input.enabled_features : []
+  }
 }
 
 export class UserRecord {

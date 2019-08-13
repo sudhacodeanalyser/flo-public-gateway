@@ -1,10 +1,12 @@
+import { fold, fromNullable, Option } from 'fp-ts/lib/Option';
+import { pipe } from 'fp-ts/lib/pipeable';
+import { inject, injectable } from 'inversify';
 import _ from 'lodash';
-import { injectable, inject } from 'inversify';
-import {User, UserUpdate, PropExpand, UpdateDeviceAlarmSettings} from '../api';
-import { UserResolver } from '../resolver';
-import {AccountService} from '../service';
+import { PropExpand, UpdateDeviceAlarmSettings, User, UserUpdate } from '../api';
+import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import ValidationError from '../api/error/ValidationError';
-import { Option, fromNullable } from 'fp-ts/lib/Option';
+import { UserResolver } from '../resolver';
+import { AccountService } from '../service';
 
 @injectable()
 class UserService {
@@ -39,6 +41,37 @@ class UserService {
   public async updateAlarmSettings(id: string, settings: UpdateDeviceAlarmSettings): Promise<void> {
     return this.userResolver.updateAlarmSettings(id, settings);
   }
+
+  public async addEnabledFeatures(id: string, features: string[]): Promise<void> {
+    const maybeUser: Option<User> = fromNullable(await this.userResolver.getUserById(id));
+
+    return pipe(
+      maybeUser,
+      fold(
+        async () => { throw new ResourceDoesNotExistError('User does not exist') },
+        async (user) => {
+          const mergedFeatures = Array.from(new Set(_.concat(features, user.enabledFeatures)));
+          return this.userResolver.setEnabledFeatures(user.id, mergedFeatures);
+        }
+      )
+    );
+  }
+
+  public async removeEnabledFeatures(id: string, features: string[]): Promise<void> {
+    const maybeUser: Option<User> = fromNullable(await this.userResolver.getUserById(id));
+
+    return pipe(
+      maybeUser,
+      fold(
+        async () => { throw new ResourceDoesNotExistError('User does not exist') },
+        async (user) => {
+          const difference = _.difference(user.enabledFeatures, features);
+          return this.userResolver.setEnabledFeatures(user.id, difference);
+        }
+      )
+    );
+  }
 }
 
 export { UserService };
+
