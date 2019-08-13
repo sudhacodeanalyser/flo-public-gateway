@@ -1,8 +1,12 @@
+import Logger from 'bunyan';
 import { inject, injectable } from 'inversify';
+import { injectHttpContext, interfaces } from 'inversify-express-utils';
+import _ from 'lodash';
 import { fromPartialRecord } from '../../database/Patch';
-import {DependencyFactoryFactory, User, PropExpand, UpdateDeviceAlarmSettings} from '../api';
+import { DependencyFactoryFactory, PropExpand, UpdateDeviceAlarmSettings, User } from '../api';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
-import {AccountResolver, LocationResolver, PropertyResolverMap, Resolver} from '../resolver';
+import { NotificationService, NotificationServiceFactory } from '../notification/NotificationService';
+import { AccountResolver, LocationResolver, PropertyResolverMap, Resolver } from '../resolver';
 import { UserAccountRoleRecord } from './UserAccountRoleRecord';
 import UserAccountRoleTable from './UserAccountRoleTable';
 import { UserDetailRecord } from './UserDetailRecord';
@@ -11,10 +15,6 @@ import { UserLocationRoleRecord, UserLocationRoleRecordData } from './UserLocati
 import UserLocationRoleTable from './UserLocationRoleTable';
 import { UserRecord } from './UserRecord';
 import UserTable from './UserTable';
-import {NotificationService, NotificationServiceFactory} from '../notification/NotificationService';
-import _ from 'lodash';
-import { injectHttpContext, interfaces } from 'inversify-express-utils';
-import Logger from 'bunyan';
 
 @injectable()
 class UserResolver extends Resolver<User> {
@@ -176,6 +176,15 @@ class UserResolver extends Resolver<User> {
 
   public async updateAlarmSettings(id: string, settings: UpdateDeviceAlarmSettings): Promise<void> {
     return this.notificationServiceFactory().updateAlarmSettings(id, settings);
+  }
+
+  public async setEnabledFeatures(id: string, features: string[]): Promise<void> {
+    const userDetailRecord = UserDetailRecord.fromModel({
+      enabledFeatures: features
+    });
+    const patch = fromPartialRecord(userDetailRecord);
+
+    await this.userDetailTable.update({ user_id: id }, patch);
   }
 }
 

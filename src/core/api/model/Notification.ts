@@ -1,5 +1,6 @@
 import * as t from 'io-ts';
 import { AlertFeedbackFlow, TimestampedModel } from '../../api';
+import { AlertFeedbackCodec } from './AlertFeedback'; // Necessary otherwise codec is undefined when imported form '../../api'
 
 export interface AlarmListResult {
   items: Alarm[]
@@ -43,14 +44,27 @@ export interface TriggersAlarmResponse {
   id: number
 }
 
+const {
+  incidentId,
+  alarmId,
+  systemMode,
+  deviceId,
+  ...userFeedbackProps
+} = AlertFeedbackCodec.props;
+
+
+export const UserFeedbackCodec = t.type({ ...userFeedbackProps });
+export type UserFeedback = t.TypeOf<typeof UserFeedbackCodec>;
+
 export interface AlarmEvent extends TimestampedModel {
   id: string;
   alarm: SimpleAlarm,
-  icdId: string;
+  deviceId: string;
   status: number;
   snoozeTo?: string;
   locationId: string;
   systemMode: string;
+  userFeedback?: UserFeedback[]
 }
 
 export interface SimpleAlarm {

@@ -16,6 +16,7 @@ export interface UserDetailRecordData extends Timestamped {
   unit_system?: UnitSystem; // Measurement unit prefence (e.g. metric vs freedom units)
   phone_mobile?: string;
   locale?: string;
+  enabled_features?: string[];
 }
 
 const ModelToRecordSchema: StrictSchema<Partial<UserDetailRecordData>, Partial<User>> = {
@@ -26,7 +27,8 @@ const ModelToRecordSchema: StrictSchema<Partial<UserDetailRecordData>, Partial<U
   suffixname: 'suffixName',
   unit_system: 'unitSystem',
   phone_mobile: 'phoneMobile',
-  locale: 'locale'
+  locale: 'locale',
+  enabled_features: 'enabledFeatures'
 }
 
 export class UserDetailRecord {

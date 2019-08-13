@@ -1,5 +1,5 @@
 import * as t from 'io-ts';
-import { Account, Expandable, Location, DeviceAlarmSettings, TimestampedModel } from '../../api';
+import { Account, DeviceAlarmSettings, Expandable, Location, TimestampedModel } from '../../api';
 import { NonEmptyString } from '../../api/validator/NonEmptyString';
 
 export interface UserLocationRole {
@@ -37,13 +37,14 @@ export const UserUpdateValidator = t.exact(t.partial(UserMutableCodec.props));
 export type UserUpdate = t.TypeOf<typeof UserUpdateValidator>;
 
 export interface User extends UserUpdate, TimestampedModel {
-  id: string,
-  email: string,
-  password?: string,
-  isActive?: boolean,
-  locations: Array<Expandable<Location>>,
-  alarmSettings: Array<Expandable<DeviceAlarmSettings, 'deviceId'>>,
-  account: Expandable<Account>,
-  locationRoles: UserLocationRole[],
-  accountRole: UserAccountRole
+  id: string;
+  email: string;
+  password?: string;
+  isActive?: boolean;
+  locations: Array<Expandable<Location>>;
+  alarmSettings: Array<Expandable<DeviceAlarmSettings, 'deviceId'>>;
+  account: Expandable<Account>;
+  locationRoles: UserLocationRole[];
+  accountRole: UserAccountRole;
+  enabledFeatures: string[];
 }
