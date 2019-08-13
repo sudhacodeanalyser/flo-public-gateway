@@ -40,7 +40,8 @@ class EventService {
     const alertFeedbackRecord = AlertFeedbackRecord.fromModel({
       userId,
       alarmId: alarmEvent.alarm.id,
-      systemMode: alarmEvent.systemMode, 
+      systemMode: alarmEvent.systemMode,
+      createdAt: new Date().toISOString(),
       ...alertFeedback
     });
 

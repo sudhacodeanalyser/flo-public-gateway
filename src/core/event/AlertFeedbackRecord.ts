@@ -14,7 +14,8 @@ export const AlertFeedbackRecordDataCodec = t.type({
   cause_other: t.union([t.undefined, t.string]),
   plumbing_failure_other: t.union([t.undefined, t.string]),
   action_taken: t.union([t.undefined, t.string]),
-  user_id: t.union([t.undefined, t.string])
+  user_id: t.union([t.undefined, t.string]),
+  created_at: t.string
 });
 
 export type AlertFeedbackRecordData = t.TypeOf<typeof AlertFeedbackRecordDataCodec>;
@@ -42,7 +43,8 @@ const AlertFeedbackRecordToModelSchema: StrictSchema<AlertFeedback, AlertFeedbac
   causeOther: 'cause_other',
   plumbingFailureOther: 'plumbing_failure_other',
   actionTaken: 'action_taken',
-  userId: 'user_id'
+  userId: 'user_id',
+  createdAt: 'created_at'
 };
 
 const AlertFeedbackModelToRecordSchema: StrictSchema<AlertFeedbackRecordData, AlertFeedback> = {
@@ -69,7 +71,8 @@ const AlertFeedbackModelToRecordSchema: StrictSchema<AlertFeedbackRecordData, Al
   cause_other: 'causeOther',
   plumbing_failure_other: 'plumbingFailureOther',
   action_taken: 'actionTaken',
-  user_id: 'userId'
+  user_id: 'userId',
+  created_at: (input: AlertFeedback) => input.createdAt || new Date().toISOString()
 };
 
 export class AlertFeedbackRecord {

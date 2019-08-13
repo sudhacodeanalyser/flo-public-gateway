@@ -12,7 +12,8 @@ export const AlertFeedbackCodec = t.type({
   causeOther: t.union([t.undefined, t.string]),
   plumbingFailureOther: t.union([t.undefined, t.string]),
   actionTaken: t.union([t.undefined, t.string]),
-  userId: t.union([t.undefined, t.string])
+  userId: t.union([t.undefined, t.string]),
+  createdAt: t.union([t.undefined, t.string])
 });
 
 export type AlertFeedback = t.TypeOf<typeof AlertFeedbackCodec>;
