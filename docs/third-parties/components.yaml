@@ -1,0 +1,14 @@
+components:
+  schemas:
+    Notifications:
+      type: object
+      properties:
+        notifications:
+          type: object
+          properties:
+            criticalCount:
+              type: number
+            warningCount:
+              type: number
+            infoCount:
+              type: number

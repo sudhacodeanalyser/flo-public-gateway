@@ -11,6 +11,39 @@ components:
             type: string
         monthlyCost:
           type: number
+    SubscriptionCreate:
+      type: object
+      properties:
+        user:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+        location:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+        isActive:
+          type: boolean
+        plan:
+          type: object
+          properties:
+            id:
+              type: string
+        sourceId:
+          type: string
+        provider:
+          type: object
+          properties:
+            name:
+              type: string
+            token:
+              type: string
+            couponId:
+              type: string
     SubscriptionPlanExpandable:
       oneOf:
         - type: object
@@ -19,6 +52,20 @@ components:
               type: string
               format: uuid
         - $ref: '#/components/schemas/SubscriptionPlan'
+    Subscription:
+      allOf:
+        - type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            plan:
+              $ref: '#/components/schemas/SubscriptionPlanExpandable'
+            location:
+              $ref: '#/components/schemas/LocationExpandable'
+            sourceId:
+              type: string
+        - $ref: '#/components/schemas/Timestamped'
     SubscriptionExpandable:
       type: object
       required:
@@ -30,6 +77,16 @@ components:
           format: uuid
         sourceId:
           type: string
+        isActive:
+          type: boolean
+        status:
+          type: string
+          enum:
+            - active
+            - trial
+            - canceled
+            - delinquent
+            - unknown
         plan:
           $ref: '#/components/schemas/SubscriptionPlanExpandable'
         location:
@@ -43,6 +100,8 @@ components:
               type: string
             isActive:
               type: boolean
+
+
 
 
 
