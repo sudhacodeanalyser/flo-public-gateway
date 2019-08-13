@@ -368,7 +368,7 @@ paths:
           schema:
             $ref: '#/components/schemas/Error'
 
-  /api/v2/devices/{id}/healthTest:
+  /api/v2/devices/{id}/healthTest/{roundId}:
     parameters:
       - in: path
         name: id
@@ -377,8 +377,15 @@ paths:
           type: string
           format: uuid
         description: Device ID
+      - in: path
+        name: roundId
+        required: true
+        schema:
+          type: string
+        description: Test Round ID - use 'latest' for last one run
     get:
-      summary: Retrieves latest Health Test result.
+      summary: Retrieve Health Test Result
+      description: Retrieve test result by round id (UUID), you can use 'latest' to retrieve the latest test
       tags:
         - Devices
       produces:
