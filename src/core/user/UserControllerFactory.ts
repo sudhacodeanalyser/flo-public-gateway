@@ -1,16 +1,16 @@
+import { Option, some } from 'fp-ts/lib/Option';
 import { Container, inject } from 'inversify';
 import { BaseHttpController, httpDelete, httpGet, httpPost, interfaces, queryParam, requestBody, requestParam } from 'inversify-express-utils';
 import * as t from 'io-ts';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
-import { User, UserUpdate, UserUpdateValidator, UpdateDeviceAlarmSettings, UpdateDeviceAlarmSettingsCodec } from '../api';
+import { UpdateDeviceAlarmSettings, UpdateDeviceAlarmSettingsCodec, User, UserUpdate, UserUpdateValidator } from '../api';
 import { asyncMethod, authorizationHeader, createMethod, deleteMethod, httpController, parseExpand, withResponseType } from '../api/controllerUtils';
 import Request from '../api/Request';
+import * as Responses from '../api/response';
 import { UserService } from '../service';
 import { PasswordResetService } from './PasswordResetService';
 import { EmailAvailability, EmailVerification, EmailVerificationCodec, OAuth2Response, UserRegistrationData, UserRegistrationDataCodec, UserRegistrationService } from './UserRegistrationService';
-import { Option, some } from 'fp-ts/lib/Option';
-import * as Responses from '../api/response';
 
 export function UserControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
@@ -165,6 +165,38 @@ export function UserControllerFactory(container: Container, apiVersion: number):
     )
     private async updateAlarmSettings(@requestParam('id') id: string, @requestBody() data: UpdateDeviceAlarmSettings): Promise<void> {
       return this.userService.updateAlarmSettings(id, data);
+    }
+
+    @httpPost(
+      '/:id/enabledFeatures',
+      authWithId,
+      reqValidator.create(t.type({
+        params: t.type({
+          id: t.string
+        }),
+        body: t.type({
+          items: t.array(t.string)
+        })
+      }))
+    )
+    private async addEnabledFeatures(@requestParam('id') id: string, @requestBody() { items }: { items: string[] }): Promise<void> {
+      return this.userService.addEnabledFeatures(id, items);
+    }
+
+    @httpDelete(
+      '/:id/enabledFeatures',
+      authWithId,
+      reqValidator.create(t.type({
+        params: t.type({
+          id: t.string
+        }),
+        body: t.type({
+          items: t.array(t.string)
+        })
+      }))
+    )
+    private async removeEnabledFeatures(@requestParam('id') id: string, @requestBody() { items }: { items: string[] }): Promise<void> {
+      return this.userService.removeEnabledFeatures(id, items);
     }
   }
 
