@@ -283,6 +283,71 @@ paths:
         403:
           description: 'Unauthorized client'
 
+  /api/v2/users/{id}/enabledFeatures:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: User ID
+    post:
+      summary: Add a feature tag to existing array
+      description: This method adds one or more items to an array of feature tags. If a tag already exists, it will not add a second one
+      tags:
+        - Users
+      produces:
+        - application/json
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                items:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        200:
+          description: Success
+        400:
+          description: Invalid request body
+        401:
+          description: 'Invalid client'
+        403:
+          description: 'Unauthorized client'
+
+    delete:
+      summary: Remove a feature tag to existing array
+      description: This method removes one or more items to an array of feature tags.
+      tags:
+        - Users
+      produces:
+        - application/json
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                items:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        200:
+          description: Success
+        400:
+          description: Invalid request body
+        401:
+          description: 'Invalid client'
+        403:
+          description: 'Unauthorized client'
+
 components:
   schemas:
     UserRegistration:
@@ -340,6 +405,10 @@ components:
               format: email
             isActive:
               type: boolean
+            enabledFeatures:
+              type: array
+              items:
+                type: string
             locations:
               type: array
               items:
