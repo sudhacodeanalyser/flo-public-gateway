@@ -15,7 +15,7 @@ import uuid from 'uuid';
 import Config from '../config/config';
 import ExtendableError from '../core/api/error/ExtendableError';
 import Request from '../core/api/Request';
-import { internalSwaggerJsDoc, legacySwaggerJsDoc, swaggerOpts, thirdPartiesSwaggerJsDoc } from '../docs/swagger';
+import { internalSwaggerJsDoc, legacySwaggerJsDoc, swaggerInternalOpts, swaggerLegacyOpts, swaggerPartnerOpts, thirdPartiesSwaggerJsDoc } from '../docs/swagger';
 import LoggerFactory from '../logging/LoggerFactory';
 import { Loaders } from '../memoize/MemoizeMixin';
 
@@ -111,9 +111,9 @@ function ServerConfigurationFactory(container: Container): (app: express.Applica
     const setupSwaggerUi = (swaggerJsDoc: {[key: string]: any}, opts: {[key: string]: any}) =>
       (req: Request, res: express.Response, next: express.NextFunction) => swaggerUi.setup(swaggerJsDoc, opts)(req, res, next);
 
-    app.use('/docs', internalSwaggerBasicAuth, swaggerUi.serve, setupSwaggerUi(internalSwaggerJsDoc, swaggerOpts));
-    app.use('/legacy', internalSwaggerBasicAuth, swaggerUi.serve, setupSwaggerUi(legacySwaggerJsDoc, swaggerOpts));
-    app.use('/swagger', externalSwaggerBasicAuth, swaggerUi.serve, setupSwaggerUi(thirdPartiesSwaggerJsDoc, swaggerOpts));
+    app.use('/docs', internalSwaggerBasicAuth, swaggerUi.serve, setupSwaggerUi(internalSwaggerJsDoc, swaggerInternalOpts));
+    app.use('/legacy', internalSwaggerBasicAuth, swaggerUi.serve, setupSwaggerUi(legacySwaggerJsDoc, swaggerLegacyOpts));
+    app.use('/swagger', externalSwaggerBasicAuth, swaggerUi.serve, setupSwaggerUi(thirdPartiesSwaggerJsDoc, swaggerPartnerOpts));
   };
 }
 

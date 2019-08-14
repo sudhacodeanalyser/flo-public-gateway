@@ -2,6 +2,7 @@ paths:
   /api/v2/ping:
     get:
       summary: Ping Api v2 System
+      description: Use the result of this response to determine if API is online and healthy
       tags:
         - Ping
       security: [] # No Security
