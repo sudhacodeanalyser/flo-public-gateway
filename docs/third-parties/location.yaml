@@ -40,7 +40,6 @@ paths:
       summary: Set system mode
       tags:
         - Locations
-        - System Mode
       produces:
         - application/json
       requestBody:

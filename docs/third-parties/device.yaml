@@ -19,9 +19,7 @@ paths:
           content:
             application/json:
               schema:
-                oneOf:
-                  - $ref: '#/components/schemas/Device'
-                  - $ref: '#/components/schemas/Empty'
+                $ref: '#/components/schemas/Device'
         401:
           $ref: '#/components/responses/UnauthorizedError'
         403:
@@ -50,9 +48,7 @@ paths:
           content:
             application/json:
               schema:
-                oneOf:
-                  - $ref: '#/components/schemas/Device'
-                  - $ref: '#/components/schemas/Empty'
+                $ref: '#/components/schemas/Device'
         401:
           $ref: '#/components/responses/UnauthorizedError'
         403:
@@ -89,7 +85,6 @@ paths:
       summary: Sends directive to change device system mode
       tags:
         - Devices
-        - System Mode
       produces:
         application/json
       requestBody:

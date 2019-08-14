@@ -4,7 +4,7 @@ paths:
       operationId: login
       summary: Generate access and refresh tokens
       description: |
-        Returns a Token contains JWT
+        Returns a token using JWT format. Refresh token can only be used once. Once you renew your access token, save new refresh token provided.
       tags:
         - Authentication
       responses:
@@ -16,13 +16,13 @@ paths:
                 $ref: '#/components/schemas/OauthToken'
               example:
                 access_token: >-
-                  eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJmZmZmZmZmZi1mZmZmLTRmZmYtOGZmZi1mZmZmZmZmZmZmZmYiLCJ1c2VyX2lkIjoiZmZmZmZmZmYtZmZmZi00ZmZmLThmZmYtZmZmZmZmZmZmZmZmIiwiaWF0IjoxNTQ4NzQ0ODg2LCJleHAiOjE1NDg4MzEyODYsImp0aSI6ImZmZmZmZmZmLWZmZmYtNGZmZi04ZmZmLWZmZmZmZmZmZmZmZiJ9.Xh7tDNBCHUZBr_oqolwYUJVkSBm3BGiXli76qjldZD8
+                  jwt.token.data
                 token_type: Bearer
                 refresh_token: >-
-                  eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJmZmZmZmZmZi1mZmZmLTRmZmYtOGZmZi1mZmZmZmZmZmZmZmYiLCJ1c2VyX2lkIjoiZmZmZmZmZmYtZmZmZi00ZmZmLThmZmYtZmZmZmZmZmZmZmZmIiwiaWF0IjoxNTQ4NzQ0ODg2LCJleHAiOjE1NDg4MzEyODYsImp0aSI6ImZmZmZmZmZmLWZmZmYtNGZmZi04ZmZmLWZmZmZmZmZmZmZmZiJ9.Xh7tDNBCHUZBr_oqolwYUJVkSBm3BGiXli76qjldZD8
+                  jwt.token.data
                 expires_in: 86400
-                expires_at: '2019-01-01T16:58:51.639Z'
-                issued_at: '2019-01-01T16:58:51.639Z'
+                expires_at: '2010-01-01T12:34:56.789Z'
+                issued_at: '2010-01-02T12:34:56.789Z'
                 user_id: ffffffff-ffff-4fff-8fff-ffffffffffff
         '500':
           $ref: '#/components/responses/InternalServerError'
