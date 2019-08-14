@@ -8,7 +8,11 @@ metadata:
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
 spec:
+{{ if eq .Values.environment "production" }}
   replicas: {{ .Values.replicaCount }}
+{{ else  }}
+  replicas: 2
+{{ end }}
   selector:
     matchLabels:
       app.kubernetes.io/name: {{ include "flo-public-gateway.name" . }}
@@ -37,7 +41,7 @@ spec:
                   name:  flocloud-public-gateway-secrets
                   key: {{ $key |   quote }}
           {{- end }}
-        
+
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}
