@@ -77,7 +77,7 @@ export function EventControllerFactory(container: Container, apiVersion: number)
     @httpGet('/alarms',
       // TODO: deviceId is optional, how I can ask for admin role if is not present or customer role if has deviceId
       // TODO: Is not possible to do right now with the auth system, we may need to split this in 2 endpoints
-      // authMiddlewareFactory.create(async ({ query: { deviceId, locationId } }) => ({ icd_id: deviceId, location_id: locationId })),
+       authMiddlewareFactory.create(async ({ query: { deviceId, locationId } }) => ({ icd_id: deviceId, location_id: locationId })),
     )
     private async getAlarmEventsByFilter(@request() req: Request): Promise<PaginatedResult<AlarmEvent>> {
       const filters = req.url.split('?')[1] || '';
