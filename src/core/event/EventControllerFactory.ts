@@ -1,14 +1,17 @@
+import * as Either from 'fp-ts/lib/Either';
+import { pipe } from 'fp-ts/lib/pipeable';
 import { Container, inject } from 'inversify';
 import { BaseHttpController, httpDelete, httpGet, httpPost, interfaces, request, requestBody, requestParam } from 'inversify-express-utils';
 import * as t from 'io-ts';
+import _ from 'lodash';
+import queryString from 'query-string';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
+import ReqValidationError from '../../validation/ReqValidationError';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
-import { AlarmEvent, PaginatedResult, NotificationCounts, UserFeedback, UserFeedbackCodec, AlertFeedback } from '../api';
-import { httpController, createMethod } from '../api/controllerUtils';
+import { AlarmEvent, AlertFeedback, NotificationCounts, PaginatedResult, UserFeedback, UserFeedbackCodec } from '../api';
+import { createMethod, httpController } from '../api/controllerUtils';
 import Request from '../api/Request';
 import { NotificationServiceFactory } from '../notification/NotificationService';
-import * as Either from 'fp-ts/lib/Either';
-import { pipe } from 'fp-ts/lib/pipeable';
 import { EventService } from '../service';
 
 export function EventControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
@@ -72,12 +75,17 @@ export function EventControllerFactory(container: Container, apiVersion: number)
     }
 
     @httpGet('/alarms',
-      authMiddlewareFactory.create(async ({ query: { deviceId, locationId } }) => ({ icd_id: deviceId, location_id: locationId }))
       // TODO: deviceId is optional, how I can ask for admin role if is not present or customer role if has deviceId
       // TODO: Is not possible to do right now with the auth system, we may need to split this in 2 endpoints
+      // authMiddlewareFactory.create(async ({ query: { deviceId, locationId } }) => ({ icd_id: deviceId, location_id: locationId })),
     )
     private async getAlarmEventsByFilter(@request() req: Request): Promise<PaginatedResult<AlarmEvent>> {
       const filters = req.url.split('?')[1] || '';
+      const queryStringMap = queryString.parse(filters);
+
+      if (_.isEmpty(queryStringMap.deviceId) && _.isEmpty(queryStringMap.locationId)) {
+        throw new ReqValidationError('Missing deviceId or locationId parameters.');
+      }
 
       return this.eventService.getAlarmEventsByFilter(filters);
     }
@@ -90,15 +98,15 @@ export function EventControllerFactory(container: Container, apiVersion: number)
         .generateEventsSample(data);
     }
 
-    @httpPost('/alarms/:id/feedback', 
+    @httpPost('/alarms/:id/feedback',
       authWithIcd,
       reqValidator.create(t.type({
         params: t.type({
           id: t.string,
         }),
         body: t.intersection([
-          UserFeedbackCodec, 
-          t.type({ deviceId: t.string }), 
+          UserFeedbackCodec,
+          t.type({ deviceId: t.string }),
           t.partial({ alarmId: t.number, systemMode: t.string })
         ])
       }))

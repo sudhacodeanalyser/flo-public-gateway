@@ -1,6 +1,6 @@
 import axios from 'axios';
-import ExternalApiError from './ExternalApiError';
 import config from './config/config';
+import ExternalApiError from './ExternalApiError';
 
 export interface ApiRequest {
   method: string,
@@ -41,3 +41,4 @@ class ApiService {
 }
 
 export { ApiService, ExternalApiError };
+

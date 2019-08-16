@@ -44,10 +44,23 @@ class ApiNotificationService {
   }
 
   public async getAlarmEventsByFilter(filters: string): Promise<PaginatedResult<AlarmEvent>> {
-    return this.notificationApi.sendRequest({
-      method: 'get',
-      url: `/events?${filters}`
-    });
+    try {
+      return await this.notificationApi.sendRequest({
+        method: 'get',
+        url: `/events?${filters}`
+      });
+    } catch (err) {
+      if (err.statusCode === 404) {
+        return {
+          items: [],
+          page: 0,
+          pageSize: 0,
+          total: 0
+        };
+      } else {
+        throw err;
+      }
+    }
   }
 
   public async clearAlarm(alarmId: string | number, data: any): Promise<ClearAlertResponse> {
