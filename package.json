@@ -44,6 +44,7 @@
     "morphism": "^1.11.1",
     "node-rdkafka": "^2.6.1",
     "pg": "^7.11.0",
+    "query-string": "^6.8.2",
     "reflect-metadata": "^0.1.13",
     "squel": "^5.12.2",
     "stripe": "^6.31.2",
