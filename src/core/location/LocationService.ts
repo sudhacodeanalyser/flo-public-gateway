@@ -123,7 +123,7 @@ class LocationService {
 
     if (devices.length && !unlockedDevices.length) {
 
-      throw new ConflictError();
+      throw new ConflictError('All devices are in locked system mode state.');
 
     } else if (target === SystemMode.SLEEP) {
       const now = new Date().toISOString();
