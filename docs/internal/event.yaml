@@ -70,12 +70,6 @@ paths:
           schema:
             type: string
         - in: query
-          name: createdAt
-          schema:
-            type: string
-            example: gt:2019-10-01T22:03:09
-          description: 'Date on which events were created. Multiple filters are allowed. The date should be in UTC. Allowed operators: eq, lt, let, gt, get.'
-        - in: query
           name: status
           schema:
             type: string
