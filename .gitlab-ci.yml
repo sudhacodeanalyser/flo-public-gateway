@@ -26,7 +26,6 @@ Compile:
   stage: build
   except:
     - tags
-    - runscope-test
   tags:
     - build
   artifacts:
@@ -60,8 +59,6 @@ Sanity:
       # Collect logs
       - build.log
       - /root/.npm/_logs
-  except:
-    - runscope-test
   dependencies:
     - Compile
   script:
@@ -157,11 +154,11 @@ RunscopeProd:
   dependencies:
     - Compile
   only:
-    - runscope-test
+    - master
   environment:
     name: prod
     url: https://flo-public-gateway.flosecurecloud.co/ping
   script:
-    - curl "${RUNSCOPE_URL}" 2>/dev/null | jq '' -
+    - curl -i "${RUNSCOPE_URL}" 1>/dev/null
   tags:
     - kubernetes
