@@ -150,7 +150,7 @@ RunscopeProd:
     RUNSCOPE_URL: "https://api.runscope.com/radar/68e4a198-9132-4560-bb08-a2e746c8c3e6/trigger?runscope_environment=755b5795-c9d2-464f-9372-d2aaa106e5cc"
     AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID_PROD}"
     AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY_PROD}"
-  stage: deploy
+  stage: verify
   dependencies:
     - Compile
   only:
