@@ -2,8 +2,25 @@ paths:
   /api/v2/alerts:
     get:
       summary: Retrieve alerts for device(s) and/or location(s)
-      description: |
-        Returns a list of alerts based on the filter. The system requires at least one deviceId or locationId, it can contain multiple.
+      description:
+        <h2>Pending alerts by location and device<h2>
+        <p style="font-weight:normal">You can pass as many deviceId and locationId params in the query strung as you want. The OR clause will be applied between the same params.</p>
+        <p style="font-weight:normal"><strong>Critical:</strong> GET /api/v2/events/alarms?deviceId=00977ce3-6870-441f-8792-0bca4b8c0400&locationId=2181e548-6bf9-49b0-ac6c-26a9c92477b6&severity=critical&status=triggered</p>
+        <p style="font-weight:normal"><strong>Warning:</strong> GET /api/v2/events/alarms?deviceId=00977ce3-6870-441f-8792-0bca4b8c0400&locationId=2181e548-6bf9-49b0-ac6c-26a9c92477b6&severity=critical&status=triggered</p>
+        <p style="font-weight:normal">Then the total of pendings is the sum of the total field of warning and critical request result.</p>
+        <p style="font-weight:normal">Clients should do the grouping and ordering if they need to, like group by alarm id.</p>
+        <h2>Activity log</h2>
+        <p style="font-weight:normal">You can pass as many deviceId and locationId params in the query strung as you want. The OR clause will be applied between the same params.</p>
+        <p style="font-weight:normal">GET /api/v2/events/alarms?deviceId=00977ce3-6870-441f-8792-0bca4b8c0400&locationId=2181e548-6bf9-49b0-ac6c-26a9c92477b6&status=resolved</p>
+        <h3>Alerts type filter</h3>
+        <p style="font-weight:normal">Add &severy=critical or &severy=info or &severy=warning to the query params</p>
+        <h3>Resolution Types</h3>
+        <ul>
+          <li><strong>Cleared:</strong> Add &reason=cleared</li>
+          <li><strong>Ignored:</strong> Add &reason=snoozed</li>
+          <li><strong>Cancelled:</strong> Add &reason=cancelled</li>
+        </ul>
+        <p><strong>Note:<strong> Device name is not known at this level so clients should use the device id to get the name.</p>
       tags:
         - Alerts
       produces:
@@ -13,25 +30,36 @@ paths:
           name: locationId
           schema:
             type: string
-          description: 'Multiple locationId query params are allowed and will use an OR to retrieve the union of all locationIds'
+          description: 'Multiple locationId query params are allowed'
         - in: query
           name: deviceId
           schema:
             type: string
-          description: 'Multiple deviceId query params are allowed and will use an OR to retrieve the union of all deviceIds'
+          description: 'Multiple deviceId query params are allowed'
         - in: query
           name: status
           schema:
             type: string
             enum:
-              - open
-              - canceled
-              - closed
+              - triggered
+              - resolved
           description: |
-            Multiple filters are allowed. |
-            * `open` - Alerts pending user feedback |
-            * `canceled` - System resolved alerts - no user input |
-            * `closed` - User acknowledged alerts
+            Multiple filters are allowed.
+            * `triggered` - Alerts pending user feedback
+            * `resolved` - Resolved, reason will contain detail why
+        - in: query
+          name: reason
+          schema:
+            type: string
+            enum:
+              - cleared
+              - snoozed
+              - cancelled
+          description: |
+            Multiple filters are allowed.
+            * `cleared` - Cleared by user
+            * `snoozed` - User muted alert for some time
+            * `cancelled` - System clered the alert before user
         - in: query
           name: severity
           schema:
@@ -41,9 +69,9 @@ paths:
               - critical
               - warning
           description: |
-            Multiple filters are allowed. |
-            * `info` - Informational message. e.g. Health Test Completed |
-            * `warning` - Should look into. e.g. High Water Temperature |
+            Multiple filters are allowed.
+            * `info` - Informational message. e.g. Health Test Completed
+            * `warning` - Should look into. e.g. High Water Temperature
             * `critical` - Water shutoff events. e.g. Fast Water Flow
         - in: query
           name: page
@@ -102,6 +130,9 @@ paths:
   /api/v2/alerts/action:
     post:
       summary: User response to the alert
+      description:
+        <p> To mute alarm 28 (Small Drip)
+        </p>
       tags:
         - Alerts
       produces:
@@ -168,15 +199,25 @@ components:
         id:
           type: string
           format: uuid
+        displayTitle:
+          type: string
+        displayMessage:
+          type: string
         alarm:
           type: object
           properties:
             id:
               type: number
+            severity:
+              type: string
         deviceId:
           type: string
           format: uuid
         status:
+          type: string
+        reason:
+          type: string
+        systemMode:
           type: string
         snoozeTo:
           type: string
@@ -184,14 +225,25 @@ components:
         locationId:
           type: string
           format: uuid
-        systemMode:
-          type: string
         updateAt:
           type: string
           format: date-time
         createAt:
           type: string
           format: date-time
+        fwValues:
+          type: object
+          properties:
+            gpm:
+              type: ['number','null']
+            galUsed:
+              type: ['number','null']
+            psiDelta:
+              type: ['number','null']
+            leakLossMinGal:
+              type: number
+            leakLossMaxGal:
+              type: number
         userFeedback:
           type: array
           items:
