@@ -1,4 +1,24 @@
 paths:
+  /api/v2/alarms:
+    get:
+      summary: Alarm definition list
+      tags:
+        - Alarms
+      produces:
+        - application/json
+      responses:
+        200:
+          description: Alarms list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Alarm'
+
   /api/v2/alerts:
     get:
       summary: Retrieve alerts for device(s) and/or location(s)
@@ -146,6 +166,53 @@ paths:
 
 components:
   schemas:
+    Alarm:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        severity:
+          type: number
+        isInternal:
+          type: boolean
+        isShutoff:
+          type: boolean
+        triggersAlarm:
+          type: object
+          properties:
+            id:
+              type: integer
+        actions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Action'
+        supportOptions:
+          type: array
+          items:
+            $ref: '#/components/schemas/SupportOption'
+        active:
+          type: boolean
+        userFeedbackFlow:
+          type: array
+          items:
+            $ref: '#/components/schemas/AlertFeedbackFlow'
+    Action:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        text:
+          type: string
+        displayOnStatus:
+          type: integer
+        sort:
+          type: integer
     AlertAction:
       type: object
       properties:
@@ -273,4 +340,75 @@ components:
         createdAt:
           type: string
           format: date-time
-
+    SupportOption:
+      type: object
+      properties:
+        id:
+          type: integer
+        text:
+          type: string
+        alarmId:
+          type: integer
+        actionPath:
+          type: string
+        actionType:
+          type: integer
+        sort:
+          type: integer
+    AlertFeedbackStep:
+      type: object
+      properties:
+        titleText:
+          type: string
+        type:
+          enum:
+            - list
+            - text
+        options:
+          array:
+            items:
+              $ref '#/components/schemas/AlertFeedbackStepOption'
+    AlertFeedbackStepOption:
+      type: object
+      required:
+        - property
+      properties:
+        property:
+          type: string
+        displayText:
+          type: string
+        sortOrder:
+          type: string
+        action:
+          enum:
+            - sleep_2h
+            - sleep_24h
+        value:
+          oneOf:
+            - type: string
+            - type: boolean
+            - type: number
+        flow:
+          oneOf:
+            - $ref: '#/components/schemas/AlertFeedbackStep'
+            - type: object
+              properties:
+                tag:
+                  type: string
+    AlertFeedbackFlow:
+      type: object
+      required:
+        - systemMode
+        - flow
+      properties:
+        systemMode:
+          enum:
+            - home
+            - away
+            - sleep
+        flow:
+          $ref: '#/components/schemas/AlertFeedbackStep'
+        flowTags:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/AlertFeedbackStep'
