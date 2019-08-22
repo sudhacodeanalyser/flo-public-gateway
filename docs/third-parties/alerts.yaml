@@ -50,11 +50,13 @@ paths:
           name: locationId
           schema:
             type: string
+            format: uuid
           description: 'Multiple locationId query params are allowed'
         - in: query
           name: deviceId
           schema:
             type: string
+            format: uuid
           description: 'Multiple deviceId query params are allowed'
         - in: query
           name: status
@@ -115,15 +117,17 @@ paths:
     get:
       parameters:
         - in: query
-          name: deviceId
-          schema:
-            type: string
-            format: uuid
-        - in: query
           name: locationId
           schema:
             type: string
             format: uuid
+          description: 'Multiple locationId query params are allowed'
+        - in: query
+          name: deviceId
+          schema:
+            type: string
+            format: uuid
+          description: 'Multiple deviceId query params are allowed'
       summary: Statistics for open
       tags:
         - Alerts
@@ -150,9 +154,11 @@ paths:
   /api/v2/alerts/action:
     post:
       summary: User response to the alert
-      description:
-        <p> To mute alarm 28 (Small Drip)
-        </p>
+      description: >
+        <h2>Mute 'Small Drip' alert for device XYZ for 2 hours.</h2>
+        <p><pre>POST /api/v2/alerts/action BODY: { "deviceId" : "XYZ", "alarmIds" : [28,29,30,31], "snoozeSeconds" : 7200 } </pre></p>
+        <h2>Clear 'Fast Water Flow' alert for device XYZ. Do not snooze, the next time it occurs it will again generate alert.</h2>
+        <p><pre>POST /api/v2/alerts/action BODY: { "deviceId" : "XYZ", "alarmIds" : [10], "snoozeSeconds" : 0 } </pre></p>
       tags:
         - Alerts
       produces:
