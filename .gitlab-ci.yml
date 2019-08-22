@@ -162,6 +162,7 @@ RunscopeProd:
     name: prod
     url: https://flo-public-gateway.flosecurecloud.co/ping
   script:
-    - curl -i "${RUNSCOPE_URL}" | jq '' -
+    - echo curl -i "${RUNSCOPE_URL}"
+    # - curl -i "${RUNSCOPE_URL}" | jq '' -
   tags:
     - kubernetes
