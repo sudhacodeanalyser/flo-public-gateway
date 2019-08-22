@@ -56,6 +56,10 @@ paths:
 
     get:
       summary: Retrieves all Alarm Events according to the given filters.
+      description: |
+        Returns a Token contains JWT |
+        Canceled, Cleared, Ignored in the UI need to map to a different GET filter for alerts. |
+        Document in Swagger the mapping. Use the "description" property of swagger.
       tags:
         - Alarm Events
       produces:
@@ -65,10 +69,12 @@ paths:
           name: locationId
           schema:
             type: string
+          description: 'Multiple locationId query params are allowed and will use an OR to retrieve the union of all locationIds'
         - in: query
           name: deviceId
           schema:
             type: string
+          description: 'Multiple deviceId query params are allowed and will use an OR to retrieve the union of all deviceIds'
         - in: query
           name: status
           schema:
