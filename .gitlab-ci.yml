@@ -14,7 +14,7 @@ stages:
 before_script:
   - export DOCKER_HOST=tcp://localhost:2375
   - export CI_REGISTRY=registry.gitlab.com
-  - apk add --no-cache make bash # TODO: this should be part of the compose image
+  - apk add --no-cache make bash jq # TODO: this should be part of the compose image
   - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY
   - |
     if [[ -f Dockerrun.aws.json ]]; then
@@ -26,6 +26,7 @@ Compile:
   stage: build
   except:
     - tags
+    - runscope-test
   tags:
     - build
   artifacts:
@@ -59,6 +60,8 @@ Sanity:
       # Collect logs
       - build.log
       - /root/.npm/_logs
+  except:
+    - runscope-test
   dependencies:
     - Compile
   script:
