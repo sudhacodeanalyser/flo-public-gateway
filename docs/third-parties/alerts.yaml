@@ -1,0 +1,224 @@
+paths:
+  /api/v2/alerts:
+    get:
+      summary: Retrieve alerts for device(s) and/or location(s)
+      description: |
+        Returns a list of alerts based on the filter. The system requires at least one deviceId or locationId, it can contain multiple.
+      tags:
+        - Alerts
+      produces:
+        - application/json
+      parameters:
+        - in: query
+          name: locationId
+          schema:
+            type: string
+          description: 'Multiple locationId query params are allowed and will use an OR to retrieve the union of all locationIds'
+        - in: query
+          name: deviceId
+          schema:
+            type: string
+          description: 'Multiple deviceId query params are allowed and will use an OR to retrieve the union of all deviceIds'
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum:
+              - open
+              - canceled
+              - closed
+          description: |
+            Multiple filters are allowed. |
+            * `open` - Alerts pending user feedback |
+            * `canceled` - System resolved alerts - no user input |
+            * `closed` - User acknowledged alerts
+        - in: query
+          name: severity
+          schema:
+            type: string
+            enum:
+              - info
+              - critical
+              - warning
+          description: |
+            Multiple filters are allowed. |
+            * `info` - Informational message. e.g. Health Test Completed |
+            * `warning` - Should look into. e.g. High Water Temperature |
+            * `critical` - Water shutoff events. e.g. Fast Water Flow
+        - in: query
+          name: page
+          schema:
+            type: number
+          description: Page number
+        - in: query
+          name: size
+          schema:
+            type: number
+          description: Page size
+      responses:
+        200:
+          description: A list of matching alerts.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertItemList'
+
+  /api/v2/alerts/statistics:
+    get:
+      parameters:
+        - in: query
+          name: deviceId
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: locationId
+          schema:
+            type: string
+            format: uuid
+      summary: Statistics for open
+      tags:
+        - Alerts
+      produces:
+        - application/json
+      responses:
+        200:
+          description: Alert statistics for the used filters.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pending:
+                    type: object
+                    properties:
+                      infoCount:
+                        type: number
+                      warningCount:
+                        type: number
+                      criticalCount:
+                        type: number
+
+  /api/v2/alerts/action:
+    post:
+      summary: User response to the alert
+      tags:
+        - Alerts
+      produces:
+        - application/json
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AlertAction'
+
+components:
+  schemas:
+    AlertAction:
+      type: object
+      properties:
+        deviceId:
+          type: string
+        alarmIds:
+          type: array
+          items:
+            type: number
+        snoozeSeconds:
+          type: number
+    AlertItemList:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AlertItemEvent'
+        page:
+          type: number
+        total:
+          type: number
+    UserFeedback:
+      type: object
+      required:
+        - shouldAcceptAsNormal
+        - cause
+        - createdAt
+      properties:
+        cause:
+          type: number
+        shouldAcceptAsNormal:
+          type: boolean
+        plumbingFailure:
+          type: number
+        fixture:
+          type: string
+        causeOther:
+          type: string
+        plumbingFailureOther:
+          type: string
+        userId:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+    AlertItemEvent:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        alarm:
+          type: object
+          properties:
+            id:
+              type: number
+        deviceId:
+          type: string
+          format: uuid
+        status:
+          type: string
+        snoozeTo:
+          type: string
+          format: date-time
+        locationId:
+          type: string
+          format: uuid
+        systemMode:
+          type: string
+        updateAt:
+          type: string
+          format: date-time
+        createAt:
+          type: string
+          format: date-time
+        userFeedback:
+          type: array
+          items:
+            $ref: '#/components/schemas/AlertUserFeedback'
+    AlertUserFeedback:
+      type: object
+      required:
+        - shouldAcceptAsNormal
+        - cause
+        - createdAt
+      properties:
+        cause:
+          type: number
+        shouldAcceptAsNormal:
+          type: boolean
+        plumbingFailure:
+          type: number
+        fixture:
+          type: string
+        causeOther:
+          type: string
+        plumbingFailureOther:
+          type: string
+        userId:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+
