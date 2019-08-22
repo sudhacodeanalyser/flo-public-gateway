@@ -6,7 +6,7 @@ sed -i  "s/  tag:.*/  tag: '$CI_PIPELINE_ID'/g" k8s/pipeline.yaml
 sed -i  "s/    application_name:.*/    application_name: $APPLICATION_NAME/g" k8s/pipeline.yaml
 sed -i  "s/    docs_endpoint_password:.*/    docs_endpoint_password: $DOCS_ENDPOINT_PASSWORD/g" k8s/pipeline.yaml
 sed -i  "s/    docs_endpoint_user:.*/    docs_endpoint_user: $DOCS_ENDPOINT_USER/g" k8s/pipeline.yaml
-sed -i  "s/    environment:.*/    environment: dev/g" k8s/pipeline.yaml
+sed -i  "s/    environment:.*/    environment: development/g" k8s/pipeline.yaml
 sed -i  "s/    external_docs_endpoint_password:.*/    external_docs_endpoint_password: $EXTERNAL_DOCS_ENDPOINT_PASSWORD/g" k8s/pipeline.yaml
 sed -i  "s/    external_docs_endpoint_user:.*/    external_docs_endpoint_user: $EXTERNAL_DOCS_ENDPOINT_USER/g" k8s/pipeline.yaml
 sed -i  "s/    internal_device_service_base_url:.*/    internal_device_service_base_url: $INTERNAL_DEVICE_SERVICE_BASE_URL/g" k8s/pipeline.yaml
