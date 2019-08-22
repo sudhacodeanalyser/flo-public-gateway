@@ -56,10 +56,25 @@ paths:
 
     get:
       summary: Retrieves all Alarm Events according to the given filters.
-      description: |
-        Returns a Token contains JWT |
-        Canceled, Cleared, Ignored in the UI need to map to a different GET filter for alerts. |
-        Document in Swagger the mapping. Use the "description" property of swagger.
+      description:
+        <h2>Pending alerts by location and device<h2>
+        <p style="font-weight:normal">You can pass as many deviceId and locationId params in the query strung as you want. The OR clause will be applied between the same params.</p>
+        <p style="font-weight:normal"><strong>Critical:</strong> GET /api/v2/events/alarms?deviceId=00977ce3-6870-441f-8792-0bca4b8c0400&locationId=2181e548-6bf9-49b0-ac6c-26a9c92477b6&severity=critical&status=triggered</p>
+        <p style="font-weight:normal"><strong>Warning:</strong> GET /api/v2/events/alarms?deviceId=00977ce3-6870-441f-8792-0bca4b8c0400&locationId=2181e548-6bf9-49b0-ac6c-26a9c92477b6&severity=critical&status=triggered</p>
+        <p style="font-weight:normal">Then the total of pendings is the sum of the total field of warning and critical request result.</p>
+        <p style="font-weight:normal">Clients should do the grouping and ordering if they need to, like group by alarm id.</p>
+        <h2>Activity log</h2>
+        <p style="font-weight:normal">You can pass as many deviceId and locationId params in the query strung as you want. The OR clause will be applied between the same params.</p>
+        <p style="font-weight:normal">GET /api/v2/events/alarms?deviceId=00977ce3-6870-441f-8792-0bca4b8c0400&locationId=2181e548-6bf9-49b0-ac6c-26a9c92477b6&status=resolved</p>
+        <h3>Alerts type filter</h3>
+        <p style="font-weight:normal">Add &severy=critical or &severy=info or &severy=warning to the query params</p>
+        <h3>Resolution Types</h3>
+        <ul>
+          <li><strong>Cleared:</strong> Add &reason=cleared</li>
+          <li><strong>Ignored:</strong> Add &reason=snoozed</li>
+          <li><strong>Cancelled:</strong> Add &reason=cancelled</li>
+        </ul>
+        <p><strong>Note:<strong> Device name is not known at this level so clients should use the device id to get the name.</p>
       tags:
         - Alarm Events
       produces:
@@ -80,13 +95,19 @@ paths:
           schema:
             type: string
             example: gt:2
-          description: 'Alarm event status. Multiple filters are allowed. Allowed operators: eq, lt, let, gt, get.'
+          description: 'Alarm event status. You can use this param multiple times.'
+        - in: query
+          name: reason
+          schema:
+            type: string
+            example: snoozed
+          description: 'Reason of why the alarm event is in the status reason. You can use this param multiple times.'
         - in: query
           name: severity
           schema:
             type: string
             example: gt:2
-          description: 'Alarm severity. Multiple filters are allowed. Allowed operators: eq, lt, let, gt, get.'
+          description: 'Alarm severity. You can use this param multiple times.'
         - in: query
           name: lang
           schema:
@@ -238,15 +259,25 @@ components:
         id:
           type: string
           format: uuid
+        displayTitle:
+          type: string
+        displayMessage:
+          type: string
         alarm:
           type: object
           properties:
             id:
               type: number
+            severity:
+              type: string
         deviceId:
           type: string
           format: uuid
         status:
+          type: string
+        reason:
+          type: string
+        systemMode:
           type: string
         snoozeTo:
           type: string
@@ -254,14 +285,25 @@ components:
         locationId:
           type: string
           format: uuid
-        systemMode:
-          type: string
         updateAt:
           type: string
           format: date-time
         createAt:
           type: string
           format: date-time
+        fwValues:
+          type: object
+          properties:
+            gpm:
+              type: ['number','null'] 
+            galUsed:
+              type: ['number','null'] 
+            psiDelta:
+              type: ['number','null'] 
+            leakLossMinGal:
+              type: number
+            leakLossMaxGal:
+              type: number        
         userFeedback:
           type: array
           items: 
