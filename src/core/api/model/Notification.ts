@@ -1,6 +1,7 @@
 import * as t from 'io-ts';
 import { AlertFeedbackFlow, TimestampedModel } from '../../api';
 import { AlertFeedbackCodec } from './AlertFeedback'; // Necessary otherwise codec is undefined when imported form '../../api'
+import { convertEnumtoCodec } from '../enumUtils';
 
 export interface AlarmListResult {
   items: Alarm[]
@@ -84,6 +85,14 @@ export interface ClearAlertResponse {
   cleared: number;
 }
 
+export const ClearAlertBodyCodec = t.type({
+  deviceId: t.string,
+  alarmIds: t.array(t.Int),
+  snoozeSeconds: t.Int
+});
+
+export interface ClearAlertBody extends t.TypeOf<typeof ClearAlertBodyCodec> {}
+
 export const AlarmSettingsCodec = t.type({
   alarmId: t.number,
   systemMode: t.string,
@@ -131,3 +140,11 @@ export interface NotificationCounts {
   warningCount: number;
   infoCount: number;
 }
+
+
+export enum AlarmStatus {
+  TRIGGERED = 'triggered',
+  RESOLVED = 'resolved'
+}
+
+export const AlarmStatusCodec = convertEnumtoCodec(AlarmStatus);
