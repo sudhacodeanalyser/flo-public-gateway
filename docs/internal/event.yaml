@@ -76,7 +76,7 @@ paths:
         </ul>
         <p><strong>Note:<strong> Device name is not known at this level so clients should use the device id to get the name.</p>
       tags:
-        - Alerts
+        - Alarm Events
       produces:
         - application/json
       parameters:
