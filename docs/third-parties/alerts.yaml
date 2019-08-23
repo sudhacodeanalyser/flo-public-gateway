@@ -179,10 +179,12 @@ components:
           type: integer
         name:
           type: string
+        displayName:
+          type: string
         description:
           type: string
         severity:
-          type: number
+          type: string
         isInternal:
           type: boolean
         isShutoff:
@@ -216,6 +218,8 @@ components:
         text:
           type: string
         displayOnStatus:
+          type: integer
+        snoozeSeconds:
           type: integer
         sort:
           type: integer
