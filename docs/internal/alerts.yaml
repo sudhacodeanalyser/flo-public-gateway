@@ -92,26 +92,44 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AlertItemList'
-    post:
-      summary: Creates an Alert Event - this is a low level functon, use with care
+
+  /api/v2/alerts/statistics:
+    get:
+      parameters:
+        - in: query
+          name: locationId
+          schema:
+            type: string
+            format: uuid
+          description: 'Multiple locationId query params are allowed'
+        - in: query
+          name: deviceId
+          schema:
+            type: string
+            format: uuid
+          description: 'Multiple deviceId query params are allowed'
+      summary: Statistics for alerts
       tags:
         - Alerts
       produces:
         - application/json
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AlertRawData'
-
       responses:
         200:
-          description: The ID of the created Alarm Event
+          description: Alert statistics for the used filters.
           content:
             application/json:
               schema:
-                type: string
+                type: object
+                properties:
+                  pending:
+                    type: object
+                    properties:
+                      infoCount:
+                        type: number
+                      warningCount:
+                        type: number
+                      criticalCount:
+                        type: number
 
   /api/v2/alerts/{id}:
     get:
@@ -135,16 +153,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AlertItemEvent'
-
-    delete:
-      summary: Deletes an Alert Event by ID.
-      tags:
-        - Alerts
-      produces:
-        - application/json
-      responses:
-        200:
-          description: The Alert Event was successfully deleted.
 
   /api/v2/alerts/{id}/feedback:
     parameters:
@@ -181,44 +189,6 @@ paths:
         404:
           description: Alert event not found
 
-  /api/v2/alerts/statistics:
-    get:
-      parameters:
-        - in: query
-          name: locationId
-          schema:
-            type: string
-            format: uuid
-          description: 'Multiple locationId query params are allowed'
-        - in: query
-          name: deviceId
-          schema:
-            type: string
-            format: uuid
-          description: 'Multiple deviceId query params are allowed'
-      summary: Statistics for open
-      tags:
-        - Alerts
-      produces:
-        - application/json
-      responses:
-        200:
-          description: Alert statistics for the used filters.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  pending:
-                    type: object
-                    properties:
-                      infoCount:
-                        type: number
-                      warningCount:
-                        type: number
-                      criticalCount:
-                        type: number
-
   /api/v2/alerts/action:
     post:
       summary: User response to the alert
@@ -240,38 +210,6 @@ paths:
 
 components:
   schemas:
-    AlertRawData:
-      type: object
-      properties:
-        macAddress:
-          type: string
-        alarmId:
-          type: number
-        telemetry:
-          type: object
-          properties:
-            wf:
-              type: number
-            t:
-              type: number
-            p:
-              type: number
-            sw1:
-              type: number
-            sw2:
-              type: number
-            did:
-              type: string
-            ts:
-              type: number
-            sm:
-              type: number
-            f:
-              type: number
-            v:
-              type: number
-            rssi:
-              type: number
     Action:
       type: object
       properties:
