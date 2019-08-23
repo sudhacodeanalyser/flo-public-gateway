@@ -55,7 +55,7 @@ paths:
                 type: string
 
     get:
-      summary: Retrieves all Alarm Events according to the given filters.
+      summary: Retrieve alerts for device(s) and/or location(s)
       description:
         <h2>Pending alerts by location and device<h2>
         <p style="font-weight:normal">You can pass as many deviceId and locationId params in the query strung as you want. The OR clause will be applied between the same params.</p>
@@ -76,7 +76,7 @@ paths:
         </ul>
         <p><strong>Note:<strong> Device name is not known at this level so clients should use the device id to get the name.</p>
       tags:
-        - Alarm Events
+        - Alerts
       produces:
         - application/json
       parameters:
@@ -84,35 +84,51 @@ paths:
           name: locationId
           schema:
             type: string
-          description: 'Multiple locationId query params are allowed and will use an OR to retrieve the union of all locationIds'
+            format: uuid
+          description: 'Multiple locationId query params are allowed'
         - in: query
           name: deviceId
           schema:
             type: string
-          description: 'Multiple deviceId query params are allowed and will use an OR to retrieve the union of all deviceIds'
+            format: uuid
+          description: 'Multiple deviceId query params are allowed'
         - in: query
           name: status
           schema:
             type: string
-            example: gt:2
-          description: 'Alarm event status. You can use this param multiple times.'
+            enum:
+              - triggered
+              - resolved
+          description: |
+            Multiple filters are allowed.
+            * `triggered` - Alerts pending user feedback
+            * `resolved` - Resolved, reason will contain detail why
         - in: query
           name: reason
           schema:
             type: string
-            example: snoozed
-          description: 'Reason of why the alarm event is in the status reason. You can use this param multiple times.'
+            enum:
+              - cleared
+              - snoozed
+              - cancelled
+          description: |
+            Multiple filters are allowed.
+            * `cleared` - Cleared by user
+            * `snoozed` - User muted alert for some time
+            * `cancelled` - System clered the alert before user
         - in: query
           name: severity
           schema:
             type: string
-            example: gt:2
-          description: 'Alarm severity. You can use this param multiple times.'
-        - in: query
-          name: lang
-          schema:
-            type: string
-          description: Language
+            enum:
+              - info
+              - critical
+              - warning
+          description: |
+            Multiple filters are allowed.
+            * `info` - Informational message. e.g. Health Test Completed
+            * `warning` - Should look into. e.g. High Water Temperature
+            * `critical` - Water shutoff events. e.g. Fast Water Flow
         - in: query
           name: page
           schema:

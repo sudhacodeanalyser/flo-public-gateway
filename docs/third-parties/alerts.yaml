@@ -184,7 +184,7 @@ components:
         description:
           type: string
         severity:
-          type: number
+          type: string
         isInternal:
           type: boolean
         isShutoff:
