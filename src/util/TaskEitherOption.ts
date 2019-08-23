@@ -5,7 +5,7 @@ import * as Option from 'fp-ts/lib/Option';
 import { getOptionM } from 'fp-ts/lib/OptionT';
 import { getEitherM } from 'fp-ts/lib/EitherT';
 import * as Task from 'fp-ts/lib/Task';
-import { pipeable } from 'fp-ts/lib/pipeable';
+import { pipeable, pipe } from 'fp-ts/lib/pipeable';
 import { Alt2, Alt2C } from 'fp-ts/lib/Alt';
 import { Monad2, Monad2C } from 'fp-ts/lib/Monad'
 import { MonadTask2 } from 'fp-ts/lib/MonadTask';
@@ -25,8 +25,8 @@ export const URI = 'TaskEitherOption';
 export type URI = typeof URI;
 export interface TaskEitherOption<E, A> extends TaskEither.TaskEither<E, Option.Option<A>> {}
 
-export const left: <E = never, A = Option.Option<never>>(e: E) => TaskEitherOption<E, A> = TaskEither.left
-export const right = <E = never, A = Option.Option<never>>(a: A): TaskEitherOption<E, A> => TaskEither.right(Option.some(a))
+export const left: <E = never, A = never>(e: E) => TaskEitherOption<E, A> = TaskEither.left
+export const right = <E = never, A = never>(a: A): TaskEitherOption<E, A> => TaskEither.right(Option.some(a))
 export const some = right;
 export const none = TaskEither.right(Option.none);
 
@@ -38,7 +38,7 @@ export const rightIO = <E = never, A = never>(ma: IO<A>): TaskEitherOption<E, A>
   return rightTask(Task.task.fromIO(ma));
 };
 
-export const mapLeft: <E, A, G>(fea: TaskEitherOption<E, A>, f: (e: E) => G) => TaskEitherOption<G, A> = TaskEither.taskEither.mapLeft;
+export const mapLeft: <E, G>(f: (e: E) => G) => <A>(fea: TaskEitherOption<E, A>) => TaskEitherOption<G, A> = TaskEither.mapLeft;
 
 export function fold<E, A, B>(
   onLeft: (e: E) => Task.Task<B>,
@@ -78,7 +78,15 @@ export const {
   flatten,
   map,
   fromEither,
-  fromOption,
   fromPredicate,
-  filterOrElse
+  filterOrElse,
 } = pipeable(taskEitherOption);
+
+
+export function fromOption<E, A>(opt: Option.Option<A>): TaskEitherOption<E, A> {
+  return TaskEither.right(opt);
+}
+
+export function fromTaskOption<E, A>(taskOpt: () => Promise<Option.Option<A>>): TaskEitherOption<E, A> {
+  return TaskEither.rightTask(taskOpt);
+}
