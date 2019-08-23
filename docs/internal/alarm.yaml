@@ -144,14 +144,20 @@ components:
           type: integer
         name:
           type: string
+        displayName:
+          type: string
         description:
           type: string
         severity:
-          type: number
+          type: string
         isInternal:
           type: boolean
         isShutoff:
           type: boolean
+        children:
+          type: array
+          items:
+            type: integer
         triggersAlarm:
           type: object
           properties:

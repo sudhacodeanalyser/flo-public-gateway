@@ -1,59 +1,25 @@
 paths:
-  /api/v2/events/alarms/{id}/feedback:
-    parameters:
-      - in: path
-        name: id
-        required: true
-        schema:
-          type: string
-          format: uuid
-        description: Alarm Event ID
-    post:
-      summary: Submit feedback for an incident
+  /api/v2/alarms:
+    get:
+      summary: Alarm definition list
       tags:
-        - Alarm Events
+        - Alarms
       produces:
         - application/json
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/FeedbackSubmission'
-      responses:
-        201:
-          description: Feedback successfully submitted
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/FeedbackSubmission'
-        400:
-          description: Invalid request request body
-        403:
-          description: Unauthorized or device ID does not match incident
-        404:
-          description: Alarm event not found
-  /api/v2/events/alarms:
-    post:
-      summary: Creates an Alarm Event
-      tags:
-        - Alarm Events
-      produces:
-        - application/json
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AlarmInfo'
       responses:
         200:
-          description: The ID of the created Alarm Event
+          description: Alarms list
           content:
             application/json:
               schema:
-                type: string
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Alarm'
 
+  /api/v2/alerts:
     get:
       summary: Retrieve alerts for device(s) and/or location(s)
       description:
@@ -76,7 +42,7 @@ paths:
         </ul>
         <p><strong>Note:<strong> Device name is not known at this level so clients should use the device id to get the name.</p>
       tags:
-        - Alarm Events
+        - Alerts
       produces:
         - application/json
       parameters:
@@ -141,135 +107,170 @@ paths:
           description: Page size
       responses:
         200:
-          description: A list of matching Alarm Events.
+          description: A list of matching alerts.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AlarmEventList'
+                $ref: '#/components/schemas/AlertItemList'
 
-  /api/v2/events/alarms/{id}:
-    parameters:
-      - in: path
-        name: id
-        required: true
-        schema:
-          type: string
-          format: uuid
-        description: Alarm Event ID
-
-    get:
-      summary: Retrieves an Alarm Event by ID.
-      tags:
-        - Alarm Events
-      produces:
-        - application/json
-      responses:
-        200:
-          description: The Alarm Event with the given ID.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AlarmEvent'
-
-    delete:
-      summary: Deletes an Alarm Event by ID.
-      tags:
-        - Alarm Events
-      produces:
-        - application/json
-      responses:
-        200:
-          description: The Alarm Event was successfully deleted.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Empty'
-
-  /api/v2/events/alarms/statistics:
+  /api/v2/alerts/statistics:
     get:
       parameters:
-        - in: query
-          name: from
-          schema:
-            type: string
-            format: date-time
-        - in: query
-          name: to
-          schema:
-            type: string
-            format: date-time
-        - in: query
-          name: deviceId
-          schema:
-            type: string
-            format: uuid
-        - in: query
-          name: accountId
-          schema:
-            type: string
-            format: uuid
         - in: query
           name: locationId
           schema:
             type: string
             format: uuid
-      summary: Retrieves Alarm Event statistics.
+          description: 'Multiple locationId query params are allowed'
+        - in: query
+          name: deviceId
+          schema:
+            type: string
+            format: uuid
+          description: 'Multiple deviceId query params are allowed'
+      summary: Statistics for open
       tags:
-        - Alarm Events
+        - Alerts
       produces:
         - application/json
       responses:
         200:
-          description: The Alarm Events statistics for the used filters.
+          description: Alert statistics for the used filters.
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  infoCount:
-                    type: number
-                  warningCount:
-                    type: number
-                  criticalCount:
-                    type: number
+                  pending:
+                    type: object
+                    properties:
+                      infoCount:
+                        type: number
+                      warningCount:
+                        type: number
+                      criticalCount:
+                        type: number
 
+  /api/v2/alerts/action:
+    post:
+      summary: User response to the alert
+      description: >
+        <h2>Mute 'Small Drip' alert for device XYZ for 2 hours.</h2>
+        <p><pre>POST /api/v2/alerts/action BODY: { "deviceId" : "XYZ", "alarmIds" : [28,29,30,31], "snoozeSeconds" : 7200 } </pre></p>
+        <h2>Clear 'Fast Water Flow' alert for device XYZ. Do not snooze, the next time it occurs it will again generate alert.</h2>
+        <p><pre>POST /api/v2/alerts/action BODY: { "deviceId" : "XYZ", "alarmIds" : [10], "snoozeSeconds" : 0 } </pre></p>
+      tags:
+        - Alerts
+      produces:
+        - application/json
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AlertAction'
 
 components:
   schemas:
-    AlarmInfo:
+    Alarm:
       type: object
       properties:
-        macAddress:
+        id:
+          type: integer
+        name:
           type: string
-        alarmId:
-          type: number
-        telemetry:
+        displayName:
+          type: string
+        description:
+          type: string
+        severity:
+          type: string
+        isInternal:
+          type: boolean
+        isShutoff:
+          type: boolean
+        triggersAlarm:
           type: object
           properties:
-            wf:
-              type: number
-            t:
-              type: number
-            p:
-              type: number
-            sw1:
-              type: number
-            sw2:
-              type: number
-            did:
-              type: string
-            ts:
-              type: number
-            sm:
-              type: number
-            f:
-              type: number
-            v:
-              type: number
-            rssi:
-              type: number
-
-    AlarmEvent:
+            id:
+              type: integer
+        actions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Action'
+        supportOptions:
+          type: array
+          items:
+            $ref: '#/components/schemas/SupportOption'
+        active:
+          type: boolean
+        userFeedbackFlow:
+          type: array
+          items:
+            $ref: '#/components/schemas/AlertFeedbackFlow'
+    Action:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        text:
+          type: string
+        displayOnStatus:
+          type: integer
+        snoozeSeconds:
+          type: integer
+        sort:
+          type: integer
+    AlertAction:
+      type: object
+      properties:
+        deviceId:
+          type: string
+        alarmIds:
+          type: array
+          items:
+            type: number
+        snoozeSeconds:
+          type: number
+    AlertItemList:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AlertItemEvent'
+        page:
+          type: number
+        total:
+          type: number
+    UserFeedback:
+      type: object
+      required:
+        - shouldAcceptAsNormal
+        - cause
+        - createdAt
+      properties:
+        cause:
+          type: number
+        shouldAcceptAsNormal:
+          type: boolean
+        plumbingFailure:
+          type: number
+        fixture:
+          type: string
+        causeOther:
+          type: string
+        plumbingFailureOther:
+          type: string
+        userId:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+    AlertItemEvent:
       type: object
       properties:
         id:
@@ -311,32 +312,20 @@ components:
           type: object
           properties:
             gpm:
-              type: ['number','null'] 
+              type: ['number','null']
             galUsed:
-              type: ['number','null'] 
+              type: ['number','null']
             psiDelta:
-              type: ['number','null'] 
+              type: ['number','null']
             leakLossMinGal:
               type: number
             leakLossMaxGal:
-              type: number        
+              type: number
         userFeedback:
           type: array
-          items: 
-            $ref: '#/components/schemas/UserFeedback'
-
-    AlarmEventList:
-      type: object
-      properties:
-        items:
-          type: array
           items:
-            $ref: '#/components/schemas/AlarmEvent'
-        page:
-          type: number
-        total:
-          type: number
-    UserFeedback:
+            $ref: '#/components/schemas/AlertUserFeedback'
+    AlertUserFeedback:
       type: object
       required:
         - shouldAcceptAsNormal
@@ -361,23 +350,75 @@ components:
         createdAt:
           type: string
           format: date-time
-    FeedbackSubmission:
+    SupportOption:
+      type: object
+      properties:
+        id:
+          type: integer
+        text:
+          type: string
+        alarmId:
+          type: integer
+        actionPath:
+          type: string
+        actionType:
+          type: integer
+        sort:
+          type: integer
+    AlertFeedbackStep:
+      type: object
+      properties:
+        titleText:
+          type: string
+        type:
+          enum:
+            - list
+            - text
+        options:
+          array:
+            items:
+              $ref '#/components/schemas/AlertFeedbackStepOption'
+    AlertFeedbackStepOption:
       type: object
       required:
-        - deviceId
-        - shouldAcceptAsNormal
-        - cause
+        - property
       properties:
-        deviceId: 
+        property:
           type: string
-          format: uuid
-        shouldAcceptAsNormal:
-          type: boolean
-        plumbingFailure:
-          type: number
-        fixture:
+        displayText:
           type: string
-        causeOther:
+        sortOrder:
           type: string
-        plumbingFailureOther:
-          type: string
+        action:
+          enum:
+            - sleep_2h
+            - sleep_24h
+        value:
+          oneOf:
+            - type: string
+            - type: boolean
+            - type: number
+        flow:
+          oneOf:
+            - $ref: '#/components/schemas/AlertFeedbackStep'
+            - type: object
+              properties:
+                tag:
+                  type: string
+    AlertFeedbackFlow:
+      type: object
+      required:
+        - systemMode
+        - flow
+      properties:
+        systemMode:
+          enum:
+            - home
+            - away
+            - sleep
+        flow:
+          $ref: '#/components/schemas/AlertFeedbackStep'
+        flowTags:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/AlertFeedbackStep'
