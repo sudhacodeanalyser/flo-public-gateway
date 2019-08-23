@@ -1,0 +1,202 @@
+paths:
+  /api/v2/flodetect/computations:
+    parameters:
+      - in: query
+        name: macAddress
+        schema:
+          type: string
+        description: MAC address of device to retrieve fixture detection computations for.
+      - in: query
+        name: duration
+        schema:
+          type: string
+          enum:
+            - 24h
+            - 7d
+        description: Duration of the date range the computation covers
+    get:
+      summary: Retrieve the most recent FloDetect fixture detect computation for a given device
+      tags:
+        - Fixture Detection
+      produces:
+        - application/json
+      responses:
+        200:
+          description: Computation exists or the device in learning mode. If isStale flag is set to true, then this computation may be out-of-date. Clients should handle this appropriately.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  macAddress:
+                    type: string
+                  startDate:
+                    type: string
+                    format: date-time
+                  endDate:
+                    type: string
+                    format: date-time
+                  isStale:
+                    type: boolean
+                  fixtures:
+                    type: array
+                    items:
+                      type: object
+                      properties: 
+                        name: 
+                          type: string
+                        index:
+                          type: number
+                        type:
+                          type: number
+                        gallons:
+                          type: number
+                        ratio:
+                          type: number
+                        numEvents:
+                          type: number
+                  computeStartDate:
+                    type: string
+                    format: date-time
+                  computeEndDate:
+                    type: string
+                    format: date-time
+        400:
+          description: Invalid query parameters
+        404:
+          description: Device not found or device is not in learning mode and no computations can be found
+  /api/v2/flodetect/computations/{id}/events:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Computation ID
+      - in: query
+        name: start
+        required: false
+        schema:
+          type: string
+          format: date-time
+        description: URI encoded date that represents the offset for pagination. This should be the start property of the last event in the previous page.
+      - in: query
+        name: size
+        required: false
+        schema:
+          type: number
+        description: Page size, default 50
+      - in: query
+        name: order
+        required: false
+        schema: 
+          type: string
+          enum:
+            - asc
+            - desc
+        description: Ascending or descending sort order of events based on start date. Ascending by default.
+    get:
+      summary: Retrieve page of events associated with Flo Detect computation
+      tags:
+        - Fixture Detection
+      produces:
+        - application/json
+      responses:
+        200:
+          description: Computation of that ID exists 
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/FloDetectEvent'
+        400:
+          description: Invalid parameters
+        404:
+          description: Computation could not be found
+  /api/v2/flodetect/computations/{id}/events/{start}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Computation ID
+      - in: path
+        name: start
+        required: true
+        schema:
+          type: string
+          format: date-time
+        description: URI encoded start property of the event that feedback is being submitted for
+    post:
+      summary: Submit feedback for a given event
+      tags:
+        - Fixture Detection
+      produces: 
+        - application/json
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                feedback:
+                  $ref: '#/components/schemas/FloDetectEventFeedback'
+      responses:
+        200:
+          description: Feedback successfully submitted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FloDetectEvent'
+        400:
+          description: Invalid parameters
+        404:
+          description: Computation could not be found
+        409:
+          description: Event does not exists, therefore feedback cannot be submitted
+components:
+  schemas:
+    FloDetectEventFeedback:
+      type: object
+      properties:
+        case:
+          type: number
+        correctFixture:
+          type: string
+    FloDetectEvent:
+      type: object
+      properties:
+        computationId:
+          type: string
+          format: uuid
+        macAddress:
+          type: string
+        duration:
+          type: number
+        fixture:
+          type: string
+        feedback:
+          $ref: '#/components/schemas/FloDetectEventFeedback'
+        type:
+          type: number
+        start: 
+          type: string
+          format: date-time
+        end:
+          type: string
+          format: date-time
+        flow: 
+          type: number
+        gpm:
+          type: number

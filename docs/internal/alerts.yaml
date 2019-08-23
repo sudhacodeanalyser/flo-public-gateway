@@ -1,24 +1,4 @@
 paths:
-  /api/v2/alarms:
-    get:
-      summary: Alarm definition list
-      tags:
-        - Alarms
-      produces:
-        - application/json
-      responses:
-        200:
-          description: Alarms list
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  items:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Alarm'
-
   /api/v2/alerts:
     get:
       summary: Retrieve alerts for device(s) and/or location(s)
@@ -36,9 +16,9 @@ paths:
         <p style="font-weight:normal">Add &severy=critical or &severy=info or &severy=warning to the query params</p>
         <h3>Resolution Types</h3>
         <ul>
-          <li><strong>Cleared:</strong> Add &reason=cleared</li>
-          <li><strong>Ignored:</strong> Add &reason=snoozed</li>
-          <li><strong>Cancelled:</strong> Add &reason=cancelled</li>
+        <li><strong>Cleared:</strong> Add &reason=cleared</li>
+        <li><strong>Ignored:</strong> Add &reason=snoozed</li>
+        <li><strong>Cancelled:</strong> Add &reason=cancelled</li>
         </ul>
         <p><strong>Note:<strong> Device name is not known at this level so clients should use the device id to get the name.</p>
       tags:
@@ -128,7 +108,7 @@ paths:
             type: string
             format: uuid
           description: 'Multiple deviceId query params are allowed'
-      summary: Statistics for open
+      summary: Statistics for alerts
       tags:
         - Alerts
       produces:
@@ -151,6 +131,64 @@ paths:
                       criticalCount:
                         type: number
 
+  /api/v2/alerts/{id}:
+    get:
+      summary: Retrieves an Alert by ID.
+      tags:
+        - Alerts
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Alert Event ID
+      produces:
+        - application/json
+      responses:
+        200:
+          description: The Alert with the given ID.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertItemEvent'
+
+  /api/v2/alerts/{id}/feedback:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Alert ID
+    post:
+      summary: Submit feedback for an alert
+      tags:
+        - Alerts
+      produces:
+        - application/json
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FeedbackSubmission'
+      responses:
+        201:
+          description: Feedback successfully submitted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FeedbackSubmission'
+        400:
+          description: Invalid request request body
+        403:
+          description: Unauthorized or device ID does not match Alert
+        404:
+          description: Alert event not found
+
   /api/v2/alerts/action:
     post:
       summary: User response to the alert
@@ -172,79 +210,6 @@ paths:
 
 components:
   schemas:
-    Alarm:
-      type: object
-      properties:
-        id:
-          type: integer
-        name:
-          type: string
-        displayName:
-          type: string
-        description:
-          type: string
-        severity:
-          type: string
-          enum:
-            - critical
-            - warning
-            - info
-        isInternal:
-          type: boolean
-        isShutoff:
-          type: boolean
-        active:
-          type: boolean
-        parent:
-          type: object
-          properties:
-            id:
-              type: integer
-        children:
-          type: array
-          items:
-            type: integer
-        triggersAlarm:
-          type: object
-          properties:
-            id:
-              type: integer
-        actions:
-          type: array
-          items:
-            $ref: '#/components/schemas/Action'
-        supportOptions:
-          type: array
-          items:
-            $ref: '#/components/schemas/SupportOption'
-        userFeedbackFlow:
-          type: array
-          items:
-            $ref: '#/components/schemas/AlertFeedbackFlow'
-        deliveryMedium:
-          type: object
-          properties:
-            sms:
-              type: object
-              properties:
-                supported:
-                  type: boolean
-            email:
-              type: object
-              properties:
-                supported:
-                  type: boolean
-            push:
-              type: object
-              properties:
-                supported:
-                  type: boolean
-            call:
-              type: object
-              properties:
-                supported:
-                  type: boolean
-
     Action:
       type: object
       properties:

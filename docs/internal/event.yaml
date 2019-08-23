@@ -9,6 +9,7 @@ paths:
           format: uuid
         description: Alarm Event ID
     post:
+      deprecated: true
       summary: Submit feedback for an incident
       tags:
         - Alarm Events
@@ -35,6 +36,7 @@ paths:
           description: Alarm event not found
   /api/v2/events/alarms:
     post:
+      deprecated: true
       summary: Creates an Alarm Event
       tags:
         - Alarm Events
@@ -55,6 +57,7 @@ paths:
                 type: string
 
     get:
+      deprecated: true
       summary: Retrieve alerts for device(s) and/or location(s)
       description:
         <h2>Pending alerts by location and device<h2>
@@ -158,6 +161,7 @@ paths:
         description: Alarm Event ID
 
     get:
+      deprecated: true
       summary: Retrieves an Alarm Event by ID.
       tags:
         - Alarm Events
@@ -172,6 +176,7 @@ paths:
                 $ref: '#/components/schemas/AlarmEvent'
 
     delete:
+      deprecated: true
       summary: Deletes an Alarm Event by ID.
       tags:
         - Alarm Events
@@ -187,6 +192,7 @@ paths:
 
   /api/v2/events/alarms/statistics:
     get:
+      deprecated: true
       parameters:
         - in: query
           name: from
