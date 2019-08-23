@@ -9,11 +9,12 @@ stages:
   - build
   - test
   - deploy
+  - verify
 
 before_script:
   - export DOCKER_HOST=tcp://localhost:2375
   - export CI_REGISTRY=registry.gitlab.com
-  - apk add --no-cache make bash # TODO: this should be part of the compose image
+  - apk add --no-cache make bash jq # TODO: this should be part of the compose image
   - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY
   - |
     if [[ -f Dockerrun.aws.json ]]; then
@@ -141,5 +142,23 @@ Prod:
   script:
     - make pull
     - make deploy ENV=prod
+  tags:
+    - kubernetes
+
+RunscopeProd:
+  variables:
+    RUNSCOPE_URL: "https://api.runscope.com/radar/68e4a198-9132-4560-bb08-a2e746c8c3e6/trigger?runscope_environment=755b5795-c9d2-464f-9372-d2aaa106e5cc"
+    AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID_PROD}"
+    AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY_PROD}"
+  stage: verify
+  dependencies:
+    - Compile
+  only:
+    - master
+  environment:
+    name: prod
+    url: https://flo-public-gateway.flosecurecloud.co/ping
+  script:
+    - curl -i "${RUNSCOPE_URL}" 1>/dev/null
   tags:
     - kubernetes

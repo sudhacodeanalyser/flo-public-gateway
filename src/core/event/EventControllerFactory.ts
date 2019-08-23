@@ -4,7 +4,6 @@ import { Container, inject } from 'inversify';
 import { BaseHttpController, httpDelete, httpGet, httpPost, interfaces, request, requestBody, requestParam } from 'inversify-express-utils';
 import * as t from 'io-ts';
 import _ from 'lodash';
-import queryString from 'query-string';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import ReqValidationError from '../../validation/ReqValidationError';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
@@ -75,15 +74,13 @@ export function EventControllerFactory(container: Container, apiVersion: number)
     }
 
     @httpGet('/alarms',
-      // TODO: deviceId is optional, how I can ask for admin role if is not present or customer role if has deviceId
-      // TODO: Is not possible to do right now with the auth system, we may need to split this in 2 endpoints
-       authMiddlewareFactory.create(async ({ query: { deviceId, locationId } }) => ({ icd_id: deviceId, location_id: locationId })),
+      // TODO: improve auth
+      auth,
     )
     private async getAlarmEventsByFilter(@request() req: Request): Promise<PaginatedResult<AlarmEvent>> {
       const filters = req.url.split('?')[1] || '';
-      const queryStringMap = queryString.parse(filters);
-
-      if (_.isEmpty(queryStringMap.deviceId) && _.isEmpty(queryStringMap.locationId)) {
+    
+      if (_.isEmpty(req.query.deviceId) && _.isEmpty(req.query.locationId)) {
         throw new ReqValidationError('Missing deviceId or locationId parameters.');
       }
 

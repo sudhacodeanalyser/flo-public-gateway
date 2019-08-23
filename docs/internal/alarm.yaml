@@ -64,6 +64,7 @@ paths:
           format: uuid
         description: Alarm ID
     put:
+      deprecated: true
       summary: Clear device alarms by id
       tags:
         - Alarms
@@ -102,6 +103,7 @@ paths:
           format: uuid
         description: Alarm ID
     put:
+      deprecated: true
       summary: Clear device alarms by id
       tags:
         - Alarms
@@ -144,14 +146,31 @@ components:
           type: integer
         name:
           type: string
+        displayName:
+          type: string
         description:
           type: string
         severity:
-          type: number
+          type: string
+          enum:
+            - critical
+            - warning
+            - info
         isInternal:
           type: boolean
         isShutoff:
           type: boolean
+        active:
+          type: boolean
+        parent:
+          type: object
+          properties:
+            id:
+              type: integer
+        children:
+          type: array
+          items:
+            type: integer
         triggersAlarm:
           type: object
           properties:
@@ -165,12 +184,34 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/SupportOption'
-        active:
-          type: boolean
         userFeedbackFlow:
           type: array
           items:
             $ref: '#/components/schemas/AlertFeedbackFlow'
+        deliveryMedium:
+          type: object
+          properties:
+            sms:
+              type: object
+              properties:
+                supported:
+                  type: boolean
+            email:
+              type: object
+              properties:
+                supported:
+                  type: boolean
+            push:
+              type: object
+              properties:
+                supported:
+                  type: boolean
+            call:
+              type: object
+              properties:
+                supported:
+                  type: boolean
+
     Action:
       type: object
       properties:
