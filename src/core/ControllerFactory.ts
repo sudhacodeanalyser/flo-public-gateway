@@ -14,6 +14,7 @@ import { UserControllerFactory } from './user/UserControllerFactory';
 import { WaterControllerFactory } from './water/WaterControllerFactory';
 import { SessionControllerFactory } from './session/SessionControllerFactory';
 import { EventControllerFactory } from './event/EventControllerFactory';
+import { FloDetectControllerFactory } from './flo-detect/FloDetectControllerFactory';
 
 export default function ControllerFactory(container: Container, apiVersion: number = 2): interfaces.Controller[] {
   return [
@@ -29,7 +30,8 @@ export default function ControllerFactory(container: Container, apiVersion: numb
     WaterControllerFactory,
     SessionControllerFactory,
     AlarmControllerFactory,
-    EventControllerFactory
+    EventControllerFactory,
+    FloDetectControllerFactory
   ]
   .map(controllerFactory => controllerFactory(container, apiVersion));
 }
