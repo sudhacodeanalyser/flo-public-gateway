@@ -18,10 +18,6 @@ import express from 'express';
 export function FloDetectControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
   const authMiddlewareFactory = container.get<AuthMiddlewareFactory>('AuthMiddlewareFactory');
-  const auth = authMiddlewareFactory.create();
-  const authWithIcd = authMiddlewareFactory.create(async ({ body: { deviceId } }) => ({icd_id: deviceId}));
-  const authWithLocation = authMiddlewareFactory.create(async ({ body: { locationId } }) => ({ location_id: locationId }));
-
 
   const DateFromURIEncodedISOString = new t.Type<Date, string, unknown>(
     'DateFromISOString',
@@ -60,7 +56,7 @@ export function FloDetectControllerFactory(container: Container, apiVersion: num
     }
 
     @httpGet('/computations',
-      // auth,
+      authMiddlewareFactory.create(async ({ query: { macAddress }}) => ({ device_id: macAddress })),
       reqValidator.create(t.type({
         query: t.type({
           macAddress: t.string,
@@ -120,6 +116,7 @@ export function FloDetectControllerFactory(container: Container, apiVersion: num
     }
     
     @httpPost('/computations/:id/events/:startDate',
+      // Auth deferred to controller method
       reqValidator.create(t.type({
         params: t.type({
           id: t.string,
