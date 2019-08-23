@@ -144,6 +144,8 @@ components:
           type: integer
         name:
           type: string
+        displayName:
+          type: string
         description:
           type: string
         severity:
