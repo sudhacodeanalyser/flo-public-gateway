@@ -7,7 +7,7 @@ import _ from 'lodash';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import ReqValidationError from '../../validation/ReqValidationError';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
-import { AlarmEvent, AlertFeedback, NotificationCounts, PaginatedResult, UserFeedback, UserFeedbackCodec } from '../api';
+import { AlarmEvent, AlertFeedback, NotificationStatistics, PaginatedResult, UserFeedback, UserFeedbackCodec } from '../api';
 import { createMethod, httpController } from '../api/controllerUtils';
 import Request from '../api/Request';
 import { NotificationServiceFactory } from '../notification/NotificationService';
@@ -29,7 +29,7 @@ export function EventControllerFactory(container: Container, apiVersion: number)
     }
 
     @httpGet('/alarms/statistics', auth)
-    private async retrieveStatistics(@request() req: Request): Promise<NotificationCounts> {
+    private async retrieveStatistics(@request() req: Request): Promise<NotificationStatistics> {
       const filters = req.url.split('?')[1] || '';
 
       return this
