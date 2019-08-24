@@ -2,7 +2,7 @@ import { fold, fromNullable, map, Option } from 'fp-ts/lib/Option';
 import { pipe } from 'fp-ts/lib/pipeable';
 import _ from 'lodash';
 import { ApiService } from '../ApiService';
-import { Alarm, AlarmEvent, AlarmListResult, AlarmSettings, ClearAlertResponse, DeviceAlarmSettings, NotificationCounts, PaginatedResult, UpdateDeviceAlarmSettings } from '../core/api';
+import { Alarm, AlarmEvent, AlarmListResult, AlarmSettings, ClearAlertResponse, DeviceAlarmSettings, NotificationStatistics, PaginatedResult, UpdateDeviceAlarmSettings } from '../core/api';
 
 class ApiNotificationService {
   constructor(private notificationApi: ApiService) {}
@@ -125,7 +125,7 @@ class ApiNotificationService {
     });
   }
 
-  public async retrieveStatistics(filters: string): Promise<NotificationCounts> {
+  public async retrieveStatistics(filters: string): Promise<NotificationStatistics> {
     return this.notificationApi.sendRequest({
       method: 'get',
       url: `/statistics?${filters}`
