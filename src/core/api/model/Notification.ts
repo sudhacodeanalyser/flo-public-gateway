@@ -141,10 +141,29 @@ export interface NotificationCounts {
   infoCount: number;
 }
 
+export interface NotificationStatistics {
+  pending: NotificationCounts
+}
 
-export enum AlarmStatus {
+export enum AlertStatus {
   TRIGGERED = 'triggered',
   RESOLVED = 'resolved'
 }
 
-export const AlarmStatusCodec = convertEnumtoCodec(AlarmStatus);
+export const AlertStatusCodec = convertEnumtoCodec(AlertStatus);
+
+export enum AlarmSeverity {
+  INFO = 'info',
+  WARNING = 'warning',
+  CRITICAL = 'critical'
+}
+
+export const AlarmSeverityCodec = convertEnumtoCodec(AlarmSeverity);
+
+export enum IncidentStatusReason {
+  CLEARED = 'cleared',
+  SNOOZED = 'snoozed',
+  CANCELLED = 'cancelled'
+}
+
+export const IncidentStatusReasonCodec = convertEnumtoCodec(IncidentStatusReason);
