@@ -7,20 +7,21 @@ import _ from 'lodash';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import ReqValidationError from '../../validation/ReqValidationError';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
-import { AlarmEvent, AlertFeedback, NotificationStatistics, PaginatedResult, UserFeedback, UserFeedbackCodec } from '../api';
+import { NotificationStatistics, IncidentStatusReasonCodec, AlarmSeverityCodec, ClearAlertResponse, ClearAlertBodyCodec, ClearAlertBody, AlertStatusCodec, AlertStatus, AlarmEvent, AlertFeedback, NotificationCounts, PaginatedResult, UserFeedback, UserFeedbackCodec } from '../api';
 import { createMethod, httpController } from '../api/controllerUtils';
 import Request from '../api/Request';
 import { NotificationServiceFactory } from '../notification/NotificationService';
 import { EventService } from '../service';
+import { $enum } from 'ts-enum-util';
 
-export function EventControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
+export function AlertControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
   const authMiddlewareFactory = container.get<AuthMiddlewareFactory>('AuthMiddlewareFactory');
   const auth = authMiddlewareFactory.create();
   const authWithIcd = authMiddlewareFactory.create(async ({ body: { deviceId } }) => ({icd_id: deviceId}));
 
-  @httpController({ version: apiVersion }, '/events')
-  class EventController extends BaseHttpController {
+  @httpController({ version: apiVersion }, '/alerts')
+  class AlertController extends BaseHttpController {
     constructor(
       @inject('NotificationServiceFactory') private notificationServiceFactory: NotificationServiceFactory,
       @inject('EventService') private eventService: EventService
@@ -28,7 +29,7 @@ export function EventControllerFactory(container: Container, apiVersion: number)
       super();
     }
 
-    @httpGet('/alarms/statistics', auth)
+    @httpGet('/statistics', auth)
     private async retrieveStatistics(@request() req: Request): Promise<NotificationStatistics> {
       const filters = req.url.split('?')[1] || '';
 
@@ -38,15 +39,7 @@ export function EventControllerFactory(container: Container, apiVersion: number)
         .retrieveStatistics(filters);
     }
 
-    @httpPost('/alarms', auth)
-    private async sendAlarm(@request() req: Request, @requestBody() alarmInfo: any): Promise<string> {
-      return this
-        .notificationServiceFactory
-        .create(req)
-        .sendAlarm(alarmInfo);
-    }
-
-    @httpGet('/alarms/:id',
+    @httpGet('/:id',
       auth,
       reqValidator.create(t.type({
         params: t.type({
@@ -58,44 +51,71 @@ export function EventControllerFactory(container: Container, apiVersion: number)
       return this.eventService.getAlarmEvent(id);
     }
 
-    @httpDelete('/alarms/:id',
-      auth,
-      reqValidator.create(t.type({
-        params: t.type({
-          id: t.string
-        })
-      }))
-    )
-    private async deleteAlarmEvent(@request() req: Request, @requestParam('id') id: string): Promise<void> {
-      return this
-        .notificationServiceFactory
-        .create(req)
-        .deleteAlarmEvent(id);
-    }
-
-    @httpGet('/alarms',
+    @httpGet('/',
       // TODO: improve auth
       auth,
+      reqValidator.create(t.type({
+        query: t.intersection([
+          t.union([
+            // Just locationId
+            t.type({
+              locationId: t.union([t.string, t.array(t.string)])
+            }),
+            // Just deviceId
+            t.type({
+              deviceId: t.union([t.string, t.array(t.string)])
+            }),
+            // Both together
+            t.type({
+              locationId: t.union([t.string, t.array(t.string)]),
+              deviceId: t.union([t.string, t.array(t.string)])
+            })
+          ]),
+          t.partial({
+            status: t.union([t.string, t.array(AlertStatusCodec)]),
+            severity: t.union([t.string, t.array(AlarmSeverityCodec)]),
+            reason: t.union([t.string, t.array(IncidentStatusReasonCodec)]),
+            page: t.Int,
+            size: t.Int
+          })
+        ])
+      }))
     )
     private async getAlarmEventsByFilter(@request() req: Request): Promise<PaginatedResult<AlarmEvent>> {
       const filters = req.url.split('?')[1] || '';
-    
-      if (_.isEmpty(req.query.deviceId) && _.isEmpty(req.query.locationId)) {
-        throw new ReqValidationError('Missing deviceId or locationId parameters.');
-      }
 
-      return this.eventService.getAlarmEventsByFilter(filters);
+      const combinedFilters = [
+        filters,
+        ...(
+          _.isEmpty(req.query.status) ? 
+            $enum(AlertStatus).getValues().map(status => `status=${status}`) :
+            []
+        )
+      ].join('&');
+
+      return this.eventService.getAlarmEventsByFilter(combinedFilters);
     }
 
-    @httpPost('/alarms/sample', authWithIcd)
-    private async generateRandomEvents(@request() req: Request, @requestBody() data: any): Promise<void> {
-      return this
-        .notificationServiceFactory
-        .create(req)
-        .generateEventsSample(data);
+    @httpPost('/action',
+      authWithIcd,
+      reqValidator.create(t.type({
+        body: ClearAlertBodyCodec
+      }))
+    )
+    private async clearAlarm(@request() req: Request, @requestBody() data: ClearAlertBody): Promise<ClearAlertResponse> {
+      const service = this.notificationServiceFactory.create(req);
+
+      const clearResponses = await Promise.all(data.alarmIds.map(alarmId => service.clearAlarm(alarmId, {
+        deviceId: data.deviceId,
+        snoozeSeconds: data.snoozeSeconds
+      })));   
+
+      return clearResponses.reduce((acc, clearResponse) => ({
+        cleared: acc.cleared + clearResponse.cleared
+      }));
     }
 
-    @httpPost('/alarms/:id/feedback',
+    @httpPost('/:id/feedback',
       authWithIcd,
       reqValidator.create(t.type({
         params: t.type({
@@ -126,5 +146,5 @@ export function EventControllerFactory(container: Container, apiVersion: number)
     }
   }
 
-  return EventController;
+  return AlertController;
 }

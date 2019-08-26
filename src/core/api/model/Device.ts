@@ -1,7 +1,7 @@
 import * as t from 'io-ts';
 import _ from 'lodash';
 import {InternalConnectivity, InternalDevice, InternalTelemetry, InternalDeviceCodec} from '../../../internal-device-service/models';
-import { Expandable, Location, NotificationCounts, Omit, SystemModeCodec as DeviceSystemModeCodec, TimestampedModel } from '../../api';
+import { Expandable, Location, NotificationStatistics, Omit, SystemModeCodec as DeviceSystemModeCodec, TimestampedModel } from '../../api';
 import { NonEmptyString } from '../../api/validator/NonEmptyString';
 import { convertEnumtoCodec } from '../../api/enumUtils';
 import { ComputedIrrigationSchedule } from '../../device/IrrigationScheduleService';
@@ -137,7 +137,7 @@ export interface Device extends Omit<DeviceUpdate, 'valve'>, TimestampedModel {
     computed?: Omit<ComputedIrrigationSchedule, 'macAddress'>,
     updatedAt?: string
   };
-  notifications?: NotificationCounts;
+  notifications?: NotificationStatistics;
   hardwareThresholds?: HardwareThresholds;
   pairingData?: PairingData;
   serialNumber?: string;

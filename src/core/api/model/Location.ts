@@ -1,5 +1,5 @@
 import * as t from 'io-ts';
-import { NotificationCounts, Omit, TimestampedModel } from '../../api';
+import { NotificationStatistics, Omit, TimestampedModel } from '../../api';
 import { NonEmptyString } from '../../api/validator/NonEmptyString';
 import { convertEnumtoCodec } from '../enumUtils';
 import { NoYesUnsure } from '../NoYesUnsure';
@@ -216,5 +216,5 @@ export const LocationCodec = t.intersection([
 ]);
 
 export interface Location extends t.TypeOf<typeof LocationCodec>, TimestampedModel {
-  notifications?: NotificationCounts;
+  notifications?: NotificationStatistics;
 }
