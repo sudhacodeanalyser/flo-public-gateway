@@ -37,8 +37,8 @@ const RecordToModelSchema: StrictSchema<Device, DeviceRecordData>  = {
   updatedAt: 'updated_at',
   isPaired: (input: DeviceRecordData) => _.get(input, 'is_paired', false),
   additionalProps: () => null,
-  deviceModel: (input: DeviceRecordData) => _.get(input, 'device_model', DeviceType.FLO_DEVICE_V2),
-  deviceType: (input: DeviceRecordData) => _.get(input, 'device_type', DeviceModelType.FLO_0_75),
+  deviceModel: (input: DeviceRecordData) => _.get(input, 'device_model', DeviceModelType.FLO_0_75),
+  deviceType: (input: DeviceRecordData) => _.get(input, 'device_type', DeviceType.FLO_DEVICE_V2),
   irrigationType: 'irrigation_type',
   prvInstallation: 'prv_installation',
   systemMode: (input: DeviceRecordData) => ({
