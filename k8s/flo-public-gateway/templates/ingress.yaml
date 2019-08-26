@@ -32,9 +32,13 @@ spec:
     - host: {{ . }}
       http:
         paths:
-          - path: {{ $ingressPath  }}
+          - path: {{ .Values.ingress.paths.v2  }}
             backend:
               serviceName: {{ $fullName }}
               servicePort: http
+          - path: {{ .Values.ingress.paths.v1  }}
+              backend:
+                serviceName: proxy-eb-{{ include "flo-public-gateway.fullname" . }}
+                servicePort: http
   {{- end }}
 {{- end }}

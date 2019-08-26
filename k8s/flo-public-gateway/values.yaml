@@ -20,7 +20,9 @@ ingress:
   annotations:
     kubernetes.io/ingress.class: nginx
     # kubernetes.io/tls-acme: "true"
-  paths: /
+  paths:
+    v1: /api/v1
+    v2: /api/v2
   hosts:
     - api.meetflo.com
     - flo-public-gateway.flosecurecloud.com

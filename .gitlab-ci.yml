@@ -78,6 +78,7 @@ K8sDev:
     - Compile
   only:
     - dev
+    - test-ingress-split
     - kloia-helmchart-deployment
   environment:
     name: dev
