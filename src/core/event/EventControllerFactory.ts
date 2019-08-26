@@ -28,7 +28,7 @@ export function EventControllerFactory(container: Container, apiVersion: number)
       super();
     }
 
-    @httpGet('/alarms/statistics', auth)
+    @httpGet('/alarms/statistics')
     private async retrieveStatistics(@request() req: Request): Promise<NotificationStatistics> {
       const filters = req.url.split('?')[1] || '';
 
@@ -47,7 +47,6 @@ export function EventControllerFactory(container: Container, apiVersion: number)
     }
 
     @httpGet('/alarms/:id',
-      auth,
       reqValidator.create(t.type({
         params: t.type({
           id: t.string
@@ -73,10 +72,7 @@ export function EventControllerFactory(container: Container, apiVersion: number)
         .deleteAlarmEvent(id);
     }
 
-    @httpGet('/alarms',
-      // TODO: improve auth
-      auth,
-    )
+    @httpGet('/alarms')
     private async getAlarmEventsByFilter(@request() req: Request): Promise<PaginatedResult<AlarmEvent>> {
       const filters = req.url.split('?')[1] || '';
     
