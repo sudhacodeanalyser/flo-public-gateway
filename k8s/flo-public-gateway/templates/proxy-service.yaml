@@ -3,7 +3,8 @@ kind: Service
 apiVersion: v1
 metadata:
   name: proxy-eb-{{ include "flo-public-gateway.fullname" . }}
-
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
 spec:
   ports:
     - protocol: TCP
