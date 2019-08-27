@@ -2,10 +2,11 @@
 {{- $fullName := include "flo-public-gateway.fullname" . -}}
 {{- $servicePort := .Values.service.port -}}
 {{- $ingressPath := .Values.internalIngress.path -}}
+{{- $ingressName := include "flo-public-gateway.name" . -}}
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: {{ include "flo-public-gateway.name" . }}
+  name: internal-{{ $ingressName }}
   labels:
     app.kubernetes.io/name: {{ include "flo-public-gateway.name" . }}
     helm.sh/chart: {{ include "flo-public-gateway.chart" . }}
