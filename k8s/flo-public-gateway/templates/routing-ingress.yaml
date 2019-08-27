@@ -34,7 +34,7 @@ spec:
         paths:
           - path: /api/v2 
             backend:
-              serviceName: proxy-eb-{{ $fullName }}
+              serviceName: proxy-k8s-{{ $fullName }}
               servicePort: 443
           - path: /api/v1 
             backend:

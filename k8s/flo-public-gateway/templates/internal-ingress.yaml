@@ -1,0 +1,27 @@
+{{- if .Values.internalIngress.enabled -}}
+{{- $fullName := include "flo-public-gateway.fullname" . -}}
+{{- $servicePort := .Values.service.port -}}
+{{- $ingressPath := .Values.internalIngress.path -}}
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: {{ include "flo-public-gateway.name" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "flo-public-gateway.name" . }}
+    helm.sh/chart: {{ include "flo-public-gateway.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+  {{- with .Values.internalIngress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  rules:
+    - host: {{ .Values.internalIngress.host }}
+      http:
+        paths:
+          - path: {{ $ingressPath }} 
+            backend:
+              serviceName: {{ $fullName }} 
+              servicePort: http
+{{- end }}

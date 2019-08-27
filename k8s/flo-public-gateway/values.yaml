@@ -15,18 +15,15 @@ service:
   type: ClusterIP
   port: 3000
 
-ingress:
+routingIngress:
   enabled: true
   annotations:
-    nginx.ingress.kubernetes.io/upstream-vhost: flo-public-gateway-k8s.flocloud.co
+    nginx.ingress.kubernetes.io/upstream-vhost: internal-ingress.flocloud.co 
     nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
     kubernetes.io/ingress.class: nginx
-    # kubernetes.io/tls-acme: "true"
-  paths:
-    v1: /api/v1
-    v2: /api/v2
   hosts:
     - api.meetflo.com
+    - api-gw-dev.flocloud.co
     - flo-public-gateway-k8s.flocloud.co
     - flo-public-gateway.flosecurecloud.com
     - flo-public-gateway-prod.flosecurecloud.com
@@ -34,6 +31,13 @@ ingress:
   #  - secretName: chart-example-tls
   #    hosts:
   #      - chart-example.local
+
+internalIngress:
+  enabled: true
+  path: /
+  annotations:
+    kubernetes.io/ingress.class: nginx
+  host: internal-ingress.flocloud.co # points at 127.0.0.1
 
 resources: {}
 
