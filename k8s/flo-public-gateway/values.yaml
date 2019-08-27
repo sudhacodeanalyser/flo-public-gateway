@@ -25,6 +25,7 @@ ingress:
     v2: /api/v2
   hosts:
     - api.meetflo.com
+    - flo-public-gateway-k8s.flocloud.co
     - flo-public-gateway.flosecurecloud.com
     - flo-public-gateway-prod.flosecurecloud.com
   tls: []
