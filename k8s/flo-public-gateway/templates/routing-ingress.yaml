@@ -2,7 +2,7 @@
 {{- $fullName := include "flo-public-gateway.fullname" . -}}
 {{- $servicePort := .Values.service.port -}}
 {{- $fullName := include "flo-public-gateway.fullname" . -}}
-{{- $ingressPath := .Values.ingress.path -}}
+{{- $ingressPath := .Values.routingIngress.path -}}
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
