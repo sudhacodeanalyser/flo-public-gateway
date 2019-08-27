@@ -34,11 +34,11 @@ spec:
         paths:
           - path: /api/v2 
             backend:
-              serviceName: {{ $fullName }}
-              servicePort: http
+              serviceName: proxy-eb-{{ $fullName }}
+              servicePort: 443
           - path: /api/v1 
             backend:
               serviceName: proxy-eb-{{ $fullName }}
-              servicePort: http
+              servicePort: 443
   {{- end }}
 {{- end }}

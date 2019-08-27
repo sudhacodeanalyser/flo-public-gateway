@@ -18,6 +18,8 @@ service:
 ingress:
   enabled: true
   annotations:
+    nginx.ingress.kubernetes.io/upstream-vhost: flo-public-gateway-k8s.flocloud.co
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
     kubernetes.io/ingress.class: nginx
     # kubernetes.io/tls-acme: "true"
   paths:
