@@ -3,6 +3,7 @@ APP ?= flo-public-gateway
 # Default env is always dev. This can be overriden
 ENV ?= dev
 AWS_REGION ?= us-west-2
+EB_DEPLOY_TIMEOUT ?= 15
 DOCKER_IMAGE ?= ${CI_REGISTRY_IMAGE}
 DOCKER_REGISTRY ?= registry.gitlab.com/flotechnologies
 DOCKER_TAG ?= latest
@@ -14,7 +15,7 @@ GRADLE ?= $(COMPOSE) -f build-tools.yml run --rm gradle
 GIT ?= $(COMPOSE) -f build-tools.yml run --rm git
 RUN ?= $(COMPOSE) -f build-tools.yml run --rm --service-ports run --node-env=$(NODE_ENV) run
 EB_INIT ?= $(COMPOSE) -f build-tools.yml run --rm eb init $(APP) --region=${AWS_REGION} --platform docker-18.06.1-ce
-EB_DEPLOY ?= $(COMPOSE) -f build-tools.yml run --rm eb deploy $(APP)-$(ENV) --staged
+EB_DEPLOY ?= $(COMPOSE) -f build-tools.yml run --rm eb deploy $(APP)-$(ENV) --staged --timeout $(EB_DEPLOY_TIMEOUT)
 HELM ?= $(shell which helm)
 
 .PHONY: help auth
