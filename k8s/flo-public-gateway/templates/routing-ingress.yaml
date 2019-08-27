@@ -1,4 +1,4 @@
-{{- if .Values.ingress.enabled -}}
+{{- if .Values.routingIngress.enabled -}}
 {{- $fullName := include "flo-public-gateway.fullname" . -}}
 {{- $servicePort := .Values.service.port -}}
 {{- $fullName := include "flo-public-gateway.fullname" . -}}
@@ -12,14 +12,14 @@ metadata:
     helm.sh/chart: {{ include "flo-public-gateway.chart" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
-  {{- with .Values.ingress.annotations }}
+  {{- with .Values.routingIngress.annotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
   {{- end }}
 spec:
-{{- if .Values.ingress.tls }}
+{{- if .Values.routingIngress.tls }}
   tls:
-  {{- range .Values.ingress.tls }}
+  {{- range .Values.routingIngress.tls }}
     - hosts:
       {{- range .hosts }}
         - {{ . }}
@@ -28,7 +28,7 @@ spec:
   {{- end }}
 {{- end }}
   rules:
-  {{- range .Values.ingress.hosts }}
+  {{- range .Values.routingIngress.hosts }}
     - host: {{ . }}
       http:
         paths:
