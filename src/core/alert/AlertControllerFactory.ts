@@ -29,7 +29,7 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
       super();
     }
 
-    @httpGet('/statistics', auth)
+    @httpGet('/statistics')
     private async retrieveStatistics(@request() req: Request): Promise<NotificationStatistics> {
       const filters = req.url.split('?')[1] || '';
 
@@ -40,7 +40,6 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
     }
 
     @httpGet('/:id',
-      auth,
       reqValidator.create(t.type({
         params: t.type({
           id: t.string
@@ -52,8 +51,6 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
     }
 
     @httpGet('/',
-      // TODO: improve auth
-      auth,
       reqValidator.create(t.type({
         query: t.intersection([
           t.union([
