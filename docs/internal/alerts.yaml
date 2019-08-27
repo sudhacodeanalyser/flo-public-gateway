@@ -21,7 +21,7 @@ paths:
             schema:
               $ref: '#/components/schemas/Feedback'
       responses:
-        201:
+        200:
           description: Feedback successfully submitted
           content:
             application/json:
