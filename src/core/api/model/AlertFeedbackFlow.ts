@@ -46,7 +46,7 @@ export const AlertFeedbackStepOptionCodec: t.Type<AlertFeedbackStepOption> = t.r
   displayText: t.union([t.string, t.undefined]),
   sortOrder: t.union([t.number, t.undefined]),
   action: t.union([ActionTypeCodec, t.undefined]),
-  value: t.union([t.boolean, t.string, t.number, t.undefined]),
+  value: t.any,
   flow: t.union([AlertFeedbackStepCodec, TaggedAlertFeedbackFlowCodec, t.undefined])
 }));
 

@@ -10,5 +10,5 @@ export * from './notification/NotificationService';
 export * from './water/WaterService';
 export * from './session/SessionService';
 export * from './alarm/AlarmService';
-export * from './event/EventService';
+export * from './alert/AlertService';
 export * from './flo-detect/FloDetectService';

@@ -1,7 +1,7 @@
 import { injectable, inject } from 'inversify';
 import AlertFeedbackTable from './AlertFeedbackTable';
 import { AlertFeedbackRecord } from './AlertFeedbackRecord';
-import { AlertFeedback, AlarmEvent, UserFeedback,UserFeedbackCodec, PaginatedResult } from '../api';
+import { AlarmEvent, UserFeedback, UserFeedbackCodec, PaginatedResult, AlertFeedback } from '../api';
 import * as Option from 'fp-ts/lib/Option';
 import * as Either from 'fp-ts/lib/Either';
 import { pipe } from 'fp-ts/lib/pipeable';
@@ -12,7 +12,7 @@ import _ from 'lodash';
 import ForbiddenError from '../api/error/ForbiddenError';
 
 @injectable()
-class EventService {
+class AlertService {
   private notificationServiceFactory: () => NotificationService;
 
   constructor(
@@ -30,12 +30,13 @@ class EventService {
     };
   }
 
-  public async submitFeedback(alertFeedback: AlertFeedback, userId?: string): Promise<Either.Either<ForbiddenError, AlertFeedback>> {
-    const alarmEvent = await this.notificationServiceFactory().getAlarmEvent(alertFeedback.incidentId);
-
-    if (alarmEvent.deviceId !== alertFeedback.deviceId) {
-      return Either.left(new ForbiddenError());
-    }
+  public async submitFeedback(alarmEvent: AlarmEvent, userFeedback: UserFeedback, userId?: string): Promise<UserFeedback> {
+    const alertFeedback = {
+      userFeedback: userFeedback.feedback,
+      incidentId: alarmEvent.id,
+      deviceId: alarmEvent.deviceId,
+      createdAt: new Date().toISOString()
+    };
 
     const alertFeedbackRecord = AlertFeedbackRecord.fromModel({
       userId,
@@ -45,9 +46,13 @@ class EventService {
       ...alertFeedback
     });
 
-    await this.alertFeedbackTable.put(alertFeedbackRecord);
+    const createdAlertFeedback = AlertFeedbackRecord.toModel(await this.alertFeedbackTable.put(alertFeedbackRecord));
 
-    return Either.right(alertFeedback);
+    return {
+      userId,
+      createdAt: createdAlertFeedback.createdAt,
+      feedback: createdAlertFeedback.userFeedback
+    };
   }
 
 
@@ -76,12 +81,16 @@ class EventService {
       await this.getFeedback(alarmEvent.deviceId, alarmEvent.id),
       Option.fold(
         () => Either.left([]),
-        alertFeedback => t.exact(UserFeedbackCodec).decode(alertFeedback)
+        alertFeedback => 
+          t.exact(UserFeedbackCodec).decode({ 
+            userId: alertFeedback.userId, 
+            createdAt: alertFeedback.createdAt,
+            feedback: alertFeedback.userFeedback 
+          })
       ),
       Either.fold(
         () => alarmEvent,
         userFeedback => ({ ...alarmEvent, userFeedback: [userFeedback] })
-        
       )
     );
   }
@@ -94,4 +103,4 @@ class EventService {
   }
 }
 
-export { EventService };
+export { AlertService };

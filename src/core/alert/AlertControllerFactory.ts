@@ -1,7 +1,7 @@
 import * as Either from 'fp-ts/lib/Either';
 import { pipe } from 'fp-ts/lib/pipeable';
 import { Container, inject } from 'inversify';
-import { BaseHttpController, httpDelete, httpGet, httpPost, interfaces, request, requestBody, requestParam } from 'inversify-express-utils';
+import { BaseHttpController, httpDelete, httpGet, httpPost, interfaces, request, response, requestBody, requestParam } from 'inversify-express-utils';
 import * as t from 'io-ts';
 import _ from 'lodash';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
@@ -11,8 +11,9 @@ import { NotificationStatistics, IncidentStatusReasonCodec, AlarmSeverityCodec, 
 import { createMethod, httpController } from '../api/controllerUtils';
 import Request from '../api/Request';
 import { NotificationServiceFactory } from '../notification/NotificationService';
-import { EventService } from '../service';
+import { AlertService } from '../service';
 import { $enum } from 'ts-enum-util';
+import express from 'express';
 
 export function AlertControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
@@ -24,7 +25,7 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
   class AlertController extends BaseHttpController {
     constructor(
       @inject('NotificationServiceFactory') private notificationServiceFactory: NotificationServiceFactory,
-      @inject('EventService') private eventService: EventService
+      @inject('AlertService') private alertService: AlertService
     ) {
       super();
     }
@@ -47,7 +48,7 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
       }))
     )
     private async getAlarmEvent(@requestParam('id') id: string): Promise<AlarmEvent> {
-      return this.eventService.getAlarmEvent(id);
+      return this.alertService.getAlarmEvent(id);
     }
 
     @httpGet('/',
@@ -90,7 +91,7 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
         )
       ].join('&');
 
-      return this.eventService.getAlarmEventsByFilter(combinedFilters);
+      return this.alertService.getAlarmEventsByFilter(combinedFilters);
     }
 
     @httpPost('/action',
@@ -112,34 +113,29 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
       }));
     }
 
-    @httpPost('/:id/feedback',
-      authWithIcd,
+    @httpPost('/:id/userFeedback',
+      // Auth deferred to controller method
       reqValidator.create(t.type({
         params: t.type({
           id: t.string,
         }),
-        body: t.intersection([
-          UserFeedbackCodec,
-          t.type({ deviceId: t.string }),
-          t.partial({ alarmId: t.number, systemMode: t.string })
-        ])
+        body: t.type({
+          feedback: UserFeedbackCodec.props.feedback
+        })
       }))
     )
-    @createMethod
-    private async submitIncidentFeedback(@request() req: Request, @requestParam('id') incidentId: string, @requestBody() userFeedback: UserFeedback & { deviceId: string, alarmId: number | undefined, systemMode: string | undefined }): Promise<AlertFeedback> {
-      const tokenMetadata = req.token;
-      const alertFeedback: AlertFeedback = {
-        ...userFeedback,
-        incidentId
-      }
+    private async submitIncidentFeedback(@request() req: Request, @response() res: express.Response, @requestParam('id') incidentId: string, @requestBody() userFeedback: UserFeedback & { deviceId: string, alarmId: number | undefined, systemMode: string | undefined }): Promise<UserFeedback> {
+      const alarmEvent = await this.notificationServiceFactory.create(req).getAlarmEvent(incidentId);
 
-      return pipe(
-        await this.eventService.submitFeedback(alertFeedback, tokenMetadata && tokenMetadata.user_id),
-        Either.fold(
-          forbiddenError => { throw forbiddenError },
-          createdAlertFeedback => createdAlertFeedback
-        )
-      );
+      await authMiddlewareFactory.create(async () => ({ icd_id: alarmEvent.deviceId }))(req, res, err => {
+        if (err) {
+          throw err;
+        }
+      });
+
+      const tokenMetadata = req.token;
+
+      return this.alertService.submitFeedback(alarmEvent, userFeedback, tokenMetadata && tokenMetadata.user_id);
     }
   }
 

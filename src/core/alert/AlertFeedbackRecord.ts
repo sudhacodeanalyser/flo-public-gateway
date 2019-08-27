@@ -1,22 +1,19 @@
 import * as t from 'io-ts';
 import { morphism, StrictSchema } from 'morphism';
 import { AlertFeedback } from '../api';
+import _ from 'lodash';
 
-export const AlertFeedbackRecordDataCodec = t.type({
-  icd_id: t.string,
-  incident_id: t.string,
-  alarm_id: t.union([t.undefined, t.number]),
-  system_mode: t.union([t.undefined, t.number]),
-  cause: t.number,
-  should_accept_as_normal: t.boolean,
-  plumbing_failure: t.union([t.undefined, t.number]),
-  fixture: t.union([t.undefined, t.string]),
-  cause_other: t.union([t.undefined, t.string]),
-  plumbing_failure_other: t.union([t.undefined, t.string]),
-  action_taken: t.union([t.undefined, t.string]),
-  user_id: t.union([t.undefined, t.string]),
-  created_at: t.string
-});
+export const AlertFeedbackRecordDataCodec = t.intersection([
+  t.type({
+    icd_id: t.string,
+    incident_id: t.string,
+    alarm_id: t.union([t.undefined, t.number]),
+    system_mode: t.union([t.undefined, t.number]),
+    user_id: t.union([t.undefined, t.string]),
+    created_at: t.string
+  }),
+  t.dictionary(t.string, t.any)
+]);
 
 export type AlertFeedbackRecordData = t.TypeOf<typeof AlertFeedbackRecordDataCodec>;
 
@@ -36,15 +33,21 @@ const AlertFeedbackRecordToModelSchema: StrictSchema<AlertFeedback, AlertFeedbac
         return undefined;
     }
   },
-  cause: 'cause',
-  shouldAcceptAsNormal: 'should_accept_as_normal',
-  plumbingFailure: 'plumbing_failure',
-  fixture: 'fixture',
-  causeOther: 'cause_other',
-  plumbingFailureOther: 'plumbing_failure_other',
-  actionTaken: 'action_taken',
   userId: 'user_id',
-  createdAt: 'created_at'
+  createdAt: 'created_at',
+  userFeedback: (input: AlertFeedbackRecordData) => {
+    const {
+      icd_id,
+      incident_id,
+      alarm_id,
+      system_mode,
+      user_id,
+      created_at,
+      ...userFeedback
+    } = input;
+
+    return _.map(userFeedback, (value, key) => ({ property: key, value }));
+  }
 };
 
 const AlertFeedbackModelToRecordSchema: StrictSchema<AlertFeedbackRecordData, AlertFeedback> = {
@@ -64,13 +67,6 @@ const AlertFeedbackModelToRecordSchema: StrictSchema<AlertFeedbackRecordData, Al
         return undefined;
     }
   },
-  cause: 'cause',
-  should_accept_as_normal: 'shouldAcceptAsNormal',
-  plumbing_failure: 'plumbingFailure',
-  fixture: 'fixture',
-  cause_other: 'causeOther',
-  plumbing_failure_other: 'plumbingFailureOther',
-  action_taken: 'actionTaken',
   user_id: 'userId',
   created_at: (input: AlertFeedback) => input.createdAt || new Date().toISOString()
 };
@@ -81,6 +77,14 @@ export class AlertFeedbackRecord {
   }
 
   public static fromModel(model: AlertFeedback): AlertFeedbackRecordData {
-    return morphism(AlertFeedbackModelToRecordSchema, model);
+    const userFeedback = model.userFeedback.reduce(
+      (acc, { property, value }) => ({ ...acc, [property]: value }), 
+      {}
+    );
+
+    return {
+       ...morphism(AlertFeedbackModelToRecordSchema, model),
+       ...userFeedback
+     };
   }
 }
