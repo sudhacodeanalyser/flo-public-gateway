@@ -11,7 +11,7 @@ import notificationContainerModule from './notification/containerModule';
 import waterContainerModule from './water/containerModule';
 import sessionContainerModule from './session/containerModule';
 import alarmContainerModule from './alarm/containerModule';
-import eventContainerModule from './event/containerModule';
+import alertContainerModule from './alert/containerModule';
 import floDetectContainerModule from './flo-detect/containerModule';
 
 export default [
@@ -28,6 +28,6 @@ export default [
   waterContainerModule,
   sessionContainerModule,
   alarmContainerModule,
-  eventContainerModule,
+  alertContainerModule,
   floDetectContainerModule
 ];

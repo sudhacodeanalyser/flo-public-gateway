@@ -46,15 +46,18 @@ export interface TriggersAlarmResponse {
 }
 
 const {
-  incidentId,
-  alarmId,
-  systemMode,
-  deviceId,
-  ...userFeedbackProps
+  userId,
+  createdAt,
+  userFeedback
 } = AlertFeedbackCodec.props;
 
 
-export const UserFeedbackCodec = t.type({ ...userFeedbackProps });
+export const UserFeedbackCodec = t.type({
+  userId,
+  createdAt,
+  feedback: userFeedback
+});
+
 export type UserFeedback = t.TypeOf<typeof UserFeedbackCodec>;
 
 export interface AlarmEvent extends TimestampedModel {
