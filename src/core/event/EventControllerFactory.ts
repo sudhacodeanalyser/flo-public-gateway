@@ -11,7 +11,7 @@ import { AlarmEvent, AlertFeedback, NotificationStatistics, PaginatedResult, Use
 import { createMethod, httpController } from '../api/controllerUtils';
 import Request from '../api/Request';
 import { NotificationServiceFactory } from '../notification/NotificationService';
-import { EventService } from '../service';
+import { AlertService } from '../service';
 
 export function EventControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
@@ -23,7 +23,7 @@ export function EventControllerFactory(container: Container, apiVersion: number)
   class EventController extends BaseHttpController {
     constructor(
       @inject('NotificationServiceFactory') private notificationServiceFactory: NotificationServiceFactory,
-      @inject('EventService') private eventService: EventService
+      @inject('AlertService') private eventService: AlertService
     ) {
       super();
     }
@@ -91,35 +91,6 @@ export function EventControllerFactory(container: Container, apiVersion: number)
         .generateEventsSample(data);
     }
 
-    @httpPost('/alarms/:id/feedback',
-      authWithIcd,
-      reqValidator.create(t.type({
-        params: t.type({
-          id: t.string,
-        }),
-        body: t.intersection([
-          UserFeedbackCodec,
-          t.type({ deviceId: t.string }),
-          t.partial({ alarmId: t.number, systemMode: t.string })
-        ])
-      }))
-    )
-    @createMethod
-    private async submitIncidentFeedback(@request() req: Request, @requestParam('id') incidentId: string, @requestBody() userFeedback: UserFeedback & { deviceId: string, alarmId: number | undefined, systemMode: string | undefined }): Promise<AlertFeedback> {
-      const tokenMetadata = req.token;
-      const alertFeedback: AlertFeedback = {
-        ...userFeedback,
-        incidentId
-      }
-
-      return pipe(
-        await this.eventService.submitFeedback(alertFeedback, tokenMetadata && tokenMetadata.user_id),
-        Either.fold(
-          forbiddenError => { throw forbiddenError },
-          createdAlertFeedback => createdAlertFeedback
-        )
-      );
-    }
   }
 
   return EventController;

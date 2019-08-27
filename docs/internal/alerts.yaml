@@ -154,41 +154,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/AlertItemEvent'
 
-  /api/v2/alerts/{id}/feedback:
-    parameters:
-      - in: path
-        name: id
-        required: true
-        schema:
-          type: string
-          format: uuid
-        description: Alert ID
-    post:
-      summary: Submit feedback for an alert
-      tags:
-        - Alerts
-      produces:
-        - application/json
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/FeedbackSubmission'
-      responses:
-        201:
-          description: Feedback successfully submitted
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/FeedbackSubmission'
-        400:
-          description: Invalid request request body
-        403:
-          description: Unauthorized or device ID does not match Alert
-        404:
-          description: Alert event not found
-
   /api/v2/alerts/action:
     post:
       summary: User response to the alert
@@ -208,8 +173,65 @@ paths:
             schema:
               $ref: '#/components/schemas/AlertAction'
 
+  /api/v2/alerts/{id}/userFeedback:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Alert ID
+    post:
+      summary: Submit feedback for an alert
+      tags:
+        - Alerts
+      produces:
+        - application/json
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Feedback'
+      responses:
+        200:
+          description: Feedback successfully submitted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserFeedback'
+        400:
+          description: Invalid request request body
+        403:
+          description: Unauthorized or device ID does not match incident
+        404:
+          description: Alert event not found
+
+  /api/v2/alerts/incident:
+    post:
+      summary: Creates a new incident. Incident will be processed through all the filters and business rules.
+      tags:
+        - Alerts
+      produces:
+        - application/json
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IncidentRawData'
+      responses:
+        200:
+          description: The ID of the created Incident Event
+          content:
+            application/json:
+              schema:
+                type: string
+
 components:
   schemas:
+    AnyValue: {}
     Action:
       type: object
       properties:
@@ -247,31 +269,6 @@ components:
           type: number
         total:
           type: number
-    UserFeedback:
-      type: object
-      required:
-        - shouldAcceptAsNormal
-        - cause
-        - createdAt
-      properties:
-        cause:
-          type: number
-        shouldAcceptAsNormal:
-          type: boolean
-        plumbingFailure:
-          type: number
-        fixture:
-          type: string
-        causeOther:
-          type: string
-        plumbingFailureOther:
-          type: string
-        userId:
-          type: string
-          format: uuid
-        createdAt:
-          type: string
-          format: date-time
     AlertItemEvent:
       type: object
       properties:
@@ -326,32 +323,34 @@ components:
         userFeedback:
           type: array
           items:
-            $ref: '#/components/schemas/AlertUserFeedback'
-    AlertUserFeedback:
+            $ref: '#/components/schemas/UserFeedback'
+    UserFeedback:
       type: object
-      required:
-        - shouldAcceptAsNormal
-        - cause
-        - createdAt
       properties:
-        cause:
-          type: number
-        shouldAcceptAsNormal:
-          type: boolean
-        plumbingFailure:
-          type: number
-        fixture:
-          type: string
-        causeOther:
-          type: string
-        plumbingFailureOther:
-          type: string
         userId:
           type: string
           format: uuid
         createdAt:
           type: string
           format: date-time
+        feedback:
+          $ref: '#/components/schemas/Feedback'
+    Feedback:
+      type: array
+      items:
+        type: object
+        required:
+          - property
+          - value
+        properties:
+          property:
+            type: string
+          value:
+            anyOf:
+              - type: number
+              - type: string
+              - type: boolean
+              - $ref: '#/components/schemas/AnyValue'
     SupportOption:
       type: object
       properties:
