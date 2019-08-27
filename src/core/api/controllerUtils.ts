@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import { controller, interfaces, HttpResponseMessage, JsonContent, requestHeaders } from 'inversify-express-utils';
+import { controller, interfaces, HttpResponseMessage, JsonContent, requestHeaders, queryParam } from 'inversify-express-utils';
 import ResourceDoesNotExistError from './error/ResourceDoesNotExistError';
 import { PropExpand, Expandable } from './index';
 import { Response } from './response';
@@ -89,5 +89,41 @@ export function withResponseType<M, R extends Response>(responseFormatter: (mode
 
       return responseFormatter(result.value);
     }
+  };
+}
+
+export function withQueryParamArray(target: any, propertyName: string | symbol, propertyDescriptor: PropertyDescriptor): void {
+  const method = propertyDescriptor.value;
+  const queryArrayParams = Reflect.getOwnMetadata('queryParamArray', target, propertyName) || {};
+
+  propertyDescriptor.value = function (...args: any[]): any {
+    const normalizedArgs = args.map((arg: any, i: number) => {
+
+      if (!queryArrayParams[i] || _.isArray(arg)) {
+        return arg;
+      } else if (_.isString(arg) && arg.includes(',')) {
+        return arg.split(',');
+      } else {
+       return [arg];
+      }
+      
+    });
+
+    return method.apply(this, normalizedArgs);
+  };
+
+}
+
+export function queryParamArray(queryParamName: string): ParameterDecorator {
+
+  return (target: any, propertyName: string | symbol, parameterIndex: number): void => {
+    const existingQueryArrayParams = {
+      ...Reflect.getOwnMetadata('queryParamArray', target, propertyName),
+      [parameterIndex]: true
+    };
+
+    Reflect.defineMetadata('queryParamArray', existingQueryArrayParams, target, propertyName);
+
+    queryParam(queryParamName)(target, propertyName, parameterIndex);
   };
 }

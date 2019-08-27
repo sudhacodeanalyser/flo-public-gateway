@@ -4,7 +4,7 @@ import {Container, inject} from 'inversify';
 import {LookupService} from '../service';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
 import * as t from 'io-ts';
-import {httpController} from '../api/controllerUtils';
+import { httpController, withQueryParamArray, queryParamArray } from '../api/controllerUtils';
 import {Lookup, LookupResponse, MultiLookupResponse} from '../api/response';
 
 
@@ -36,14 +36,14 @@ export function LookupControllerFactory(container: Container, apiVersion: number
       '/',
       reqValidator.create(t.type({
         query: t.type({
-          id: t.string,
+          id: t.union([t.string, t.array(t.string)]),
           lang: t.union([t.undefined, t.string])
         })
       }))
     )
-    private async getByIds(@queryParam('id') idString: string, @queryParam('lang') lang: string = LookupController.defaultLang): Promise<MultiLookupResponse> {
+    @withQueryParamArray
+    private async getByIds(@queryParamArray('id') ids: string[], @queryParam('lang') lang: string = LookupController.defaultLang): Promise<MultiLookupResponse> {
       const cleanLang = LookupController.fixLang(lang);
-      const ids = idString.split(',');
       const lookups = await this.lookupService.getByIds(ids);
 
       if (!_.isEmpty(lookups)) {
