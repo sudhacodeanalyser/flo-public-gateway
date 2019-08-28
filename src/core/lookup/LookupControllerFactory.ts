@@ -1,10 +1,10 @@
 import _ from 'lodash';
-import {BaseHttpController, httpGet, interfaces, queryParam, requestParam} from 'inversify-express-utils';
+import {BaseHttpController, interfaces, queryParam, requestParam} from 'inversify-express-utils';
 import {Container, inject} from 'inversify';
 import {LookupService} from '../service';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
 import * as t from 'io-ts';
-import { httpController, withQueryParamArray, queryParamArray } from '../api/controllerUtils';
+import { httpController, httpGet, queryParamArray } from '../api/controllerUtils';
 import {Lookup, LookupResponse, MultiLookupResponse} from '../api/response';
 
 
@@ -41,7 +41,6 @@ export function LookupControllerFactory(container: Container, apiVersion: number
         })
       }))
     )
-    @withQueryParamArray
     private async getByIds(@queryParamArray('id') ids: string[], @queryParam('lang') lang: string = LookupController.defaultLang): Promise<MultiLookupResponse> {
       const cleanLang = LookupController.fixLang(lang);
       const lookups = await this.lookupService.getByIds(ids);
