@@ -236,7 +236,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       // device record
       const model = await this.deviceService.updatePartialDevice(id, {
         systemMode: {
-          shouldInherit: data.isLocked || data.shouldInherit === undefined ? false : data.shouldInherit,
+          shouldInherit: data.shouldInherit,
           target: data.target,
           ...(!isSleep ? {} : {
             revertMode: data.revertMode,
