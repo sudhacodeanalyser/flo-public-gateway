@@ -73,8 +73,7 @@ export enum PlumbingAppliance {
   EXPANSION_TANK = 'exp_tank',
   WHOLE_HOME_FILTRATION = 'home_filter',
   WHOLE_HOME_HUMIDIFIER = 'home_humidifier',
-  RECIRCULATION_PUMP = 'recirculation_pump',
-  REVERSE_OSMOSIS = 're_pump',
+  RECIRCULATION_PUMP = 're_pump',
   WATER_SOFTENER = 'softener',
   PRESSURE_REDUCING_VALVE = 'prv',
   REVERSE_OSMOSIS = 'rev_osmosis'
