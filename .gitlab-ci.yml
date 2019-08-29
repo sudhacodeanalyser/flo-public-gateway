@@ -14,7 +14,7 @@ stages:
 before_script:
   - export DOCKER_HOST=tcp://localhost:2375
   - export CI_REGISTRY=registry.gitlab.com
-  - apk add --no-cache make bash jq # TODO: this should be part of the compose image
+  - apk add --no-cache make bash jq gettext # TODO: this should be part of the compose image
   - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY
   - |
     if [[ -f Dockerrun.aws.json ]]; then
