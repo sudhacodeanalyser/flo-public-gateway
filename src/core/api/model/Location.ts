@@ -35,11 +35,11 @@ export enum WaterSource {
 export const WaterSourceCodec = convertEnumtoCodec(WaterSource);
 
 export enum LocationSize {
-  LTE_700_FT = 'lte_700',
-  GT_700_FT_LTE_1000_FT = 'gt_700_ft_lte_1000_ft',
-  GT_1000_FT_LTE_2000_FT = 'gt_1000_ft_lte_2000_ft',
-  GT_2000_FT_LTE_4000_FT = 'gt_2000_ft_lte_4000_ft',
-  GT_4000_FT = 'gt_4000_ft'
+  LTE_700_FT = 'lt_700_sq_ft',
+  GT_700_FT_LTE_1000_FT = 'lte_1000_sq_ft',
+  GT_1000_FT_LTE_2000_FT = 'lte_2000_sq_ft',
+  GT_2000_FT_LTE_4000_FT = 'lte_4000_sq_ft',
+  GT_4000_FT = 'gt_4000_sq_ft'
 }
 export const LocationSizeCodec = convertEnumtoCodec(LocationSize);
 
@@ -47,43 +47,45 @@ export enum PlumbingType {
   COPPER = 'copper',
   GALVANIZED = 'galvanized'
 }
+
 export const PlumbingTypeCodec = convertEnumtoCodec(PlumbingType);
 
 export enum IndoorAmenity {
   BATHTUB = 'bathtub',
-  HOT_TUB = 'hot_tub',
-  WASHING_MACHINE = 'washing_machine',
+  HOT_TUB = 'hottub',
+  WASHING_MACHINE = 'clotheswasher',
   DISHWASHER = 'dishwasher',
-  ICE_MAKER = 'ice_maker'
+  ICE_MAKER = 'icemaker_ref'
 }
 export const IndoorAmenityCodec = convertEnumtoCodec(IndoorAmenity);
 
 export enum OutdoorAmenity {
   POOL = 'pool',
-  POOL_AUTO_FILL = 'pool_auto_fill',
-  HOT_TUB = 'hot_tub',
+  POOL_AUTO_FILL = 'pool_filter',
+  HOT_TUB = 'hottub',
   FOUNTAIN = 'fountain',
   POND = 'pond'
 }
 export const OutdoorAmenityCodec = convertEnumtoCodec(OutdoorAmenity);
 
 export enum PlumbingAppliance {
-  TANKLESS_WATER_HEATER = 'tankless_water_heater',
-  EXPANSION_TANK = 'expansion_tank',
-  WHOLE_HOME_FILTRATION = 'whole_home_filtration',
-  WHOLE_HOME_HUMIDIFIER = 'whole_home_humidifer',
+  TANKLESS_WATER_HEATER = 'tankless',
+  EXPANSION_TANK = 'exp_tank',
+  WHOLE_HOME_FILTRATION = 'home_filter',
+  WHOLE_HOME_HUMIDIFIER = 'home_humidifier',
   RECIRCULATION_PUMP = 'recirculation_pump',
-  REVERSE_OSMOSIS = 'reverse_osmosis',
-  WATER_SOFTENER = 'water_softener',
-  PRESSURE_REDUCING_VALVE = 'pressure_reducing_valve'
+  REVERSE_OSMOSIS = 're_pump',
+  WATER_SOFTENER = 'softener',
+  PRESSURE_REDUCING_VALVE = 'prv',
+  REVERSE_OSMOSIS = 'rev_osmosis'
 }
 export const PlumbingApplicanceCodec = convertEnumtoCodec(PlumbingAppliance);
 
 export enum WaterDamageClaim {
   LTE_10K_USD = 'lte_10k_usd',
-  GT_10K_USD_LTE_50K_USD = 'gt_10k_usd_lte_50k_usd',
-  GT_50K_USD_LTE_100K_USD = 'gt_50k_usd_lte_100k_usd',
-  GT_100K_USD = 'gt_100K_usd'
+  GT_10K_USD_LTE_50K_USD = 'lte_50k_usd',
+  GT_50K_USD_LTE_100K_USD = 'lte_100k_usd',
+  GT_100K_USD = 'gt_100k_usd'
 }
 export const WaterDamageClaimCodec = convertEnumtoCodec(WaterDamageClaim);
 
