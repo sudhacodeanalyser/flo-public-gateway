@@ -18,7 +18,7 @@ secrets:
     postgres_user: "${POSTGRES_USER}"
     localization_url: '${LOCALIZATION_API_URL}'
 internalIngress:
-  host: internal-ingress.flosecurecloud.com
+  host: internal-ingress.flocloud.co
 routingIngress:
   annotations:
-    nginx.ingress.kubernetes.io/upstream-vhost: internal-ingress.flosecurecloud.com
+    nginx.ingress.kubernetes.io/upstream-vhost: internal-ingress.flocloud.co
