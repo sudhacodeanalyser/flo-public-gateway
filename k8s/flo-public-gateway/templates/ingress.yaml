@@ -1,8 +1,8 @@
-{{- if .Values.routingIngress.enabled -}}
+{{- if .Values.ingress.enabled -}}
 {{- $fullName := include "flo-public-gateway.fullname" . -}}
 {{- $servicePort := .Values.service.port -}}
 {{- $fullName := include "flo-public-gateway.fullname" . -}}
-{{- $ingressPath := .Values.routingIngress.path -}}
+{{- $ingressPath := .Values.ingress.path -}}
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
@@ -12,14 +12,14 @@ metadata:
     helm.sh/chart: {{ include "flo-public-gateway.chart" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
-  {{- with .Values.routingIngress.annotations }}
+  {{- with .Values.ingress.annotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
   {{- end }}
 spec:
-{{- if .Values.routingIngress.tls }}
+{{- if .Values.ingress.tls }}
   tls:
-  {{- range .Values.routingIngress.tls }}
+  {{- range .Values.ingress.tls }}
     - hosts:
       {{- range .hosts }}
         - {{ . }}
@@ -28,17 +28,13 @@ spec:
   {{- end }}
 {{- end }}
   rules:
-  {{- range .Values.routingIngress.hosts }}
+  {{- range .Values.ingress.hosts }}
     - host: {{ . }}
       http:
         paths:
-          - path: /api/v2 
+          - path: {{ $ingressPath  }}
             backend:
-              serviceName: proxy-k8s-{{ $fullName }}
-              servicePort: 443
-          - path: /api/v1 
-            backend:
-              serviceName: proxy-eb-{{ $fullName }}
-              servicePort: 443
+              serviceName: {{ $fullName }}
+              servicePort: http
   {{- end }}
 {{- end }}
