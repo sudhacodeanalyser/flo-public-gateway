@@ -11,7 +11,7 @@ secrets:
     internal_device_service_base_url: '${INTERNAL_DEVICE_SERVICE_BASE_URL}'
     kafka_host: "${KAFKA_HOST}"
     kafka_timeout_ms: "${KAFKA_TIMEOUT_MS}"
-    postgres_database: "${POSTGRES_DATABASE}"
+    psotgres_database: "${POSTGRES_DATABASE}"
     postgres_host: "${POSTGRES_HOST}"
     postgres_password: "${POSTGRES_PASSWORD}"
     postgres_port: "${POSTGRES_PORT}"
