@@ -26,4 +26,4 @@ spec:
     port: 443
     targetPort: 443
   type: ExternalName
-  externalName: {{ .Values.v1ProxyService.floApiV1Hostname }}
+  externalName: {{ .Values.internalIngress.host }}
