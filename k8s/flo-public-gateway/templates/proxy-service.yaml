@@ -11,7 +11,7 @@ spec:
       port: 443
       targetPort: 443 
   type: ExternalName
-  externalName: api-dev.flocloud.co 
+  externalName: {{ .Values.v1ProxyService.floApiV1Hostname }}
 
 ---
 kind: Service
@@ -26,4 +26,4 @@ spec:
     port: 443
     targetPort: 443
   type: ExternalName
-  externalName: internal-ingress.flocloud.co 
+  externalName: {{ .Values.v1ProxyService.floApiV1Hostname }}

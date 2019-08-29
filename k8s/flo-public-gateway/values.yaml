@@ -15,6 +15,9 @@ service:
   type: ClusterIP
   port: 3000
 
+v1ProxyService:
+  floApiV1Hostname: api-dev.flocloud.co
+
 routingIngress:
   enabled: true
   annotations:
@@ -37,7 +40,7 @@ internalIngress:
   path: /
   annotations:
     kubernetes.io/ingress.class: nginx
-  host: internal-ingress.flocloud.co # points at 127.0.0.1
+  host: internal-ingress.flocloud.co
 
 resources: {}
 
