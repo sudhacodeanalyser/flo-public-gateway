@@ -32,7 +32,6 @@ export enum DeviceModelType {
 }
 
 export enum DeviceType {
-  FLO_DEVICE_V1 = 'flo_device_v1',
   FLO_DEVICE_V2 = 'flo_device_v2' // Defined for defaults
 }
 
