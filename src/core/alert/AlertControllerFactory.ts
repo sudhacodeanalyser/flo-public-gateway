@@ -21,6 +21,21 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
   const auth = authMiddlewareFactory.create();
   const authWithIcd = authMiddlewareFactory.create(async ({ body: { deviceId } }) => ({icd_id: deviceId}));
 
+  type Integer = t.TypeOf<typeof t.Integer>;
+
+  const IntegerFromString = new t.Type<Integer, string, unknown>(
+    'IntegerFromString',
+    (u): u is Integer => t.Integer.is(u),
+    (u, c) => {
+      return Either.either.chain(t.string.validate(u, c), str => {
+        const value = parseInt(str, 10);
+
+        return isNaN(value) ? t.failure(str, c) : t.success(value);
+      });
+    },
+    a => `${ a }`
+  );
+
   @httpController({ version: apiVersion }, '/alerts')
   class AlertController extends BaseHttpController {
     constructor(
@@ -73,8 +88,8 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
             status: t.union([t.string, t.array(AlertStatusCodec)]),
             severity: t.union([t.string, t.array(AlarmSeverityCodec)]),
             reason: t.union([t.string, t.array(IncidentStatusReasonCodec)]),
-            page: t.Int,
-            size: t.Int
+            page: IntegerFromString,
+            size: IntegerFromString
           })
         ])
       }))
