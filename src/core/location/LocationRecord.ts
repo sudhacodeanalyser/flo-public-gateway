@@ -204,7 +204,9 @@ const RecordToModelSchema: StrictSchema<Location, LocationRecordData> = {
   hasPastWaterDamage: 'profile.has_past_water_damage',
   showerBathCount: 'profile.shower_bath_count',
   toiletCount: 'profile.toilet_count',
-  nickname: 'location_name',
+  nickname: (input: LocationRecordData) => {
+    return _.get(input, 'location_name', input.address);
+  },
   irrigationSchedule: (input: LocationRecordData) =>
     input.is_irrigation_schedule_enabled === undefined ?
       undefined :({
