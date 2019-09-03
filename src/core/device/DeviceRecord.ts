@@ -42,10 +42,8 @@ const RecordToModelSchema: StrictSchema<Device, DeviceRecordData>  = {
     return _.get(
       input, 
       'device_type', 
-      input.device_id.startsWith('8cc7aa') || input.device_id.startsWith('f87aef') ? 
-        DeviceType.FLO_DEVICE_V1 : 
-        DeviceType.FLO_DEVICE_V2
-      );
+       DeviceType.FLO_DEVICE_V2
+    );
   },
   irrigationType: 'irrigation_type',
   prvInstallation: 'prv_installation',
