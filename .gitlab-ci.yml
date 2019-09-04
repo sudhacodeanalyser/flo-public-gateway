@@ -78,7 +78,6 @@ K8sDev:
     - Compile
   only:
     - dev
-    - test-ingress-split
     - kloia-helmchart-deployment
   environment:
     name: dev
@@ -155,6 +154,7 @@ RunscopeProd:
   dependencies:
     - Compile
   only:
+    - prep_prod_deployment
     - master
   environment:
     name: prod

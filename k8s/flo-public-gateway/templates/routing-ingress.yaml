@@ -36,6 +36,18 @@ spec:
             backend:
               serviceName: proxy-k8s-{{ $fullName }}
               servicePort: 443
+          - path: /docs
+            backend:
+              serviceName: proxy-k8s-{{ $fullName }}
+              servicePort: 443
+          - path: /legacy
+            backend:
+              serviceName: proxy-k8s-{{ $fullName }}
+              servicePort: 443
+          - path: /swagger
+            backend:
+              serviceName: proxy-k8s-{{ $fullName }}
+              servicePort: 443
           - path: /api/v1 
             backend:
               serviceName: proxy-eb-{{ $fullName }}
