@@ -193,7 +193,10 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Feedback'
+              type: object
+              properties:
+                feedback:
+                  $ref: '#/components/schemas/Feedback'
       responses:
         200:
           description: Feedback successfully submitted
