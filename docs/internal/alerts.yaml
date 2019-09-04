@@ -183,7 +183,7 @@ paths:
           format: uuid
         description: Alert ID
     post:
-      summary: Submit feedback for an alert
+      summary: Submit feedback for an incident
       tags:
         - Alerts
       produces:
@@ -206,7 +206,8 @@ paths:
         403:
           description: Unauthorized or device ID does not match incident
         404:
-          description: Alert event not found
+          description: Incident not found
+
 
   /api/v2/alerts/incident:
     post:
