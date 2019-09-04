@@ -171,10 +171,6 @@ components:
                 - closed
     IrrigationType:
       type: string
-      enum:
-        - none
-        - sprinklers
-        - drip
     Device:
       allOf:
         - $ref: '#/components/schemas/DeviceMutable'

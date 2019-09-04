@@ -430,10 +430,6 @@ components:
 
     IrrigationType:
       type: string
-      enum:
-        - none
-        - sprinklers
-        - drip
 
     Device:
       allOf:
