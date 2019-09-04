@@ -246,40 +246,18 @@ components:
             type: string
         locationType:
           type: string
-          enum:
-            - sfh
-            - apartment
-            - condo
-            - other
         residenceType:
           type: string
-          enum:
-            - primary
-            - rental
-            - vacation
-            - other
-        waterSource:
+         waterSource:
           type: string
-          enum:
-            - utility
-            - well
         locationSize:
           type: string
-          enum:
-            - lte_700
-            - gt_700_ft_lte_1000_ft
-            - gt_1000_ft_lte_2000_ft
-            - gt_2000_ft_lte_4000_ft
-            - gt_4000_ft
-        showerBathCount:
+         showerBathCount:
           type: number
         toiletCount:
           type: number
         plumbingType:
           type: string
-          enum:
-            - copper
-            - galvanized
         waterUtility:
           type: string
         homeownersInsurance:
@@ -288,11 +266,6 @@ components:
           type: boolean
         pastWaterDamageClaimAmount:
           type: string
-          enum:
-            - lte_10k_usd
-            - gt_10k_usd_lte_50k_usd
-            - gt_50k_usd_lte_100k_usd
-            - gt_100K_usd
         irrigationSchedule:
           type: object
           properties:
