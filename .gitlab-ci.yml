@@ -117,7 +117,6 @@ K8sProd:
   dependencies:
     - Compile
   only:
-    - prep_prod_deployment
     - master
   environment:
     name: prod
