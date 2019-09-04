@@ -61,7 +61,7 @@ paths:
             Multiple filters are allowed.
             * `cleared` - Cleared by user
             * `snoozed` - User muted alert for some time
-            * `cancelled` - System clered the alert before user
+            * `cancelled` - System cleared the alert before user
         - in: query
           name: severity
           schema:
@@ -183,7 +183,7 @@ paths:
           format: uuid
         description: Alert ID
     post:
-      summary: Submit feedback for an alert
+      summary: Submit feedback for an incident
       tags:
         - Alerts
       produces:
@@ -193,7 +193,10 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Feedback'
+              type: object
+              properties:
+                feedback:
+                  $ref: '#/components/schemas/Feedback'
       responses:
         200:
           description: Feedback successfully submitted
@@ -206,7 +209,8 @@ paths:
         403:
           description: Unauthorized or device ID does not match incident
         404:
-          description: Alert event not found
+          description: Incident not found
+
 
   /api/v2/alerts/incident:
     post:
