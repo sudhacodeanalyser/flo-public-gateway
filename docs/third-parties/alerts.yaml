@@ -361,32 +361,34 @@ components:
         userFeedback:
           type: array
           items:
-            $ref: '#/components/schemas/AlertUserFeedback'
-    AlertUserFeedback:
+            $ref: '#/components/schemas/UserFeedback'
+    UserFeedback:
       type: object
-      required:
-        - shouldAcceptAsNormal
-        - cause
-        - createdAt
       properties:
-        cause:
-          type: number
-        shouldAcceptAsNormal:
-          type: boolean
-        plumbingFailure:
-          type: number
-        fixture:
-          type: string
-        causeOther:
-          type: string
-        plumbingFailureOther:
-          type: string
         userId:
           type: string
           format: uuid
         createdAt:
           type: string
           format: date-time
+        feedback:
+          $ref: '#/components/schemas/Feedback'
+    Feedback:
+      type: array
+      items:
+        type: object
+        required:
+          - property
+          - value
+        properties:
+          property:
+            type: string
+          value:
+            anyOf:
+              - type: number
+              - type: string
+              - type: boolean
+              - $ref: '#/components/schemas/AnyValue'
     SupportOption:
       type: object
       properties:
