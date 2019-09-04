@@ -61,7 +61,7 @@ paths:
             Multiple filters are allowed.
             * `cleared` - Cleared by user
             * `snoozed` - User muted alert for some time
-            * `cancelled` - System clered the alert before user
+            * `cancelled` - System cleared the alert before user
         - in: query
           name: severity
           schema:

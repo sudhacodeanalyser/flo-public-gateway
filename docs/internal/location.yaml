@@ -248,11 +248,11 @@ components:
           type: string
         residenceType:
           type: string
-         waterSource:
+        waterSource:
           type: string
         locationSize:
           type: string
-         showerBathCount:
+        showerBathCount:
           type: number
         toiletCount:
           type: number
