@@ -83,13 +83,16 @@ class AccountResolver extends Resolver<Account> {
         ...account.userRoles.map(async ({ userId }) =>
           this.userAccountRoleTable.remove({ account_id: id, user_id: userId })
         ),
-        ...account.users.map(async ({ id: userId }) =>
-          this.userResolverFactory().removeUser(userId)
-        ),
         ...account.locations.map(async ({ id: locationId }) =>
           this.locationResolverFactory().removeLocation(locationId)
         )
       ]);
+
+      await Promise.all(
+        account.users.map(async ({ id: userId }) =>
+          this.userResolverFactory().removeUser(userId)
+        )
+      );
     }
   }
 
