@@ -405,6 +405,8 @@ paths:
           $ref: '#/components/responses/UnauthorizedError'
         403:
           $ref: '#/components/responses/ForbiddenError'
+        404:
+          $ref: '#/components/responses/NotFoundError'
         409:
           description: A Device with the specified ID was not found.
           schema:
