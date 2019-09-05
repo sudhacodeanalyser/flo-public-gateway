@@ -312,7 +312,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       const latestHealthTest = await healthTestService.getLatest(device.value.macAddress);
 
       if (latestHealthTest === null) {
-        return new NotFoundError();
+        throw new NotFoundError();
       }
 
       return latestHealthTest;
@@ -343,7 +343,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
           healthTestService.getTestResultByRoundId(roundId));
 
       if (healthTest === null) {
-        return new NotFoundError()
+        throw new NotFoundError();
       }
 
       if (healthTest.deviceId !== device.value.macAddress) {
