@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import { controller, interfaces, HttpResponseMessage, JsonContent, requestHeaders, queryParam, httpMethod as inversifyHttpMethod } from 'inversify-express-utils';
 import ResourceDoesNotExistError from './error/ResourceDoesNotExistError';
+import NotFoundError from './error/NotFoundError';
 import { PropExpand, Expandable } from './index';
 import { Response } from './response';
 import { Option, isNone } from 'fp-ts/lib/Option';
@@ -85,7 +86,7 @@ export function withResponseType<M, R extends Response>(responseFormatter: (mode
       const result: Option<Expandable<M>> = await method.apply(this, args);
 
       if (isNone(result)) {
-        return {};
+        throw new NotFoundError();
       }
 
       return responseFormatter(result.value);

@@ -16,7 +16,7 @@ paths:
           description: Account ID
       responses:
         200:
-          description: An Account with the specified ID or an empty object if not found.
+          description: An Account with the specified ID.
           content:
             application/json:
               schema:
@@ -25,6 +25,8 @@ paths:
           $ref: '#/components/responses/UnauthorizedError'
         403:
           $ref: '#/components/responses/ForbiddenError'
+        404:
+          $ref: '#/components/responses/NotFoundError'
 
     delete:
       summary: Deletes an Account by ID.
