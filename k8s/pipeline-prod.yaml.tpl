@@ -4,6 +4,8 @@ secrets:
   datas:
     application_name: "${APPLICATION_NAME}"
     environment: production
+    ACL_URL: "${ACL_URL_PROD}"
+    API_V1_URL: "${API_V1_URL_PROD}"
     auth_url: "${AUTH_URL_PROD}"
     DYNAMO_TABLE_PREFIX: "${DYNAMO_TABLE_PREFIX_PROD}"
     EXTERNAL_SERVICE_HTTP_TIMEOUT_MS: "${EXTERNAL_SERVICE_HTTP_TIMEOUT_MS_PROD}"
