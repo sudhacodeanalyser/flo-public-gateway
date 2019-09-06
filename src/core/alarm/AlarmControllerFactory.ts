@@ -56,7 +56,7 @@ export function AlarmControllerFactory(container: Container, apiVersion: number)
         }),
         body: t.intersection([
           t.type({
-            snooze: t.number
+            snoozeSeconds: t.number
           }),
           t.union([
             t.type({
