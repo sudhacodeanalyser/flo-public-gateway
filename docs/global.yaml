@@ -10,6 +10,8 @@ components:
       description: Access token is missing or invalid
     ForbiddenError:
       description: Access to resource not permitted
+    NotFoundError:
+      description: Resource not found
 
   schemas:
     Roles:

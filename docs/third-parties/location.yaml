@@ -18,7 +18,7 @@ paths:
         - $ref: '#/components/parameters/ExpandParam'
       responses:
         200:
-          description: A Location with the specified ID or an empty object if not found.
+          description: A Location with the specified ID.
           content:
             application/json:
               schema:
@@ -27,6 +27,9 @@ paths:
           $ref: '#/components/responses/UnauthorizedError'
         403:
           $ref: '#/components/responses/ForbiddenError'
+        404:
+          $ref: '#/components/responses/NotFoundError'
+
   /api/v2/locations/{id}/systemMode:
     parameters:
       - in: path

@@ -13,7 +13,11 @@ export function AlarmControllerFactory(container: Container, apiVersion: number)
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
   const authMiddlewareFactory = container.get<AuthMiddlewareFactory>('AuthMiddlewareFactory');
   const auth = authMiddlewareFactory.create();
-  const authWithIcd = authMiddlewareFactory.create(async ({ body: { deviceId } }) => ({icd_id: deviceId}));
+  const authWithIcdIdOrLocationId = authMiddlewareFactory.create(
+    async ({ body: { deviceId, locationId } }: Request) => ({
+      icd_id: deviceId, location_id: locationId
+    })
+  );
   const authWithLocation = authMiddlewareFactory.create(async ({ body: { locationId } }) => ({ location_id: locationId }));
 
   @httpController({ version: apiVersion }, '/alarms')
@@ -45,15 +49,24 @@ export function AlarmControllerFactory(container: Container, apiVersion: number)
     }
 
     @httpPut('/:id/clear',
-      authWithIcd,
+      authWithIcdIdOrLocationId,
       reqValidator.create(t.type({
         params: t.type({
           id: t.string
         }),
-        body: t.type({
-          deviceId: t.string,
-          snooze: t.union([t.number, t.undefined])
-        }),
+        body: t.intersection([
+          t.type({
+            snoozeSeconds: t.number
+          }),
+          t.union([
+            t.type({
+              deviceId: t.string
+            }),
+            t.type({
+              locationId: t.string
+            })
+          ])
+        ])
       }))
     )
     private async clearAlarm(@request() req: Request, @requestParam('id') id: string, @requestBody() data: any): Promise<ClearAlertResponse> {

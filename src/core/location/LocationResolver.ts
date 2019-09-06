@@ -86,21 +86,27 @@ class LocationResolver extends Resolver<Location> {
       }
 
       const devices = await this.deviceResolverFactory().getAllByLocationId(location.id);
-      const device: Device | undefined = devices
+      const unlockedDevices = devices
         .filter((d: Device) =>
           d.systemMode &&
-          !d.systemMode.isLocked &&
-          (d.systemMode.lastKnown || d.systemMode.target)
-        )
-        .sort((deviceA: Device, deviceB: Device) => {
-          if (_.get(deviceA, 'systemMode.target') && !_.get(deviceB, 'systemMode.target')) {
-            return -1;
-          } else if (_.get(deviceB, 'systemMode.target') && !_.get(deviceA, 'systemMode.target')) {
-            return 1;
-          } else {
-            return 0;
-          }
-        })[0];
+          !d.systemMode.isLocked 
+        );
+      const device: Device | undefined = 
+        // If all devices are in forced sleep
+        !unlockedDevices.length && devices.length ?
+          // Then use the forced sleep system mode information
+          devices.filter(({ systemMode }) => systemMode)[0] :
+          // Otherwise, find an unlocked device
+          unlockedDevices
+            .sort((deviceA: Device, deviceB: Device) => {
+              if (_.get(deviceA, 'systemMode.target') && !_.get(deviceB, 'systemMode.target')) {
+                return -1;
+              } else if (_.get(deviceB, 'systemMode.target') && !_.get(deviceA, 'systemMode.target')) {
+                return 1;
+              } else {
+                return 0;
+              }
+            })[0];
 
       return {
         target: _.get(device, 'systemMode.target') || _.get(device, 'systemMode.lastKnown') || SystemMode.HOME

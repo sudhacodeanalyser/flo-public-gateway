@@ -18,6 +18,7 @@ import { DirectiveServiceFactory } from './DirectiveService';
 import { HealthTest, HealthTestServiceFactory } from './HealthTestService';
 import ForbiddenError from '../api/error/ForbiddenError';
 import UnauthorizedError  from '../api/error/UnauthorizedError';
+import NotFoundError from '../api/error/NotFoundError';
 import { PairingResponse } from './PairingService';
 
 enum HealthTestActions {
@@ -311,7 +312,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       const latestHealthTest = await healthTestService.getLatest(device.value.macAddress);
 
       if (latestHealthTest === null) {
-        return {};
+        throw new NotFoundError();
       }
 
       return latestHealthTest;
@@ -342,7 +343,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
           healthTestService.getTestResultByRoundId(roundId));
 
       if (healthTest === null) {
-        return {};
+        throw new NotFoundError();
       }
 
       if (healthTest.deviceId !== device.value.macAddress) {
