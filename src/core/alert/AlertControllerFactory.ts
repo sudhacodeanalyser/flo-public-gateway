@@ -137,10 +137,6 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
       }));
     }
 
-    private hasDeviceId = (data: any): data is { deviceId: string } => {
-      return data.deviceId !== undefined;
-    }
-
     @httpPost('/:id/userFeedback',
       // Auth deferred to controller method
       reqValidator.create(t.type({
