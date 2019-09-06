@@ -1,6 +1,6 @@
 import { Option, some } from 'fp-ts/lib/Option';
 import { Container, inject } from 'inversify';
-import { BaseHttpController, httpDelete, httpGet, httpPost, interfaces, queryParam, requestBody, requestParam } from 'inversify-express-utils';
+import { BaseHttpController, httpDelete, httpGet, httpPost, interfaces, queryParam, requestBody, requestParam, request } from 'inversify-express-utils';
 import * as t from 'io-ts';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
@@ -10,7 +10,8 @@ import Request from '../api/Request';
 import * as Responses from '../api/response';
 import { UserService } from '../service';
 import { PasswordResetService } from './PasswordResetService';
-import { EmailAvailability, EmailVerification, EmailVerificationCodec, OAuth2Response, UserRegistrationData, UserRegistrationDataCodec, UserRegistrationService } from './UserRegistrationService';
+import { EmailAvailability, EmailVerification, EmailVerificationCodec, OAuth2Response, UserRegistrationData, UserRegistrationDataCodec, UserRegistrationService, RegistrationTokenResponse } from './UserRegistrationService';
+import UnauthorizedError from '../api/error/UnauthorizedError';
 
 export function UserControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
@@ -80,6 +81,25 @@ export function UserControllerFactory(container: Container, apiVersion: number):
     )
     private async checkEmailAvailability(@queryParam('email') email: string): Promise<EmailAvailability> {
       return this.userRegistrationService.checkEmailAvailability(email);
+    }
+
+    @httpGet(
+      '/register/token',
+      // Auth deferred to API v1
+      reqValidator.create(t.type({
+        query: t.type({
+          email: t.string
+        })
+      }))
+    )
+    private async getRegistrationTokenByEmail(@request() req: Request, @queryParam('email') email: string): Promise<RegistrationTokenResponse> {
+      const token = req.get('Authorization');
+
+      if (!token) {
+        throw new UnauthorizedError();
+      }
+
+      return this.userRegistrationService.getRegistrationTokenByEmail(token, email);
     }
 
     @httpPost(

@@ -34,11 +34,18 @@ export const OAuth2ResponseCodec = t.type({
   issued_at: t.union([t.undefined, t.string])
 });
 
+export const RegistrationTokenResponseCodec = t.type({
+  token: t.string
+});
+
 export type OAuth2Response = t.TypeOf<typeof OAuth2ResponseCodec>;
+
+export type RegistrationTokenResponse = t.TypeOf<typeof RegistrationTokenResponseCodec>;
 
 export interface UserRegistrationService {
   acceptTermsAndVerifyEmail(data: UserRegistrationData): Promise<void>;
   checkEmailAvailability(email: string): Promise<EmailAvailability>;
   resendVerificationEmail(email: string): Promise<void>;
   verifyEmailAndCreateUser(emailVerification: EmailVerification): Promise<OAuth2Response>;
+  getRegistrationTokenByEmail(authToken: string, email: string): Promise<RegistrationTokenResponse>;
 }

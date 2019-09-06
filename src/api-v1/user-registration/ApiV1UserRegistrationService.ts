@@ -2,7 +2,7 @@ import { inject, injectable } from 'inversify';
 import { HttpService } from '../../http/HttpService';
 import HttpError from '../../http/HttpError';
 import { EmailAvailabilityCodec } from './models';
-import { UserRegistrationData, EmailAvailability, UserRegistrationService, EmailVerification, OAuth2Response, OAuth2ResponseCodec } from '../../core/user/UserRegistrationService';
+import { UserRegistrationData, EmailAvailability, UserRegistrationService, EmailVerification, OAuth2Response, OAuth2ResponseCodec, RegistrationTokenResponse, RegistrationTokenResponseCodec } from '../../core/user/UserRegistrationService';
 import { isLeft } from 'fp-ts/lib/Either';
 
 import _ from 'lodash';
@@ -89,6 +89,22 @@ class ApiV1UserRegistrationService extends HttpService implements UserRegistrati
     };
     const response = await this.sendRequest(request);
     const result = OAuth2ResponseCodec.decode(response);
+
+    if (isLeft(result)) {
+      throw new Error('Invalid response.');
+    }
+
+    return result.right;
+  }
+
+  public async getRegistrationTokenByEmail(authToken: string, email: string): Promise<RegistrationTokenResponse> {
+    const request = {
+      method: 'GET',
+      url: `${ this.apiV1Url }/userregistration?email=${ encodeURIComponent(email) }`,
+      authToken
+    };
+    const response = await this.sendRequest(request);
+    const result = RegistrationTokenResponseCodec.decode(response);
 
     if (isLeft(result)) {
       throw new Error('Invalid response.');
