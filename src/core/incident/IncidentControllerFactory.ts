@@ -13,13 +13,13 @@ import Request from '../api/Request';
 import { NotificationServiceFactory } from '../notification/NotificationService';
 import { AlertService } from '../service';
 
-export function EventControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
+
+export function IncidentControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
   const authMiddlewareFactory = container.get<AuthMiddlewareFactory>('AuthMiddlewareFactory');
   const auth = authMiddlewareFactory.create();
-  const authWithIcd = authMiddlewareFactory.create(async ({ body: { deviceId } }) => ({icd_id: deviceId}));
 
-  @httpController({ version: apiVersion }, '/events')
+  @httpController({ version: apiVersion }, '/incidents')
   class EventController extends BaseHttpController {
     constructor(
       @inject('NotificationServiceFactory') private notificationServiceFactory: NotificationServiceFactory,
@@ -28,54 +28,18 @@ export function EventControllerFactory(container: Container, apiVersion: number)
       super();
     }
 
-    @httpGet('/alarms/statistics')
-    private async retrieveStatistics(@request() req: Request): Promise<NotificationStatistics> {
+    @httpPost('/raw', auth)
+    private async createIncidentRaw(@request() req: Request, @requestBody() incidentInfo: any): Promise<string> {
+      return this
+        .notificationServiceFactory
+        .create(req)
+        .sendAlarm(incidentInfo);
+    }
+
+    @httpGet('/')
+    private async getIncidentByFilter(@request() req: Request): Promise<PaginatedResult<AlarmEvent>> {
       const filters = req.url.split('?')[1] || '';
 
-      return this
-        .notificationServiceFactory
-        .create(req)
-        .retrieveStatistics(filters);
-    }
-
-    @httpPost('/alarms', auth)
-    private async sendAlarm(@request() req: Request, @requestBody() alarmInfo: any): Promise<string> {
-      return this
-        .notificationServiceFactory
-        .create(req)
-        .sendAlarm(alarmInfo);
-    }
-
-    @httpGet('/alarms/:id',
-      reqValidator.create(t.type({
-        params: t.type({
-          id: t.string
-        })
-      }))
-    )
-    private async getAlarmEvent(@requestParam('id') id: string): Promise<AlarmEvent> {
-      return this.eventService.getAlarmEvent(id);
-    }
-
-    @httpDelete('/alarms/:id',
-      auth,
-      reqValidator.create(t.type({
-        params: t.type({
-          id: t.string
-        })
-      }))
-    )
-    private async deleteAlarmEvent(@request() req: Request, @requestParam('id') id: string): Promise<void> {
-      return this
-        .notificationServiceFactory
-        .create(req)
-        .deleteAlarmEvent(id);
-    }
-
-    @httpGet('/alarms')
-    private async getAlarmEventsByFilter(@request() req: Request): Promise<PaginatedResult<AlarmEvent>> {
-      const filters = req.url.split('?')[1] || '';
-    
       if (_.isEmpty(req.query.deviceId) && _.isEmpty(req.query.locationId)) {
         throw new ReqValidationError('Missing deviceId or locationId parameters.');
       }
@@ -83,14 +47,16 @@ export function EventControllerFactory(container: Container, apiVersion: number)
       return this.eventService.getAlarmEventsByFilter(filters);
     }
 
-    @httpPost('/alarms/sample', authWithIcd)
-    private async generateRandomEvents(@request() req: Request, @requestBody() data: any): Promise<void> {
-      return this
-        .notificationServiceFactory
-        .create(req)
-        .generateEventsSample(data);
+    @httpGet('/:id',
+        reqValidator.create(t.type({
+          params: t.type({
+            id: t.string
+          })
+        }))
+    )
+    private async getIncident(@requestParam('id') id: string): Promise<AlarmEvent> {
+      return this.eventService.getAlarmEvent(id);
     }
-
   }
 
   return EventController;

@@ -1,3 +1,124 @@
+paths:
+  /api/v2/incidents:
+    get:
+      summary: Retrieve incident for device(s) and/or location(s)
+      tags:
+        - Incidents
+      produces:
+        - application/json
+      parameters:
+        - in: query
+          name: locationId
+          schema:
+            type: string
+            format: uuid
+          description: 'Multiple locationId query params are allowed'
+        - in: query
+          name: deviceId
+          schema:
+            type: string
+            format: uuid
+          description: 'Multiple deviceId query params are allowed'
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum:
+              - triggered
+              - resolved
+          description: |
+            Multiple filters are allowed.
+            * `triggered` - Alerts pending user feedback
+            * `resolved` - Resolved, reason will contain detail why
+            * `filtered` - Filtered, system filtered it, user will never see it
+        - in: query
+          name: reason
+          schema:
+            type: string
+            enum:
+              - cleared
+              - snoozed
+              - cancelled
+          description: |
+            Multiple filters are allowed.
+            * `cleared` - Cleared by user
+            * `snoozed` - User muted alert for some time
+            * `cancelled` - System cleared the alert before user
+        - in: query
+          name: severity
+          schema:
+            type: string
+            enum:
+              - info
+              - critical
+              - warning
+          description: |
+            Multiple filters are allowed.
+            * `info` - Informational message. e.g. Health Test Completed
+            * `warning` - Should look into. e.g. High Water Temperature
+            * `critical` - Water shutoff events. e.g. Fast Water Flow
+        - in: query
+          name: page
+          schema:
+            type: number
+          description: Page number
+        - in: query
+          name: size
+          schema:
+            type: number
+          description: Page size
+      responses:
+        200:
+          description: A list of matching incidents.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertItemList'
+
+  /api/v2/incidents/{id}:
+    get:
+      summary: Retrieves an Incident by id
+      tags:
+        - Incidents
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Incident Id
+      produces:
+        - application/json
+      responses:
+        200:
+          description: The Incident with the given Id
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertItemEvent'
+
+  /api/v2/incidents/raw:
+    post:
+      summary: Creates an incident incident using raw request
+      description: This endpoint will create a new incident that will be processed by all the filters in Notification Router
+      tags:
+        - Incidents
+      produces:
+        - application/json
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IncidentRawData'
+      responses:
+        200:
+          description: The ID of the created incident
+          content:
+            application/json:
+              schema:
+                type: string
 
 components:
   schemas:
