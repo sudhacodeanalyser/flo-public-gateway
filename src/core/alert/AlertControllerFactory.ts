@@ -1,25 +1,26 @@
+import express from 'express';
 import * as Either from 'fp-ts/lib/Either';
-import { pipe } from 'fp-ts/lib/pipeable';
 import { Container, inject } from 'inversify';
-import { BaseHttpController, httpDelete, httpGet, httpPost, interfaces, request, response, requestBody, requestParam } from 'inversify-express-utils';
+import { BaseHttpController, httpGet, httpPost, interfaces, request, requestBody, requestParam, response } from 'inversify-express-utils';
 import * as t from 'io-ts';
 import _ from 'lodash';
+import { $enum } from 'ts-enum-util';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
-import ReqValidationError from '../../validation/ReqValidationError';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
-import { NotificationStatistics, IncidentStatusReasonCodec, AlarmSeverityCodec, ClearAlertResponse, ClearAlertBodyCodec, ClearAlertBody, AlertStatusCodec, AlertStatus, AlarmEvent, AlertFeedback, NotificationCounts, PaginatedResult, UserFeedback, UserFeedbackCodec } from '../api';
-import { createMethod, httpController } from '../api/controllerUtils';
+import { AlarmEvent, AlarmSeverityCodec, AlertStatus, AlertStatusCodec, ClearAlertBody, ClearAlertBodyCodec, ClearAlertResponse, IncidentStatusReasonCodec, NotificationStatistics, PaginatedResult, UserFeedback, UserFeedbackCodec } from '../api';
+import { httpController } from '../api/controllerUtils';
 import Request from '../api/Request';
 import { NotificationServiceFactory } from '../notification/NotificationService';
 import { AlertService } from '../service';
-import { $enum } from 'ts-enum-util';
-import express from 'express';
 
 export function AlertControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
   const authMiddlewareFactory = container.get<AuthMiddlewareFactory>('AuthMiddlewareFactory');
-  const auth = authMiddlewareFactory.create();
-  const authWithIcd = authMiddlewareFactory.create(async ({ body: { deviceId } }) => ({icd_id: deviceId}));
+  const authWithIcdIdOrLocationId = authMiddlewareFactory.create(
+    async ({ body: { deviceId, locationId } }: Request) => ({
+      icd_id: deviceId, location_id: locationId
+    })
+  );
 
   type Integer = t.TypeOf<typeof t.Integer>;
 
@@ -100,7 +101,7 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
       const combinedFilters = [
         filters,
         ...(
-          _.isEmpty(req.query.status) ? 
+          _.isEmpty(req.query.status) ?
             $enum(AlertStatus).getValues().map(status => `status=${status}`) :
             []
         )
@@ -110,22 +111,34 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
     }
 
     @httpPost('/action',
-      authWithIcd,
+      authWithIcdIdOrLocationId,
       reqValidator.create(t.type({
         body: ClearAlertBodyCodec
       }))
     )
     private async clearAlarm(@request() req: Request, @requestBody() data: ClearAlertBody): Promise<ClearAlertResponse> {
+      const hasDeviceId = (obj: any): obj is { deviceId: string } => {
+        return obj.deviceId !== undefined;
+      }
+      const hasLocationId = (obj: any): obj is { locationId: string } => {
+        return obj.locationId !== undefined;
+      }
+
       const service = this.notificationServiceFactory.create(req);
 
       const clearResponses = await Promise.all(data.alarmIds.map(alarmId => service.clearAlarm(alarmId, {
-        deviceId: data.deviceId,
+        ...(hasDeviceId(data) && { deviceId: data.deviceId }),
+        ...(hasLocationId(data) && { locationId: data.locationId }),
         snoozeSeconds: data.snoozeSeconds
-      })));   
+      })));
 
       return clearResponses.reduce((acc, clearResponse) => ({
         cleared: acc.cleared + clearResponse.cleared
       }));
+    }
+
+    private hasDeviceId = (data: any): data is { deviceId: string } => {
+      return data.deviceId !== undefined;
     }
 
     @httpPost('/:id/userFeedback',
