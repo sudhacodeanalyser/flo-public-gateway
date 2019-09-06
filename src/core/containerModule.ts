@@ -14,6 +14,7 @@ import alarmContainerModule from './alarm/containerModule';
 import alertContainerModule from './alert/containerModule';
 import floDetectContainerModule from './flo-detect/containerModule';
 import entityActivityContainerModule from './entity-activity/containerModule';
+import telemetryContainerModule from './telemetry/containerModule';
 
 export default [
   pingContainerModule,
@@ -31,5 +32,6 @@ export default [
   alarmContainerModule,
   alertContainerModule,
   floDetectContainerModule,
-  entityActivityContainerModule
+  entityActivityContainerModule,
+  telemetryContainerModule
 ];

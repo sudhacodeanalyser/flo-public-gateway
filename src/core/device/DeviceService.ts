@@ -2,7 +2,7 @@ import _ from 'lodash';
 import { injectable, inject } from 'inversify';
 import { DependencyFactoryFactory, Device, DeviceUpdate, DeviceCreate, Location, ValveState, PropExpand, Expandable, Telemetry } from '../api';
 import { DeviceResolver } from '../resolver';
-import { LocationService, EntityActivityService, EntityActivityAction, EntityActivityType } from '../service';
+import { TelemetryService, LocationService, EntityActivityService, EntityActivityAction, EntityActivityType } from '../service';
 import { PairingService, PairingData, QrData } from '../../api-v1/pairing/PairingService';
 import ConflictError from '../api/error/ConflictError';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
@@ -32,7 +32,7 @@ class DeviceService {
     @inject('InternalDeviceService') private internalDeviceService: InternalDeviceService,
     @inject('EntityActivityService') private entityActivityService: EntityActivityService,
     @inject('KafkaProducer') private kafkaPublisher: KafkaProducer,
-    @inject('TelemetryKafkaTopic') private telemetryKafkaTopic: string
+    @inject('TelemetryService') private telemetrySevice: TelemetryService
   ) {
     this.locationServiceFactory = depFactoryFactory<LocationService>('LocationService');
     this.sessionServiceFactory = depFactoryFactory<SessionService>('SessionService');
@@ -139,16 +139,14 @@ class DeviceService {
     await pipe(
       await this.getDeviceById(id),
       O.map(async device => {
-        const promises = telemetryMessages.map(telemetryMessage => 
-          this.kafkaPublisher.send(
-            this.telemetryKafkaTopic, 
-            { ...telemetryMessage, did: device.macAddress }
-          )
-        );
+        const messages = telemetryMessages
+          .map(telemetryMessage => ({ 
+            ...telemetryMessage, 
+            did: device.macAddress 
+          }));
 
-        await Promise.all(promises);
+        await this.telemetrySevice.publishTelemetry(messages);
       }),
-      // Needs a body to pass linter
       O.getOrElse(async (): Promise<void> => { throw new NotFoundError(); })
     );
   }
