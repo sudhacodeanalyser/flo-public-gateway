@@ -1,17 +1,23 @@
 import _ from 'lodash';
 import { injectable, inject } from 'inversify';
-import { DependencyFactoryFactory, Device, DeviceUpdate, DeviceCreate, Location, ValveState, PropExpand } from '../api';
+import { DependencyFactoryFactory, Device, DeviceUpdate, DeviceCreate, Location, ValveState, PropExpand, Expandable, Telemetry } from '../api';
 import { DeviceResolver } from '../resolver';
-import { LocationService } from '../service';
+import { TelemetryService, LocationService, EntityActivityService, EntityActivityAction, EntityActivityType } from '../service';
 import { PairingService, PairingData, QrData } from '../../api-v1/pairing/PairingService';
 import ConflictError from '../api/error/ConflictError';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import Logger from 'bunyan';
 import { DirectiveService } from './DirectiveService';
-import { Option, some, none, isNone, fromNullable } from 'fp-ts/lib/Option';
+import * as O from 'fp-ts/lib/Option';
 import { InternalDeviceService } from '../../internal-device-service/InternalDeviceService';
 import { SessionService } from '../session/SessionService';
 import { PairingResponse } from './PairingService';
+import { pipe } from 'fp-ts/lib/pipeable';
+import { KafkaProducer } from '../../kafka/KafkaProducer';
+import NotFoundError from '../api/error/NotFoundError';
+
+const { some, none, isNone, fromNullable } = O;
+type Option<T> = O.Option<T>;
 
 @injectable()
 class DeviceService {
@@ -23,7 +29,10 @@ class DeviceService {
     @inject('PairingService') private apiV1PairingService: PairingService,
     @inject('Logger') private readonly logger: Logger,
     @inject('DependencyFactoryFactory') depFactoryFactory: DependencyFactoryFactory,
-    @inject('InternalDeviceService') private internalDeviceService: InternalDeviceService
+    @inject('InternalDeviceService') private internalDeviceService: InternalDeviceService,
+    @inject('EntityActivityService') private entityActivityService: EntityActivityService,
+    @inject('KafkaProducer') private kafkaPublisher: KafkaProducer,
+    @inject('TelemetryService') private telemetrySevice: TelemetryService
   ) {
     this.locationServiceFactory = depFactoryFactory<LocationService>('LocationService');
     this.sessionServiceFactory = depFactoryFactory<SessionService>('SessionService');
@@ -56,7 +65,23 @@ class DeviceService {
   }
 
   public async removeDevice(id: string): Promise<void> {
-    return this.deviceResolver.remove(id);
+
+    await pipe(
+      await this.getDeviceById(id),
+      O.fold(
+        async () => {
+          await this.deviceResolver.remove(id)
+        },
+        async device => {
+          await this.deviceResolver.remove(id);
+          await this.entityActivityService.publishEntityActivity(
+            EntityActivityType.DEVICE, 
+            EntityActivityAction.DELETED, 
+            device
+          );
+        }
+      )
+    );
   }
 
   public async scanQrCode(authToken: string, userId: string, qrData: QrData): Promise<PairingResponse> {
@@ -108,6 +133,24 @@ class DeviceService {
   public async getAllByLocationId(locationId: string, expand?: PropExpand): Promise<Device[]> {
     return this.deviceResolver.getAllByLocationId(locationId, expand);
   }
+
+  public async publishTelemetry(id: string, telemetryMessages: Telemetry[]): Promise<void> {
+
+    await pipe(
+      await this.getDeviceById(id),
+      O.map(async device => {
+        const messages = telemetryMessages
+          .map(telemetryMessage => ({ 
+            ...telemetryMessage, 
+            did: device.macAddress 
+          }));
+
+        await this.telemetrySevice.publishTelemetry(messages);
+      }),
+      O.getOrElse(async (): Promise<void> => { throw new NotFoundError(); })
+    );
+  }
+
 }
 
 export { DeviceService };

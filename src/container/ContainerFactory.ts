@@ -17,7 +17,6 @@ import subscriptionProviderModule from '../subscription/containerModule';
 import validationContainerModule from '../validation/containerModule';
 import memoizeContainerModule from '../memoize/containerModule';
 
-
 export default function ContainerFactory(container: Container = new Container()): Container {
 
   container.bind<typeof config>('Config').toConstantValue(config);
