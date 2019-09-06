@@ -6,7 +6,7 @@ import { PairingData, QrData, QrDataValidator } from '../../api-v1/pairing/Pairi
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import { InternalDeviceService } from '../../internal-device-service/InternalDeviceService';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
-import { Device, DeviceCreate, DeviceCreateValidator, DeviceUpdate, DeviceUpdateValidator, SystemMode as DeviceSystemMode, SystemModeCodec as DeviceSystemModeCodec } from '../api';
+import { Device, DeviceCreate, DeviceCreateValidator, DeviceUpdate, DeviceUpdateValidator, SystemMode as DeviceSystemMode, SystemModeCodec as DeviceSystemModeCodec, Telemetry, TelemetryCodec } from '../api';
 import { asyncMethod, authorizationHeader, createMethod, deleteMethod, httpController, parseExpand, withResponseType } from '../api/controllerUtils';
 import { convertEnumtoCodec } from '../api/enumUtils';
 import ResourceDoesNotExistError from "../api/error/ResourceDoesNotExistError";
@@ -265,6 +265,22 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     private async rebootDevice(@request() req: Request, @requestParam('id') id: string): Promise<void> {
       const directiveService = this.directiveServiceFactory.create(req);
       return directiveService.reboot(id);
+    }
+
+    @httpPost('/:id/telemetry',
+      authWithId,
+      reqValidator.create(t.type({
+        params: t.type({
+          id: t.string
+        }),
+        body: t.type({
+          items: t.array(TelemetryCodec)
+        })
+      }))
+    )
+    @asyncMethod
+    private async publishTelemetry(@requestParam('id') id: string, @requestBody() data: { items: Telemetry[] }): Promise<void> {
+      return this.deviceService.publishTelemetry(id, data.items);
     }
 
     @httpPost('/:id/healthTest/:action',

@@ -51,7 +51,7 @@ class KafkaProducer {
 
     const self = await this.connect();
 
-    self.kafkaProducer.produce(topic, null, new Buffer(JSON.stringify(message)), undefined, Date.now());
+    self.kafkaProducer.produce(topic, null, Buffer.from(JSON.stringify(message)), undefined, Date.now());
   }
 }
 
