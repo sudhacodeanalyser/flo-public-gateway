@@ -12,3 +12,4 @@ export * from './session/SessionService';
 export * from './alarm/AlarmService';
 export * from './alert/AlertService';
 export * from './flo-detect/FloDetectService';
+export * from './entity-activity/EntityActivityService';

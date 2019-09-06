@@ -13,6 +13,7 @@ import sessionContainerModule from './session/containerModule';
 import alarmContainerModule from './alarm/containerModule';
 import alertContainerModule from './alert/containerModule';
 import floDetectContainerModule from './flo-detect/containerModule';
+import entityActivityContainerModule from './entity-activity/containerModule';
 
 export default [
   pingContainerModule,
@@ -29,5 +30,6 @@ export default [
   sessionContainerModule,
   alarmContainerModule,
   alertContainerModule,
-  floDetectContainerModule
+  floDetectContainerModule,
+  entityActivityContainerModule
 ];

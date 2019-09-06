@@ -29,7 +29,9 @@ function getDefaults(): { [key: string]: any } {
         influxHourlyMeasurement: 'telemetry_hourly',
         influxTelemetryDb: 'telemetry_dev',
         influxSecondMeasurement: '"twelve_weeks".telemetry_raw',
-        externalServiceHttpTimeoutMs: 10000
+        externalServiceHttpTimeoutMs: 10000,
+        entityActivityKafkaTopic: 'entity-activity-v1',
+        telemetryKafkaTopic: 'telemetry-v3'
       };
   }
 }
@@ -71,7 +73,9 @@ const config = {
   influxHourlyMeasurement: process.env.INFLUX_HOURLY_MEASUREMENT,
   influxTelemetryDb: process.env.INFLUX_TELEMETRY_DB,
   influxSecondMeasurement: process.env.INFLUX_SECOND_MEASUREMNT,
-  externalServiceHttpTimeoutMs: process.env.EXTERNAL_SERVICE_HTTP_TIMEOUT_MS
+  externalServiceHttpTimeoutMs: process.env.EXTERNAL_SERVICE_HTTP_TIMEOUT_MS,
+  entityActivityKafkaTopic: process.env.ENTITY_ACTIVITY_KAFKA_TOPIC,
+  telemetryKafkaTopic: process.env.TELEMETRY_KAFKA_TOPIC
 };
 
 export default {
