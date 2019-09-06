@@ -1,7 +1,7 @@
 import * as t from 'io-ts';
 import { AlertFeedbackFlow, TimestampedModel } from '../../api';
-import { AlertFeedbackCodec } from './AlertFeedback'; // Necessary otherwise codec is undefined when imported form '../../api'
 import { convertEnumtoCodec } from '../enumUtils';
+import { AlertFeedbackCodec } from './AlertFeedback'; // Necessary otherwise codec is undefined when imported form '../../api'
 
 export interface AlarmListResult {
   items: Alarm[]
@@ -88,13 +88,22 @@ export interface ClearAlertResponse {
   cleared: number;
 }
 
-export const ClearAlertBodyCodec = t.type({
-  deviceId: t.string,
-  alarmIds: t.array(t.Int),
-  snoozeSeconds: t.Int
-});
+export const ClearAlertBodyCodec = t.intersection([
+  t.type({
+    snoozeSeconds: t.number,
+    alarmIds: t.array(t.Int)
+  }),
+  t.union([
+    t.type({
+      deviceId: t.string
+    }),
+    t.type({
+      locationId: t.string
+    })
+  ])
+]);
 
-export interface ClearAlertBody extends t.TypeOf<typeof ClearAlertBodyCodec> {}
+export type ClearAlertBody = t.TypeOf<typeof ClearAlertBodyCodec>;
 
 export const AlarmSettingsCodec = t.type({
   alarmId: t.number,
