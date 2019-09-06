@@ -1,3 +1,25 @@
+paths:
+  /api/v2/incidents/raw:
+    post:
+      summary: Creates an incident incident using raw request
+      description: This endpoint will create a new incident that will be processed by all the filters in Notification Router
+      tags:
+        - Incidents
+      produces:
+        - application/json
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IncidentRawData'
+      responses:
+        200:
+          description: The ID of the created incident
+          content:
+            application/json:
+              schema:
+                type: string
 
 components:
   schemas:
