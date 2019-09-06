@@ -13,7 +13,7 @@ import { SubscriptionControllerFactory } from './subscription/SubscriptionContro
 import { UserControllerFactory } from './user/UserControllerFactory';
 import { WaterControllerFactory } from './water/WaterControllerFactory';
 import { SessionControllerFactory } from './session/SessionControllerFactory';
-import { EventControllerFactory } from './event/EventControllerFactory';
+import { IncidentControllerFactory } from './incident/IncidentControllerFactory';
 import { FloDetectControllerFactory } from './flo-detect/FloDetectControllerFactory';
 import { AlertControllerFactory } from './alert/AlertControllerFactory';
 
@@ -31,7 +31,7 @@ export default function ControllerFactory(container: Container, apiVersion: numb
     WaterControllerFactory,
     SessionControllerFactory,
     AlarmControllerFactory,
-    EventControllerFactory,
+    IncidentControllerFactory,
     FloDetectControllerFactory,
     AlertControllerFactory
   ]
