@@ -329,6 +329,8 @@ components:
               type: ['number','null']
             psiDelta:
               type: ['number','null']
+            flowEventDuration:
+              type: ['number','null']
             leakLossMinGal:
               type: number
             leakLossMaxGal:
