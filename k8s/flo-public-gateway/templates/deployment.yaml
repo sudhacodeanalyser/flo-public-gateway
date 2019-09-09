@@ -3,6 +3,7 @@ kind: Deployment
 metadata:
   name: {{ include "flo-public-gateway.fullname" . }}
   labels:
+    app: {{ include "flo-public-gateway.name" . }}
     app.kubernetes.io/name: {{ include "flo-public-gateway.name" . }}
     helm.sh/chart: {{ include "flo-public-gateway.chart" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}
@@ -33,6 +34,24 @@ spec:
             - name: http
               containerPort: {{ .Values.service.port }}
               protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.service.livenessProbe.path }}
+              port: {{ .Values.service.port }}
+              scheme: HTTP
+            initialDelaySeconds: {{ .Values.service.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.service.livenessProbe.periodSeconds }}
+            successThreshold: 1
+            timeoutSeconds: {{ .Values.service.livenessProbe.timeoutSeconds }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.service.readinessProbe.path }}
+              port: {{ .Values.service.port }}
+              scheme: HTTP
+            initialDelaySeconds: {{ .Values.service.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.service.readinessProbe.periodSeconds }}
+            successThreshold: {{ .Values.service.readinessProbe.successThreshold }}
+            timeoutSeconds: {{ .Values.service.readinessProbe.timeoutSeconds }}
           env:
           {{- range $key, $value := .Values.secrets.datas }}
           - name: {{ $key | upper }}

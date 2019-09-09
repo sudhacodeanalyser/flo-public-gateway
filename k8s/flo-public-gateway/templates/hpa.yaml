@@ -4,11 +4,11 @@ metadata:
   name: {{ template "flo-public-gateway.fullname" . }}-hpa
 spec:
 {{ if eq .Values.environment "production" }}
-  minReplicas: 3
-  maxReplicas: 8
+  minReplicas: {{ .Values.replicaCount }}
+  maxReplicas: {{ add .Values.replicaCount 2 }}
 {{ else  }}
-  minReplicas: 1
-  maxReplicas: 2
+  minReplicas: 2
+  maxReplicas: 4
 {{ end }}
   metrics:
   - type: Resource
