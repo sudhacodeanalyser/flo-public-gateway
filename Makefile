@@ -77,7 +77,10 @@ deploy:
 deploy-k8s:
 	$(HELM) init --upgrade --wait --force-upgrade
 	$(HELM) ls
-	$(HELM) upgrade --install flo-public-gateway ./k8s/flo-public-gateway -f ./k8s/pipeline.yaml  --set environment=${params.environment} --namespace=flo-public-gateway
+	$(HELM) upgrade --install $(APP) ./k8s/flo-public-gateway -f ./k8s/pipeline.yaml  --set environment=${params.environment} --namespace=flo-public-gateway
+
+render-template:
+	$(HELM) template ./k8s/flo-public-gateway -f ./k8s/pipeline.yaml  --set environment=${params.environment} --namespace=flo-public-gateway
 
 environment-dev:
 	chmod +x ./k8s/env-dev.sh
