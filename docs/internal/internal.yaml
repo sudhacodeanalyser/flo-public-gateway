@@ -12,3 +12,10 @@ components:
               type: number
             infoCount:
               type: number
+            alarmCount:
+              type: array
+              items:
+                type: object
+                properties:
+                  id: number
+                  count: number

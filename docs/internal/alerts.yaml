@@ -130,6 +130,13 @@ paths:
                         type: number
                       criticalCount:
                         type: number
+                      alarmCount:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id: number
+                            count: number
 
   /api/v2/alerts/{id}:
     get:
