@@ -5,6 +5,11 @@ image: registry.gitlab.com/flotechnologies/gitlabci-docker-compose:18.06-fat
 services:
   - docker:18.09-dind
 
+variables:
+  DOCKER_HOST: "tcp://localhost:2375"
+  CI_REGISTRY: "registry.gitlab.com"
+  CI_REGISTRY_IMAGE: "${CI_REGISTRY}/flotechnologies/flo-public-gateway"
+
 stages:
   - build
   - test
@@ -12,15 +17,13 @@ stages:
   - verify
 
 before_script:
-  - export DOCKER_HOST=tcp://localhost:2375
-  - export CI_REGISTRY=registry.gitlab.com
-  - apk add --no-cache make bash jq gettext # TODO: this should be part of the compose image
-  - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY
   - |
+    # TODO: this should be part of the compose image
+    apk add --no-cache make bash jq gettext
+    docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY
     if [[ -f Dockerrun.aws.json ]]; then
       sed -i "s/:latest/:${CI_PIPELINE_ID}/g" Dockerrun.aws.json
     fi
-  - export CI_REGISTRY_IMAGE="registry.gitlab.com/flotechnologies/flo-public-gateway"
 
 Compile:
   stage: build
@@ -34,7 +37,6 @@ Compile:
       - node_modules/
       - dist
       - /root/.npm/_logs
-
     expire_in: 1 week
     # Cache modules in between jobs
   cache:
@@ -42,13 +44,11 @@ Compile:
     paths:
       - .npm/
       - node_modules
-
   script:
     - make pull
     - make build
     - make audit
     - make push
-
 
 Sanity:
   stage: test
@@ -88,25 +88,24 @@ K8sDev:
   tags:
     - dev
 
-
-Dev:
-  variables:
-    AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID_DEV}"
-    AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY_DEV}"
-  stage: deploy
-  dependencies:
-    - Compile
-  only:
-    - dev
-    - kloia-helmchart-deployment
-  environment:
-    name: dev
-    url: https://flo-public-gateway.flocloud.co/ping
-  script:
-    - make pull
-    - make deploy ENV=dev
-  tags:
-    - kubernetes
+# Dev:
+#   variables:
+#     AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID_DEV}"
+#     AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY_DEV}"
+#   stage: deploy
+#   dependencies:
+#     - Compile
+#   only:
+#     - dev
+#     - kloia-helmchart-deployment
+#   environment:
+#     name: dev
+#     url: https://flo-public-gateway.flocloud.co/ping
+#   script:
+#     - make pull
+#     - make deploy ENV=dev
+#   tags:
+#     - kubernetes
 
 K8sProd:
   variables:
@@ -127,23 +126,23 @@ K8sProd:
   tags:
     - deploy-prod
 
-Prod:
-  variables:
-    AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID_PROD}"
-    AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY_PROD}"
-  stage: deploy
-  dependencies:
-    - Compile
-  only:
-    - master
-  environment:
-    name: prod
-    url: https://flo-public-gateway.flosecurecloud.co/ping
-  script:
-    - make pull
-    - make deploy ENV=prod
-  tags:
-    - kubernetes
+# Prod:
+#   variables:
+#     AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID_PROD}"
+#     AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY_PROD}"
+#   stage: deploy
+#   dependencies:
+#     - Compile
+#   only:
+#     - master
+#   environment:
+#     name: prod
+#     url: https://flo-public-gateway.flosecurecloud.co/ping
+#   script:
+#     - make pull
+#     - make deploy ENV=prod
+#   tags:
+#     - kubernetes
 
 RunscopeProd:
   variables:
@@ -160,6 +159,7 @@ RunscopeProd:
     name: prod
     url: https://flo-public-gateway.flosecurecloud.co/ping
   script:
+    - sleep 60
     - curl -i "${RUNSCOPE_URL}" 1>/dev/null
   tags:
     - kubernetes
