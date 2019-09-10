@@ -64,7 +64,7 @@ export function FloDetectControllerFactory(container: Container, apiVersion: num
         })
       }))
     )
-    private async getLatestComputation(@queryParam('macAddress') macAddress: string, duration: FloDetectCompuationDuration): Promise<FloDetectComputation | FloDetectLearning> {
+    private async getLatestComputation(@queryParam('macAddress') macAddress: string, @queryParam('duration') duration: FloDetectCompuationDuration): Promise<FloDetectComputation | FloDetectLearning> {
       return pipe(
         await this.floDetectService.getLatestComputation(macAddress, duration),
         Option.getOrElse<FloDetectComputation | FloDetectLearning>(() => {
