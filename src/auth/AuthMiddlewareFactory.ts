@@ -13,7 +13,8 @@ import { pipe } from 'fp-ts/lib/pipeable';
 import * as TaskEither from 'fp-ts/lib/TaskEither';
 import { TokenMetadata, OAuth2TokenCodec, LegacyAuthTokenCodec } from './Token';
 
-type GetParams = (req: Request) => Promise<{ [param: string]: any }>;
+type Params = { [param: string]: any };
+type GetParams = (req: Request) => Promise<Params>;
 
 
 @injectable()
@@ -31,10 +32,11 @@ class AuthMiddlewareFactory {
 
       const path = overrideMethodId || req.route.path.split('/').map((p: string) => p.replace(/:.+/g, '$')).join('/');
       const methodId = req.method + path;
+      const params = getParams && (await getParams(req));
       const tokenMetadata = pipe(
-        await this.checkCache(req, methodId, token, getParams),
+        await this.checkCache(methodId, token, params),
         Option.fold(
-          () => async () => this.callAuthService(req, methodId, token, getParams),
+          () => async () => this.callAuthService(methodId, token, params),
           tokenMedata => TaskEither.right(tokenMedata)
         ),
         TaskEither.getOrElse((err): TokenMetadata => async () => next(err))
@@ -51,7 +53,7 @@ class AuthMiddlewareFactory {
     };
   }
 
-  private async formatCacheKey(req: Request, methodId: string, token: string, getParams?: GetParams): Promise<string | null> {
+  private formatCacheKey(methodId: string, token: string, params?: Params): string | null {
     const tokenData = jwt.decode(_.last(token.split('Bearer ')) || '');
     const cacheKeyPrefix = pipe(
       LegacyAuthTokenCodec.decode(tokenData),
@@ -64,9 +66,9 @@ class AuthMiddlewareFactory {
       ),
       Either.getOrElse((): string | null => null)
     );
-    const formattedParams = !getParams ?
+    const formattedParams = !params ?
       [] :
-      _.chain(await getParams(req))
+      _.chain(params)
         .map((value, key) => `${ key }_${ value }`)
         .sortBy()
         .value();
@@ -74,10 +76,10 @@ class AuthMiddlewareFactory {
     return cacheKeyPrefix && [cacheKeyPrefix, methodId, ...formattedParams].join(':');
   }
 
-  private async checkCache(req: Request, methodId: string, token: string, getParams?: GetParams): Promise<Option.Option<TokenMetadata>> {
-    const cacheKey = await this.formatCacheKey(req, methodId, token, getParams);
+  private async checkCache(methodId: string, token: string, params?: Params): Promise<Option.Option<TokenMetadata>> {
+    const cacheKey = this.formatCacheKey(methodId, token, params);
     const cacheResult = cacheKey && (await this.redisClient.get(cacheKey));
-    
+
     if (cacheResult == null) {
       return Option.none;
     } else {
@@ -85,9 +87,8 @@ class AuthMiddlewareFactory {
     }
   }
 
-  private async callAuthService(req: Request, methodId: string, token: string, getParams?: GetParams): Promise<Either.Either<Error, TokenMetadata>> {
+  private async callAuthService(methodId: string, token: string, params?: Params): Promise<Either.Either<Error, TokenMetadata>> {
       try {
-        const params = getParams !== undefined ? (await getParams(req)) : undefined;
         const authResponse = await axios({
           method: 'post',
           url: this.authUrl,
@@ -103,7 +104,7 @@ class AuthMiddlewareFactory {
 
         if (authResponse.status === 200) {
           // Do not block on cache write
-          this.writeToCache(authResponse.data, req, methodId, token, getParams);
+          this.writeToCache(authResponse.data, methodId, token, params);
 
           return Either.right(authResponse.data);
         } else {
@@ -122,8 +123,8 @@ class AuthMiddlewareFactory {
       }   
   }
 
-  private async writeToCache(tokenMetadata: TokenMetadata, req: Request, methodId: string, token: string, getParams?: GetParams): Promise<void> {
-    const cacheKey = await this.formatCacheKey(req, methodId, token, getParams);
+  private async writeToCache(tokenMetadata: TokenMetadata, methodId: string, token: string, params?: Params): Promise<void> {
+    const cacheKey = this.formatCacheKey(methodId, token, params);
 
     if (cacheKey !== null) {
       // TTL 1 hour, this means that a token can live max 1 hour after it's true expiration in the cache
