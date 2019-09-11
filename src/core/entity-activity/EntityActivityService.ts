@@ -37,9 +37,6 @@ class EntityActivityService {
     try {
       const message = this.formatEntityActivityMessage(type, action, item);
 
-      // tslint:disable
-      console.log([this.entityActivityKafkaTopic, message])
-
       await this.kafkaProducer.send(this.entityActivityKafkaTopic, message);
     } catch (err) {
       this.logger.error({ err });
