@@ -11,6 +11,7 @@ import internalDeviceServiceFetcherModule from '../internal-device-service/conta
 import kafkaContainerModule from '../kafka/containerModule';
 import localizationContainerModule from '../localization/containerModule';
 import influxContainerModule from '../database/influx/containerModule';
+import redisContainerModule from '../database/redis/containerModule';
 // Shared container modules
 import loggerFactoryContainerModule from '../logging/containerModule';
 import subscriptionProviderModule from '../subscription/containerModule';
@@ -35,6 +36,7 @@ export default function ContainerFactory(container: Container = new Container())
     healthTestServiceContainerModule,
     influxContainerModule,
     memoizeContainerModule,
+    redisContainerModule,
     ...coreContainerModules
   );
 
