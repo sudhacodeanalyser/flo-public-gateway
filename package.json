@@ -22,6 +22,7 @@
   },
   "author": "Flo Technologies",
   "dependencies": {
+    "@instana/collector": "^1.72.0",
     "aws-sdk": "^2.437.0",
     "axios": "^0.18.0",
     "body-parser": "^1.18.3",
