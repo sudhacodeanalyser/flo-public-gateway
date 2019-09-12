@@ -53,6 +53,11 @@ spec:
             successThreshold: {{ .Values.service.readinessProbe.successThreshold }}
             timeoutSeconds: {{ .Values.service.readinessProbe.timeoutSeconds }}
           env:
+          - name: INSTANA_AGENT_HOST
+            valueFrom:
+              fieldRef:
+                apiVersion: v1
+                fieldPath: status.hostIP
           {{- range $key, $value := .Values.secrets.datas }}
           - name: {{ $key | upper }}
             valueFrom:
