@@ -1,3 +1,6 @@
+// tslint:disable-next-line:no-var-requires
+require('@instana/collector')();
+
 import 'reflect-metadata';
 import Config from './config/config';
 import ContainerFactory from './container/ContainerFactory';
