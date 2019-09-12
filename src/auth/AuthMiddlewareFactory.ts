@@ -33,7 +33,7 @@ class AuthMiddlewareFactory {
       const path = overrideMethodId || req.route.path.split('/').map((p: string) => p.replace(/:.+/g, '$')).join('/');
       const methodId = req.method + path;
       const params = getParams && (await getParams(req));
-      const tokenMetadata = pipe(
+      const tokenMetadata = await pipe(
         await this.checkCache(methodId, token, params),
         Option.fold(
           () => async () => this.callAuthService(methodId, token, params),
