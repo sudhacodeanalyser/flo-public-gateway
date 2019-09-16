@@ -22,10 +22,6 @@ services:
     entrypoint: npm
     <<: *build
 
-  eb:
-    entrypoint: eb
-    <<: *build
-
   gradle:
     image: gradle:5.4.0-alpine
     entrypoint: gradle --warn
