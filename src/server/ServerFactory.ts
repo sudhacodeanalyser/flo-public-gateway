@@ -18,6 +18,7 @@ import Request from '../core/api/Request';
 import { internalSwaggerJsDoc, legacySwaggerJsDoc, swaggerInternalOpts, swaggerLegacyOpts, swaggerPartnerOpts, thirdPartiesSwaggerJsDoc } from '../docs/swagger';
 import LoggerFactory from '../logging/LoggerFactory';
 import { Loaders } from '../memoize/MemoizeMixin';
+import { CachePolicy } from '../cache/CacheMiddleware';
 
 function ServerConfigurationFactory(container: Container): (app: express.Application) => void {
   return (app: express.Application) => {
@@ -64,6 +65,7 @@ function ServerConfigurationFactory(container: Container): (app: express.Applica
     });
 
     container.bind<Loaders>('Loaders').toConstantValue(new Map());
+    container.bind<CachePolicy>('CachePolicy').toConstantValue(CachePolicy.READ_WRITE);
 
     const loggerFactory = container.get<LoggerFactory>('LoggerFactory');
     const logger = loggerFactory.createLogger();
