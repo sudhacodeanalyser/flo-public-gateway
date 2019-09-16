@@ -3,8 +3,8 @@ FROM node:10-alpine
 
 ARG NODE_ENV=development
 
-#RUN echo http://mirror.yandex.ru/mirrors/alpine/v3.10/main > /etc/apk/repositories
-#RUN echo http://mirror.yandex.ru/mirrors/alpine/v3.10/community >> /etc/apk/repositories
+RUN echo https://sjc.edge.kernel.org/alpine/v3.9/main > /etc/apk/repositories
+RUN echo https://sjc.edge.kernel.org/alpine/v3.9/community >> /etc/apk/repositories
 
 RUN rm -rf /var/cache/apk/* && \
     rm -rf /tmp/* && \
