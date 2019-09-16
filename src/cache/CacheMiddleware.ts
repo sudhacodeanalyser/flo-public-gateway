@@ -40,6 +40,7 @@ class CacheMiddleware extends BaseMiddleware {
       case 'yes':
       case 'on':
       case 'true':
+      case '1':
       case 'readwrite':
       default:
         return CachePolicy.READ_WRITE;
