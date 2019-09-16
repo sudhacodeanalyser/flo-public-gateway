@@ -84,28 +84,9 @@ K8sDev:
     url: https://flo-public-gateway.flocloud.co/ping
   script:
     - make environment-dev
-    - make deploy-k8s
+    - make deploy
   tags:
     - dev
-
-# Dev:
-#   variables:
-#     AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID_DEV}"
-#     AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY_DEV}"
-#   stage: deploy
-#   dependencies:
-#     - Compile
-#   only:
-#     - dev
-#     - kloia-helmchart-deployment
-#   environment:
-#     name: dev
-#     url: https://flo-public-gateway.flocloud.co/ping
-#   script:
-#     - make pull
-#     - make deploy ENV=dev
-#   tags:
-#     - kubernetes
 
 K8sProd:
   variables:
@@ -122,27 +103,9 @@ K8sProd:
     url: https://flo-public-gateway.flosecurecloud.co/ping
   script:
     - make environment-prod
-    - make deploy-k8s
+    - make deploy
   tags:
     - deploy-prod
-
-# Prod:
-#   variables:
-#     AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID_PROD}"
-#     AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY_PROD}"
-#   stage: deploy
-#   dependencies:
-#     - Compile
-#   only:
-#     - master
-#   environment:
-#     name: prod
-#     url: https://flo-public-gateway.flosecurecloud.co/ping
-#   script:
-#     - make pull
-#     - make deploy ENV=prod
-#   tags:
-#     - kubernetes
 
 RunscopeProd:
   variables:
