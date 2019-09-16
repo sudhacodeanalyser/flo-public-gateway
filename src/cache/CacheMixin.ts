@@ -33,7 +33,7 @@ export function cached(entityType: string): MethodDecorator {
 
       const result = await method.apply(this, args);
 
-      if (result && (cachePolicy === CachePolicy.WRITE_ONLY || CachePolicy.READ_WRITE)) {
+      if (result && (cachePolicy === CachePolicy.WRITE_ONLY || cachePolicy === CachePolicy.READ_WRITE)) {
         // Don't wait on cache write
         redisClient.set(key, JSON.stringify(result));
       }
