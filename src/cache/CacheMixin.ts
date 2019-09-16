@@ -27,8 +27,8 @@ export function cached(entityType: string): MethodDecorator {
         null :
         await redisClient.get(key);
 
-      if (cacheResult != null) {
-        return JSON.parse(cacheResult);
+      if (cacheResult != null || cacheResult === CachePolicy.READ_ONLY) {
+        return cacheResult && JSON.parse(cacheResult);
       }
 
       const result = await method.apply(this, args);
