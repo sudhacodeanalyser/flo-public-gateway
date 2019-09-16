@@ -16,7 +16,7 @@ class CacheMiddleware extends BaseMiddleware {
   public handler(req: Request, res: express.Response, next: express.NextFunction): void {
     const cachePolicy = this.parseCachePolicy(req.query.cachePolicy || '');
 
-    // Delete propery to avoid conflict with validation
+    // Delete property to avoid conflict with validation
     delete req.query.cachePolicy;
 
     this.bind<CachePolicy>('CachePolicy').toConstantValue(cachePolicy);
