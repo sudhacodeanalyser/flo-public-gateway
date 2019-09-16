@@ -17,6 +17,7 @@ import loggerFactoryContainerModule from '../logging/containerModule';
 import subscriptionProviderModule from '../subscription/containerModule';
 import validationContainerModule from '../validation/containerModule';
 import memoizeContainerModule from '../memoize/containerModule';
+import cacheContainerModule from '../cache/containerModule';
 
 export default function ContainerFactory(container: Container = new Container()): Container {
 
@@ -37,6 +38,7 @@ export default function ContainerFactory(container: Container = new Container())
     influxContainerModule,
     memoizeContainerModule,
     redisContainerModule,
+    cacheContainerModule,
     ...coreContainerModules
   );
 
