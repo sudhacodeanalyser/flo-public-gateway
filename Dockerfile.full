@@ -9,13 +9,7 @@ RUN rm -rf /var/cache/apk/* && \
       gcc \
       g++ \
       make \
-      python \
-      py-pip \
-      git \
-       && \
-    pip install \
-      direnv \
-      pipenv
+      git
 
 RUN mkdir -p /app
 WORKDIR /app
