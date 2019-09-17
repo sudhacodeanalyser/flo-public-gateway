@@ -1,7 +1,7 @@
 import { injectable } from 'inversify';
 import UserTable from './UserTable';
 import { UserRecordData } from './UserRecord';
-import { CacheMixin, cached, cacheKey, dropCache } from '../../cache/CacheMixin';
+import { CacheMixin, cached, cacheKey, dropCache, updateCache } from '../../cache/CacheMixin';
 import { KeyMap } from '../../database/DatabaseClient';
 import { Patch } from '../../database/Patch';
 
@@ -14,7 +14,7 @@ class CachedUserTable extends CacheMixin(UserTable) {
     return super.get(key);
   }
 
-  @dropCache('User')
+  @updateCache('User')
   public async update(@cacheKey(({ id }) => id) key: KeyMap, patch: Patch): Promise<UserRecordData> {
 
     return super.update(key, patch);
@@ -26,7 +26,7 @@ class CachedUserTable extends CacheMixin(UserTable) {
     return super.remove(key);
   }
 
-  @dropCache('User')
+  @updateCache('User')
   public async put(@cacheKey(({ id }) => id) record: UserRecordData): Promise<UserRecordData> {
     
     return super.put(record);
