@@ -101,7 +101,7 @@ export function withQueryParamArray(target: any, propertyName: string | symbol, 
   propertyDescriptor.value = function (...args: any[]): any {
     const normalizedArgs = args.map((arg: any, i: number) => {
 
-      if (!queryArrayParams[i] || _.isArray(arg)) {
+      if (!queryArrayParams[i] || _.isArray(arg) || arg === undefined) {
         return arg;
       } else if (_.isString(arg) && arg.includes(',')) {
         return arg.split(',');

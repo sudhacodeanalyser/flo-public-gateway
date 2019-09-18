@@ -35,10 +35,14 @@ paths:
       parameters:
         - in: query
           name: id
-          required: true
           schema:
             type: string
           description: A comma-separated list of List IDs
+        - in: query
+          name: q
+          schema:
+            type: string
+          description: A comma-separated list of List ID prefixes
       responses:
         200:
           description: Specified lists

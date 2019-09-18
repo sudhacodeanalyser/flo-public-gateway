@@ -10,8 +10,8 @@ class LookupService {
     @inject('LookupTable') private lookupTable: LookupTable 
   ) {}
 
-  public async getByIds(ids: string[]): Promise<Lookup> {
-    const result = await this.lookupTable.getLookups(ids);
+  public async getByIds(ids: string[], prefixes?: string[]): Promise<Lookup> {
+    const result = await this.lookupTable.getLookups(ids, prefixes);
 
     return _.chain(result)
       .groupBy('list_id')
