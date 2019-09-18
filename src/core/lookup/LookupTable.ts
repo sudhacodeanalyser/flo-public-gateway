@@ -12,16 +12,26 @@ class LookupTable extends PostgresTable<LookupItemRecord> {
     super(databaseClient, 'list');
   }
 
-  public async getLookups(ids: string[]): Promise<LookupItemRecord[]> {
+  public async getLookups(ids: string[] = [], prefixes: string[] = []): Promise<LookupItemRecord[]> {
+    const idExactMatchClause = ids.length ?
+      squel.expr()
+        .or('list_id IN ?', ids) :
+      squel.expr();
+    const idClause = prefixes
+      .reduce(
+        (expr, prefix) => expr.or(`list_id LIKE '${ prefix }%'`), 
+        idExactMatchClause
+      );
+
     const query = squel.useFlavour('postgres')
       .select()
-      .where('list_id IN ?', ids)
+      .where(idClause)
       .where('"state" = ?', LookupItemState.ENABLED)
       .order('list_id')
       .order('"order"')
       .order('short_display')
       .order('key_id');
-
+      
     return this.query({ query });
   }
 
