@@ -22,19 +22,13 @@ services:
     entrypoint: npm
     <<: *build
 
-  eb:
-    entrypoint: eb
-    <<: *build
-
   gradle:
     image: gradle:5.4.0-alpine
     entrypoint: gradle --warn
-
     working_dir: /home/gradle/project
     environment:
       BINTRAY_USER: "${BINTRAY_USER:-SetBintrayCredentialsPLS}"
       BINTRAY_KEY: "${BINTRAY_KEY:-empty}"
-#      JAVA_TOOL_OPTIONS: xmx...
     volumes:
       - ./:/home/gradle/project
 

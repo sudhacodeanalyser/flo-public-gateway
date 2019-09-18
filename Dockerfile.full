@@ -9,17 +9,7 @@ RUN rm -rf /var/cache/apk/* && \
       gcc \
       g++ \
       make \
-      python \
-      py-pip \
-      git \
-       && \
-    pip install \
-      awscli \
-      awsebcli \
-      direnv \
-      pipenv \
-    && \
-    pip install PyYAML==3.13
+      git
 
 RUN mkdir -p /app
 WORKDIR /app
