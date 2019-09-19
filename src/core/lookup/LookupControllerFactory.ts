@@ -35,23 +35,35 @@ export function LookupControllerFactory(container: Container, apiVersion: number
     @httpGet(
       '/',
       reqValidator.create(t.type({
-        query: t.type({
-          id: t.union([t.string, t.array(t.string)]),
-          lang: t.union([t.undefined, t.string])
-        })
+        query: t.intersection([
+          t.union([
+            t.type({
+              q: t.union([t.string, t.array(t.string)]),
+              id: t.union([t.string, t.array(t.string)])
+            }),
+            t.type({
+              q: t.union([t.string, t.array(t.string)])              
+            }),
+            t.type({
+              id: t.union([t.string, t.array(t.string)])
+            })
+          ]),
+          t.partial({
+            lang: t.string
+          })
+        ])
       }))
     )
-    private async getByIds(@queryParamArray('id') ids: string[], @queryParam('lang') lang: string = LookupController.defaultLang): Promise<MultiLookupResponse> {
+    private async getByIds(@queryParamArray('id') ids: string[] = [], @queryParamArray('q') prefixes: string[] = [], @queryParam('lang') lang: string = LookupController.defaultLang): Promise<MultiLookupResponse> {
       const cleanLang = LookupController.fixLang(lang);
-      const lookups = await this.lookupService.getByIds(ids);
+      const lookups = await this.lookupService.getByIds(ids, prefixes);
 
       if (!_.isEmpty(lookups)) {
-        const result: any = ids.reduce((map: any, id) => {
-          const item = lookups[id];
+        const result = _.mapValues(lookups, item => {
           const byLang = _.groupBy(item, 'lang');
-          map[id] = byLang[cleanLang] || byLang[LookupController.defaultLang];
-          return map;
-        }, {});
+
+          return byLang[cleanLang] || byLang[LookupController.defaultLang];
+        });
 
         return Lookup.fromModelToMulti(result);
       }
