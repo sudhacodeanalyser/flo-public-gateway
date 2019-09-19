@@ -175,25 +175,25 @@ class DeviceResolver extends Resolver<Device> {
       const gpm = device.deviceType !== 'flo_device_075_v2' ?
         {
           ...minZero,
-          okMax: 16,
-          maxValue: 20
+          okMax: 29,
+          maxValue: 35
         } :
         {
           ...minZero,
-          okMax: 12,
-          maxValue: 16
+          okMax: 100,
+          maxValue: 125
         };
 
       const lpm = device.deviceType !== 'flo_device_075_v2' ?
         {
           ...minZero,
-          okMax: 60,
-          maxValue: 75
+          okMax: 110,
+          maxValue: 130
         } :
         {
           ...minZero,
-          okMax: 45,
-          maxValue: 60
+          okMax: 378,
+          maxValue: 470
         };
 
       const psi = {
