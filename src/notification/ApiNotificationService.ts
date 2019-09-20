@@ -5,7 +5,7 @@ import { ApiService } from '../ApiService';
 import { Alarm, AlarmEvent, AlarmListResult, AlarmSettings, ClearAlertResponse, DeviceAlarmSettings, NotificationStatistics, PaginatedResult, UpdateDeviceAlarmSettings } from '../core/api';
 
 class ApiNotificationService {
-  constructor(private notificationApi: ApiService) {}
+  constructor(private notificationApi: ApiService, private defaultFloSenseLevel: number) {}
 
   public async getAlarmById(id: string): Promise<Alarm> {
     return this.notificationApi.sendRequest({
@@ -86,6 +86,7 @@ class ApiNotificationService {
       fromNullable(_.head(settingsArray)),
       map(settings => ({
         ...settings,
+        floSenseLevel: settings.floSenseLevel || this.defaultFloSenseLevel,
         smallDripSensitivity: this.calculateSmallDripSensitivity(settings)
       })
     ));
@@ -100,6 +101,7 @@ class ApiNotificationService {
 
     return settingsArray.map(settings => ({
       ...settings,
+      floSenseLevel: settings.floSenseLevel || this.defaultFloSenseLevel,
       smallDripSensitivity: this.calculateSmallDripSensitivity(settings)
     }));
   }
@@ -165,6 +167,7 @@ class ApiNotificationService {
     return {
       deviceId: deviceSettings.deviceId,
       smallDripSensitivity: deviceSettings.smallDripSensitivity,
+      floSenseLevel: deviceSettings.floSenseLevel,
       settings: this.normalizeSmallDripSettings(_.concat(deviceSettings.settings || [], defaultSmallDripCat1Settings, missingSettings), deviceSettings.smallDripSensitivity)
     }
   }
