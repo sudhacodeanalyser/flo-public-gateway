@@ -1,6 +1,7 @@
 import { inject, injectable } from 'inversify';
 import Redis from 'ioredis';
 import { CachePolicy } from './CacheMiddleware';
+import _ from 'lodash';
 
 function formatCacheKey(entityType: string, target: any, propertyName: string | symbol, args: any[]): string {
     const cacheKeyExtractors = Reflect.getOwnMetadata('cacheKey', target, propertyName);
@@ -83,7 +84,7 @@ export function cacheKey(extractKey?: (arg: any) => string): ParameterDecorator 
   return (target: any, propertyName: string | symbol, parameterIndex: number): void => {
     const existingCacheKeys = {
       ...Reflect.getOwnMetadata('cacheKey', target, propertyName),
-      [parameterIndex]: extractKey || ((arg: any) => JSON.stringify(arg))
+      [parameterIndex]: extractKey || ((arg: any) => _.isString(arg) ? arg : JSON.stringify(arg))
     };
 
     Reflect.defineMetadata('cacheKey', existingCacheKeys, target, propertyName);
