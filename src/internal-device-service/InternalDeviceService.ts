@@ -47,9 +47,19 @@ class InternalDeviceService extends MemoizeMixin(InternalDeviceServiceHandler) i
     await this.sendRequest(request);
   }
 
+  public async syncDevice(deviceId: string): Promise<void> {
+    const request = {
+      method: 'post',
+      url: `${this.internalDeviceServiceBaseUrl}/devices/${deviceId}/sync`,
+      body: null,
+    };
+
+    await this.sendRequest(request);
+  }
+
   public async issueToken(assets: FirestoreAssests): Promise<FirestoreTokenResponse> {
     const request = {
-      method: 'POST',
+      method: 'post',
       url: `${ this.internalDeviceServiceBaseUrl }/firestore/auth`,
       body: assets
     };
@@ -60,7 +70,7 @@ class InternalDeviceService extends MemoizeMixin(InternalDeviceServiceHandler) i
   public async cleanup(deviceId: string): Promise<void> {
     try {
       const request = {
-        method: 'DELETE',
+        method: 'delete',
         url: `${this.internalDeviceServiceBaseUrl}/firestore/devices/${deviceId}`,
         body: null,
       };
@@ -81,7 +91,7 @@ class InternalDeviceService extends MemoizeMixin(InternalDeviceServiceHandler) i
   public async createFirestoreStubDevice(deviceId: string): Promise<void> {
     try {
       const request = {
-        method: 'POST',
+        method: 'post',
         url: `${ this.internalDeviceServiceBaseUrl }/firestore/devices/${ deviceId }`,
         body: {
           value: {
