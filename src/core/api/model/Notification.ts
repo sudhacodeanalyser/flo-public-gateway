@@ -11,8 +11,6 @@ export interface Id<T> {
   id: T;
 }
 
-type DeliveryMedium = 'sms' | 'push' | 'email' | 'call';
-
 export interface AlarmDefaultSettings {
   systemMode: string;
   enabled: boolean;
@@ -21,6 +19,14 @@ export interface AlarmDefaultSettings {
 export interface DeliveryMediumSettings {
   supported: boolean;
   defaultSettings: AlarmDefaultSettings[]
+}
+
+export interface DeliveryMediumConfig {
+  userConfigurable: boolean;
+  sms: DeliveryMediumSettings;
+  email: DeliveryMediumSettings;
+  push: DeliveryMediumSettings;
+  call: DeliveryMediumSettings;
 }
 
 export interface Alarm {
@@ -37,7 +43,7 @@ export interface Alarm {
   active: boolean;
   parent?: Id<number>;
   children: Array<Id<number>>;
-  deliveryMedium: Record<DeliveryMedium, DeliveryMediumSettings>;
+  deliveryMedium: DeliveryMediumConfig;
   userFeedbackFlow?: AlertFeedbackFlow[];
 }
 
@@ -117,6 +123,7 @@ export const AlarmSettingsCodec = t.type({
 export const DeviceAlarmSettingsCodec = t.type({
   deviceId: t.string,
   smallDripSensitivity: t.union([t.number, t.undefined]),
+  floSenseLevel: t.union([t.number, t.undefined]),
   settings: t.union([t.array(AlarmSettingsCodec), t.undefined])
 });
 

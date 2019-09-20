@@ -18,6 +18,7 @@ function getDefaults(): { [key: string]: any } {
         aclUrl: 'https://api-dev.flocloud.co/api/v1/accesscontrol/refresh',
         internalDeviceServiceBaseUrl: 'https://flo-device-service.flocloud.co/v1',
         apiV1Url: 'https://api-dev.flocloud.co/api/v1',
+        defaultFloSenseLevel: 5,
         defaultUserLocale: 'en-US',
         localizationApiUrl: 'https://flo-localization-service-dev.flocloud.co/v1',
         notificationApiUrl: 'https://flo-notification-api.flocloud.co',
