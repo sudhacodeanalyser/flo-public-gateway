@@ -162,9 +162,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       reqValidator.create(t.type({
         params: t.type({
           id: t.string
-        }),
-        // TODO Do not allow empty
-        body: t.record(t.string, t.any)
+        })
       }))
     )
     private async syncDevice(@requestParam('id') id: string): Promise<void> {
