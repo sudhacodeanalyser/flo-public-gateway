@@ -36,7 +36,9 @@ export function IncidentControllerFactory(container: Container, apiVersion: numb
         .sendAlarm(incidentInfo);
     }
 
-    @httpGet('/')
+    @httpGet('/',
+      auth
+    )
     private async getIncidentByFilter(@request() req: Request): Promise<PaginatedResult<AlarmEvent>> {
       const filters = req.url.split('?')[1] || '';
 
@@ -48,11 +50,12 @@ export function IncidentControllerFactory(container: Container, apiVersion: numb
     }
 
     @httpGet('/:id',
-        reqValidator.create(t.type({
-          params: t.type({
-            id: t.string
-          })
-        }))
+      auth,
+      reqValidator.create(t.type({
+        params: t.type({
+          id: t.string
+        })
+      }))
     )
     private async getIncident(@requestParam('id') id: string): Promise<AlarmEvent> {
       return this.eventService.getAlarmEvent(id);
