@@ -1,9 +1,9 @@
-import { HttpService } from "../http/HttpService";
-import { LocalizationService } from "../core/service";
-import { AssetsResponse, LocalesResponse, LocalizedResponse } from "../core/api/response/Localization";
-import { Asset, AssetFilter, LocaleFilter, Locale, LocalizedFilter } from "../core/api/model/Localization";
-import { inject } from "inversify";
-import _ from "lodash";
+import { HttpService } from '../http/HttpService';
+import { LocalizationService } from '../core/service';
+import { AssetsResponse, LocalesResponse, LocalizedResponse, TypesResponse, BulkLocalizedResponse } from '../core/api/response/Localization';
+import { Asset, AssetFilter, LocaleFilter, Locale, LocalizedFilter, TypeFilter } from '../core/api/model/Localization';
+import { inject } from 'inversify';
+import _ from 'lodash';
 
 class LocalizationApiService extends HttpService implements LocalizationService {
 
@@ -137,7 +137,7 @@ class LocalizationApiService extends HttpService implements LocalizationService 
     return this.sendRequest(request);
   }
 
-  public async getLocalizedValues(filter: { items: LocalizedFilter[] }, caching: string): Promise<LocalizedResponse> {
+  public async getLocalizedValues(filter: { items: LocalizedFilter[] }, caching: string): Promise<BulkLocalizedResponse> {
     const request = {
       method: 'POST',
       url: `${ this.localizationApiUrl }/localized`,
@@ -145,6 +145,18 @@ class LocalizationApiService extends HttpService implements LocalizationService 
         caching
       },
       body: {
+        ...filter
+      }
+    };
+
+    return this.sendRequest(request);
+  }
+
+  public async getTypes(filter: TypeFilter): Promise<TypesResponse> {
+    const request = {
+      method: 'GET',
+      url: `${ this.localizationApiUrl }/types`,
+      params: {
         ...filter
       }
     };

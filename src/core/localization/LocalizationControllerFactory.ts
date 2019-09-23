@@ -5,7 +5,7 @@ import { inject, Container } from 'inversify';
 import { LocalizationService } from '../service';
 import { httpController } from '../api/controllerUtils';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
-import { AssetsResponse, LocalesResponse, LocalizedResponse } from '../api/response/Localization';
+import { AssetsResponse, LocalesResponse, LocalizedResponse, TypesResponse, BulkLocalizedResponse } from '../api/response/Localization';
 import { Asset, Locale, LocalizedFilter } from '../api/model/Localization';
 import Request from '../api/Request';
 
@@ -27,8 +27,9 @@ export function LocalizationControllerFactory(container: Container, apiVersion: 
                             @queryParam('locale') locale?: string,
                             @queryParam('released') released?: string,
                             @queryParam('offset') offset?: string,
-                            @queryParam('limit') limit?: string): Promise<AssetsResponse> {
-      return this.localizationService.getAssets({name, type, locale, released, offset, limit});
+                            @queryParam('limit') limit?: string,
+                            @queryParam('search') search?: string): Promise<AssetsResponse> {
+      return this.localizationService.getAssets({name, type, locale, released, offset, limit, search});
     }
 
     @httpPost('/assets', auth)
@@ -94,8 +95,15 @@ export function LocalizationControllerFactory(container: Container, apiVersion: 
 
     @httpPost('/localized', auth)
     private async getLocalizedValues( @requestBody() filter: { items: LocalizedFilter[] },
-                                      @queryParam('caching') caching: string): Promise<LocalizedResponse> {
+                                      @queryParam('caching') caching: string): Promise<BulkLocalizedResponse> {
       return this.localizationService.getLocalizedValues(filter, caching);
+    }
+
+    @httpGet('/types', auth)
+    private async getTypes( @queryParam('caching') caching: string,
+                            @queryParam('offset') offset?: string,
+                            @queryParam('limit') limit?: string): Promise<TypesResponse> {
+      return this.localizationService.getTypes({caching, offset, limit});
     }
   }
 
