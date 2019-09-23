@@ -1,4 +1,4 @@
-import { Asset, Locale } from "../model/Localization";
+import { Asset, Locale, Type } from "../model/Localization";
 
 export interface Meta {
   limit: number,
@@ -22,4 +22,12 @@ export interface LocalizedResponse {
   localizedValue: string,
   name: string,
   type: string
+}
+
+export interface BulkLocalizedResponse {
+  items: LocalizedResponse[]
+}
+
+export interface TypesResponse {
+  items: Type[]
 }

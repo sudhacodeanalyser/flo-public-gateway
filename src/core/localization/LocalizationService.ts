@@ -1,5 +1,5 @@
-import { AssetsResponse, LocalesResponse, LocalizedResponse } from "../api/response/Localization";
-import { Asset, AssetFilter, LocaleFilter, Locale, LocalizedFilter } from "../api/model/Localization";
+import { AssetsResponse, LocalesResponse, LocalizedResponse, TypesResponse, BulkLocalizedResponse } from "../api/response/Localization";
+import { Asset, AssetFilter, LocaleFilter, Locale, LocalizedFilter, TypeFilter } from "../api/model/Localization";
 
 export interface LocalizationService {
   getAssets(filter: AssetFilter): Promise<AssetsResponse>
@@ -13,5 +13,6 @@ export interface LocalizationService {
   updateLocale(id: string, locale: Locale): Promise<void>
   deleteLocale(id: string): Promise<void>
   getLocalizedValue(filter: LocalizedFilter, caching?: string): Promise<LocalizedResponse>
-  getLocalizedValues(filter: { items: LocalizedFilter[] }, caching: string): Promise<LocalizedResponse>
+  getLocalizedValues(filter: { items: LocalizedFilter[] }, caching: string): Promise<BulkLocalizedResponse>
+  getTypes(filter: TypeFilter): Promise<TypesResponse>
 }

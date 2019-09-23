@@ -1,0 +1,621 @@
+paths:
+  /api/v2/localization/assets:
+    get:
+      summary: Get localized assets
+      description:
+        'This endpoint gets filtered (if any filters provided) paginated localized assets. Default values for pagination are: 0 for offset, 10 for limit.'
+      tags:
+        - Localization
+      produces:
+        - application/json
+      parameters:
+        - in: query
+          name: name
+          schema:
+            type: string
+          description: 'Filter by name'
+        - in: query
+          name: type
+          schema:
+            type: string
+          description: 'Filter by type'
+        - in: query
+          name: locale
+          schema:
+            type: string
+          description: 'Filter by locale'
+        - in: query
+          name: released
+          schema:
+            type: boolean
+          description: 'Filter by released flag'
+        - in: query
+          name: search
+          schema:
+            type: string
+          description: Fuzzy search within asset name column, e.g. search=valve
+        - in: query
+          name: offset
+          schema:
+            type: number
+          description: Pagination offset
+        - in: query
+          name: limit
+          schema:
+            type: number
+          description: Pagination limit
+      responses:
+        200:
+          description: A list of matching assets.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LocalizationAssetList'
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        403:
+          $ref: '#/components/responses/ForbiddenError'
+
+    post:
+      summary: Creates new localized assets
+      description:
+        'This endpoint creates an asset. Asset is a unique record of name, type, locale, e.g. low_pressure_alert, sms, en_us.
+        Asset is considered to be ready for production use if its released flag is set to true (it is defaulted to false).
+        Each asset can be tagged. Name, type, locale and value are the mandatory properties. Released, tags are optional.
+        All other properties provided will be ignored. Multiple tags can be applied to the asset. The response is an echo
+        of provided properties of the request body plus created time. updated time and an asset id. The returned asset id is uuid formatted.'
+      tags:
+        - Localization
+      produces:
+        - application/json
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LocalizationAsset'
+      responses:
+        201:
+          description: Created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LocalizationAsset'
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        403:
+          $ref: '#/components/responses/ForbiddenError'
+
+  /api/v2/localization/assets/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Asset ID
+    get:
+      summary: Get localized asset by id
+      description:
+        'This endpoint gets localized asset by id, id has to be uuid formatted'
+      tags:
+        - Localization
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LocalizationAsset'
+        404:
+          description: An asset with the specified ID was not found.
+          schema:
+            $ref: '#/components/responses/NotFoundError'
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        403:
+          $ref: '#/components/responses/ForbiddenError'
+    post:
+      summary: Updates an asset
+      description:
+        'This endpoint updates an asset by its id and provided json body. Id, created are the immutable fields.'
+      tags:
+        - Localization
+      produces:
+        - application/json
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LocalizationAsset'
+      responses:
+        204:
+          description: Updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Empty'
+        404:
+          description: An asset with the specified ID was not found.
+          schema:
+            $ref: '#/components/responses/NotFoundError'
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        403:
+          $ref: '#/components/responses/ForbiddenError'
+    delete:
+      summary: Deletes a Localization asset by ID.
+      description: This endpoint deletes localized asset by id, id has to be uuid formatted
+      tags:
+        - Localization
+      produces:
+        - application/json
+      responses:
+        204:
+          description: The Asset was successfully deleted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Empty'
+        404:
+          description: An asset with the specified ID was not found.
+          schema:
+            $ref: '#/components/responses/NotFoundError'
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        403:
+          $ref: '#/components/responses/ForbiddenError'
+
+  /api/v2/localization/locales:
+    get:
+      summary: Get Locales
+      description:
+        'This endpoint gets filtered (if any filters provided) paginated locales. Default values for pagination are: 0 for offset, 10 for limit.'
+      tags:
+        - Localization
+      produces:
+        - application/json
+      parameters:
+        - in: query
+          name: fallback
+          schema:
+            type: string
+          description: 'Filter by fallback'
+        - in: query
+          name: released
+          schema:
+            type: boolean
+          description: 'Filter by released flag'
+        - in: query
+          name: offset
+          schema:
+            type: number
+          description: Pagination offset
+        - in: query
+          name: limit
+          schema:
+            type: number
+          description: Pagination limit
+      responses:
+        200:
+          description: A list of matching locales.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LocalizationLocaleList'
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        403:
+          $ref: '#/components/responses/ForbiddenError'
+    post:
+      summary: Creates new locales
+      description:
+        'This endpoint creates a locale. Locale is in the format of ll-cc (ll is language, cc is country),
+        e.g. en-us. The id of the locale is the locale itself. Locale is considered to be ready for production
+        use if its released flag is set to true. Each locale has a fallback'
+      tags:
+        - Localization
+      produces:
+        - application/json
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LocalizationLocale'
+      responses:
+        201:
+          description: Created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LocalizationLocale'
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        403:
+          $ref: '#/components/responses/ForbiddenError'
+
+  /api/v2/localization/locales/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        description: Locale ID
+    get:
+      summary: Get locale by id
+      description:
+        'This endpoint gets a locale by id'
+      tags:
+        - Localization
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LocalizationLocale'
+        404:
+          description: A Locale with the specified ID was not found.
+          schema:
+            $ref: '#/components/responses/NotFoundError'
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        403:
+          $ref: '#/components/responses/ForbiddenError'
+    post:
+      summary: Updates a locale
+      description:
+        'This endpoint updates a locale by its id and provided json body. Id, created are the immutable fields.'
+      tags:
+        - Localization
+      produces:
+        - application/json
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LocalizationLocale'
+      responses:
+        204:
+          description: Updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Empty'
+        404:
+          description: A local with the specified ID was not found.
+          schema:
+            $ref: '#/components/responses/NotFoundError'
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        403:
+          $ref: '#/components/responses/ForbiddenError'
+    delete:
+      summary: Deletes a locale by ID.
+      description: This endpoint deletes locale by id
+      tags:
+        - Localization
+      produces:
+        - application/json
+      responses:
+        204:
+          description: The Locale was successfully deleted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Empty'
+        404:
+          description: A locale with the specified ID was not found.
+          schema:
+            $ref: '#/components/responses/NotFoundError'
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        403:
+          $ref: '#/components/responses/ForbiddenError'
+
+  /api/v2/localization/localized:
+    get:
+      summary: Gets localized transformed asset
+      description:
+        'This endpoint gets localized asset filtered by asset name, asset delivery type and asset locale.
+        It can transform an asset value if it’s stored as a template (simple find and replace). Find and replace
+        values for an asset value have to be passed in as query parameters with a special args. prepend to manifest
+        itself as find and replace one.
+        Not implemented: If the asset has templated values but replacement query params have not been provided it will return 404.
+        For immediate non-cached data use caching=off query param'
+      tags:
+        - Localization
+      produces:
+        - application/json
+      parameters:
+        - in: query
+          name: name
+          required: true
+          schema:
+            type: string
+          description: Asset name
+        - in: query
+          name: type
+          required: true
+          schema:
+            type: string
+          description: Asset type
+        - in: query
+          name: locale
+          required: true
+          schema:
+            type: string
+          description: Asset Locale
+        - in: query
+          name: args
+          schema:
+            type: array
+            items:
+              type: string
+          description: Find and replace param for the localized value
+        - in: query
+          name: caching
+          schema:
+            type: string
+          description: Caching flag
+      responses:
+        200:
+          description: OK.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LocalizationLocalizedValue'
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        403:
+          $ref: '#/components/responses/ForbiddenError'
+        404:
+          description: Not Found.
+          schema:
+            $ref: '#/components/responses/NotFoundError'
+    post:
+      summary: Gets one or more localized transformed assets
+      description:
+        'This endpoint gets localized assets filtered by asset name, asset delivery type and asset locale
+        (each individual filter is baked in items of request body).
+        It can transform an asset value if it’s stored as a template (simple find and replace). Find and replace
+        values for an asset value have to be passed as an args property of the request body of the item.
+        Not implemented: If the asset has templated values but replacement query params have not been provided it will return 404.
+        For immediate non-cached data use caching=off query param'
+      tags:
+        - Localization
+      produces:
+        - application/json
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LocalizationBulkLocalizedFilter'
+      parameters:
+        - in: query
+          name: caching
+          schema:
+            type: string
+          description: Caching flag
+      responses:
+        200:
+          description: OK.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LocalizationLocalizedValueList'
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        403:
+          $ref: '#/components/responses/ForbiddenError'
+        404:
+          description: Not Found.
+          schema:
+            $ref: '#/components/responses/NotFoundError'
+
+  /api/v2/localization/types:
+    get:
+      summary: Get types
+      description:
+        'This endpoint gets filtered (if any filters provided) paginated types. Default values for pagination are: 0 for offset, 10 for limit.'
+      tags:
+        - Localization
+      produces:
+        - application/json
+      parameters:
+        - in: query
+          name: offset
+          schema:
+            type: number
+          description: Pagination offset
+        - in: query
+          name: limit
+          schema:
+            type: number
+          description: Pagination limit
+        - in: query
+          name: caching
+          schema:
+            type: string
+          description: Caching flag
+      responses:
+        200:
+          description: OK.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LocalizationTypeValueList'
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        403:
+          $ref: '#/components/responses/ForbiddenError'
+        404:
+          description: Not Found.
+          schema:
+            $ref: '#/components/responses/NotFoundError'
+components:
+  schemas:
+    AnyValue: {}
+    LocalizationMeta:
+      type: object
+      properties:
+        limit:
+          type: number
+          example: 10
+        offset:
+          type: number
+          example: 0
+        total:
+          type: number
+          example: 1
+    LocalizationAsset:
+      type: object
+      properties:
+        create:
+          type: string
+          example: '2019-05-30T17:50:22.127785Z'
+        id:
+          type: string
+          format: uuid
+          example: bd3a7efc-680a-40f8-bb52-bb754f9b6869
+        locale:
+          type: string
+          example: ru-blr
+        name:
+          type: string
+          example: low_pressure_alert
+        released:
+          type: boolean
+          example: 'true'
+        type:
+          type: string
+          example: sms
+        tags:
+          type: array
+          items:
+            type: string
+          example: List [ ["wordy", "to_revise", "latest_release"] ]
+        updated:
+          type: string
+          example: '2019-05-30T17:50:22.127785Z'
+        value:
+          type: string
+          example: 'FLO has detected water low pressure, recommend to inspect water lines'
+    LocalizationLocale:
+      type: object
+      properties:
+        created:
+          type: string
+          example: '2019-05-30T17:50:22.127785Z'
+        fallback:
+          type: string
+          example: ru_blr
+        id:
+          type: string
+          example: ru_blr
+        released:
+          type: boolean
+          example: 'true'
+        updated:
+          type: string
+          example: '2019-05-30T17:50:22.127785Z'
+    LocalizationAssetList:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocalizationAsset'
+        meta:
+          $ref: '#/components/schemas/LocalizationMeta'
+    LocalizationLocaleList:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocalizationLocale'
+        meta:
+          $ref: '#/components/schemas/LocalizationMeta'
+    LocalizationLocalizedValue:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: bd3a7efc-680a-40f8-bb52-bb754f9b6869
+        locale:
+          type: string
+          example: ru-blr
+        localizedValue:
+          type: string
+          example: FLO has detected water low pressure, recommend to inspect water lines
+        name:
+          type: string
+          example: low_pressure_alert
+        type:
+          type: string
+          example: sms
+    LocalizationLocalizedValueList:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocalizationLocalizedValue'
+    LocalizationLocalizedFilter:
+      type: object
+      properties:
+        name:
+          type: string
+          example: low_pressure_alert
+        locale:
+          type: string
+          example: ru-blr
+        type:
+          type: string
+          example: sms
+        args:
+          type: array
+          items:
+            type: string
+    LocalizationBulkLocalizedFilter:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocalizationLocalizedFilter'
+    LocalizationTypeValue:
+      type: object
+      properties:
+        created:
+          type: string
+          example: '2019-05-30T17:50:22.127785Z'
+        description:
+          type: string
+          example: text message
+        type:
+          type: string
+          example: sms
+        updated:
+          type: string
+          example: '2019-05-30T17:50:22.127785Z'
+    LocalizationTypeValueList:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocalizationTypeValue'
+
