@@ -48,7 +48,7 @@ export interface LocalizedFilter {
   args?: {[key: string]: string}
 }
 
-export interface Type {
+export interface AssetType {
   type?: string,
   description?: string,
   created?: string,

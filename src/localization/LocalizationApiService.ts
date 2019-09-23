@@ -1,9 +1,9 @@
-import { HttpService } from "../http/HttpService";
-import { LocalizationService } from "../core/service";
-import { AssetsResponse, LocalesResponse, LocalizedResponse, TypesResponse, BulkLocalizedResponse } from "../core/api/response/Localization";
-import { Asset, AssetFilter, LocaleFilter, Locale, LocalizedFilter, TypeFilter } from "../core/api/model/Localization";
-import { inject } from "inversify";
-import _ from "lodash";
+import { HttpService } from '../http/HttpService';
+import { LocalizationService } from '../core/service';
+import { AssetsResponse, LocalesResponse, LocalizedResponse, TypesResponse, BulkLocalizedResponse } from '../core/api/response/Localization';
+import { Asset, AssetFilter, LocaleFilter, Locale, LocalizedFilter, TypeFilter } from '../core/api/model/Localization';
+import { inject } from 'inversify';
+import _ from 'lodash';
 
 class LocalizationApiService extends HttpService implements LocalizationService {
 
