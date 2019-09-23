@@ -167,8 +167,8 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     )
     private async syncDevice(@requestParam('id') id: string): Promise<void> {
 
-      const deviceId = await this.mapIcdToMacAddress(id);
-      return this.internalDeviceService.syncDevice(deviceId);
+      const macAddress = await this.mapIcdToMacAddress(id);
+      return this.internalDeviceService.syncDevice(macAddress);
     }
 
     @httpDelete('/:id',

@@ -27,6 +27,7 @@ const InternalDeviceCodec = t.type({
   connectivity: t.union([InternalConnectivityCodec, t.null, t.undefined]),
   createdTime: t.string,
   deviceId: t.string,
+  floSense: t.union([t.record(t.string, t.any), t.null, t.undefined]),
   fwProperties: t.union([t.record(t.string, t.any), t.null, t.undefined]),
   fwVersion: t.string,
   isConnected: t.boolean,
@@ -36,7 +37,6 @@ const InternalDeviceCodec = t.type({
   updatedTime: t.string,
   valveState: t.union([InternalValveStateCodec, t.null, t.undefined]),
 });
-
 
 type InternalDevice = t.TypeOf<typeof InternalDeviceCodec>;
 type InternalSystemMode = t.TypeOf<typeof InternalSystemModeCodec>;
