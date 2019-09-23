@@ -157,6 +157,20 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       return this.internalDeviceService.setDeviceFwProperties(deviceId, fwProperties);
     }
 
+    @httpPost('/:id/sync',
+      authWithId,
+      reqValidator.create(t.type({
+        params: t.type({
+          id: t.string
+        })
+      }))
+    )
+    private async syncDevice(@requestParam('id') id: string): Promise<void> {
+
+      const macAddress = await this.mapIcdToMacAddress(id);
+      return this.internalDeviceService.syncDevice(macAddress);
+    }
+
     @httpDelete('/:id',
       authWithId,
       reqValidator.create(t.type({

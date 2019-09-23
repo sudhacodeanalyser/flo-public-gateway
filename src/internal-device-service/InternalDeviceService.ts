@@ -37,11 +37,21 @@ class InternalDeviceService extends MemoizeMixin(InternalDeviceServiceHandler) i
     }
   }
 
-  public async setDeviceFwProperties(deviceId: string, data: { [prop: string]: any }): Promise<void> {
+  public async setDeviceFwProperties(macAddress: string, data: { [prop: string]: any }): Promise<void> {
     const request = {
       method: 'post',
-      url: `${this.internalDeviceServiceBaseUrl}/devices/${deviceId}/fwproperties`,
+      url: `${this.internalDeviceServiceBaseUrl}/devices/${macAddress}/fwproperties`,
       body: data,
+    };
+
+    await this.sendRequest(request);
+  }
+
+  public async syncDevice(macAddress: string): Promise<void> {
+    const request = {
+      method: 'post',
+      url: `${this.internalDeviceServiceBaseUrl}/devices/${macAddress}/sync`,
+      body: null,
     };
 
     await this.sendRequest(request);
@@ -49,7 +59,7 @@ class InternalDeviceService extends MemoizeMixin(InternalDeviceServiceHandler) i
 
   public async issueToken(assets: FirestoreAssests): Promise<FirestoreTokenResponse> {
     const request = {
-      method: 'POST',
+      method: 'post',
       url: `${ this.internalDeviceServiceBaseUrl }/firestore/auth`,
       body: assets
     };
@@ -57,11 +67,11 @@ class InternalDeviceService extends MemoizeMixin(InternalDeviceServiceHandler) i
     return this.sendRequest(request);
   }
 
-  public async cleanup(deviceId: string): Promise<void> {
+  public async cleanup(macAddress: string): Promise<void> {
     try {
       const request = {
-        method: 'DELETE',
-        url: `${this.internalDeviceServiceBaseUrl}/firestore/devices/${deviceId}`,
+        method: 'delete',
+        url: `${this.internalDeviceServiceBaseUrl}/firestore/devices/${macAddress}`,
         body: null,
       };
       // TODO: do the same ^^ for locations
@@ -69,7 +79,7 @@ class InternalDeviceService extends MemoizeMixin(InternalDeviceServiceHandler) i
     } catch (err) {
       if (err instanceof InternalDeviceServiceError) {
         // Failure to complete the deletion of the firestore document should not cause the unpairing to completely fail.
-        const errMsg = `failed to delete ${deviceId} document from devices collection in the Firestore`;
+        const errMsg = `failed to delete ${macAddress} document from devices collection in the Firestore`;
         this.logger.error( errMsg, err );
         return;
       } else {
@@ -78,14 +88,14 @@ class InternalDeviceService extends MemoizeMixin(InternalDeviceServiceHandler) i
     }
   }
 
-  public async createFirestoreStubDevice(deviceId: string): Promise<void> {
+  public async createFirestoreStubDevice(macAddress: string): Promise<void> {
     try {
       const request = {
-        method: 'POST',
-        url: `${ this.internalDeviceServiceBaseUrl }/firestore/devices/${ deviceId }`,
+        method: 'post',
+        url: `${ this.internalDeviceServiceBaseUrl }/firestore/devices/${macAddress}`,
         body: {
           value: {
-            deviceId
+            deviceId: macAddress
           }
         }
       };

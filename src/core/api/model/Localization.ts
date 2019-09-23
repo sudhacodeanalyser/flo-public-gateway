@@ -16,7 +16,14 @@ export interface AssetFilter {
   released?: string,
   type?: string,
   offset?: string,
-  limit?: string
+  limit?: string,
+  search?: string
+}
+
+export interface TypeFilter {
+  caching?: string,
+  limit?: string,
+  offset?: string
 }
 
 export interface LocaleFilter {
@@ -39,4 +46,11 @@ export interface LocalizedFilter {
   type?: string,
   locale?: string,
   args?: {[key: string]: string}
+}
+
+export interface AssetType {
+  type?: string,
+  description?: string,
+  created?: string,
+  updated?: string,
 }

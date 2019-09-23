@@ -68,6 +68,7 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
     }
 
     @httpGet('/',
+      authMiddlewareFactory.create(),
       reqValidator.create(t.type({
         query: t.intersection([
           t.union([
