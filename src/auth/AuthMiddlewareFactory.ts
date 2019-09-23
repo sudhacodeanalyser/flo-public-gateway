@@ -12,6 +12,7 @@ import * as Option from 'fp-ts/lib/Option';
 import { pipe } from 'fp-ts/lib/pipeable';
 import * as TaskEither from 'fp-ts/lib/TaskEither';
 import { TokenMetadata, OAuth2TokenCodec, LegacyAuthTokenCodec } from './Token';
+import crypto from 'crypto';
 
 type Params = { [param: string]: any };
 type GetParams = (req: Request) => Promise<Params>;
@@ -83,7 +84,13 @@ class AuthMiddlewareFactory {
     if (cacheResult == null) {
       return Option.none;
     } else {
-      return Option.some(JSON.parse(cacheResult));
+      const tokenMetadata = JSON.parse(cacheResult);
+
+      if (!tokenMetadata._token_hash || tokenMetadata._token_hash !== this.hashToken(token)) {
+        return Option.none;
+      }
+      
+      return Option.some(cacheResult);
     }
   }
 
@@ -123,12 +130,17 @@ class AuthMiddlewareFactory {
       }   
   }
 
+  private hashToken(token:string): string {
+    return crypto.createHash('sha1').update(token).digest('base64');
+  }
+
   private async writeToCache(tokenMetadata: TokenMetadata, methodId: string, token: string, params?: Params): Promise<void> {
     const cacheKey = this.formatCacheKey(methodId, token, params);
+    const tokenHash = this.hashToken(token);
 
     if (cacheKey !== null) {
       // TTL 1 hour, this means that a token can live max 1 hour after it's true expiration in the cache
-      await this.redisClient.setex(cacheKey, 3600, JSON.stringify(tokenMetadata));
+      await this.redisClient.setex(cacheKey, 3600, JSON.stringify({ ...tokenMetadata, _token_hash: tokenHash }));
     }
   }
 }
