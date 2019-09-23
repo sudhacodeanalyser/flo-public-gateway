@@ -1,5 +1,5 @@
-import { AssetsResponse, LocalesResponse, LocalizedResponse, TypesResponse, BulkLocalizedResponse } from "../api/response/Localization";
-import { Asset, AssetFilter, LocaleFilter, Locale, LocalizedFilter, TypeFilter } from "../api/model/Localization";
+import { AssetsResponse, LocalesResponse, LocalizedResponse, TypesResponse, BulkLocalizedResponse } from '../api/response/Localization';
+import { Asset, AssetFilter, LocaleFilter, Locale, LocalizedFilter, TypeFilter } from '../api/model/Localization';
 
 export interface LocalizationService {
   getAssets(filter: AssetFilter): Promise<AssetsResponse>

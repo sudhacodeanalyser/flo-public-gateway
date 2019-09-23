@@ -1,4 +1,4 @@
-import { Asset, Locale, AssetType } from "../model/Localization";
+import { Asset, Locale, AssetType } from '../model/Localization';
 
 export interface Meta {
   limit: number,
