@@ -71,7 +71,8 @@ const RecordToModelSchema: StrictSchema<Device, DeviceRecordData>  = {
   pairingData: () => undefined,
   serialNumber: () => undefined,
   connectivity: () => undefined,
-  telemetry: () => undefined
+  telemetry: () => undefined,
+  healthTest: () => undefined
 };
 
 const ModelToRecordSchema: StrictSchema<DeviceRecordData, Device> = {

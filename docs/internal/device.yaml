@@ -580,6 +580,11 @@ components:
                   type: string
             serialNumber:
               type: string
+            healthTest:
+              type: object
+              properties:
+                latest:
+                  $ref: '#/components/schemas/HealthTest'
     DeviceExpandable:
       oneOf:
         - type: object
