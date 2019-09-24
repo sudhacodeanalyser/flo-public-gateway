@@ -80,13 +80,7 @@ class SubscriptionResolver extends Resolver<Subscription> {
       return this.toModel(subscriptionRecordData, expandProps);
     }
 
-    const oldSubscriptionRecordData = await this.oldSubscriptionTable.getBySubscriptionId(id);
-
-    if (oldSubscriptionRecordData !== null) {
-      return this.toModel(oldSubscriptionRecordData, expandProps);
-    } 
-
-    return null;
+    return this.getByAccountId(id);
   }
 
   public async getByRelatedEntityId(relatedEntityId: string): Promise<Subscription | null> {

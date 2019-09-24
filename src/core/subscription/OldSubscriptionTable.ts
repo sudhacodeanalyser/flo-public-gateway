@@ -26,21 +26,6 @@ class OldSubscriptionTable extends DatabaseTable<OldSubscriptionRecordData> {
     return result.length ? result[0] : null;
   }
 
-  public async getBySubscriptionId(subscriptionId: string): Promise<OldSubscriptionRecordData | null> {
-    const result = await this.query<DynamoDbQuery>({
-      IndexName: 'StripeSubscriptionIdIndex',
-      KeyConditionExpression: '#stripe_subscription_id = :stripe_subscription_id',
-      ExpressionAttributeNames: {
-        '#stripe_subscription_id': 'stripe_subscription_id'
-      },
-      ExpressionAttributeValues: {
-        ':stripe_subscription_id': subscriptionId
-      }
-    });
-
-    return result.length ? result[0] : null;
-  }
-
   public async getByCustomerId(customerId: string): Promise<OldSubscriptionRecordData | null> {
     const result = await this.query<DynamoDbQuery>({
       IndexName: 'StripeCustomerIdIndex',
