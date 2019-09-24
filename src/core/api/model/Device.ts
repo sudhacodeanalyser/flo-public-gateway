@@ -6,6 +6,7 @@ import { NonEmptyString } from '../../api/validator/NonEmptyString';
 import { convertEnumtoCodec } from '../../api/enumUtils';
 import { ComputedIrrigationSchedule } from '../../device/IrrigationScheduleService';
 import { NoYesUnsure } from '../NoYesUnsure';
+import { HealthTest } from '../../device/HealthTestService'
 
 export enum ValveState {
   OPEN = 'open',
@@ -141,6 +142,9 @@ export interface Device extends Omit<DeviceUpdate, 'valve'>, TimestampedModel {
   hardwareThresholds?: HardwareThresholds;
   pairingData?: PairingData;
   serialNumber?: string;
+  healthTest?: {
+    latest?: HealthTest
+  }
 }
 
 interface FwProperties {
