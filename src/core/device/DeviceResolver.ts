@@ -19,6 +19,7 @@ import { pipe } from 'fp-ts/lib/pipeable';
 import { PairingService } from '../../api-v1/pairing/PairingService';
 import * as t from 'io-ts';
 import * as Either from 'fp-ts/lib/Either';
+import { HealthTestServiceFactory, HealthTestService } from './HealthTestService';
 
 @injectable()
 class DeviceResolver extends Resolver<Device> {
@@ -166,6 +167,14 @@ class DeviceResolver extends Resolver<Device> {
     notifications: async (device: Device, shouldExpand = false) => {
       return this.notificationService.retrieveStatistics(`deviceId=${device.id}`);
     },
+    healthTest: async (device: Device, shouldExpand = false) => {
+      if (!shouldExpand) {
+        return null;
+      }
+
+      const latest = await this.healthTestService.getLatest(device.macAddress);
+      return (!latest) ? null : { latest };
+    },
     hardwareThresholds: async (device: Device, shouldExpand = false) => {
       const minZero = {
         okMin: 0,
@@ -274,6 +283,7 @@ class DeviceResolver extends Resolver<Device> {
   private locationResolverFactory: () => LocationResolver;
   private irrigationScheduleService: IrrigationScheduleService;
   private notificationService: NotificationService;
+  private healthTestService: HealthTestService;
 
   constructor(
    @inject('DeviceTable') private deviceTable: DeviceTable,
@@ -285,6 +295,7 @@ class DeviceResolver extends Resolver<Device> {
    @inject('IrrigationScheduleServiceFactory') irrigationScheduleServiceFactory: IrrigationScheduleServiceFactory,
    @inject('NotificationServiceFactory') notificationServiceFactory: NotificationServiceFactory,
    @inject('PairingService') private pairingService: PairingService,
+   @inject('HealthTestServiceFactory') healthTestServiceFactory: HealthTestServiceFactory,
    @injectHttpContext private readonly httpContext: interfaces.HttpContext
   ) {
     super();
@@ -294,6 +305,7 @@ class DeviceResolver extends Resolver<Device> {
     if (!_.isEmpty(this.httpContext)) {
       this.irrigationScheduleService = irrigationScheduleServiceFactory.create(this.httpContext.request);
       this.notificationService = notificationServiceFactory.create(this.httpContext.request);
+      this.healthTestService = healthTestServiceFactory.create(this.httpContext.request);
     }
   }
 
