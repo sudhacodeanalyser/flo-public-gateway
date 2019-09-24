@@ -151,14 +151,16 @@ const {
   isConnected,
   lastHeardFromTime,
   fwVersion,
-  fwProperties
+  fwProperties,
+  floSense
 } = InternalDeviceCodec.props;
 
 export const AdditionalDevicePropsCodec  = t.type({
   isConnected,
   lastHeardFromTime,
   fwProperties,
-  fwVersion
+  fwVersion,
+  floSense
 });
 
 export interface AdditionalDeviceProps extends t.TypeOf<typeof AdditionalDevicePropsCodec> {}
