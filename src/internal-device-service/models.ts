@@ -23,6 +23,8 @@ const InternalTelemetryCodec = t.partial({
   current: InternalCurrentTelemetryCodec,
 });
 
+// If the additional property (which is going to be exposed to the clients in the API response) has to be added to the
+// InternalDeviceCodec, make sure to update AdditionalDevicePropsCodec in /src/core/api/model/Device.ts accordingly
 const InternalDeviceCodec = t.type({
   connectivity: t.union([InternalConnectivityCodec, t.null, t.undefined]),
   createdTime: t.string,
