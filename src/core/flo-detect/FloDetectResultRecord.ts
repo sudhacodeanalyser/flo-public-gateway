@@ -33,7 +33,7 @@ const FloDetectResultRecordToComputationModelSchema: StrictSchema<FloDetectCompu
   fixtures: (input: FloDetectResultRecordData) => input.fixtures && input.fixtures.map(fixture => ({
     name: fixture.name,
     index: fixture.index,
-    type: fixture.index,
+    type: fixture.type,
     gallons: fixture.gallons,
     ratio: fixture.ratio,
     numEvents: fixture.num_events
