@@ -9,8 +9,7 @@ import { ApiNotificationService } from './ApiNotificationService';
 class ApiNotificationServiceFactory implements NotificationServiceFactory  {
 
   constructor(
-    @inject('notificationApiUrl') private readonly notificationApiUrl: string,
-    @inject('defaultFloSenseLevel') private readonly defaultFloSenseLevel: number
+    @inject('notificationApiUrl') private readonly notificationApiUrl: string
   ) {}
 
   public create(req: Request): NotificationService {
@@ -20,7 +19,7 @@ class ApiNotificationServiceFactory implements NotificationServiceFactory  {
       throw new UnauthorizedError();
     }
 
-    return new ApiNotificationService(new ApiService(this.notificationApiUrl, authToken), this.defaultFloSenseLevel);
+    return new ApiNotificationService(new ApiService(this.notificationApiUrl, authToken));
   }
 }
 
