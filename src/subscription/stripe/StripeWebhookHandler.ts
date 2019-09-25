@@ -59,7 +59,7 @@ class StripeWebhookHandler implements SubscriptionProviderWebhookHandler {
         async () => Option.fromNullable(await this.stripeClient.customers.retrieve(stripeSubscription.customer))
       ),
       TaskOption.chain(customer => {
-        const locationId = customer.metadata.location_id;
+        const locationId = stripeSubscription.metadata.location_id;
         const subscription = {
           plan: {
             id: stripeSubscription.plan.id
