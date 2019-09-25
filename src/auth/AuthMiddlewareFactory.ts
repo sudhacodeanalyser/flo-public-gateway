@@ -90,7 +90,7 @@ class AuthMiddlewareFactory {
         return Option.none;
       }
       
-      return Option.some(cacheResult);
+      return Option.some(tokenMetadata);
     }
   }
 
