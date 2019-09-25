@@ -66,13 +66,14 @@ push: docker
 	$(COMPOSE) $(@)
 	$(COMPOSE) -f build-tools.yml $(@) || true
 
+debug-helm: environment-dev
+	$(HELM) ls
+	$(HELM) template ./k8s/$(APP) -f k8s/pipeline.yaml --namespace=$(APP)
+
 deploy:
 	$(HELM) init --upgrade --wait --force-upgrade
 	$(HELM) ls
-	$(HELM) upgrade --install $(APP) ./k8s/flo-public-gateway -f ./k8s/pipeline.yaml  --set environment=${params.environment} --namespace=flo-public-gateway
-
-render-template:
-	$(HELM) template ./k8s/flo-public-gateway -f ./k8s/pipeline.yaml  --set environment=${params.environment} --namespace=flo-public-gateway
+	$(HELM) upgrade --install $(APP) ./k8s/$(APP) -f ./k8s/pipeline.yaml  --set environment=${params.environment} --namespace=$(APP)
 
 environment-dev:
 	chmod +x ./k8s/env-dev.sh

@@ -1,7 +1,8 @@
 import { injectable, inject } from 'inversify';
 import { KafkaProducer } from '../../kafka/KafkaProducer';
-import { Expandable } from '../api';
+import { Expandable, Device as DeviceModel, Location as LocationModel, Account as AccountModel, User as UserModel } from '../api';
 import Logger from 'bunyan';
+import { Device, Account, Location, User } from '../api/response';
 
 export enum EntityActivityAction {
   CREATED = 'created',
@@ -21,7 +22,7 @@ interface EntityActivityMessage<T> {
   type: EntityActivityType;
   action: EntityActivityAction;
   id: string;
-  item?: Expandable<T>;
+  item?: any;
 }
 
 @injectable() 
@@ -43,7 +44,9 @@ class EntityActivityService {
     }
   }
 
-  private formatEntityActivityMessage<T>(type: EntityActivityType, action: EntityActivityAction, item: Expandable<T>): EntityActivityMessage<T> {
+  private formatEntityActivityMessage<T>(type: EntityActivityType, action: EntityActivityAction, data: Expandable<T>): EntityActivityMessage<T> {
+    const item = this.mapItem(type, data);
+    
     return {
       date: new Date().toISOString(),
       type,
@@ -51,6 +54,21 @@ class EntityActivityService {
       id: item.id,
       item
     };
+  }
+
+  private mapItem(type: EntityActivityType, data: any): any {
+    switch (type) {
+      case EntityActivityType.DEVICE:
+        return Device.fromModel(data as DeviceModel);
+      case EntityActivityType.LOCATION:
+        return Location.fromModel(data as LocationModel);
+      case EntityActivityType.ACCOUNT:
+        return Account.fromModel(data as AccountModel);
+      case EntityActivityType.USER:
+        return User.fromModel(data as UserModel);
+      default:
+        return data;
+    }
   }
 }
 
