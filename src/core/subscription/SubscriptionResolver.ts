@@ -129,13 +129,42 @@ class SubscriptionResolver extends Resolver<Subscription> {
   public async updatePartial(id: string, partialSubscription: Partial<Subscription>): Promise<Subscription> {
     const subscriptionRecordData = SubscriptionRecord.fromPartialModel(partialSubscription);
     const patch = fromPartialRecord<SubscriptionRecordData>(subscriptionRecordData);
-    const updateSubscription = await this.subscriptionTable.update({ id }, patch);
 
-    return new SubscriptionRecord(updateSubscription).toModel();
+    try {
+      const updateSubscription = await this.subscriptionTable.update({ id }, patch);
+
+      return new SubscriptionRecord(updateSubscription).toModel();
+    } catch (err) {
+
+      if (!(err instanceof ResourceDoesNotExistError)) {
+        throw err; 
+      }
+      // Migrate old subscription record to new table if updated
+      const oldSubscriptionRecordData = await this.getByAccountId(id);
+
+      if (oldSubscriptionRecordData === null) {
+        throw err;
+      }
+
+      const subscriptionModel = await this.toModel(oldSubscriptionRecordData);
+      const newSubscriptionRecordData = await this.create(subscriptionModel);
+
+      return this.updatePartial(newSubscriptionRecordData.id, partialSubscription);
+    }
+
   }
 
   public async remove(id: string): Promise<void> {
-    return this.subscriptionTable.remove({ id });
+    try {
+      return this.subscriptionTable.remove({ id });
+    } catch (err) {
+
+      if (!(err instanceof ResourceDoesNotExistError)) {
+        throw err;
+      }
+
+      return this.oldSubscriptionTable.remove({ account_id: id });
+    }
   }
 
   public async getPlanById(planId: string): Promise<SubscriptionPlanRecordData | null> {
