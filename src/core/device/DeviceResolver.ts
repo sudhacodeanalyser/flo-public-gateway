@@ -81,8 +81,25 @@ class DeviceResolver extends Resolver<Device> {
           this.internalDeviceService.getDevice(device.macAddress)
         ]);
 
+        const {
+          target = undefined,
+          revertScheduledAt = undefined,
+          revertMode  = undefined,
+          revertMinutes  = undefined,
+          ...systemModeData
+        } = device.systemMode || {};
+        const revertData = target !== SystemMode.SLEEP ?
+          {} :
+          {
+            revertScheduledAt,
+            revertMode,
+            revertMinutes
+          };
+
         return {
-          ...device.systemMode,
+          ...systemModeData,
+          ...revertData,
+          target,
           isLocked: forcedSystemMode !== null && forcedSystemMode.system_mode !== null,
           lastKnown: _.get(additionalProperties, 'systemMode.lastKnown') || translateNumericToStringEnum(
             SystemMode,

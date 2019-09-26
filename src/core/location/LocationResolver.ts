@@ -82,7 +82,26 @@ class LocationResolver extends Resolver<Location> {
     systemMode: async (location: Location, shouldExpand = false) => {
 
       if (!_.isEmpty(_.pickBy(location.systemMode, _.identity))) {
-        return location.systemMode;
+        const {
+          target = undefined,
+          revertScheduledAt = undefined,
+          revertMinutes = undefined,
+          revertMode = undefined,
+          ...systemModeData
+        } = location.systemMode || {};
+        const revertData = target !== SystemMode.SLEEP ?
+          {} :
+          {
+            revertScheduledAt,
+            revertMinutes,
+            revertMode
+          };
+
+        return {
+          ...systemModeData,
+          ...revertData,
+          target
+        };
       }
 
       const devices = await this.deviceResolverFactory().getAllByLocationId(location.id);
