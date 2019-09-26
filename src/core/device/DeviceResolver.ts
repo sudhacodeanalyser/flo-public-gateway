@@ -82,12 +82,18 @@ class DeviceResolver extends Resolver<Device> {
         ]);
 
         const {
-          target = undefined,
-          revertScheduledAt = undefined,
-          revertMode  = undefined,
-          revertMinutes  = undefined,
+          target,
+          revertScheduledAt,
+          revertMode,
+          revertMinutes,
           ...systemModeData
-        } = device.systemMode || {};
+        } = device.systemMode || {
+          target: undefined,
+          revertScheduledAt: undefined,
+          revertMode: undefined,
+          revertMinutes: undefined
+        };
+
         const revertData = target !== SystemMode.SLEEP ?
           {} :
           {
