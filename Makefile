@@ -4,6 +4,7 @@ APP ?= flo-public-gateway
 ENV ?= dev
 AWS_REGION ?= us-west-2
 EB_DEPLOY_TIMEOUT ?= 15
+HELM_DEPLOY_TIMEOUT ?= 180
 DOCKER_IMAGE ?= ${CI_REGISTRY_IMAGE}
 DOCKER_REGISTRY ?= registry.gitlab.com/flotechnologies
 DOCKER_TAG ?= latest
@@ -33,7 +34,7 @@ install: docker ## Install npm packages using docker-based npm
 	$(NPM) $(@)
 
 audit: docker ## Install npm packages using docker-based npm
-	-$(NPM) $(@) fix
+	$(NPM) $(@) fix
 
 test: docker ## Run test task using docker-based npm
 	$(NPM) run $(@)
@@ -72,8 +73,17 @@ debug-helm: environment-dev
 
 deploy:
 	$(HELM) init --upgrade --wait --force-upgrade
-	$(HELM) ls
-	$(HELM) upgrade --install $(APP) ./k8s/$(APP) -f ./k8s/pipeline.yaml  --set environment=${params.environment} --namespace=$(APP)
+	$(HELM) upgrade \
+		--install $(APP) \
+		./k8s/$(APP) \
+		--values ./k8s/pipeline.yaml \
+		--set environment=${params.environment} \
+		--namespace=$(APP) \
+		--wait --timeout $(HELM_DEPLOY_TIMEOUT)
+
+deploy-status:
+	$(HELM) status $(APP)
+	$(HELM) history $(APP)
 
 environment-dev:
 	chmod +x ./k8s/env-dev.sh
