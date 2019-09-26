@@ -12,7 +12,7 @@
     "build-ts": "tsc",
     "debug": "npm run build && node --inspect=0.0.0.0 dist/app.js",
     "serve": "npm run build && node dist/app.js",
-    "start": "node dist/app.js",
+    "start": "npm run serve",
     "test": "jest --colors --coverage --verbose",
     "tslint": "tslint -c tslint.json -p tsconfig.json",
     "watch": "npm run copy-docs && tsc-watch --onSuccess 'node ./dist/app.js' --onFailure 'echo Compilation Failed'",
