@@ -21,7 +21,7 @@ service:
     timeoutSeconds: 1
   readinessProbe:
     path: "/api/v2/ping"
-    initialDelaySeconds: 45
+    initialDelaySeconds: 60
     periodSeconds: 5
     successThreshold: 2
     timeoutSeconds: 3
