@@ -83,7 +83,7 @@ K8sDev:
     - Compile
   only:
     - dev
-    - kloia-helmchart-deployment
+    - helm-wait-for-deploy
   environment:
     name: dev
     url: https://flo-public-gateway.flocloud.co/ping
