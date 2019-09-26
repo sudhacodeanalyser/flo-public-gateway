@@ -16,15 +16,15 @@ service:
   port: 3000
   livenessProbe:
     path: "/api/v2/ping"
-    initialDelaySeconds: 60
+    initialDelaySeconds: 70
     periodSeconds: 10
     timeoutSeconds: 1
   readinessProbe:
     path: "/api/v2/ping"
-    initialDelaySeconds: 60
-    periodSeconds: 3
-    successThreshold: 3
-    timeoutSeconds: 1
+    initialDelaySeconds: 45
+    periodSeconds: 5
+    successThreshold: 2
+    timeoutSeconds: 3
 
 v1ProxyService:
   floApiV1Hostname: api-dev.flocloud.co
