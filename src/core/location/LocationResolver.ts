@@ -82,7 +82,31 @@ class LocationResolver extends Resolver<Location> {
     systemMode: async (location: Location, shouldExpand = false) => {
 
       if (!_.isEmpty(_.pickBy(location.systemMode, _.identity))) {
-        return location.systemMode;
+        const {
+          target,
+          revertScheduledAt,
+          revertMinutes,
+          revertMode,
+          ...systemModeData
+        } = location.systemMode || {
+          target: undefined,
+          revertScheduledAt: undefined,
+          revertMode: undefined,
+          revertMinutes: undefined
+        };
+        const revertData = target !== SystemMode.SLEEP ?
+          {} :
+          {
+            revertScheduledAt,
+            revertMinutes,
+            revertMode
+          };
+
+        return {
+          ...systemModeData,
+          ...revertData,
+          target
+        };
       }
 
       const devices = await this.deviceResolverFactory().getAllByLocationId(location.id);
@@ -109,7 +133,10 @@ class LocationResolver extends Resolver<Location> {
             })[0];
 
       return {
-        target: _.get(device, 'systemMode.target') || _.get(device, 'systemMode.lastKnown') || SystemMode.HOME
+        target: _.get(device, 'systemMode.target') || _.get(device, 'systemMode.lastKnown') || SystemMode.HOME,
+        revertMinutes: device && device.systemMode && device.systemMode.revertMinutes,
+        revertMode: device && device.systemMode && device.systemMode.revertMode,
+        revertScheduledAt: device && device.systemMode && device.systemMode.revertScheduledAt
       };
     },
     irrigationSchedule: async (location: Location, shouldExpand = false) => {

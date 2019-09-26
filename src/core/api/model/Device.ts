@@ -50,7 +50,7 @@ const MutableSystemModeCodec = t.type({
   shouldInherit: t.boolean,
   target: t.union([t.undefined, DeviceSystemModeCodec]),
   revertScheduledAt: t.union([t.undefined, t.string]),
-  revertMode: t.union([t.undefined, t.string]),
+  revertMode: t.union([t.undefined, DeviceSystemModeCodec]),
   revertMinutes: t.union([t.undefined, t.number])
 });
 

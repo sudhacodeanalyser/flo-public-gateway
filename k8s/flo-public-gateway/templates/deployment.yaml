@@ -2,8 +2,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "flo-public-gateway.fullname" . }}
-  annotations:
-    checksum/secrets: {{ include (print $.Template.BasePath "/secrets.yaml") . | sha256sum }}
   labels:
     app: {{ include "flo-public-gateway.name" . }}
     app.kubernetes.io/name: {{ include "flo-public-gateway.name" . }}
@@ -22,6 +20,8 @@ spec:
       app.kubernetes.io/instance: {{ .Release.Name }}
   template:
     metadata:
+      annotations:
+        checksum/secrets: {{ include (print $.Template.BasePath "/secrets.yaml") . | sha256sum }}
       labels:
         app.kubernetes.io/name: {{ include "flo-public-gateway.name" . }}
         app.kubernetes.io/instance: {{ .Release.Name }}

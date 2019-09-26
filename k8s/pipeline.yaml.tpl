@@ -4,6 +4,8 @@ secrets:
   datas:
     application_name: "${APPLICATION_NAME}"
     environment: development
+    STRIPE_SECRET_KEY: "${STRIPE_SECRET_KEY}"
+    STRIPE_WEBHOOK_SECRET: "${STRIPE_WEBHOOK_SECRET}"
     docs_endpoint_password: "${DOCS_ENDPOINT_PASSWORD}"
     docs_endpoint_user: "${DOCS_ENDPOINT_USER}"
     external_docs_endpoint_password: "${EXTERNAL_DOCS_ENDPOINT_PASSWORD}"
