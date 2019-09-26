@@ -36,7 +36,10 @@ export class OldSubscriptionRecord {
         data: {
           customerId: record.stripe_customer_id,
           subscriptionId: record.stripe_subscription_id,
-          status: record.status
+          status: record.status,
+          currentPeriodStart: record.current_period_start,
+          currentPeriodEnd: record.current_period_end,
+          cancelAtPeriodEnd: record.cancel_at_period_end
         }
       },
       createdAt: record.created_at,
