@@ -100,7 +100,7 @@ class SubscriptionResolver extends Resolver<Subscription> {
   }
 
   // TODO: Remove me once data migration is completed.
-  public async getByAccountId(accountId: string): Promise<any | null> {
+  public async getByAccountId(accountId: string): Promise<Subscription | null> {
     const subscriptionRecordData = await this.oldSubscriptionTable.get({ account_id: accountId });
 
     if (subscriptionRecordData === null) {
@@ -140,13 +140,16 @@ class SubscriptionResolver extends Resolver<Subscription> {
         throw err; 
       }
       // Migrate old subscription record to new table if updated
-      const oldSubscriptionRecordData = await this.getByAccountId(id);
+      const subscriptionModel = await this.getByAccountId(id);
 
-      if (oldSubscriptionRecordData === null) {
+      if (subscriptionModel === null) {
         throw err;
       }
 
-      const subscriptionModel = await this.toModel(oldSubscriptionRecordData);
+      // tslint:disable
+      console.log('MODEL');
+      console.log(JSON.stringify(subscriptionModel, null, 4));
+
       const newSubscriptionRecordData = await this.create(subscriptionModel);
 
       return this.updatePartial(newSubscriptionRecordData.id, partialSubscription);

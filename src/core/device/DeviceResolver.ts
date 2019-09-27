@@ -164,6 +164,11 @@ class DeviceResolver extends Resolver<Device> {
       );
     },
     notifications: async (device: Device, shouldExpand = false) => {
+
+      if (!this.notificationService) {
+        return null;
+      }
+
       return this.notificationService.retrieveStatistics(`deviceId=${device.id}`);
     },
     hardwareThresholds: async (device: Device, shouldExpand = false) => {
@@ -291,7 +296,7 @@ class DeviceResolver extends Resolver<Device> {
 
     this.locationResolverFactory = depFactoryFactory<LocationResolver>('LocationResolver');
 
-    if (!_.isEmpty(this.httpContext)) {
+    if (!_.isEmpty(this.httpContext) && this.httpContext.request.get('Authorization')) {
       this.irrigationScheduleService = irrigationScheduleServiceFactory.create(this.httpContext.request);
       this.notificationService = notificationServiceFactory.create(this.httpContext.request);
     }

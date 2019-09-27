@@ -71,13 +71,10 @@ class SubscriptionService {
       return {};
     }
 
-    const subscriptionProvider = this.getProvider(subscription.provider.name);
-    const providerInfo = await subscriptionProvider.retrieveSubscription(subscription);
+    // const subscriptionProvider = this.getProvider(subscription.provider.name);
+    // const providerInfo = await subscriptionProvider.retrieveSubscription(subscription);
 
-    return {
-      ...subscription,
-      provider: providerInfo
-    };
+    return subscription;
   }
 
   public async getSubscriptionByRelatedEntityId(id: string): Promise<Option<Subscription>> {

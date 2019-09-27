@@ -1,12 +1,14 @@
 import { inject, injectable } from 'inversify';
 import _ from 'lodash';
 import Stripe from 'stripe';
-import { Subscription, SubscriptionProviderWebhookHandler } from '../../core/api';
+import { Subscription, SubscriptionProviderWebhookHandler, SubscriptionProviderInfo } from '../../core/api';
 import { SubscriptionService } from '../../core/service';
 import { isSubscriptionActive } from './StripeUtils';
 import * as Option from 'fp-ts/lib/Option';
 import { pipe } from 'fp-ts/lib/pipeable';
 import * as TaskOption from 'fp-ts-contrib/lib/TaskOption';
+
+type GetSubscription = (subcription: Stripe.subscriptions.ISubscription) => Promise<Option.Option<Subscription>>;
 
 @injectable()
 class StripeWebhookHandler implements SubscriptionProviderWebhookHandler {
@@ -18,10 +20,19 @@ class StripeWebhookHandler implements SubscriptionProviderWebhookHandler {
     @inject('SubscriptionService') private subscriptionService: SubscriptionService
   ) {
     this.eventMap = {
-      'customer.deleted': this.handleCustomerDeleted.bind(this),
+      'customer.deleted': this.handleSubscriptionUpdated.bind(
+        this,
+        sub => this.subscriptionService.getSubscriptionByProviderCustomerId(this.getCustomerId(sub))
+      ),
       'customer.subscription.created': this.handleSubscriptionCreated.bind(this),
-      'customer.subscription.updated': this.handleSubscriptionUpdated.bind(this),
-      'customer.subscription.deleted': this.handleSubscriptionDeleted.bind(this)
+      'customer.subscription.updated': this.handleSubscriptionUpdated.bind(
+        this, 
+        sub => this.subscriptionService.getSubscriptionByRelatedEntityId(sub.metadata.location_id)
+      ),
+      'customer.subscription.deleted': this.handleSubscriptionUpdated.bind(
+        this,
+        sub => this.subscriptionService.getSubscriptionByRelatedEntityId(sub.metadata.location_id)
+      )
     }
   }
 
@@ -34,18 +45,6 @@ class StripeWebhookHandler implements SubscriptionProviderWebhookHandler {
     }
 
     return handler(data);
-  }
-
-  private async handleCustomerDeleted(data: any): Promise<void> {
-    const { object: customer } = data;
-
-    return pipe(
-      await this.subscriptionService.getSubscriptionByProviderCustomerId(customer.id),
-      Option.fold(
-        async () => Promise.resolve(),
-        async () => this.makeSubscriptionInactiveByCustomerId(customer.id),
-      )
-    );
   }
 
   private async handleSubscriptionCreated(data: any): Promise<void> {
@@ -68,14 +67,7 @@ class StripeWebhookHandler implements SubscriptionProviderWebhookHandler {
             id: locationId
           },
           sourceId: stripeSubscription.metadata.source_id || 'stripe',
-          provider: {
-            name: 'stripe',
-            isActive: isSubscriptionActive(stripeSubscription.status),
-            data: {
-              customerId: stripeSubscription.customer,
-              subscriptionId: stripeSubscription.id
-            }
-          }
+          provider: this.formatProviderData(stripeSubscription)
         };
 
         return TaskOption.fromTask(async () => {
@@ -86,30 +78,25 @@ class StripeWebhookHandler implements SubscriptionProviderWebhookHandler {
     );
   }
 
-  private async handleSubscriptionUpdated(data: any): Promise<void> {
-    const { object: stripeSubscription } = data;
+  private async handleSubscriptionUpdated(getSubscription: GetSubscription, data: any): Promise<void> {
+    const { object } = data;
+    const stripeSubscription: Stripe.subscriptions.ISubscription = object;
+    const customer = this.getCustomerId(stripeSubscription);
 
     await pipe(
-      await this.subscriptionService.getSubscriptionByProviderCustomerId(stripeSubscription.customer),
+      await getSubscription(stripeSubscription),
       Option.fold(
         async () => Promise.resolve(),
         async subscription => {
-         const updatedSubscription = {
+         const updatedSubscription: Partial<Subscription> = {
             plan: {
-              id: stripeSubscription.plan.id || subscription.plan.id
+              id: (stripeSubscription.plan && stripeSubscription.plan.id) || subscription.plan.id
             },
             location: {
               id: stripeSubscription.metadata.location_id || subscription.location.id
             },
             sourceId: stripeSubscription.metadata.source_id || subscription.sourceId,
-            provider: {
-              name: 'stripe',
-              isActive: isSubscriptionActive(stripeSubscription.status),
-              data: {
-                customerId: stripeSubscription.customer,
-                subscriptionId: stripeSubscription.id
-              }
-            }
+            provider: this.formatProviderData(stripeSubscription)
           };
 
           await this.subscriptionService.updateSubscription(subscription.id, updatedSubscription);
@@ -118,35 +105,30 @@ class StripeWebhookHandler implements SubscriptionProviderWebhookHandler {
     );
   }
 
-  private async handleSubscriptionDeleted(data: any): Promise<void> {
-    const { object: stripeSubscription } = data;
+  private formatProviderData(stripeSubscription: Stripe.subscriptions.ISubscription): SubscriptionProviderInfo {
+    const customer = this.getCustomerId(stripeSubscription);
 
-    return this.makeSubscriptionInactiveByCustomerId(stripeSubscription.customer);
+    return {
+      name: 'stripe',
+      isActive: isSubscriptionActive(stripeSubscription.status),
+      data: {
+        status: stripeSubscription.status,
+        customerId: customer,
+        subscriptionId: stripeSubscription.id,
+        currentPeriodStart: new Date(stripeSubscription.current_period_start * 1000).toISOString(),
+        currentPeriodEnd: new Date(stripeSubscription.current_period_end * 1000).toISOString(),
+        canceledAt: !stripeSubscription.canceled_at ?
+           undefined :
+           new Date(stripeSubscription.canceled_at * 1000).toISOString(),
+        cancelAtPeriodEnd: !!stripeSubscription.cancel_at_period_end
+      }
+    };
   }
 
-  private async makeSubscriptionInactiveByCustomerId(customerId: string): Promise<void> {
-
-    await pipe(
-      await this.subscriptionService.getSubscriptionByProviderCustomerId(customerId),
-      Option.fold(
-        async () => Promise.resolve(),
-        async subscription => {
-          const inactivePartialSubscription = {
-            provider: {
-              name: 'stripe',
-              isActive: false,
-              data: {
-                isActive: false,
-                customerId: subscription.provider.data.customerId,
-                subscriptionId: subscription.provider.data.subscriptionId
-              }
-            }
-          };
-
-          await this.subscriptionService.updateSubscription(subscription.id, inactivePartialSubscription);
-        }
-      )
-    );
+  private getCustomerId(stripeSubscription: Stripe.subscriptions.ISubscription): string {
+    return _.isString(stripeSubscription.customer) ? 
+      stripeSubscription.customer : 
+      stripeSubscription.customer.id;
   }
 }
 

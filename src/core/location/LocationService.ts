@@ -26,7 +26,7 @@ class LocationService {
     this.deviceServiceFactory = depFactoryFactory<DeviceService>('DeviceService');
     this.accountServiceFactory = depFactoryFactory<AccountService>('AccountService');
 
-    if (!_.isEmpty(this.httpContext)) {
+    if (!_.isEmpty(this.httpContext) && this.httpContext.request.get('Authorization')) {
       this.irrigationScheduleService = irrigationScheduleServiceFactory.create(this.httpContext.request);
     }
   }

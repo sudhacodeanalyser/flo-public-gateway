@@ -124,6 +124,11 @@ class LocationResolver extends Resolver<Location> {
       };
     },
     notifications: async (location: Location, shouldExpand = false) => {
+      
+      if (!this.notificationService) {
+        return null;
+      }
+
       return this.notificationService.retrieveStatistics(`locationId=${location.id}`);
     }
   };
@@ -148,7 +153,7 @@ class LocationResolver extends Resolver<Location> {
     this.userResolverFactory = depFactoryFactory<UserResolver>('UserResolver');
     this.subscriptionResolverFactory = depFactoryFactory<SubscriptionResolver>('SubscriptionResolver');
 
-    if (!_.isEmpty(this.httpContext)) {
+    if (!_.isEmpty(this.httpContext) && this.httpContext.request.get('Authorization')) {
       this.notificationService = notificationServiceFactory.create(this.httpContext.request);
     }
   }

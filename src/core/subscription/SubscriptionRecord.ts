@@ -1,5 +1,13 @@
 import { Subscription, Timestamped } from '../api';
 
+export interface StripeProviderData {
+  current_period_start?: string;
+  current_period_end?: string;
+  canceled_at?: string;
+  cancel_at_period_end?: boolean;
+  status?: string;
+}
+
 export interface SubscriptionRecordData extends Timestamped {
   id: string,
   plan_id: string
@@ -10,6 +18,7 @@ export interface SubscriptionRecordData extends Timestamped {
   subscription_provider: string
   provider_customer_id: string
   provider_subscription_id: string
+  stripe_provider_data?: StripeProviderData;
 }
 
 export class SubscriptionRecord {
@@ -25,11 +34,23 @@ export class SubscriptionRecord {
       source_id: subscription.sourceId,
       subscription_provider: provider && provider.name,
       provider_customer_id: providerData && providerData.customerId,
-      provider_subscription_id: providerData && providerData.subscriptionId
+      provider_subscription_id: providerData && providerData.subscriptionId,
+      stripe_provider_data: provider && provider.name === 'stripe' && providerData ?
+        {
+          current_period_start: providerData.currentPeriodStart,
+          current_period_end: providerData.currentPeriodEnd,
+          cancel_at_period_end: providerData.cancelAtPeriodEnd,
+          status: providerData.status,
+          canceled_at: providerData.canceledAt
+        } :
+        undefined
     };
   }
 
   public static fromModel(subscription: Subscription): SubscriptionRecordData {
+    const provider = subscription.provider;
+    const providerData = provider && provider.data;
+
     return {
       id: subscription.id,
       plan_id: subscription.plan.id,
@@ -39,7 +60,16 @@ export class SubscriptionRecord {
       source_id: subscription.sourceId,
       subscription_provider: subscription.provider.name,
       provider_customer_id: subscription.provider.data.customerId,
-      provider_subscription_id: subscription.provider.data.subscriptionId
+      provider_subscription_id: subscription.provider.data.subscriptionId,
+      stripe_provider_data: provider && provider.name === 'stripe' && providerData ?
+        {
+          current_period_start: providerData.currentPeriodStart,
+          current_period_end: providerData.currentPeriodEnd,
+          cancel_at_period_end: providerData.cancelAtPeriodEnd,
+          status: providerData.status,
+          canceled_at: providerData.canceledAt
+        } :
+        undefined
     };
   }
 
@@ -62,7 +92,12 @@ export class SubscriptionRecord {
         isActive: this.data.is_active,
         data: {
           customerId: this.data.provider_customer_id,
-          subscriptionId: this.data.provider_subscription_id
+          subscriptionId: this.data.provider_subscription_id,
+          currentPeriodStart: this.data.stripe_provider_data && this.data.stripe_provider_data.current_period_start,
+          currentPeriodEnd: this.data.stripe_provider_data && this.data.stripe_provider_data.current_period_end,
+          canceledAt: this.data.stripe_provider_data && this.data.stripe_provider_data.canceled_at,
+          cancelAtPeriodEnd: this.data.stripe_provider_data && this.data.stripe_provider_data.cancel_at_period_end,
+          status: this.data.stripe_provider_data && this.data.stripe_provider_data.status
         }
       },
       createdAt: this.data.created_at,
