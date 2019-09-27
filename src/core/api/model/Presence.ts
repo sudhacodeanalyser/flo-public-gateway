@@ -4,18 +4,15 @@ import {Expandable, TimestampedModel, Location, DeviceUpdate, DeviceType, Device
 const PresenceRequestCodec = t.type({
     appName: t.string,
     appVersion: t.union([t.string, t.undefined]),
-    ttl: t.number
 });
 
 const PresenceDataCodec = t.intersection([
     PresenceRequestCodec,
     t.type({
-        action: t.string,
         userId: t.string,
         accountId: t.union([t.string, t.undefined]),
         deviceId: t.union([t.array(t.string), t.undefined]),
         type: t.string,
-        date: t.string,
         ipAddress: t.string
     })
 ]);
