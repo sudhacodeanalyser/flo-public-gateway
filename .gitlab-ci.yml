@@ -80,7 +80,7 @@ K8sDev:
     - Compile
   only:
     - dev
-    - reduce-bootstrap-time
+    - reduce-probe-times
   environment:
     name: dev
     url: https://flo-public-gateway.flocloud.co/ping
