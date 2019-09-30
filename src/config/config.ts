@@ -33,7 +33,8 @@ function getDefaults(): { [key: string]: any } {
         entityActivityKafkaTopic: 'entity-activity-v1',
         telemetryKafkaTopic: 'telemetry-v3',
         redisHost: 'redis-dev-cluster.9alsts.clustercfg.usw2.cache.amazonaws.com',
-        redisPort: '6379'
+        redisPort: '6379',
+        presenceServiceUrl: 'https://flo-core-service-dev.flocloud.co/presence'
       };
   }
 }
@@ -51,7 +52,6 @@ const config = {
   aclUrl: process.env.ACL_URL,
   kafkaHost: process.env.KAFKA_HOST,
   kafkaTimeout: process.env.KAFKA_TIMEOUT_MS,
-  presenceKafkaTopic: 'presence-activity-v1', // Should not change across environments
   internalDeviceServiceBaseUrl: process.env.INTERNAL_DEVICE_SERVICE_BASE_URL,
   apiV1Url: process.env.API_V1_URL,
   docsEndpointUser: process.env.DOCS_ENDPOINT_USER,
@@ -79,7 +79,8 @@ const config = {
   entityActivityKafkaTopic: process.env.ENTITY_ACTIVITY_KAFKA_TOPIC,
   telemetryKafkaTopic: process.env.TELEMETRY_KAFKA_TOPIC,
   redisHost: process.env.REDIS_HOST,
-  redisPort: process.env.REDIS_PORT
+  redisPort: process.env.REDIS_PORT,
+  presenceServiceUrl: process.env.PRESENCE_SERVICE_URL
 };
 
 export default {

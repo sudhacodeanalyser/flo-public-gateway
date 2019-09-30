@@ -18,6 +18,7 @@ import subscriptionProviderModule from '../subscription/containerModule';
 import validationContainerModule from '../validation/containerModule';
 import memoizeContainerModule from '../memoize/containerModule';
 import cacheContainerModule from '../cache/containerModule';
+import presenceContainerModule from '../presence/containerModule';
 
 export default function ContainerFactory(container: Container = new Container()): Container {
 
@@ -39,6 +40,7 @@ export default function ContainerFactory(container: Container = new Container())
     memoizeContainerModule,
     redisContainerModule,
     cacheContainerModule,
+    presenceContainerModule,
     ...coreContainerModules
   );
 

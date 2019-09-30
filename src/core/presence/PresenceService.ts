@@ -2,57 +2,54 @@ import { injectable, inject } from 'inversify';
 import { PresenceRequest, PresenceData } from '../api/model/Presence';
 import { KafkaProducer } from '../../kafka/KafkaProducer';
 import _ from 'lodash';
+import { ExternalPresenceService } from './ExternalPresenceService';
+import Logger from 'bunyan';
 
 @injectable()
-class PresenceService {
+class PresenceService implements ExternalPresenceService {
     constructor(
-        @inject('PresenceKafkaTopic') private readonly kafkaTopic: string,
-        @inject('KafkaProducer') private readonly kafkaProducer: KafkaProducer
+        @inject('ExternalPresenceService') private readonly externalPresenceService: ExternalPresenceService,
+        @inject('Logger') private readonly logger: Logger
     ) {}
 
-    public async report(payload: PresenceRequest, ipAddress: string, userId: string, clientId: string): Promise<PresenceData> {
-        const presenceData = {
-            action: 'report',
-            date: new Date().toISOString(),
+    public async getNow(): Promise<any> {
+       return this.externalPresenceService.getNow();
+    }
+
+    public async getHistory(): Promise<any> {
+        return this.externalPresenceService.getHistory();
+    }
+
+    public async getByUserId(userId: string): Promise<any> {
+        return this.externalPresenceService.getByUserId(userId);
+    }
+
+    public async formatPresenceData(payload: PresenceRequest, ipAddress: string, userId: string, clientId: string): Promise<PresenceData> {
+         // TODO: If cheap, resolve the accountId and list of devices (mac address)
+        // that this user has access to at the time of the presence call
+
+        return {
             ipAddress,
             userId,
             type: 'user',
-            ttl: payload.ttl === undefined || payload.ttl < 60 ? 60 : (payload.ttl > 300 ? 300 : payload.ttl),
             appName: payload.appName === undefined || payload.appName === '' ? clientId : payload.appName,
             appVersion: payload.appVersion,
             accountId: undefined,
-            deviceId: undefined,
-            ..._.pickBy(payload, value => !_.isEmpty(value))
+            deviceId: undefined
         };
+    }
 
-        // TODO: If cheap, resolve the accountId and list of devices (mac address)
-        // that this user has access to at the time of the presence call
-
+    public async report(presenceData: PresenceData): Promise<PresenceData> {
+       
         // A client can't do anything if there is an error, log it, alert us, leave client alone
         try
         {
-            await this.postToKafka(presenceData);
-            this.addToRedis(presenceData);
+            return this.externalPresenceService.report(presenceData);
         }
-        catch(e) {
-            // TODO: Log Error, don't break
+        catch (err) {
+            this.logger.error({ err });
+            return presenceData;
         }
-
-        return presenceData;
-    }
-
-    public postToKafka(payload: PresenceData): void {
-        this.kafkaProducer.send(this.kafkaTopic, payload);
-    }
-
-    public addToRedis(payload: PresenceData): void {
-        // TODO: Write data to Redis
-
-        // Redis Format
-        // HashSet
-        // Key = presence.user.{id}
-        // Expire based on TTL in the payload ( ttl is seconds )
-        // Property: {appname}+{appversion}, Value: JSON of the payload
     }
 }
 
