@@ -21,9 +21,6 @@ before_script:
     # TODO: this should be part of the compose image
     apk add --no-cache make bash jq gettext
     docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY
-    if [[ -f Dockerrun.aws.json ]]; then
-      sed -i "s/:latest/:${CI_PIPELINE_ID}/g" Dockerrun.aws.json
-    fi
 
 Compile:
   stage: build
@@ -83,7 +80,7 @@ K8sDev:
     - Compile
   only:
     - dev
-    - helm-wait-for-deploy
+    - reduce-bootstrap-time
   environment:
     name: dev
     url: https://flo-public-gateway.flocloud.co/ping
@@ -123,7 +120,6 @@ RunscopeProd:
   dependencies:
     - Compile
   only:
-    - prep_prod_deployment
     - master
   environment:
     name: prod
