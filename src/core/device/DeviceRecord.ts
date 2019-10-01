@@ -2,7 +2,6 @@ import _ from 'lodash';
 import { morphism, StrictSchema } from 'morphism';
 // These should likely go into a lookup table
 import { Device, DeviceModelType, DeviceType, SystemMode as DeviceSystemMode, ValveState } from '../api';
-import { NoYesUnsure } from '../api/NoYesUnsure';
 
 export interface DeviceRecordData {
   id: string;
@@ -23,6 +22,7 @@ export interface DeviceRecordData {
   revert_mode: DeviceSystemMode;
   revert_minutes?: number;
   target_valve_state: ValveState;
+  area_id?: string;
 }
 
 const RecordToModelSchema: StrictSchema<Device, DeviceRecordData>  = {
@@ -42,8 +42,8 @@ const RecordToModelSchema: StrictSchema<Device, DeviceRecordData>  = {
   deviceModel: (input: DeviceRecordData) => _.get(input, 'device_model', DeviceModelType.FLO_0_75),
   deviceType: (input: DeviceRecordData) => {
     return _.get(
-      input, 
-      'device_type', 
+      input,
+      'device_type',
        DeviceType.FLO_DEVICE_V2
     );
   },
@@ -72,7 +72,8 @@ const RecordToModelSchema: StrictSchema<Device, DeviceRecordData>  = {
   serialNumber: () => undefined,
   connectivity: () => undefined,
   telemetry: () => undefined,
-  healthTest: () => undefined
+  healthTest: () => undefined,
+  area: (input: DeviceRecordData) => input.area_id ? { id: input.area_id } : undefined
 };
 
 const ModelToRecordSchema: StrictSchema<DeviceRecordData, Device> = {
@@ -93,7 +94,8 @@ const ModelToRecordSchema: StrictSchema<DeviceRecordData, Device> = {
   device_type: 'deviceType',
   device_model: 'deviceModel',
   prv_installation: 'prvInstallation',
-  irrigation_type: 'irrigationType'
+  irrigation_type: 'irrigationType',
+  area_id: (input: Device) => _.get(input, 'area.id', undefined)
 };
 
 const PartialModelToRecordSchema: StrictSchema<Partial<DeviceRecordData>, Partial<Device>> = {
@@ -114,7 +116,8 @@ const PartialModelToRecordSchema: StrictSchema<Partial<DeviceRecordData>, Partia
   device_type: 'deviceType',
   device_model: 'deviceModel',
   prv_installation: 'prvInstallation',
-  irrigation_type: 'irrigationType'
+  irrigation_type: 'irrigationType',
+  area_id: (input: Partial<Device>) => _.get(input, 'area.id', undefined)
 };
 
 export class DeviceRecord {
