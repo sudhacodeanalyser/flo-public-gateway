@@ -90,6 +90,7 @@ K8sDev:
     - make deploy-status
   tags:
     - dev
+    - dev-prod
 
 K8sProd:
   variables:
@@ -110,6 +111,7 @@ K8sProd:
     - make deploy-status
   tags:
     - deploy-prod
+    - dev-prod
 
 RunscopeProd:
   variables:
