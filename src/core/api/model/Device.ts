@@ -1,12 +1,11 @@
 import * as t from 'io-ts';
 import _ from 'lodash';
-import {InternalConnectivity, InternalDevice, InternalTelemetry, InternalDeviceCodec} from '../../../internal-device-service/models';
+import { InternalConnectivity, InternalDeviceCodec, InternalTelemetry } from '../../../internal-device-service/models';
 import { Expandable, Location, NotificationStatistics, Omit, SystemModeCodec as DeviceSystemModeCodec, TimestampedModel } from '../../api';
-import { NonEmptyString } from '../../api/validator/NonEmptyString';
 import { convertEnumtoCodec } from '../../api/enumUtils';
+import { NonEmptyString } from '../../api/validator/NonEmptyString';
+import { HealthTest } from '../../device/HealthTestService';
 import { ComputedIrrigationSchedule } from '../../device/IrrigationScheduleService';
-import { NoYesUnsure } from '../NoYesUnsure';
-import { HealthTest } from '../../device/HealthTestService'
 
 export enum ValveState {
   OPEN = 'open',
@@ -144,6 +143,9 @@ export interface Device extends Omit<DeviceUpdate, 'valve'>, TimestampedModel {
   serialNumber?: string;
   healthTest?: {
     latest?: HealthTest
+  };
+  area?: {
+    id: string;
   }
 }
 

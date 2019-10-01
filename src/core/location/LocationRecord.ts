@@ -1,11 +1,11 @@
+import * as Either from 'fp-ts/lib/Either';
+import { pipe } from 'fp-ts/lib/pipeable';
 import _ from 'lodash';
 import { morphism, StrictSchema } from 'morphism';
 import { IndoorAmenity, Location, LocationSize, LocationType, Omit, OutdoorAmenity, PlumbingAppliance, PlumbingType, SystemMode, Timestamped } from '../api';
-import { NonEmptyString } from '../api/validator/NonEmptyString';
 import { translateNumericToStringEnum, translateStringToNumericEnum } from '../api/enumUtils';
 import { NoYesUnsure } from '../api/NoYesUnsure';
-import * as Either from 'fp-ts/lib/Either';
-import { pipe } from 'fp-ts/lib/pipeable';
+import { NonEmptyString } from '../api/validator/NonEmptyString';
 
 export enum LegacyLocationSizeCategory {
   LTE_700 = 0,
@@ -143,6 +143,11 @@ export interface LocationProfile {
   past_water_damage_claim_amount?: string
 }
 
+interface AreaRecord {
+  id: string;
+  name: string;
+}
+
 // This will need to be enforced as a runtime validation
 type Integer = number;
 
@@ -168,6 +173,7 @@ export interface LocationRecordData extends Partial<LegacyLocationProfile>, Time
   revert_mode?: SystemMode;
   revert_minutes?: number;
   is_irrigation_schedule_enabled?: boolean;
+  areas: AreaRecord[];
 }
 
 const RecordToModelSchema: StrictSchema<Location, LocationRecordData> = {
@@ -193,7 +199,7 @@ const RecordToModelSchema: StrictSchema<Location, LocationRecordData> = {
         result => result
       )
     )
-  , 
+  ,
   gallonsPerDayGoal: 'gallons_per_day_goal',
   occupants: 'occupants',
   stories: 'stories',
@@ -350,7 +356,8 @@ const RecordToModelSchema: StrictSchema<Location, LocationRecordData> = {
     .filter(plumbingAppliance => plumbingAppliance) as PlumbingAppliance[];
   },
   pastWaterDamageClaimAmount: 'profile.past_water_damage_claim_amount',
-  notifications: () => undefined
+  notifications: () => undefined,
+  areas: (input: LocationRecordData) => input.areas || []
 };
 
 const ModelToRecordSchema: StrictSchema<LocationRecordData, Location> = {
@@ -397,7 +404,8 @@ const ModelToRecordSchema: StrictSchema<LocationRecordData, Location> = {
       has_past_water_damage: input.hasPastWaterDamage || false,
       past_water_damage_claim_amount: input.pastWaterDamageClaimAmount
     };
-  }
+  },
+  areas: 'areas'
 };
 
 export type PartialLocationRecordData = Omit<LocationRecordData, 'profile'> & Record<'profile', Partial<LocationRecordData['profile']>>;
@@ -446,7 +454,8 @@ const PartialModelToPartialRecordSchema: StrictSchema<PartialLocationRecordData,
       has_past_water_damage: input.hasPastWaterDamage,
       past_water_damage_claim_amount: input.pastWaterDamageClaimAmount
     };
-  }
+  },
+  areas: 'areas'
 };
 
 
