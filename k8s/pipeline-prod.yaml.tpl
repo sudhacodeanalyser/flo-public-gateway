@@ -36,6 +36,7 @@ secrets:
     postgres_port: "${POSTGRES_PORT_PROD}"
     postgres_user: "${POSTGRES_USER_PROD}"
     localization_url: "${LOCALIZATION_API_URL_PROD}"
+    PRESENCE_SERVICE_URL: "${PRESENCE_SERVICE_URL_PROD}"
 internalIngress:
   host: internal-ingress.flosecurecloud.com
 routingIngress:

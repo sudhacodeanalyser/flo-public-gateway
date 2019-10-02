@@ -1,18 +1,17 @@
-import _ from 'lodash';
-import express from 'express';
-import { interfaces, httpGet, httpPost, httpDelete, httpPut, queryParam, requestParam, requestBody, request, BaseHttpController } from 'inversify-express-utils';
-import { inject, Container } from 'inversify';
-import { Location, LocationUpdateValidator, LocationUpdate, LocationUserRole, LocationCreateValidator, SystemMode, SystemModeCodec } from '../api';
-import { LocationService } from '../service';
-import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
+import { Option, some } from 'fp-ts/lib/Option';
+import { Container, inject } from 'inversify';
+import { BaseHttpController, httpDelete, httpGet, httpPost, httpPut, interfaces, queryParam, request, requestBody, requestParam } from 'inversify-express-utils';
 import * as t from 'io-ts';
-import { parseExpand, httpController, createMethod, deleteMethod, asyncMethod, withResponseType } from '../api/controllerUtils';
-import { NonEmptyArray } from '../api/validator/NonEmptyArray';
+import _ from 'lodash';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
-import { DeviceSystemModeServiceFactory } from '../device/DeviceSystemModeService';
+import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
+import { Location, LocationCreateValidator, LocationUpdate, LocationUpdateValidator, LocationUserRole, SystemMode, SystemModeCodec } from '../api';
+import { createMethod, deleteMethod, httpController, parseExpand, withResponseType } from '../api/controllerUtils';
 import Request from '../api/Request';
 import * as Responses from '../api/response';
-import { Option, none, some, isNone } from 'fp-ts/lib/Option';
+import { NonEmptyArray } from '../api/validator/NonEmptyArray';
+import { DeviceSystemModeServiceFactory } from '../device/DeviceSystemModeService';
+import { LocationService } from '../service';
 
 
 export function LocationControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
@@ -46,7 +45,7 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
       if (
         (revertMinutes !== undefined && revertMode === undefined) ||
         (revertMode !== undefined && revertMinutes === undefined) ||
-        (revertMinutes !== undefined && revertMode !== undefined && target !== SystemMode.SLEEP) 
+        (revertMinutes !== undefined && revertMode !== undefined && target !== SystemMode.SLEEP)
       ) {
         return false;
       } else {
@@ -97,7 +96,7 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
     @withResponseType<Location, Responses.Location>(Responses.Location.fromModel)
     private async getLocation(@requestParam('id') id: string, @queryParam('expand') expand?: string): Promise<Option<Location>> {
       const expandProps = parseExpand(expand);
-      
+
       return this.locationService.getLocation(id, expandProps);
     }
 
