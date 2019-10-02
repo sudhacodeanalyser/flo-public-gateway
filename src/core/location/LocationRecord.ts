@@ -357,7 +357,10 @@ const RecordToModelSchema: StrictSchema<Location, LocationRecordData> = {
   },
   pastWaterDamageClaimAmount: 'profile.past_water_damage_claim_amount',
   notifications: () => undefined,
-  areas: (input: LocationRecordData) => input.areas || []
+  areas: (input: LocationRecordData) => ({
+    default: [],
+    custom: input.areas || []
+  })
 };
 
 const ModelToRecordSchema: StrictSchema<LocationRecordData, Location> = {
@@ -405,7 +408,7 @@ const ModelToRecordSchema: StrictSchema<LocationRecordData, Location> = {
       past_water_damage_claim_amount: input.pastWaterDamageClaimAmount
     };
   },
-  areas: 'areas'
+  areas: (input: Partial<Location>) => _.get(input, 'areas.custom', undefined)
 };
 
 export type PartialLocationRecordData = Omit<LocationRecordData, 'profile'> & Record<'profile', Partial<LocationRecordData['profile']>>;
@@ -455,7 +458,7 @@ const PartialModelToPartialRecordSchema: StrictSchema<PartialLocationRecordData,
       past_water_damage_claim_amount: input.pastWaterDamageClaimAmount
     };
   },
-  areas: 'areas'
+  areas: (input: Partial<Location>) => _.get(input, 'areas.custom', undefined)
 };
 
 
