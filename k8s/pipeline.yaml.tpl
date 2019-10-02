@@ -18,7 +18,8 @@ secrets:
     postgres_password: "${POSTGRES_PASSWORD}"
     postgres_port: "${POSTGRES_PORT}"
     postgres_user: "${POSTGRES_USER}"
-    localization_url: '${LOCALIZATION_API_URL}'
+    localization_url: "${LOCALIZATION_API_URL}"
+    PRESENCE_SERVICE_URL: "${PRESENCE_SERVICE_URL}"
 internalIngress:
   host: internal-ingress.flocloud.co
 routingIngress:
