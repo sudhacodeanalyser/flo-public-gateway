@@ -433,6 +433,11 @@ components:
               enum:
                 - open
                 - closed
+        area:
+          type: object
+          properties:
+            id:
+              type: string
 
     IrrigationType:
       type: string
@@ -556,7 +561,7 @@ components:
             learning:
               type: object
               properties:
-                outOfLearningDate: 
+                outOfLearningDate:
                   type: string
                   format: date-time
             pairingData:

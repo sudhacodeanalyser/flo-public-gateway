@@ -173,6 +173,11 @@ components:
               enum:
                 - open
                 - closed
+        area:
+          type: object
+          properties:
+            id:
+              type: string
     IrrigationType:
       type: string
     Device:
@@ -225,7 +230,7 @@ components:
                       type: number
                     tempF:
                       type: number
-                    updated: 
+                    updated:
                       type: string
                       format: date-time
             connectivity:
@@ -318,9 +323,9 @@ components:
         properties:
           okMin:
             type: number
-          okMax: 
+          okMax:
             type: number
-          minValue: 
+          minValue:
             type: number
           maxValue:
             type: number

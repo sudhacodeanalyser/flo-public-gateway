@@ -201,6 +201,19 @@ const AreaCodec = t.type({
   name: t.string
 });
 
+const AreasCodec = t.type({
+  default: t.array(AreaCodec),
+  custom: t.array(AreaCodec)
+});
+
+export type Areas = t.TypeOf<typeof AreasCodec>;
+
+export const AreaNameCodec = t.type({
+  name: t.string
+});
+
+export type AreaName = t.TypeOf<typeof AreaNameCodec>;
+
 export const LocationCodec = t.intersection([
   AddressCodec,
   LocationProfileWithLegacyCodec,
@@ -216,7 +229,7 @@ export const LocationCodec = t.intersection([
       userRoles: t.array(LocationUserRoleCodec),
       devices: t.array(t.intersection([ExpandableCodec, t.partial({ macAddress: t.string })])),
       subscription: t.union([ExpandableCodec, t.undefined]),
-      areas: t.array(AreaCodec)
+      areas: AreasCodec
     })
   ])
 ]);

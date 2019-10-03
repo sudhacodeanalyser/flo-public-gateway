@@ -75,6 +75,26 @@ paths:
           description: Invalid request body
 components:
   schemas:
+    Area:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+
+    Areas:
+      type: object
+      properties:
+        default:
+          type: array
+          items:
+            $ref: '#/components/schemas/Area'
+        custom:
+          type: array
+          items:
+            $ref: '#/components/schemas/Area'
+
     LocationUserRole:
       allOf:
         - type: object
@@ -83,6 +103,7 @@ components:
               type: string
               format: uuid
         - $ref: '#/components/schemas/Roles'
+
     LocationMutable:
       type: object
       properties:
@@ -228,6 +249,9 @@ components:
                 revertScheduledAt:
                   type: string
                   format: date-time
+            areas:
+              $ref: '#/components/schemas/Areas'
+
     LocationExpandable:
       oneOf:
         - type: object
@@ -236,6 +260,7 @@ components:
               type: string
               format: uuid
         - $ref: '#/components/schemas/Location'
+
     NoYesUnsure:
       type: string
       enum:
