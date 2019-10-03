@@ -32,7 +32,8 @@ export enum DeviceModelType {
 }
 
 export enum DeviceType {
-  FLO_DEVICE_V2 = 'flo_device_v2' // Defined for defaults
+  FLO_DEVICE_V2 = 'flo_device_v2', // Defined for defaults
+  PUCK = 'puck_oem'
 }
 
 const DeviceMutableCodec = t.type({

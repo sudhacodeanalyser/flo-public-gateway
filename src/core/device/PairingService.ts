@@ -5,3 +5,9 @@ export interface PairingResponse extends PairingData {
     token: string
   };
 }
+
+// TODO: PUCK. Revisit this.
+export interface PuckPairingResponse {
+  id: string;
+  loginToken: string;
+}
