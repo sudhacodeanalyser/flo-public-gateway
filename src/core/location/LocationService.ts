@@ -1,14 +1,17 @@
+import { fromNullable, isNone, Option } from 'fp-ts/lib/Option';
 import { inject, injectable } from 'inversify';
-import { LocationResolver } from '../resolver';
-import { DependencyFactoryFactory, Location, LocationUpdate, LocationUserRole, SystemMode, Account, PropExpand } from '../api';
-import { DeviceSystemModeService } from '../device/DeviceSystemModeService';
-import { DeviceService, AccountService } from '../service';
-import { IrrigationScheduleService, IrrigationScheduleServiceFactory } from '../device/IrrigationScheduleService';
 import { injectHttpContext, interfaces } from 'inversify-express-utils';
 import _ from 'lodash';
-import { Option, fromNullable, isNone } from 'fp-ts/lib/Option';
-import ConflictError from '../api/error/ConflictError';
+import uuid from 'uuid';
 import { AccessControlService } from '../../auth/AccessControlService';
+import { Areas, DependencyFactoryFactory, Location, LocationUpdate, LocationUserRole, PropExpand, SystemMode } from '../api';
+import ConflictError from '../api/error/ConflictError';
+import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
+import ValidationError from '../api/error/ValidationError';
+import { DeviceSystemModeService } from '../device/DeviceSystemModeService';
+import { IrrigationScheduleService, IrrigationScheduleServiceFactory } from '../device/IrrigationScheduleService';
+import { LocationResolver } from '../resolver';
+import { AccountService, DeviceService } from '../service';
 
 @injectable()
 class LocationService {
@@ -63,8 +66,8 @@ class LocationService {
          const promises = devices
            .map(async (device) => {
              if  (
-               device.irrigationSchedule === undefined || 
-               device.irrigationSchedule.computed === undefined || 
+               device.irrigationSchedule === undefined ||
+               device.irrigationSchedule.computed === undefined ||
                device.irrigationSchedule.computed.times === undefined
             ) {
               return Promise.resolve();
@@ -79,7 +82,7 @@ class LocationService {
       } else {
         const devices = await deviceService.getAllByLocationId(id);
         const promises = devices
-          .map(async (device) => 
+          .map(async (device) =>
             this.irrigationScheduleService.disableDeviceIrrigationAllowedInAwayMode(device.id)
           );
 
@@ -100,7 +103,7 @@ class LocationService {
 
   public async addLocationUserRole(locationId: string, userId: string, roles: string[]): Promise<LocationUserRole> {
     const locationUserRole = await this.locationResolver.addLocationUserRole(locationId, userId, roles);
-    
+
     await this.refreshUserACL(userId);
 
     return locationUserRole;
@@ -176,13 +179,87 @@ class LocationService {
     }
   }
 
+  public async addArea(locationId: string, areaName: string): Promise<Areas> {
+    const location: Location | null = await this.locationResolver.get(locationId);
+
+    if (location === null) {
+      throw new ResourceDoesNotExistError('Location does not exist.');
+    }
+
+    this.validateAreaDoesNotExist(location.areas, areaName);
+
+    const updatedLocation = await this.locationResolver.updatePartialLocation(locationId, {
+      areas: {
+        default: location.areas.default,
+        custom: [
+          ...location.areas.custom,
+          {
+            id: uuid.v4(),
+            name: areaName
+          }
+        ]
+      }
+    });
+
+    return {
+      default: location.areas.default,
+      custom: updatedLocation.areas.custom
+    };
+  }
+
+  public async renameArea(locationId: string, areaId: string, newAreaName: string): Promise<Areas> {
+    const location: Location | null = await this.locationResolver.get(locationId);
+
+    if (location === null) {
+      throw new ResourceDoesNotExistError('Location does not exist.');
+    }
+
+    const customAreaMap: { [s: string]: string; } = location.areas.custom.reduce((acc, area) => ({
+      ...acc,
+      [area.id]: area.name
+    }), {});
+
+    if (_.isNil(customAreaMap[areaId])) {
+      throw new ResourceDoesNotExistError('Area does not exist.');
+    }
+
+    this.validateAreaDoesNotExist(location.areas, newAreaName, customAreaMap[areaId]);
+
+    const updatedLocation = await this.locationResolver.updatePartialLocation(locationId, {
+      areas: {
+        default: location.areas.default,
+        custom: location.areas.custom.map(a => ({
+          id: a.id,
+          name: a.id === areaId ? newAreaName : a.name
+        }))
+      }
+    });
+
+    return {
+      default: location.areas.default,
+      custom: updatedLocation.areas.custom
+    };
+  }
+
+  private validateAreaDoesNotExist(areas: Areas, newAreaName: string, oldAreaName?: string): void {
+    const defaultAreas = areas.default.map(a => a.name.toLowerCase());
+    const customAreas = areas.custom.map(a => a.name.toLowerCase());
+    const areaSet = new Set(defaultAreas.concat(customAreas));
+    const isUpdateAndAreaExists = oldAreaName && oldAreaName.toLowerCase() !== newAreaName.toLowerCase();
+
+    if (areaSet.has(newAreaName.toLowerCase()) && isUpdateAndAreaExists) {
+      throw new ValidationError(`Area '${newAreaName}' already exists.`);
+    }
+  }
+
   private async refreshUserACL(userId: string): Promise<void> {
     const authToken = this.httpContext.request && this.httpContext.request.get('Authorization');
 
     if (authToken) {
       await this.accessControlService.refreshUser(authToken, userId);
-    }  
+    }
   }
 }
 
 export { LocationService };
+

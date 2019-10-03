@@ -204,7 +204,15 @@ const AreaCodec = t.type({
 const AreasCodec = t.type({
   default: t.array(AreaCodec),
   custom: t.array(AreaCodec)
-})
+});
+
+export type Areas = t.TypeOf<typeof AreasCodec>;
+
+export const AreaNameCodec = t.type({
+  name: t.string
+});
+
+export type AreaName = t.TypeOf<typeof AreaNameCodec>;
 
 export const LocationCodec = t.intersection([
   AddressCodec,

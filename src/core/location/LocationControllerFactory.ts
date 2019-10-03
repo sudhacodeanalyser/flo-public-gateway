@@ -5,7 +5,7 @@ import * as t from 'io-ts';
 import _ from 'lodash';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
-import { Location, LocationCreateValidator, LocationUpdate, LocationUpdateValidator, LocationUserRole, SystemMode, SystemModeCodec } from '../api';
+import { AreaName, AreaNameCodec, Areas, Location, LocationCreateValidator, LocationUpdate, LocationUpdateValidator, LocationUserRole, SystemMode, SystemModeCodec } from '../api';
 import { createMethod, deleteMethod, httpController, parseExpand, withResponseType } from '../api/controllerUtils';
 import Request from '../api/Request';
 import * as Responses from '../api/response';
@@ -178,6 +178,35 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
       const deviceSystemModeService = this.deviceSystemModeServiceFactory.create(req);
 
       return this.locationService.setSystemMode(id, deviceSystemModeService, data);
+    }
+
+    @httpPost(
+      '/:locationId/areas',
+      authWithLocationId,
+      reqValidator.create(t.type({
+        params: t.type({
+          locationId: t.string
+        }),
+        body: AreaNameCodec
+      }))
+    )
+    @createMethod
+    private async addArea(@requestParam('locationId') locationId: string, @requestBody() { name }: AreaName): Promise<Areas> {
+      return this.locationService.addArea(locationId, name);
+    }
+
+    @httpPost(
+      '/:locationId/areas/:areaId',
+      authWithLocationId,
+      reqValidator.create(t.type({
+        params: t.type({
+          locationId: t.string
+        }),
+        body: AreaNameCodec
+      }))
+    )
+    private async renameArea(@requestParam('locationId') locationId: string, @requestParam('areaId') areaId: string, @requestBody() { name }: AreaName): Promise<Areas> {
+      return this.locationService.renameArea(locationId, areaId, name);
     }
   }
 
