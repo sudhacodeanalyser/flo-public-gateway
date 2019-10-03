@@ -180,11 +180,7 @@ class LocationService {
   }
 
   public async addArea(locationId: string, areaName: string): Promise<Areas> {
-    const location: Location | null = await this.locationResolver.get(locationId);
-
-    if (location === null) {
-      throw new ResourceDoesNotExistError('Location does not exist.');
-    }
+    const location: Location = await this.getSafeLocation(locationId);
 
     this.validateAreaDoesNotExist(location.areas, areaName);
 
@@ -208,12 +204,7 @@ class LocationService {
   }
 
   public async renameArea(locationId: string, areaId: string, newAreaName: string): Promise<Areas> {
-    const location: Location | null = await this.locationResolver.get(locationId);
-
-    if (location === null) {
-      throw new ResourceDoesNotExistError('Location does not exist.');
-    }
-
+    const location: Location = await this.getSafeLocation(locationId);
     const customAreaMap: { [s: string]: string; } = location.areas.custom.reduce((acc, area) => ({
       ...acc,
       [area.id]: area.name
@@ -241,6 +232,34 @@ class LocationService {
     };
   }
 
+  public async removeArea(locationId: string, areaId: string): Promise<Areas> {
+    const location: Location = await this.getSafeLocation(locationId);
+    const filteredCustomAreas = location.areas.custom.filter(area => area.id !== areaId);
+
+    if (filteredCustomAreas.length === location.areas.custom.length) {
+      throw new ResourceDoesNotExistError('Area does not exist.');
+    }
+
+    const updatedLocation = await this.locationResolver.updatePartialLocation(locationId, {
+      areas: {
+        default: location.areas.default,
+        custom: filteredCustomAreas
+      }
+    });
+
+    const deviceService = this.deviceServiceFactory();
+    const devices = await deviceService.getAllByLocationId(locationId);
+    const devicesInArea = devices.filter(d => d.area && d.area.id === areaId);
+    await Promise.all(devicesInArea.map(async d => (
+      deviceService.updatePartialDevice(d.id, { area: { id: '' }})
+    )));
+
+    return {
+      default: location.areas.default,
+      custom: updatedLocation.areas.custom
+    };
+  }
+
   private validateAreaDoesNotExist(areas: Areas, newAreaName: string, oldAreaName?: string): void {
     const defaultAreas = areas.default.map(a => a.name.toLowerCase());
     const customAreas = areas.custom.map(a => a.name.toLowerCase());
@@ -250,6 +269,15 @@ class LocationService {
     if (areaSet.has(newAreaName.toLowerCase()) && isUpdateAndAreaExists) {
       throw new ValidationError(`Area '${newAreaName}' already exists.`);
     }
+  }
+
+  private async getSafeLocation(locationId: string): Promise<Location> {
+    const location: Location | null = await this.locationResolver.get(locationId);
+
+    if (location === null) {
+      throw new ResourceDoesNotExistError('Location does not exist.');
+    }
+    return location;
   }
 
   private async refreshUserACL(userId: string): Promise<void> {
