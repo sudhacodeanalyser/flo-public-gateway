@@ -200,13 +200,29 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
       authWithLocationId,
       reqValidator.create(t.type({
         params: t.type({
-          locationId: t.string
+          locationId: t.string,
+          areaId: t.string
         }),
         body: AreaNameCodec
       }))
     )
     private async renameArea(@requestParam('locationId') locationId: string, @requestParam('areaId') areaId: string, @requestBody() { name }: AreaName): Promise<Areas> {
       return this.locationService.renameArea(locationId, areaId, name);
+    }
+
+    @httpDelete(
+      '/:locationId/areas/:areaId',
+      authWithLocationId,
+      reqValidator.create(t.type({
+        params: t.type({
+          locationId: t.string,
+          areaId: t.string
+        })
+      }))
+    )
+    @deleteMethod
+    private async removeArea(@requestParam('locationId') locationId: string, @requestParam('areaId') areaId: string): Promise<Areas> {
+      return this.locationService.removeArea(locationId, areaId);
     }
   }
 

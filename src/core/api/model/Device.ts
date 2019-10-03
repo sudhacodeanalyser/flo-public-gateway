@@ -83,6 +83,9 @@ export const DeviceUpdateValidator = t.exact(t.intersection([
 ]));
 export interface DeviceUpdate extends t.TypeOf<typeof DeviceUpdateValidator> {
   systemMode?: Partial<SystemModeData>;
+  area?: {
+    id: string;
+  }
 }
 
 interface ThresholdDefinition {
@@ -144,9 +147,6 @@ export interface Device extends Omit<DeviceUpdate, 'valve'>, TimestampedModel {
   healthTest?: {
     latest?: HealthTest
   };
-  area?: {
-    id: string;
-  }
 }
 
 interface FwProperties {
