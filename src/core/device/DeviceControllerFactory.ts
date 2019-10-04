@@ -2,30 +2,34 @@ import { isNone, Option, some } from 'fp-ts/lib/Option';
 import { Container, inject } from 'inversify';
 import { BaseHttpController, httpDelete, httpGet, httpPost, interfaces, queryParam, request, requestBody, requestParam } from 'inversify-express-utils';
 import * as t from 'io-ts';
-import { PairingData, QrData, QrDataValidator } from '../../api-v1/pairing/PairingService';
+import uuid from 'uuid';
+import { QrData, QrDataValidator } from '../../api-v1/pairing/PairingService';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import { InternalDeviceService } from '../../internal-device-service/InternalDeviceService';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
-import { Device, DeviceCreate, DeviceCreateValidator, DeviceUpdate, DeviceUpdateValidator, SystemMode as DeviceSystemMode, SystemModeCodec as DeviceSystemModeCodec, Telemetry, TelemetryCodec } from '../api';
+import { Device, DeviceCreate, DeviceCreateValidator, DeviceType, DeviceUpdate, DeviceUpdateValidator, SystemMode as DeviceSystemMode, SystemModeCodec as DeviceSystemModeCodec, Telemetry, TelemetryCodec } from '../api';
 import { asyncMethod, authorizationHeader, createMethod, deleteMethod, httpController, parseExpand, withResponseType } from '../api/controllerUtils';
 import { convertEnumtoCodec } from '../api/enumUtils';
+import ForbiddenError from '../api/error/ForbiddenError';
+import NotFoundError from '../api/error/NotFoundError';
 import ResourceDoesNotExistError from "../api/error/ResourceDoesNotExistError";
+import UnauthorizedError from '../api/error/UnauthorizedError';
 import Request from '../api/Request';
 import * as Responses from '../api/response';
 import { DeviceService } from '../service';
 import { DeviceSystemModeServiceFactory } from './DeviceSystemModeService';
 import { DirectiveServiceFactory } from './DirectiveService';
 import { HealthTest, HealthTestServiceFactory } from './HealthTestService';
-import ForbiddenError from '../api/error/ForbiddenError';
-import UnauthorizedError  from '../api/error/UnauthorizedError';
-import NotFoundError from '../api/error/NotFoundError';
-import { PairingResponse } from './PairingService';
+import { PairingResponse, PuckPairingResponse } from './PairingService';
 
 enum HealthTestActions {
   RUN = 'run'
 }
 
 const HealthTestActionsCodec = convertEnumtoCodec(HealthTestActions);
+
+// TODO: PUCK. Remove me once Puck Auth is implemented.
+const PUCK_TOKEN = '$$Extr3m3ly_S3cur3_Str1ng!!'
 
 export function DeviceControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
@@ -189,10 +193,27 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     @httpPost('/pair/init',
       auth,
       reqValidator.create(t.type({
-        body: QrDataValidator
+        body: t.union(
+          [
+            QrDataValidator,
+            t.type({
+              deviceType: t.string,
+              deviceModel: t.string
+            })
+          ]
+        )
       }))
     )
-    private async scanQrCode(@authorizationHeader() authToken: string, @request() req: Request, @requestBody() qrData: QrData): Promise<PairingResponse> {
+    private async scanQrCode(@authorizationHeader() authToken: string, @request() req: Request, @requestBody() qrData: QrData): Promise<PairingResponse | PuckPairingResponse> {
+
+      // TODO: PUCK. Revisit this.
+      if (req.body.deviceType === DeviceType.PUCK) {
+        return Promise.resolve({
+          id: uuid.v4(),
+          loginToken: PUCK_TOKEN
+        })
+      }
+
       const tokenMetadata = req.token;
 
       if (!tokenMetadata) {
