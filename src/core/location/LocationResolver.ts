@@ -160,7 +160,7 @@ class LocationResolver extends Resolver<Location> {
       return this.notificationService.retrieveStatistics(`locationId=${location.id}`);
     },
     areas: async (location: Location, shouldExpand = false) => {
-      const defaultAreas = await this.lookupService.getByIds([DEFAULT_AREAS_ID], [], DEFAULT_LANG);
+      const defaultAreas = await this.lookupServiceFactory().getByIds([DEFAULT_AREAS_ID], [], DEFAULT_LANG);
       return {
         ...location.areas,
         default: defaultAreas[DEFAULT_AREAS_ID].map((area: LookupItem) => ({
@@ -176,13 +176,13 @@ class LocationResolver extends Resolver<Location> {
   private userResolverFactory: () => UserResolver;
   private subscriptionResolverFactory: () => SubscriptionResolver;
   private notificationService: NotificationService;
+  private lookupServiceFactory: () => LookupService;
 
   constructor(
     @inject('LocationTable') private locationTable: LocationTable,
     @inject('UserLocationRoleTable') private userLocationRoleTable: UserLocationRoleTable,
     @inject('DependencyFactoryFactory') depFactoryFactory: DependencyFactoryFactory,
     @inject('NotificationServiceFactory') notificationServiceFactory: NotificationServiceFactory,
-    @inject('LookupService') private lookupService: LookupService,
     @injectHttpContext private readonly httpContext: interfaces.HttpContext
   ) {
     super();
@@ -191,6 +191,7 @@ class LocationResolver extends Resolver<Location> {
     this.accountResolverFactory = depFactoryFactory<AccountResolver>('AccountResolver');
     this.userResolverFactory = depFactoryFactory<UserResolver>('UserResolver');
     this.subscriptionResolverFactory = depFactoryFactory<SubscriptionResolver>('SubscriptionResolver');
+    this.lookupServiceFactory = depFactoryFactory<LookupService>('LookupService');
 
     if (!_.isEmpty(this.httpContext)) {
       this.notificationService = notificationServiceFactory.create(this.httpContext.request);
