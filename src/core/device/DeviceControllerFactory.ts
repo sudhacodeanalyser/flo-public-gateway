@@ -1,3 +1,4 @@
+import express from 'express';
 import { isNone, Option, some } from 'fp-ts/lib/Option';
 import { Container, inject } from 'inversify';
 import { BaseHttpController, httpDelete, httpGet, httpPost, interfaces, queryParam, request, requestBody, requestParam } from 'inversify-express-utils';
@@ -37,6 +38,21 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
   const auth = authMiddlewareFactory.create();
   const authWithId = authMiddlewareFactory.create(async ({ params: { id } }: Request) => ({icd_id: id}));
   const authWithLocation = authMiddlewareFactory.create(async ({ body: { location: { id } } }: Request) => ({ location_id: id }));
+
+  // TODO: PUCK. Remove me once Puck Auth is implemented.
+  const harcodedPuckTokenAuth: express.Handler = async (req: Request, res: express.Response, next: express.NextFunction): Promise<void> => {
+    if (req.body.deviceType === DeviceType.PUCK) {
+      const token = req.get('Authorization');
+      if (token === PUCK_TOKEN) {
+        return next();
+      } else {
+        return next(new UnauthorizedError('Missing or invalid access token.'));
+      }
+    }
+
+    return authWithLocation(req, res, next);
+  }
+
 
   interface SystemModeRequestBrand {
     readonly SystemModeRequest: unique symbol;
@@ -226,7 +242,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     }
 
     @httpPost('/pair/complete',
-      authWithLocation,
+      harcodedPuckTokenAuth,
       reqValidator.create(t.type({
         body: DeviceCreateValidator
       }))
@@ -234,8 +250,17 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     @createMethod
     @withResponseType<Device, Responses.Device>(Responses.Device.fromModel)
     private async pairDevice(@authorizationHeader() authToken: string, @requestBody() deviceCreate: DeviceCreate): Promise<Option<Device>> {
+      const device = await this.deviceService.pairDevice(authToken, deviceCreate);
 
-      return some(await this.deviceService.pairDevice(authToken, deviceCreate));
+      if (deviceCreate.deviceType === DeviceType.PUCK) {
+        // TODO: PUCK. Revisit this.
+        return some({
+          ...device,
+          accessToken: PUCK_TOKEN
+        });
+      } else {
+        return some(device);
+      }
     }
 
     @httpPost('/:id/systemMode',
