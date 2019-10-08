@@ -12,13 +12,13 @@ import _ from 'lodash';
 import swaggerUi from 'swagger-ui-express';
 // import enforce from 'express-sslify';
 import uuid from 'uuid';
+import { CachePolicy } from '../cache/CacheMiddleware';
 import Config from '../config/config';
 import ExtendableError from '../core/api/error/ExtendableError';
 import Request from '../core/api/Request';
-import { internalSwaggerJsDoc, legacySwaggerJsDoc, swaggerInternalOpts, swaggerLegacyOpts, swaggerPartnerOpts, thirdPartiesSwaggerJsDoc } from '../docs/swagger';
+import { internalSwaggerJsDoc, internalSwaggerOpenApiFile, legacySwaggerJsDoc, swaggerInternalOpts, swaggerLegacyOpts, swaggerPartnerOpts, thirdPartiesSwaggerJsDoc, thirdPartiesSwaggerOpenApiFile } from '../docs/swagger';
 import LoggerFactory from '../logging/LoggerFactory';
 import { Loaders } from '../memoize/MemoizeMixin';
-import { CachePolicy } from '../cache/CacheMiddleware';
 
 function ServerConfigurationFactory(container: Container): (app: express.Application) => void {
   return (app: express.Application) => {
@@ -113,8 +113,17 @@ function ServerConfigurationFactory(container: Container): (app: express.Applica
     const setupSwaggerUi = (swaggerJsDoc: {[key: string]: any}, opts: {[key: string]: any}) =>
       (req: Request, res: express.Response, next: express.NextFunction) => swaggerUi.setup(swaggerJsDoc, opts)(req, res, next);
 
+    app.use('/docs/openapi.yaml', internalSwaggerBasicAuth, (req: Request, res: express.Response) => {
+      return res.send(internalSwaggerOpenApiFile);
+    });
     app.use('/docs', internalSwaggerBasicAuth, swaggerUi.serve, setupSwaggerUi(internalSwaggerJsDoc, swaggerInternalOpts));
+
+
     app.use('/legacy', internalSwaggerBasicAuth, swaggerUi.serve, setupSwaggerUi(legacySwaggerJsDoc, swaggerLegacyOpts));
+
+    app.use('/swagger/openapi.yaml', externalSwaggerBasicAuth, (req: Request, res: express.Response) => {
+      return res.send(thirdPartiesSwaggerOpenApiFile);
+    });
     app.use('/swagger', externalSwaggerBasicAuth, swaggerUi.serve, setupSwaggerUi(thirdPartiesSwaggerJsDoc, swaggerPartnerOpts));
   };
 }
