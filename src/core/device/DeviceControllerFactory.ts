@@ -8,7 +8,7 @@ import { QrData, QrDataValidator } from '../../api-v1/pairing/PairingService';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import { InternalDeviceService } from '../../internal-device-service/InternalDeviceService';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
-import { Device, DeviceCreate, DeviceCreateValidator, DeviceType, DeviceUpdate, DeviceUpdateValidator, SystemMode as DeviceSystemMode, SystemModeCodec as DeviceSystemModeCodec, Telemetry, TelemetryCodec } from '../api';
+import { Device, DeviceCreate, DeviceCreateValidator, DeviceType, DeviceUpdate, DeviceUpdateValidator, SystemMode as DeviceSystemMode, SystemModeCodec as DeviceSystemModeCodec, TelemetryCodec } from '../api';
 import { asyncMethod, authorizationHeader, createMethod, deleteMethod, httpController, parseExpand, withResponseType } from '../api/controllerUtils';
 import { convertEnumtoCodec } from '../api/enumUtils';
 import ForbiddenError from '../api/error/ForbiddenError';
@@ -40,8 +40,12 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
   const authWithLocation = authMiddlewareFactory.create(async ({ body: { location: { id } } }: Request) => ({ location_id: id }));
 
   // TODO: PUCK. Remove me once Puck Auth is implemented.
-  const harcodedPuckTokenAuth: express.Handler = async (req: Request, res: express.Response, next: express.NextFunction): Promise<void> => {
-    if (req.body.deviceType === DeviceType.PUCK) {
+  const isPuck = (req: Request) => {
+    return req.body && (req.body.deviceType === DeviceType.PUCK || req.body.cloud_token_access === PUCK_TOKEN);
+  }
+
+  const hardcodedPuckTokenAuth: (fallbackAuth: express.Handler) => express.Handler = (fallbackAuth: express.Handler) => async (req: Request, res: express.Response, next: express.NextFunction): Promise<void> => {
+    if (isPuck(req)) {
       const token = req.get('Authorization');
       if (token === PUCK_TOKEN) {
         return next();
@@ -50,7 +54,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       }
     }
 
-    return authWithLocation(req, res, next);
+    return fallbackAuth(req, res, next);
   }
 
 
@@ -242,7 +246,8 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     }
 
     @httpPost('/pair/complete',
-      harcodedPuckTokenAuth,
+      // TODO: PUCK. Implement proper auth.
+      hardcodedPuckTokenAuth(authWithLocation),
       reqValidator.create(t.type({
         body: DeviceCreateValidator
       }))
@@ -328,19 +333,23 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     }
 
     @httpPost('/:id/telemetry',
-      authWithId,
+      // TODO: PUCK. Implement proper auth.
+      hardcodedPuckTokenAuth(authWithId),
       reqValidator.create(t.type({
         params: t.type({
           id: t.string
         }),
-        body: t.type({
-          items: t.array(TelemetryCodec)
-        })
+        body: t.union([
+          t.record(t.string, t.any),
+          t.type({
+            items: t.array(TelemetryCodec)
+          })
+        ])
       }))
     )
     @asyncMethod
-    private async publishTelemetry(@requestParam('id') id: string, @requestBody() data: { items: Telemetry[] }): Promise<void> {
-      return this.deviceService.publishTelemetry(id, data.items);
+    private async publishTelemetry(@requestParam('id') id: string, @request() req: Request): Promise<void> {
+      return this.deviceService.publishTelemetry(id, req.body, isPuck(req));
     }
 
     @httpPost('/:id/healthTest/:action',

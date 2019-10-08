@@ -32,6 +32,7 @@ function getDefaults(): { [key: string]: any } {
         externalServiceHttpTimeoutMs: 10000,
         entityActivityKafkaTopic: 'entity-activity-v1',
         telemetryKafkaTopic: 'telemetry-v3',
+        puckTelemetryKafkaTopic: 'telemetry-puck-v1',
         redisHost: 'redis-dev-cluster.9alsts.clustercfg.usw2.cache.amazonaws.com',
         redisPort: '6379',
         presenceServiceUrl: 'https://flo-core-service-dev.flocloud.co/presence'
@@ -78,6 +79,7 @@ const config = {
   externalServiceHttpTimeoutMs: process.env.EXTERNAL_SERVICE_HTTP_TIMEOUT_MS,
   entityActivityKafkaTopic: process.env.ENTITY_ACTIVITY_KAFKA_TOPIC,
   telemetryKafkaTopic: process.env.TELEMETRY_KAFKA_TOPIC,
+  puckTelemetryKafkaTopic: process.env.PUCK_TELEMETRY_KAFKA_TOPIC,
   redisHost: process.env.REDIS_HOST,
   redisPort: process.env.REDIS_PORT,
   presenceServiceUrl: process.env.PRESENCE_SERVICE_URL
