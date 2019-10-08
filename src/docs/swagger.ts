@@ -1,3 +1,5 @@
+import glob from 'glob';
+import mergeYaml from 'merge-yaml';
 import swaggerJsDoc from 'swagger-jsdoc';
 
 const internalDocsDescription = `
@@ -56,6 +58,10 @@ export const swaggerPartnerOpts = {
 export const swaggerInternalOpts = {
     customSiteTitle: `Flo Internal Docs`
 }
+
+export const internalSwaggerOpenApiFile = mergeYaml(glob.sync('./dist/docs/{,internal}/*.yaml'));
+
+export const thirdPartiesSwaggerOpenApiFile = mergeYaml(glob.sync('./dist/docs/{,third-parties}/*.yaml'));
 
 export const internalSwaggerJsDoc = buildSwaggerJsDoc('internal', 'Flo Internal Docs', internalDocsDescription);
 
