@@ -3,6 +3,7 @@ import * as O from 'fp-ts/lib/Option';
 import { pipe } from 'fp-ts/lib/pipeable';
 import { inject, injectable } from 'inversify';
 import _ from 'lodash';
+import moment from 'moment';
 import { PairingService, QrData } from '../../api-v1/pairing/PairingService';
 import { InternalDeviceService } from '../../internal-device-service/InternalDeviceService';
 import { KafkaProducer } from '../../kafka/KafkaProducer';
@@ -136,21 +137,29 @@ class DeviceService {
     return this.deviceResolver.getAllByLocationId(locationId, expand);
   }
 
-  public async publishTelemetry(id: string, telemetryMessages: Telemetry[]): Promise<void> {
+  public async publishTelemetry(id: string, telemetry: any, isDevicePuck: boolean): Promise<void> {
+    if (!isDevicePuck) {
+      const telemetryMessages: Telemetry[] = telemetry.items;
+      await pipe(
+        await this.getDeviceById(id),
+        O.map(async device => {
+          const messages = telemetryMessages
+            .map(telemetryMessage => ({
+              ...telemetryMessage,
+              did: device.macAddress
+            }));
 
-    await pipe(
-      await this.getDeviceById(id),
-      O.map(async device => {
-        const messages = telemetryMessages
-          .map(telemetryMessage => ({
-            ...telemetryMessage,
-            did: device.macAddress
-          }));
-
-        await this.telemetrySevice.publishTelemetry(messages);
-      }),
-      O.getOrElse(async (): Promise<void> => { throw new NotFoundError(); })
-    );
+          await this.telemetrySevice.publishTelemetry(messages);
+        }),
+        O.getOrElse(async (): Promise<void> => { throw new NotFoundError(); })
+      );
+    } else {
+      // TODO: PUCK. Telemetry structure is TBD at the time of writing this.
+      await this.telemetrySevice.publishPuckTelemetry({
+        ...telemetry,
+        date: moment().toISOString()
+      });
+    }
   }
 
 }
