@@ -1,4 +1,5 @@
 import glob from 'glob';
+import jsYaml from 'js-yaml';
 import mergeYaml from 'merge-yaml';
 import swaggerJsDoc from 'swagger-jsdoc';
 
@@ -59,9 +60,9 @@ export const swaggerInternalOpts = {
     customSiteTitle: `Flo Internal Docs`
 }
 
-export const internalSwaggerOpenApiFile = mergeYaml(glob.sync('./dist/docs/{,internal}/*.yaml'));
+export const internalSwaggerOpenApiContents = jsYaml.safeDump(mergeYaml(glob.sync('./dist/docs/{,internal}/*.yaml')));
 
-export const thirdPartiesSwaggerOpenApiFile = mergeYaml(glob.sync('./dist/docs/{,third-parties}/*.yaml'));
+export const thirdPartiesSwaggerOpenApiContents = jsYaml.safeDump(mergeYaml(glob.sync('./dist/docs/{,third-parties}/*.yaml')));
 
 export const internalSwaggerJsDoc = buildSwaggerJsDoc('internal', 'Flo Internal Docs', internalDocsDescription);
 

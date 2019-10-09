@@ -16,7 +16,7 @@ import { CachePolicy } from '../cache/CacheMiddleware';
 import Config from '../config/config';
 import ExtendableError from '../core/api/error/ExtendableError';
 import Request from '../core/api/Request';
-import { internalSwaggerJsDoc, internalSwaggerOpenApiFile, legacySwaggerJsDoc, swaggerInternalOpts, swaggerLegacyOpts, swaggerPartnerOpts, thirdPartiesSwaggerJsDoc, thirdPartiesSwaggerOpenApiFile } from '../docs/swagger';
+import { internalSwaggerJsDoc, internalSwaggerOpenApiContents, legacySwaggerJsDoc, swaggerInternalOpts, swaggerLegacyOpts, swaggerPartnerOpts, thirdPartiesSwaggerJsDoc, thirdPartiesSwaggerOpenApiContents } from '../docs/swagger';
 import LoggerFactory from '../logging/LoggerFactory';
 import { Loaders } from '../memoize/MemoizeMixin';
 
@@ -114,7 +114,8 @@ function ServerConfigurationFactory(container: Container): (app: express.Applica
       (req: Request, res: express.Response, next: express.NextFunction) => swaggerUi.setup(swaggerJsDoc, opts)(req, res, next);
 
     app.use('/docs/openapi.yaml', internalSwaggerBasicAuth, (req: Request, res: express.Response) => {
-      return res.send(internalSwaggerOpenApiFile);
+      res.set('Content-Type', 'text/x-yaml');
+      return res.send(internalSwaggerOpenApiContents);
     });
     app.use('/docs', internalSwaggerBasicAuth, swaggerUi.serve, setupSwaggerUi(internalSwaggerJsDoc, swaggerInternalOpts));
 
@@ -122,7 +123,8 @@ function ServerConfigurationFactory(container: Container): (app: express.Applica
     app.use('/legacy', internalSwaggerBasicAuth, swaggerUi.serve, setupSwaggerUi(legacySwaggerJsDoc, swaggerLegacyOpts));
 
     app.use('/swagger/openapi.yaml', externalSwaggerBasicAuth, (req: Request, res: express.Response) => {
-      return res.send(thirdPartiesSwaggerOpenApiFile);
+      res.set('Content-Type', 'text/x-yaml');
+      return res.send(thirdPartiesSwaggerOpenApiContents);
     });
     app.use('/swagger', externalSwaggerBasicAuth, swaggerUi.serve, setupSwaggerUi(thirdPartiesSwaggerJsDoc, swaggerPartnerOpts));
   };
