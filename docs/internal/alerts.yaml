@@ -279,6 +279,8 @@ components:
               type: number
             severity:
               type: string
+            isInternal:
+              type: boolean
         deviceId:
           type: string
           format: uuid
