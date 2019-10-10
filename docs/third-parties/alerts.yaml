@@ -96,6 +96,10 @@ paths:
             * `warning` - Should look into. e.g. High Water Temperature
             * `critical` - Water shutoff events. e.g. Fast Water Flow
         - in: query
+          name: isInternalAlarm
+          schema:
+            type: boolean
+        - in: query
           name: page
           schema:
             type: number
@@ -299,6 +303,8 @@ components:
               type: number
             severity:
               type: string
+            isInternal:
+              type: boolean
         deviceId:
           type: string
           format: uuid
