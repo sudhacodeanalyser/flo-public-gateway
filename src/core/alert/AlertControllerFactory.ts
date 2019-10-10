@@ -40,7 +40,7 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
   type BooleanType = t.TypeOf<typeof t.boolean>;
 
   const BooleanFromString = new t.Type<BooleanType, string, unknown>(
-    'IntegerFromString',
+    'BooleanFromString',
     (u): u is BooleanType => t.boolean.is(u),
     (u, c) => {
       return Either.either.chain(t.string.validate(u, c), str => {
