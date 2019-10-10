@@ -1,20 +1,21 @@
-import _ from 'lodash';
-import { injectable, inject } from 'inversify';
-import { DependencyFactoryFactory, Device, DeviceUpdate, DeviceCreate, Location, ValveState, PropExpand, Expandable, Telemetry } from '../api';
-import { DeviceResolver } from '../resolver';
-import { TelemetryService, LocationService, EntityActivityService, EntityActivityAction, EntityActivityType } from '../service';
-import { PairingService, PairingData, QrData } from '../../api-v1/pairing/PairingService';
-import ConflictError from '../api/error/ConflictError';
-import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import Logger from 'bunyan';
-import { DirectiveService } from './DirectiveService';
 import * as O from 'fp-ts/lib/Option';
-import { InternalDeviceService } from '../../internal-device-service/InternalDeviceService';
-import { SessionService } from '../session/SessionService';
-import { PairingResponse } from './PairingService';
 import { pipe } from 'fp-ts/lib/pipeable';
+import { inject, injectable } from 'inversify';
+import _ from 'lodash';
+import moment from 'moment';
+import { PairingService, QrData } from '../../api-v1/pairing/PairingService';
+import { InternalDeviceService } from '../../internal-device-service/InternalDeviceService';
 import { KafkaProducer } from '../../kafka/KafkaProducer';
+import { DependencyFactoryFactory, Device, DeviceCreate, DeviceType, DeviceUpdate, PropExpand, Telemetry, ValveState } from '../api';
+import ConflictError from '../api/error/ConflictError';
 import NotFoundError from '../api/error/NotFoundError';
+import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
+import { DeviceResolver } from '../resolver';
+import { EntityActivityAction, EntityActivityService, EntityActivityType, LocationService, TelemetryService } from '../service';
+import { SessionService } from '../session/SessionService';
+import { DirectiveService } from './DirectiveService';
+import { PairingResponse } from './PairingService';
 
 const { some, none, isNone, fromNullable } = O;
 type Option<T> = O.Option<T>;
@@ -52,7 +53,7 @@ class DeviceService {
 
   public async updatePartialDevice(id: string, deviceUpdate: DeviceUpdate, directiveService?: DirectiveService): Promise<Device> {
     const updatedDevice = await this.deviceResolver.updatePartial(id, deviceUpdate);
- 
+
     if (directiveService && deviceUpdate.valve) {
       if (deviceUpdate.valve.target === ValveState.OPEN) {
         await directiveService.openValve(id);
@@ -75,8 +76,8 @@ class DeviceService {
         async device => {
           await this.deviceResolver.remove(id);
           await this.entityActivityService.publishEntityActivity(
-            EntityActivityType.DEVICE, 
-            EntityActivityAction.DELETED, 
+            EntityActivityType.DEVICE,
+            EntityActivityAction.DELETED,
             device
           );
         }
@@ -112,19 +113,21 @@ class DeviceService {
       throw new ResourceDoesNotExistError('Location does not exist');
     }
 
-    const createdDevice = (device !== null && !_.isEmpty(device)) ? 
-      device : 
+    const createdDevice = (device !== null && !_.isEmpty(device)) ?
+      device :
       await this.deviceResolver.createDevice(deviceCreate, true);
 
-    try {
-      await this.apiV1PairingService.completePairing(authToken, createdDevice.id, { 
-        macAddress: createdDevice.macAddress, 
-        timezone: location.value.timezone 
-      });
-    } catch (err) {
-      // Failure to complete the pairing process should not cause the pairing to completely fail.
-      // This is how pairing works in API v1.
-      this.logger.error({ err });
+    if (deviceCreate.deviceType !== DeviceType.PUCK) {
+      try {
+        await this.apiV1PairingService.completePairing(authToken, createdDevice.id, {
+          macAddress: createdDevice.macAddress,
+          timezone: location.value.timezone
+        });
+      } catch (err) {
+        // Failure to complete the pairing process should not cause the pairing to completely fail.
+        // This is how pairing works in API v1.
+        this.logger.error({ err });
+      }
     }
 
     return createdDevice;
@@ -134,23 +137,32 @@ class DeviceService {
     return this.deviceResolver.getAllByLocationId(locationId, expand);
   }
 
-  public async publishTelemetry(id: string, telemetryMessages: Telemetry[]): Promise<void> {
+  public async publishTelemetry(id: string, telemetry: any, isDevicePuck: boolean): Promise<void> {
+    if (!isDevicePuck) {
+      const telemetryMessages: Telemetry[] = telemetry.items;
+      await pipe(
+        await this.getDeviceById(id),
+        O.map(async device => {
+          const messages = telemetryMessages
+            .map(telemetryMessage => ({
+              ...telemetryMessage,
+              did: device.macAddress
+            }));
 
-    await pipe(
-      await this.getDeviceById(id),
-      O.map(async device => {
-        const messages = telemetryMessages
-          .map(telemetryMessage => ({ 
-            ...telemetryMessage, 
-            did: device.macAddress 
-          }));
-
-        await this.telemetrySevice.publishTelemetry(messages);
-      }),
-      O.getOrElse(async (): Promise<void> => { throw new NotFoundError(); })
-    );
+          await this.telemetrySevice.publishTelemetry(messages);
+        }),
+        O.getOrElse(async (): Promise<void> => { throw new NotFoundError(); })
+      );
+    } else {
+      // TODO: PUCK. Telemetry structure is TBD at the time of writing this.
+      await this.telemetrySevice.publishPuckTelemetry({
+        ...telemetry,
+        date: moment().toISOString()
+      });
+    }
   }
 
 }
 
 export { DeviceService };
+

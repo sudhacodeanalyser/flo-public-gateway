@@ -9,6 +9,7 @@ const PresenceRequestCodec = t.type({
 const PresenceDataCodec = t.intersection([
     PresenceRequestCodec,
     t.type({
+        action: t.string,
         userId: t.string,
         accountId: t.union([t.string, t.undefined]),
         deviceId: t.union([t.array(t.string), t.undefined]),

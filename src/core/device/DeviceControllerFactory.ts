@@ -1,25 +1,27 @@
+import express from 'express';
 import { isNone, Option, some } from 'fp-ts/lib/Option';
 import { Container, inject } from 'inversify';
 import { BaseHttpController, httpDelete, httpGet, httpPost, interfaces, queryParam, request, requestBody, requestParam } from 'inversify-express-utils';
 import * as t from 'io-ts';
-import { PairingData, QrData, QrDataValidator } from '../../api-v1/pairing/PairingService';
+import uuid from 'uuid';
+import { QrData, QrDataValidator } from '../../api-v1/pairing/PairingService';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import { InternalDeviceService } from '../../internal-device-service/InternalDeviceService';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
-import { Device, DeviceCreate, DeviceCreateValidator, DeviceUpdate, DeviceUpdateValidator, SystemMode as DeviceSystemMode, SystemModeCodec as DeviceSystemModeCodec, Telemetry, TelemetryCodec } from '../api';
+import { Device, DeviceCreate, DeviceCreateValidator, DeviceType, DeviceUpdate, DeviceUpdateValidator, SystemMode as DeviceSystemMode, SystemModeCodec as DeviceSystemModeCodec, TelemetryCodec } from '../api';
 import { asyncMethod, authorizationHeader, createMethod, deleteMethod, httpController, parseExpand, withResponseType } from '../api/controllerUtils';
 import { convertEnumtoCodec } from '../api/enumUtils';
+import ForbiddenError from '../api/error/ForbiddenError';
+import NotFoundError from '../api/error/NotFoundError';
 import ResourceDoesNotExistError from "../api/error/ResourceDoesNotExistError";
+import UnauthorizedError from '../api/error/UnauthorizedError';
 import Request from '../api/Request';
 import * as Responses from '../api/response';
 import { DeviceService } from '../service';
 import { DeviceSystemModeServiceFactory } from './DeviceSystemModeService';
 import { DirectiveServiceFactory } from './DirectiveService';
 import { HealthTest, HealthTestServiceFactory } from './HealthTestService';
-import ForbiddenError from '../api/error/ForbiddenError';
-import UnauthorizedError  from '../api/error/UnauthorizedError';
-import NotFoundError from '../api/error/NotFoundError';
-import { PairingResponse } from './PairingService';
+import { PairingResponse, PuckPairingResponse } from './PairingService';
 
 enum HealthTestActions {
   RUN = 'run'
@@ -27,12 +29,34 @@ enum HealthTestActions {
 
 const HealthTestActionsCodec = convertEnumtoCodec(HealthTestActions);
 
+// TODO: PUCK. Remove me once Puck Auth is implemented.
+const PUCK_TOKEN = '$$Extr3m3ly_S3cur3_Str1ng!!'
+
 export function DeviceControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
   const authMiddlewareFactory = container.get<AuthMiddlewareFactory>('AuthMiddlewareFactory');
   const auth = authMiddlewareFactory.create();
   const authWithId = authMiddlewareFactory.create(async ({ params: { id } }: Request) => ({icd_id: id}));
   const authWithLocation = authMiddlewareFactory.create(async ({ body: { location: { id } } }: Request) => ({ location_id: id }));
+
+  // TODO: PUCK. Remove me once Puck Auth is implemented.
+  const isPuck = (req: Request) => {
+    return req.body && (req.body.deviceType === DeviceType.PUCK || req.body.cloud_token_access === PUCK_TOKEN);
+  }
+
+  const hardcodedPuckTokenAuth: (fallbackAuth: express.Handler) => express.Handler = (fallbackAuth: express.Handler) => async (req: Request, res: express.Response, next: express.NextFunction): Promise<void> => {
+    if (isPuck(req)) {
+      const token = req.get('Authorization');
+      if (token === PUCK_TOKEN) {
+        return next();
+      } else {
+        return next(new UnauthorizedError('Missing or invalid access token.'));
+      }
+    }
+
+    return fallbackAuth(req, res, next);
+  }
+
 
   interface SystemModeRequestBrand {
     readonly SystemModeRequest: unique symbol;
@@ -189,10 +213,27 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     @httpPost('/pair/init',
       auth,
       reqValidator.create(t.type({
-        body: QrDataValidator
+        body: t.union(
+          [
+            QrDataValidator,
+            t.type({
+              deviceType: t.string,
+              deviceModel: t.string
+            })
+          ]
+        )
       }))
     )
-    private async scanQrCode(@authorizationHeader() authToken: string, @request() req: Request, @requestBody() qrData: QrData): Promise<PairingResponse> {
+    private async scanQrCode(@authorizationHeader() authToken: string, @request() req: Request, @requestBody() qrData: QrData): Promise<PairingResponse | PuckPairingResponse> {
+
+      // TODO: PUCK. Revisit this.
+      if (req.body.deviceType === DeviceType.PUCK) {
+        return Promise.resolve({
+          id: uuid.v4(),
+          loginToken: PUCK_TOKEN
+        })
+      }
+
       const tokenMetadata = req.token;
 
       if (!tokenMetadata) {
@@ -205,7 +246,8 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     }
 
     @httpPost('/pair/complete',
-      authWithLocation,
+      // TODO: PUCK. Implement proper auth.
+      hardcodedPuckTokenAuth(authWithLocation),
       reqValidator.create(t.type({
         body: DeviceCreateValidator
       }))
@@ -213,8 +255,17 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     @createMethod
     @withResponseType<Device, Responses.Device>(Responses.Device.fromModel)
     private async pairDevice(@authorizationHeader() authToken: string, @requestBody() deviceCreate: DeviceCreate): Promise<Option<Device>> {
+      const device = await this.deviceService.pairDevice(authToken, deviceCreate);
 
-      return some(await this.deviceService.pairDevice(authToken, deviceCreate));
+      if (deviceCreate.deviceType === DeviceType.PUCK) {
+        // TODO: PUCK. Revisit this.
+        return some({
+          ...device,
+          accessToken: PUCK_TOKEN
+        });
+      } else {
+        return some(device);
+      }
     }
 
     @httpPost('/:id/systemMode',
@@ -282,19 +333,23 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     }
 
     @httpPost('/:id/telemetry',
-      authWithId,
+      // TODO: PUCK. Implement proper auth.
+      hardcodedPuckTokenAuth(authWithId),
       reqValidator.create(t.type({
         params: t.type({
           id: t.string
         }),
-        body: t.type({
-          items: t.array(TelemetryCodec)
-        })
+        body: t.union([
+          t.record(t.string, t.any),
+          t.type({
+            items: t.array(TelemetryCodec)
+          })
+        ])
       }))
     )
     @asyncMethod
-    private async publishTelemetry(@requestParam('id') id: string, @requestBody() data: { items: Telemetry[] }): Promise<void> {
-      return this.deviceService.publishTelemetry(id, data.items);
+    private async publishTelemetry(@requestParam('id') id: string, @request() req: Request): Promise<void> {
+      return this.deviceService.publishTelemetry(id, req.body, isPuck(req));
     }
 
     @httpPost('/:id/healthTest/:action',

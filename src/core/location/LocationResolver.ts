@@ -3,14 +3,18 @@ import { injectHttpContext, interfaces } from 'inversify-express-utils';
 import _ from 'lodash';
 import uuid from 'uuid';
 import { fromPartialRecord } from '../../database/Patch';
-import { DependencyFactoryFactory, Device, Location, LocationUserRole, SystemMode, PropExpand } from '../api';
+import { DependencyFactoryFactory, Device, Location, LocationUserRole, LookupItem, PropExpand, SystemMode } from '../api';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import LocationTable from '../location/LocationTable';
 import { NotificationService, NotificationServiceFactory } from '../notification/NotificationService';
 import { AccountResolver, DeviceResolver, PropertyResolverMap, Resolver, SubscriptionResolver, UserResolver } from '../resolver';
+import { LookupService } from '../service';
 import { UserLocationRoleRecord } from '../user/UserLocationRoleRecord';
 import UserLocationRoleTable from '../user/UserLocationRoleTable';
 import { LocationRecord, LocationRecordData } from './LocationRecord';
+
+const DEFAULT_LANG = 'en';
+const DEFAULT_AREAS_ID = 'areas.default';
 
 @injectable()
 class LocationResolver extends Resolver<Location> {
@@ -113,9 +117,9 @@ class LocationResolver extends Resolver<Location> {
       const unlockedDevices = devices
         .filter((d: Device) =>
           d.systemMode &&
-          !d.systemMode.isLocked 
+          !d.systemMode.isLocked
         );
-      const device: Device | undefined = 
+      const device: Device | undefined =
         // If all devices are in forced sleep
         !unlockedDevices.length && devices.length ?
           // Then use the forced sleep system mode information
@@ -154,6 +158,16 @@ class LocationResolver extends Resolver<Location> {
     },
     notifications: async (location: Location, shouldExpand = false) => {
       return this.notificationService.retrieveStatistics(`locationId=${location.id}`);
+    },
+    areas: async (location: Location, shouldExpand = false) => {
+      const defaultAreas = await this.lookupServiceFactory().getByIds([DEFAULT_AREAS_ID], [], DEFAULT_LANG);
+      return {
+        ...location.areas,
+        default: defaultAreas[DEFAULT_AREAS_ID].map((area: LookupItem) => ({
+          id: area.key,
+          name: area.shortDisplay
+        }))
+      };
     }
   };
 
@@ -162,6 +176,7 @@ class LocationResolver extends Resolver<Location> {
   private userResolverFactory: () => UserResolver;
   private subscriptionResolverFactory: () => SubscriptionResolver;
   private notificationService: NotificationService;
+  private lookupServiceFactory: () => LookupService;
 
   constructor(
     @inject('LocationTable') private locationTable: LocationTable,
@@ -176,6 +191,7 @@ class LocationResolver extends Resolver<Location> {
     this.accountResolverFactory = depFactoryFactory<AccountResolver>('AccountResolver');
     this.userResolverFactory = depFactoryFactory<UserResolver>('UserResolver');
     this.subscriptionResolverFactory = depFactoryFactory<SubscriptionResolver>('SubscriptionResolver');
+    this.lookupServiceFactory = depFactoryFactory<LookupService>('LookupService');
 
     if (!_.isEmpty(this.httpContext)) {
       this.notificationService = notificationServiceFactory.create(this.httpContext.request);

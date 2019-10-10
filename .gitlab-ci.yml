@@ -1,4 +1,3 @@
-# TODO: Make this file external, downloadable via versioned URL
 ---
 image: registry.gitlab.com/flotechnologies/gitlabci-docker-compose:18.06-fat
 
@@ -9,6 +8,31 @@ variables:
   DOCKER_HOST: "tcp://localhost:2375"
   CI_REGISTRY: "registry.gitlab.com"
   CI_REGISTRY_IMAGE: "${CI_REGISTRY}/flotechnologies/flo-public-gateway"
+  APPLICATION_NAME: "flo-public-gateway"
+  API_V1_URL: "https://api-dev.flocloud.co/api/v1"
+  ACL_URL: "${API_V1_URL}/accesscontrol/refresh"
+  AUTH_URL: "${API_V1_URL}/accesscontrol/authorize"
+  DOCS_ENDPOINT_USER: "docuser"
+  DYNAMO_TABLE_PREFIX: "dev_"
+  EXTERNAL_DOCS_ENDPOINT_USER: "partner"
+  EXTERNAL_SERVICE_HTTP_TIMEOUT_MS: "10000"
+  HEALTH_TEST_SERVICE_URL: "http://flo-device-manager-dev.flocloud.co"
+  INFLUX_ANALYTICS_DB: "telemetry_analytics_dev"
+  INFLUX_HOST: "mcfly-da662558.influxcloud.net"
+  INFLUX_HOURLY_MEASUREMENT: "telemetry_hourly"
+  INFLUX_PORT: "8086"
+  INFLUX_SECOND_MEASUREMNT: '"twelve_weeks".telemetry_raw'
+  INFLUX_TELEMETRY_DB: "telemetry_dev"
+  INFLUX_USERNAME: "telemetry_dev"
+  INTERNAL_DEVICE_SERVICE_BASE_URL: "https://flo-device-service.flocloud.co/v1"
+  KAFKA_TIMEOUT_MS: "10000"
+  LOCALIZATION_API_URL: "https://flo-localization-service-dev.flocloud.co/v1"
+  NOTIFICATION_API_URL: "https://flo-notification-api.flocloud.co"
+  POSTGRES_DATABASE: "list-service"
+  POSTGRES_PORT: "5432"
+  POSTGRES_USER: "flo-list-service"
+  PRESENCE_SERVICE_URL: "https://flo-core-service-dev.flocloud.co/presence"
+  REDIS_HOST: "redis-dev-cluster.9alsts.clustercfg.usw2.cache.amazonaws.com"
 
 stages:
   - build
@@ -21,9 +45,6 @@ before_script:
     # TODO: this should be part of the compose image
     apk add --no-cache make bash jq gettext
     docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY
-    if [[ -f Dockerrun.aws.json ]]; then
-      sed -i "s/:latest/:${CI_PIPELINE_ID}/g" Dockerrun.aws.json
-    fi
 
 Compile:
   stage: build
@@ -65,17 +86,14 @@ Sanity:
     - make pull
     - make test | tee build.log
   tags:
-      - test
+    - test
 
 K8sDev:
   variables:
     AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID_DEV}"
     AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY_DEV}"
-    KAFKA_HOST: kafka-cherry-broker-1.dev.flocloud.co:9092,kafka-cherry-broker-2.dev.flocloud.co:9092,kafka-cherry-broker-3.dev.flocloud.co:9092
-    KAFKA_TIMEOUT_MS: 10000
-    POSTGRES_DATABASE: list-service
-    POSTGRES_HOST: dev-rds-cherry.dev.flocloud.co
-    POSTGRES_PORT: 5432
+    KAFKA_HOST: "kafka-cherry-broker-1.dev.flocloud.co:9092,kafka-cherry-broker-2.dev.flocloud.co:9092,kafka-cherry-broker-3.dev.flocloud.co:9092"
+    POSTGRES_HOST: "dev-rds-cherry.dev.flocloud.co"
     KUBERNETES_SERVICE_ACCOUNT_OVERWRITE: tiller
   image: kloiadocker/kloiahelm:0.0.1
   stage: deploy
@@ -83,7 +101,7 @@ K8sDev:
     - Compile
   only:
     - dev
-    - helm-wait-for-deploy
+    - reduce-probe-times
   environment:
     name: dev
     url: https://flo-public-gateway.flocloud.co/ping
@@ -93,11 +111,38 @@ K8sDev:
     - make deploy-status
   tags:
     - dev
+    - dev-prod
 
 K8sProd:
   variables:
     AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID_PROD}"
     AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY_PROD}"
+    API_V1_URL_PROD: "https://api.meetflo.com/api/v1"
+    ACL_URL_PROD: "${API_V1_URL_PROD}/accesscontrol/refresh"
+    AUTH_URL_PROD: "${API_V1_URL_PROD}/accesscontrol/authorize"
+    DOCS_ENDPOINT_USER_PROD: "${DOCS_ENDPOINT_USER}"
+    DYNAMO_TABLE_PREFIX_PROD: "prod_"
+    EXTERNAL_DOCS_ENDPOINT_USER_PROD: "${EXTERNAL_DOCS_ENDPOINT_USER}"
+    EXTERNAL_SERVICE_HTTP_TIMEOUT_MS_PROD: "10000"
+    HEALTH_TEST_SERVICE_URL_PROD: "https://flo-device-manager.flosecurecloud.com"
+    INFLUX_ANALYTICS_DB_PROD: "telemetry_analytics_prod"
+    INFLUX_HOST_PROD: "mcfly-da662558.influxcloud.net"
+    INFLUX_HOURLY_MEASUREMENT_PROD: "telemetry_hourly"
+    INFLUX_PORT_PROD: "8086"
+    INFLUX_SECOND_MEASUREMNT_PROD: '"twelve_weeks".telemetry_raw'
+    INFLUX_TELEMETRY_DB_PROD: "telemetry_prod"
+    INFLUX_USERNAME_PROD: "flo_api_prod"
+    INTERNAL_DEVICE_SERVICE_BASE_URL_PROD: "https://flo-device-service.flosecurecloud.com/v1"
+    KAFKA_HOST_PROD: "kafka-cherry-broker-1.prod.flosecurecloud.com:9092,kafka-cherry-broker-2.prod.flosecurecloud.com:9092,kafka-cherry-broker-3.prod.flosecurecloud.com:9092"
+    KAFKA_TIMEOUT_MS_PROD: "${KAFKA_TIMEOUT_MS}"
+    POSTGRES_DATABASE_PROD: "${POSTGRES_DATABASE}"
+    POSTGRES_HOST_PROD: "prod-rds.cutnsvmodttf.us-west-2.rds.amazonaws.com"
+    POSTGRES_PORT_PROD: 5432
+    POSTGRES_USER_PROD: "${POSTGRES_USER}"
+    LOCALIZATION_API_URL_PROD: "https://flo-localization-service.flosecurecloud.com/v1"
+    NOTIFICATION_API_URL_PROD: "https://flo-notification-api.flosecurecloud.com"
+    PRESENCE_SERVICE_URL_PROD: "https://flo-core-service.flosecurecloud.com/presence"
+    REDIS_HOST_PROD: "flo-api.k5ahfc.clustercfg.usw2.cache.amazonaws.com"
   image: kloiadocker/kloiahelm:0.0.1
   stage: deploy
   dependencies:
@@ -113,17 +158,15 @@ K8sProd:
     - make deploy-status
   tags:
     - deploy-prod
+    - dev-prod
 
 RunscopeProd:
   variables:
     RUNSCOPE_URL: "https://api.runscope.com/radar/68e4a198-9132-4560-bb08-a2e746c8c3e6/trigger?runscope_environment=755b5795-c9d2-464f-9372-d2aaa106e5cc"
-    AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID_PROD}"
-    AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY_PROD}"
   stage: verify
   dependencies:
     - Compile
   only:
-    - prep_prod_deployment
     - master
   environment:
     name: prod

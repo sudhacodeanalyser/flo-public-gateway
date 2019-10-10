@@ -195,8 +195,146 @@ paths:
             $ref: '#/components/schemas/Location'
         400:
           description: Invalid request body
+
+  /api/v2/locations/{id}/areas:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Location ID
+    post:
+      summary: Add new custom area
+      tags:
+        - Locations
+        - Areas
+      produces:
+        - application/json
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+      responses:
+        201:
+          description: The newly created custom Area.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Areas'
+        400:
+          description: An area with the specified name already exists.
+          schema:
+            $ref: '#/components/schemas/Error'
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        403:
+          $ref: '#/components/responses/ForbiddenError'
+        409:
+          description: A Location with the specified ID was not found.
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  /api/v2/locations/{id}/areas/{areaId}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Location ID
+      - in: path
+        name: areaId
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Area ID
+    post:
+      summary: Rename custom area
+      tags:
+        - Locations
+        - Areas
+      produces:
+        - application/json
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+      responses:
+        201:
+          description: The newly created Area.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Areas'
+        400:
+          description: An area with the specified name already exists.
+          schema:
+            $ref: '#/components/schemas/Error'
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        403:
+          $ref: '#/components/responses/ForbiddenError'
+        409:
+          description: A Location or Area with the specified ID was not found.
+          schema:
+            $ref: '#/components/schemas/Error'
+    delete:
+      summary: Deletes a custom Area by ID.
+      tags:
+        - Locations
+        - Areas
+      produces:
+        - application/json
+      responses:
+        200:
+          description: The custom Area was successfully deleted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Empty'
+        204:
+          description: A Location or Area with the specified ID was not found.
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        403:
+          $ref: '#/components/responses/ForbiddenError'
+
 components:
   schemas:
+    Area:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+
+    Areas:
+      type: object
+      properties:
+        default:
+          type: array
+          items:
+            $ref: '#/components/schemas/Area'
+        custom:
+          type: array
+          items:
+            $ref: '#/components/schemas/Area'
+
     LocationUserRole:
       allOf:
         - type: object
@@ -350,6 +488,9 @@ components:
                 revertScheduledAt:
                   type: string
                   format: date-time
+            areas:
+              $ref: '#/components/schemas/Areas'
+
     LocationExpandable:
       oneOf:
         - type: object

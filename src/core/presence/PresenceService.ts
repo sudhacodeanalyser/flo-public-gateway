@@ -31,6 +31,7 @@ class PresenceService implements ExternalPresenceService {
         return {
             ipAddress,
             userId,
+            action: 'report',
             type: 'user',
             appName: payload.appName === undefined || payload.appName === '' ? clientId : payload.appName,
             appVersion: payload.appVersion,
