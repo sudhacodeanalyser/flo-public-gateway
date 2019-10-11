@@ -16,9 +16,30 @@ components:
             id:
               type: string
               format: uuid
-            owner_user_id:
-              type: string
-              format: uuid
+            owner:
+              $ref: '#/components/schemas/UserExpandable'
+            locations:
+              type: array
+              items:
+                $ref: '#/components/schemas/LocationExpandable'
+            users:
+              type: array
+              items:
+                $ref: '#/components/schemas/UserExpandable'
+            userRoles:
+              type: array
+              items:
+                allOf:
+                  - type: object
+                    properties:
+                      userId:
+                        type: string
+                        format: uuid
+                  - $ref: '#/components/schemas/Roles'
+            groups:
+              type: array
+              items:
+                $ref: '#/components/schemas/AccountGroupExpandable'
         - $ref: '#/components/schemas/Timestamped'
 
     AccountExpandable:
@@ -29,3 +50,21 @@ components:
               type: string
               format: uuid
         - $ref: '#/components/schemas/Account'
+
+    AccountGroup:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+
+    AccountGroupExpandable:
+      oneOf:
+        - type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+        - $ref: '#/components/schemas/AccountGroup'

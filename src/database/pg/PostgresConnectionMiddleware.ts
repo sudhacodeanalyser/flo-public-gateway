@@ -7,11 +7,12 @@ import Request from '../../core/api/Request';
 export function PostgresPoolClientProviderFactory(context: interfaces.Context, res?: express.Response): () => Promise<postgres.PoolClient> {
   const postgresPool = context.container.get<postgres.Pool>('PostgresPool');
 
+  // Factory lazily acquires PG connections, so it's safe to inject this middleware into all
+  // controllers, since resources will only be used when the factory is called
   return async () => {
     const poolClient = await postgresPool.connect();
 
-    // TODO: Check this logic. We are now releasing clients directly in DbClient.
-    /*let isReleased = false;
+    let isReleased = false;
     const releaseClient = () => {
       if (!isReleased) {
         poolClient.release();
@@ -22,7 +23,7 @@ export function PostgresPoolClientProviderFactory(context: interfaces.Context, r
     if (res) {
       res.on('finish', releaseClient);
       res.on('close', releaseClient);
-    }*/
+    }
 
     return poolClient;
   };

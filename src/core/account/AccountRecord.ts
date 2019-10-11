@@ -1,4 +1,4 @@
-import { Timestamped, Account } from '../api';
+import { Account, Timestamped } from '../api';
 
 export interface AccountRecordData extends Timestamped {
   id: string,
@@ -23,7 +23,8 @@ export class AccountRecord {
       users: [],
       userRoles: [],
       createdAt: this.data.created_at,
-      updatedAt: this.data.updated_at
+      updatedAt: this.data.updated_at,
+      groups: this.data.group_id ? [{ id: this.data.group_id }] : []
     }
   }
 }

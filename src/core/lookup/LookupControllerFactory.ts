@@ -11,9 +11,7 @@ import {Lookup, LookupResponse, MultiLookupResponse} from '../api/response';
 export function LookupControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
 
-  // Every call to a method in this controller will checkout a connection from Postgres connection pool
-  // and release it upon sending the response
-  @httpController({ version: apiVersion }, '/lists', 'PostgresConnectionMiddleware')
+  @httpController({ version: apiVersion }, '/lists')
   class LookupController extends BaseHttpController {
     private static defaultLang = 'en';
 

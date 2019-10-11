@@ -37,6 +37,19 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
     a => `${ a }`
   );
 
+  type BooleanType = t.TypeOf<typeof t.boolean>;
+
+  const BooleanFromString = new t.Type<BooleanType, string, unknown>(
+    'BooleanFromString',
+    (u): u is BooleanType => t.boolean.is(u),
+    (u, c) => {
+      return Either.either.chain(t.string.validate(u, c), str => {
+        return !str ? t.failure(str, c) : t.success(str === 'true');
+      });
+    },
+    a => `${ a }`
+  );
+
   @httpController({ version: apiVersion }, '/alerts')
   class AlertController extends BaseHttpController {
     constructor(
@@ -90,6 +103,7 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
             status: t.union([t.string, t.array(AlertStatusCodec)]),
             severity: t.union([t.string, t.array(AlarmSeverityCodec)]),
             reason: t.union([t.string, t.array(IncidentStatusReasonCodec)]),
+            isInternalAlarm: BooleanFromString,
             page: IntegerFromString,
             size: IntegerFromString
           })
