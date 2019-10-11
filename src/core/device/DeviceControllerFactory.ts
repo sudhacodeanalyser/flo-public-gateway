@@ -8,7 +8,7 @@ import { QrData, QrDataValidator } from '../../api-v1/pairing/PairingService';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import { InternalDeviceService } from '../../internal-device-service/InternalDeviceService';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
-import { Device, DeviceCreate, DeviceCreateValidator, DeviceType, DeviceUpdate, DeviceUpdateValidator, SystemMode as DeviceSystemMode, SystemModeCodec as DeviceSystemModeCodec, TelemetryCodec } from '../api';
+import { Device, DeviceCreate, DeviceCreateValidator, DeviceType, DeviceUpdate, DeviceUpdateValidator, SystemMode as DeviceSystemMode, SystemModeCodec as DeviceSystemModeCodec } from '../api';
 import { asyncMethod, authorizationHeader, createMethod, deleteMethod, httpController, parseExpand, withResponseType } from '../api/controllerUtils';
 import { convertEnumtoCodec } from '../api/enumUtils';
 import ForbiddenError from '../api/error/ForbiddenError';
@@ -330,26 +330,6 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     private async rebootDevice(@request() req: Request, @requestParam('id') id: string): Promise<void> {
       const directiveService = this.directiveServiceFactory.create(req);
       return directiveService.reboot(id);
-    }
-
-    @httpPost('/:id/telemetry',
-      // TODO: PUCK. Implement proper auth.
-      hardcodedPuckTokenAuth(authWithId),
-      reqValidator.create(t.type({
-        params: t.type({
-          id: t.string
-        }),
-        body: t.union([
-          t.record(t.string, t.any),
-          t.type({
-            items: t.array(TelemetryCodec)
-          })
-        ])
-      }))
-    )
-    @asyncMethod
-    private async publishTelemetry(@requestParam('id') id: string, @request() req: Request): Promise<void> {
-      return this.deviceService.publishTelemetry(id, req.body, isPuck(req));
     }
 
     @httpPost('/:id/healthTest/:action',

@@ -3,21 +3,18 @@ import * as O from 'fp-ts/lib/Option';
 import { pipe } from 'fp-ts/lib/pipeable';
 import { inject, injectable } from 'inversify';
 import _ from 'lodash';
-import moment from 'moment';
 import { PairingService, QrData } from '../../api-v1/pairing/PairingService';
 import { InternalDeviceService } from '../../internal-device-service/InternalDeviceService';
-import { KafkaProducer } from '../../kafka/KafkaProducer';
-import { DependencyFactoryFactory, Device, DeviceCreate, DeviceType, DeviceUpdate, PropExpand, Telemetry, ValveState } from '../api';
+import { DependencyFactoryFactory, Device, DeviceCreate, DeviceType, DeviceUpdate, PropExpand, ValveState } from '../api';
 import ConflictError from '../api/error/ConflictError';
-import NotFoundError from '../api/error/NotFoundError';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import { DeviceResolver } from '../resolver';
-import { EntityActivityAction, EntityActivityService, EntityActivityType, LocationService, TelemetryService } from '../service';
+import { EntityActivityAction, EntityActivityService, EntityActivityType, LocationService } from '../service';
 import { SessionService } from '../session/SessionService';
 import { DirectiveService } from './DirectiveService';
 import { PairingResponse } from './PairingService';
 
-const { some, none, isNone, fromNullable } = O;
+const { isNone, fromNullable } = O;
 type Option<T> = O.Option<T>;
 
 @injectable()
@@ -32,8 +29,6 @@ class DeviceService {
     @inject('DependencyFactoryFactory') depFactoryFactory: DependencyFactoryFactory,
     @inject('InternalDeviceService') private internalDeviceService: InternalDeviceService,
     @inject('EntityActivityService') private entityActivityService: EntityActivityService,
-    @inject('KafkaProducer') private kafkaPublisher: KafkaProducer,
-    @inject('TelemetryService') private telemetrySevice: TelemetryService
   ) {
     this.locationServiceFactory = depFactoryFactory<LocationService>('LocationService');
     this.sessionServiceFactory = depFactoryFactory<SessionService>('SessionService');
@@ -136,32 +131,6 @@ class DeviceService {
   public async getAllByLocationId(locationId: string, expand?: PropExpand): Promise<Device[]> {
     return this.deviceResolver.getAllByLocationId(locationId, expand);
   }
-
-  public async publishTelemetry(id: string, telemetry: any, isDevicePuck: boolean): Promise<void> {
-    if (!isDevicePuck) {
-      const telemetryMessages: Telemetry[] = telemetry.items;
-      await pipe(
-        await this.getDeviceById(id),
-        O.map(async device => {
-          const messages = telemetryMessages
-            .map(telemetryMessage => ({
-              ...telemetryMessage,
-              did: device.macAddress
-            }));
-
-          await this.telemetrySevice.publishTelemetry(messages);
-        }),
-        O.getOrElse(async (): Promise<void> => { throw new NotFoundError(); })
-      );
-    } else {
-      // TODO: PUCK. Telemetry structure is TBD at the time of writing this.
-      await this.telemetrySevice.publishPuckTelemetry({
-        ...telemetry,
-        date: moment().toISOString()
-      });
-    }
-  }
-
 }
 
 export { DeviceService };
