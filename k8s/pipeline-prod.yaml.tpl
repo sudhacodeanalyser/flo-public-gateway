@@ -36,6 +36,7 @@ secrets:
     REDIS_HOST: "${REDIS_HOST_PROD}"
     STRIPE_SECRET_KEY: "${STRIPE_SECRET_KEY_PROD}"
     STRIPE_WEBHOOK_SECRET: "${STRIPE_WEBHOOK_SECRET_PROD}"
+    TELEMETRY_TAGS_SERVICE_URL: "${TELEMETRY_TAGS_SERVICE_URL_PROD}"
 internalIngress:
   host: internal-ingress.flosecurecloud.com
 routingIngress:

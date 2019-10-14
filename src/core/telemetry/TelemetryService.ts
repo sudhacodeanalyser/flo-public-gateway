@@ -1,6 +1,7 @@
 import * as O from 'fp-ts/lib/Option';
 import { pipe } from 'fp-ts/lib/pipeable';
 import { inject, injectable } from 'inversify';
+import _ from 'lodash';
 import moment from 'moment';
 import { KafkaProducer } from '../../kafka/KafkaProducer';
 import { Device, DeviceTelemetry, DeviceTelemetryData, DeviceType, PuckTelemetry, Telemetry } from '../api';
@@ -15,7 +16,7 @@ class TelemetryService {
     @inject('TelemetryKafkaTopic') private readonly telemetryKafkaTopic: string,
     @inject('PuckTelemetryKafkaTopic') private readonly puckTelemetryKafkaTopic: string,
     @inject('KafkaProducer') private readonly kafkaProducer: KafkaProducer,
-    @inject('DeviceService') private readonly deviceService: DeviceService
+    @inject('DeviceService') private readonly deviceService: DeviceService,
   ) {}
 
   public async publishTelemetry(telemetry: Telemetry): Promise<void> {
@@ -64,12 +65,12 @@ class TelemetryService {
     return device.deviceType === DeviceType.PUCK
   }
 
-  private isPuckTelemetry(telemetry: any): telemetry is PuckTelemetry {
-    return telemetry.deviceId && telemetry.data;
+  private isPuckTelemetry(telemetry: Telemetry): telemetry is PuckTelemetry {
+    return _.isString(telemetry.deviceId) && _.isPlainObject((telemetry as PuckTelemetry).data);
   }
 
-  private isDeviceTelemetry(telemetry: any): telemetry is DeviceTelemetry {
-    return telemetry.deviceId && telemetry.items;
+  private isDeviceTelemetry(telemetry: Telemetry): telemetry is DeviceTelemetry {
+    return _.isString(telemetry.deviceId) && _.isArray((telemetry as DeviceTelemetry).items);
   }
 }
 
