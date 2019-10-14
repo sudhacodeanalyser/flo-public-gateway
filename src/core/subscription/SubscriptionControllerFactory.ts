@@ -117,7 +117,7 @@ export function SubscriptionControllerFactory(container: Container, apiVersion: 
       }))
     )
     @deleteMethod
-    private async removeSubscription(@requestParam('id') id: string, @requestBody() { cancellationReason, cancelImmediately }: { cancellationReason?: string, cancelImmediately?: boolean } ): Promise<Subscription> {
+    private async cancelSubscription(@requestParam('id') id: string, @requestBody() { cancellationReason, cancelImmediately }: { cancellationReason?: string, cancelImmediately?: boolean } ): Promise<Subscription> {
 
       return this.subscriptionService.cancelSubscription(id, cancelImmediately, cancellationReason);
     }
