@@ -33,6 +33,7 @@ variables:
   POSTGRES_USER: "flo-list-service"
   PRESENCE_SERVICE_URL: "https://flo-core-service-dev.flocloud.co/presence"
   REDIS_HOST: "redis-dev-cluster.9alsts.clustercfg.usw2.cache.amazonaws.com"
+  TELEMETRY_TAGS_SERVICE_URL: "https://flo-telemetry-tags.flocloud.co"
 
 stages:
   - build
@@ -143,6 +144,7 @@ K8sProd:
     NOTIFICATION_API_URL_PROD: "https://flo-notification-api.flosecurecloud.com"
     PRESENCE_SERVICE_URL_PROD: "https://flo-core-service.flosecurecloud.com/presence"
     REDIS_HOST_PROD: "flo-api.k5ahfc.clustercfg.usw2.cache.amazonaws.com"
+    TELEMETRY_TAGS_SERVICE_URL_PROD: "https://flo-telemetry-tags.flosecurecloud.com"
   image: kloiadocker/kloiahelm:0.0.1
   stage: deploy
   dependencies:

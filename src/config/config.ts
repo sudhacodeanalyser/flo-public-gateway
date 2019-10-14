@@ -35,7 +35,8 @@ function getDefaults(): { [key: string]: any } {
         puckTelemetryKafkaTopic: 'telemetry-puck-v1',
         redisHost: 'redis-dev-cluster.9alsts.clustercfg.usw2.cache.amazonaws.com',
         redisPort: '6379',
-        presenceServiceUrl: 'https://flo-core-service-dev.flocloud.co/presence'
+        presenceServiceUrl: 'https://flo-core-service-dev.flocloud.co/presence',
+        telemetryTagsServiceUrl: 'https://flo-telemetry-tags.flocloud.co'
       };
   }
 }
@@ -82,7 +83,8 @@ const config = {
   puckTelemetryKafkaTopic: process.env.PUCK_TELEMETRY_KAFKA_TOPIC,
   redisHost: process.env.REDIS_HOST,
   redisPort: process.env.REDIS_PORT,
-  presenceServiceUrl: process.env.PRESENCE_SERVICE_URL
+  presenceServiceUrl: process.env.PRESENCE_SERVICE_URL,
+  telemetryTagsServiceUrl: process.env.TELEMETRY_TAGS_SERVICE_URL
 };
 
 export default {
