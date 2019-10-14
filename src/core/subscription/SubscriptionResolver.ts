@@ -144,10 +144,6 @@ class SubscriptionResolver extends Resolver<Subscription> {
         throw err;
       }
 
-      // tslint:disable
-      console.log('MODEL');
-      console.log(JSON.stringify(subscriptionModel, null, 4));
-
       const newSubscriptionRecordData = await this.create(subscriptionModel);
 
       return this.updatePartial(newSubscriptionRecordData.id, partialSubscription);
