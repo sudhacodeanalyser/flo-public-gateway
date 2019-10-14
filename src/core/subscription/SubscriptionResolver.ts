@@ -110,20 +110,18 @@ class SubscriptionResolver extends Resolver<Subscription> {
     return this.toModel(subscriptionRecordData);
   }
 
-  public async getByProviderCustomerId(customerId: string): Promise<Subscription | null> {
-    const subscriptionRecordData: SubscriptionRecordData | null = await this.subscriptionTable.getByProviderCustomerId(customerId);
-
-    if (subscriptionRecordData !== null) {
-      return this.toModel(subscriptionRecordData);
-    }
-
+  public async getByProviderCustomerId(customerId: string): Promise<Subscription[]> {
+    // Possible for a customer with multiple subscriptions to have subscriptions in both old and new table
+    const subscriptionRecordData = await this.subscriptionTable.getByProviderCustomerId(customerId);
     const oldSubscriptionRecordData = await this.oldSubscriptionTable.getByCustomerId(customerId);
 
-    if (oldSubscriptionRecordData !== null) {
-      return this.toModel(oldSubscriptionRecordData);
-    }
-
-    return null;
+    return Promise.all(
+      [
+        ...subscriptionRecordData,
+        ...(oldSubscriptionRecordData ? [oldSubscriptionRecordData] : [])
+      ]
+      .map(record => this.toModel(record))
+    );
   }
 
   public async updatePartial(id: string, partialSubscription: Partial<Subscription>): Promise<Subscription> {

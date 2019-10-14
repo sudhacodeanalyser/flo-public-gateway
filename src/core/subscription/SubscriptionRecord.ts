@@ -9,16 +9,17 @@ export interface StripeProviderData {
 }
 
 export interface SubscriptionRecordData extends Timestamped {
-  id: string,
-  plan_id: string
-  related_entity: string
-  related_entity_id: string
-  source_id: string
-  is_active: boolean,
-  subscription_provider: string
-  provider_customer_id: string
-  provider_subscription_id: string
+  id: string;
+  plan_id: string;
+  related_entity: string;
+  related_entity_id: string;
+  source_id: string;
+  is_active: boolean;
+  subscription_provider: string;
+  provider_customer_id: string;
+  provider_subscription_id: string;
   stripe_provider_data?: StripeProviderData;
+  cancellation_reason?: string;
 }
 
 export class SubscriptionRecord {
@@ -35,6 +36,7 @@ export class SubscriptionRecord {
       subscription_provider: provider && provider.name,
       provider_customer_id: providerData && providerData.customerId,
       provider_subscription_id: providerData && providerData.subscriptionId,
+      cancellation_reason: subscription.cancellationReason,
       stripe_provider_data: provider && provider.name === 'stripe' && providerData ?
         {
           current_period_start: providerData.currentPeriodStart,
@@ -61,6 +63,7 @@ export class SubscriptionRecord {
       subscription_provider: subscription.provider.name,
       provider_customer_id: subscription.provider.data.customerId,
       provider_subscription_id: subscription.provider.data.subscriptionId,
+      cancellation_reason: subscription.cancellationReason,
       stripe_provider_data: provider && provider.name === 'stripe' && providerData ?
         {
           current_period_start: providerData.currentPeriodStart,
@@ -101,7 +104,8 @@ export class SubscriptionRecord {
         }
       },
       createdAt: this.data.created_at,
-      updatedAt: this.data.updated_at
+      updatedAt: this.data.updated_at,
+      cancellationReason: this.data.cancellation_reason
     }
   }
 }

@@ -43,7 +43,8 @@ export class OldSubscriptionRecord {
         }
       },
       createdAt: record.created_at,
-      updatedAt: record.updated_at
+      updatedAt: record.updated_at,
+      cancellationReason: record.cancellation_reason
     };
   }
 
