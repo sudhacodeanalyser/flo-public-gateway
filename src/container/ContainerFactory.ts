@@ -1,24 +1,25 @@
 import { Container } from 'inversify';
 import apiV1ContainerModule from '../api-v1/containerModule';
 import authContainerModule from '../auth/containerModule';
+import cacheContainerModule from '../cache/containerModule';
 import config from '../config/config';
 // Core container modules
 import coreContainerModules from '../core/containerModule';
 import dynamoDbContainerModule from '../database/dynamo/containerModule';
+import influxContainerModule from '../database/influx/containerModule';
 import postgresContainerModule from '../database/pg/containerModule';
+import redisContainerModule from '../database/redis/containerModule';
 import healthTestServiceContainerModule from '../health-test/containerModule';
 import internalDeviceServiceFetcherModule from '../internal-device-service/containerModule';
 import kafkaContainerModule from '../kafka/containerModule';
 import localizationContainerModule from '../localization/containerModule';
-import influxContainerModule from '../database/influx/containerModule';
-import redisContainerModule from '../database/redis/containerModule';
 // Shared container modules
 import loggerFactoryContainerModule from '../logging/containerModule';
+import memoizeContainerModule from '../memoize/containerModule';
+import presenceContainerModule from '../presence/containerModule';
 import subscriptionProviderModule from '../subscription/containerModule';
 import validationContainerModule from '../validation/containerModule';
-import memoizeContainerModule from '../memoize/containerModule';
-import cacheContainerModule from '../cache/containerModule';
-import presenceContainerModule from '../presence/containerModule';
+import telemetryTagsContainerModule from '../telemetry/containerModule';
 
 export default function ContainerFactory(container: Container = new Container()): Container {
 
@@ -41,6 +42,7 @@ export default function ContainerFactory(container: Container = new Container())
     redisContainerModule,
     cacheContainerModule,
     presenceContainerModule,
+    telemetryTagsContainerModule,
     ...coreContainerModules
   );
 

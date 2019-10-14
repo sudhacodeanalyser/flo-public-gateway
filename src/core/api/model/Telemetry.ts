@@ -30,3 +30,29 @@ export type DeviceTelemetry = t.TypeOf<typeof DeviceTelemetryCodec>;
 export type PuckTelemetry = t.TypeOf<typeof PuckTelemetryCodec>;
 
 export type Telemetry = DeviceTelemetry | PuckTelemetry;
+
+// Telemetry Tags
+export interface TagDetail {
+  source: string;
+  type: string;
+}
+
+export interface TagCreate extends TagDetail {
+  start: string;
+  end: string;
+}
+
+export interface Tag extends TagCreate {
+  id: string;
+  created: string;
+  status: string;
+}
+
+export interface Tags {
+  items: Tag[];
+}
+
+export interface TagFilter {
+  start?: string;
+  end?: string;
+}
