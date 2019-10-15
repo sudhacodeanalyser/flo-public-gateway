@@ -5,12 +5,12 @@ import * as t from 'io-ts';
 import _ from 'lodash';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
-import { Subscription, SubscriptionCreate, SubscriptionCreateValidator, SubscriptionProviderWebhookHandler } from '../api';
+import { Subscription, SubscriptionCreate, SubscriptionCreateValidator, SubscriptionProviderWebhookHandler, CreditCardInfo, ProvidersCodec, ProviderPaymentData } from '../api';
 import { createMethod, deleteMethod, httpController, parseExpand, withResponseType } from '../api/controllerUtils';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import * as Responses from '../api/response';
 import { SubscriptionService } from '../service';
-
+import Request from '../api/Request';
 export function SubscriptionControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
   const authMiddlewareFactory = container.get<AuthMiddlewareFactory>('AuthMiddlewareFactory');
@@ -43,6 +43,43 @@ export function SubscriptionControllerFactory(container: Container, apiVersion: 
       return some(createdSubscription);
     }
 
+    @httpGet(
+      '/payment',
+      auth,
+      reqValidator.create(t.type({
+        query: t.type({
+          userId: t.string,
+          provider: t.union([t.string, t.undefined])
+        })
+      }))
+    )
+    private async getPaymentSources(@queryParam('userId') userId: string, @queryParam('provider') providerName?: string): Promise<{ items: CreditCardInfo[] }> {
+      const sources = await this.subscriptionService.getPaymentSourcesByUserId(userId, providerName || 'stripe');
+
+      return {
+        items: sources
+      };
+    }
+
+    @httpPost(
+      '/payment',
+      auth,
+      reqValidator.create(t.type({
+       body: t.type({
+         userId: t.string,
+         provider: ProvidersCodec
+       })
+      }))
+    )
+    private async updatePaymentSources(@requestBody() { userId, provider: { name, token } }: { userId: string, provider: ProviderPaymentData }): Promise<{ items: CreditCardInfo[] }> {
+      const updatedSources = await this.subscriptionService.updatePaymentSourceByUserId(userId, name, token);
+
+      return {
+        items: updatedSources
+      };
+    }
+
+
     @httpGet('/:id',
       // auth,
       reqValidator.create(t.type({
@@ -72,12 +109,17 @@ export function SubscriptionControllerFactory(container: Container, apiVersion: 
       reqValidator.create(t.type({
         params: t.type({
           id: t.string
+        }),
+        body: t.partial({
+          cancellationReason: t.string,
+          cancelImmediately: t.boolean
         })
       }))
     )
     @deleteMethod
-    private async removeSubscription(@requestParam('id') id: string): Promise<void> {
-      return this.subscriptionService.removeSubscription(id);
+    private async cancelSubscription(@requestParam('id') id: string, @requestBody() { cancellationReason, cancelImmediately }: { cancellationReason?: string, cancelImmediately?: boolean } ): Promise<Subscription> {
+
+      return this.subscriptionService.cancelSubscription(id, cancelImmediately, cancellationReason);
     }
 
     @httpPost(

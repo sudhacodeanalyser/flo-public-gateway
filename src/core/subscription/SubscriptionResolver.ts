@@ -9,6 +9,7 @@ import SubscriptionTable from '../subscription/SubscriptionTable';
 import OldSubscriptionTable from './OldSubscriptionTable';
 import { SubscriptionPlanRecord, SubscriptionPlanRecordData } from './SubscriptionPlanRecord';
 import { SubscriptionRecord, SubscriptionRecordData } from './SubscriptionRecord';
+import { OldSubscriptionRecord, OldSubscriptionRecordData } from './OldSubscriptionRecord';
 
 @injectable()
 class SubscriptionResolver extends Resolver<Subscription> {
@@ -75,71 +76,102 @@ class SubscriptionResolver extends Resolver<Subscription> {
   public async get(id: string, expandProps: PropExpand = []): Promise<Subscription | null> {
     const subscriptionRecordData: SubscriptionRecordData | null = await this.subscriptionTable.get({ id });
 
-    if (subscriptionRecordData === null) {
-      return null;
+    if (subscriptionRecordData !== null) {
+      return this.toModel(subscriptionRecordData, expandProps);
     }
 
-    return this.toModel(subscriptionRecordData, expandProps);
+    return this.getByAccountId(id);
   }
 
   public async getByRelatedEntityId(relatedEntityId: string): Promise<Subscription | null> {
     const subscriptionRecordData: SubscriptionRecordData | null = await this.subscriptionTable.getByRelatedEntityId(relatedEntityId);
 
-    if (subscriptionRecordData === null) {
-      return null;
+    if (subscriptionRecordData !== null) {
+      return this.toModel(subscriptionRecordData);
     }
 
-    return this.toModel(subscriptionRecordData);
+    const oldSubscriptionRecordData = await this.oldSubscriptionTable.getByLocationId(relatedEntityId);
+
+    if (oldSubscriptionRecordData !== null) {
+      return this.toModel(oldSubscriptionRecordData);
+    }
+
+    return null;
   }
 
   // TODO: Remove me once data migration is completed.
-  public async getByAccountId(accountId: string): Promise<any | null> {
-    const subscriptionRecordData: any | null = await this.oldSubscriptionTable.get({ account_id: accountId });
-
-    if (subscriptionRecordData === null) {
-      return null;
-    }
-
-    return {
-      id: subscriptionRecordData.account_id,
-      provider: {
-        isActive: subscriptionRecordData.status === 'active'
-      },
-      plan: {
-        id: subscriptionRecordData.plan_id
-      },
-      sourceId: subscriptionRecordData.source_id
-    };
-  }
-
-  public async getByProviderCustomerId(customerId: string): Promise<Subscription | null> {
-    const subscriptionRecordData: SubscriptionRecordData | null = await this.subscriptionTable.getByProviderCustomerId(customerId);
+  public async getByAccountId(accountId: string): Promise<Subscription | null> {
+    const subscriptionRecordData = await this.oldSubscriptionTable.get({ account_id: accountId });
 
     if (subscriptionRecordData === null) {
       return null;
     }
 
     return this.toModel(subscriptionRecordData);
+  }
+
+  public async getByProviderCustomerId(customerId: string): Promise<Subscription[]> {
+    // Possible for a customer with multiple subscriptions to have subscriptions in both old and new table
+    const subscriptionRecordData = await this.subscriptionTable.getByProviderCustomerId(customerId);
+    const oldSubscriptionRecordData = await this.oldSubscriptionTable.getByCustomerId(customerId);
+
+    return Promise.all(
+      [
+        ...subscriptionRecordData,
+        ...(oldSubscriptionRecordData ? [oldSubscriptionRecordData] : [])
+      ]
+      .map(record => this.toModel(record))
+    );
   }
 
   public async updatePartial(id: string, partialSubscription: Partial<Subscription>): Promise<Subscription> {
     const subscriptionRecordData = SubscriptionRecord.fromPartialModel(partialSubscription);
     const patch = fromPartialRecord<SubscriptionRecordData>(subscriptionRecordData);
-    const updateSubscription = await this.subscriptionTable.update({ id }, patch);
 
-    return new SubscriptionRecord(updateSubscription).toModel();
+    try {
+      const updateSubscription = await this.subscriptionTable.update({ id }, patch);
+
+      return new SubscriptionRecord(updateSubscription).toModel();
+    } catch (err) {
+
+      if (!(err instanceof ResourceDoesNotExistError)) {
+        throw err; 
+      }
+      // Migrate old subscription record to new table if updated
+      const subscriptionModel = await this.getByAccountId(id);
+
+      if (subscriptionModel === null) {
+        throw err;
+      }
+
+      const newSubscriptionRecordData = await this.create(subscriptionModel);
+
+      return this.updatePartial(newSubscriptionRecordData.id, partialSubscription);
+    }
+
   }
 
   public async remove(id: string): Promise<void> {
-    return this.subscriptionTable.remove({ id });
+    try {
+      return this.subscriptionTable.remove({ id });
+    } catch (err) {
+
+      if (!(err instanceof ResourceDoesNotExistError)) {
+        throw err;
+      }
+
+      return this.oldSubscriptionTable.remove({ account_id: id });
+    }
   }
 
   public async getPlanById(planId: string): Promise<SubscriptionPlanRecordData | null> {
     return this.subscriptionPlanTable.get({ plan_id: planId });
   }
 
-  private async toModel(subscriptionRecordData: SubscriptionRecordData, expandProps: PropExpand = []): Promise<Subscription> {
-    const subscription = new SubscriptionRecord(subscriptionRecordData).toModel();
+  private async toModel(subscriptionRecordData: SubscriptionRecordData | OldSubscriptionRecordData, expandProps: PropExpand = []): Promise<Subscription> {
+    const subscription = OldSubscriptionRecord.isOldSubscriptionRecord(subscriptionRecordData) ?
+      OldSubscriptionRecord.toModel(subscriptionRecordData) :
+      new SubscriptionRecord(subscriptionRecordData).toModel();
     const expandedProps = await this.resolveProps(subscription, expandProps);
 
     return {

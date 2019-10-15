@@ -1,8 +1,11 @@
 import { inject, injectable } from 'inversify';
 import _ from 'lodash';
 import Stripe from 'stripe';
-import { Subscription, SubscriptionData, SubscriptionProvider, SubscriptionProviderInfo, User } from '../../core/api';
+import { Subscription, SubscriptionData, SubscriptionProvider, SubscriptionProviderInfo, CreditCardInfo, User } from '../../core/api';
 import { isSubscriptionActive } from './StripeUtils';
+import * as Option from 'fp-ts/lib/Option';
+
+type StripeObject = { object: string };
 
 @injectable()
 class StripeSubscriptionProvider implements SubscriptionProvider {
@@ -12,18 +15,91 @@ class StripeSubscriptionProvider implements SubscriptionProvider {
     @inject('StripeClient') private stripeClient: Stripe
   ) {}
 
-  public async createSubscription(user: User, subscription: SubscriptionData): Promise<SubscriptionProviderInfo> {
+  public async createSubscription(user: User, subscription: SubscriptionData, allowTrial?: boolean): Promise<SubscriptionProviderInfo> {
     const customer = await this.ensureStripeCustomer(user, subscription);
-    const stripeSubscription = await this.doCreateSubscription(customer, subscription);
+    const stripeSubscription = await this.doCreateSubscription(customer, subscription, allowTrial);
 
-    return this.toProviderInfo(customer, stripeSubscription);
+    return this.formatProviderData(stripeSubscription);
   }
 
   public async retrieveSubscription(subscription: Subscription): Promise<SubscriptionProviderInfo> {
     const customer = await this.stripeClient.customers.retrieve(subscription.provider.data.customerId);
     const stripeSubscription = await this.stripeClient.subscriptions.retrieve(subscription.provider.data.subscriptionId);
 
-    return this.toProviderInfo(customer, stripeSubscription);
+    return this.formatProviderData(stripeSubscription);
+  }
+
+  public async cancelSubscription(subscription: Subscription, shouldCancelImmediately: boolean = false): Promise<SubscriptionProviderInfo> {
+    const stripeSubscriptionId = subscription.provider.data.subscriptionId;
+    const updatedStripeSubscription = await (
+      shouldCancelImmediately ?
+        this.stripeClient.subscriptions.del(stripeSubscriptionId) :
+        this.stripeClient.subscriptions.update(stripeSubscriptionId, { cancel_at_period_end: true })
+    );
+
+    return this.formatProviderData(updatedStripeSubscription);
+  }
+
+  public getCustomerId(stripeSubscription: Stripe.subscriptions.ISubscription): string {
+    return _.isString(stripeSubscription.customer) ? 
+      stripeSubscription.customer : 
+      stripeSubscription.customer.id;
+  }
+
+  public async getPaymentSources(user: User): Promise<CreditCardInfo[]> {
+    const stripeCustomer = await this.retrieveStripeCustomer(user);
+
+    if (!stripeCustomer) {
+      return [];
+    }
+
+    return this.formatPaymentSources(stripeCustomer);
+  }
+
+  public async updatePaymentSource(user: User, token: string): Promise<CreditCardInfo[]> {
+    const stripeCustomer = await this.ensureStripeCustomer(user);
+    const source = await this.stripeClient.customers.createSource(stripeCustomer.id, { source: token });
+    const updatedStripeCustomer = await this.stripeClient.customers.update(stripeCustomer.id, { default_source: source.id });
+
+    return this.formatPaymentSources(updatedStripeCustomer);
+  }
+
+  public formatProviderData(stripeSubscription: Stripe.subscriptions.ISubscription): SubscriptionProviderInfo {
+    const customerId = this.getCustomerId(stripeSubscription);
+
+    return {
+      name: this.name,
+      isActive: isSubscriptionActive(stripeSubscription.status),
+      data: {
+        status: stripeSubscription.status,
+        customerId,
+        subscriptionId: stripeSubscription.id,
+        currentPeriodStart: new Date(stripeSubscription.current_period_start * 1000).toISOString(),
+        currentPeriodEnd: new Date(stripeSubscription.current_period_end * 1000).toISOString(),
+        canceledAt: !stripeSubscription.canceled_at ?
+           undefined :
+           new Date(stripeSubscription.canceled_at * 1000).toISOString(),
+        endedAt: !stripeSubscription.ended_at ?
+          undefined :
+          new Date(stripeSubscription.ended_at * 1000).toISOString(),
+        cancelAtPeriodEnd: !!stripeSubscription.cancel_at_period_end
+      }
+    };
+  }
+
+  public async getCanceledSubscriptions(user: User): Promise<SubscriptionProviderInfo[]> {
+    const stripeCustomer = await this.retrieveStripeCustomer(user);
+
+    if (!stripeCustomer) {
+      return [];
+    }
+
+    const subscriptions = await this.stripeClient.subscriptions.list({
+      customer: stripeCustomer.id,
+      status: 'canceled',
+    });
+
+    return (subscriptions ? subscriptions.data : []).map(subscription => this.formatProviderData(subscription)); 
   }
 
   private async doCreateSubscription(customer: Stripe.customers.ICustomer, subscription: SubscriptionData, allowTrial: boolean = true): Promise<Stripe.subscriptions.ISubscription> {
@@ -42,10 +118,45 @@ class StripeSubscriptionProvider implements SubscriptionProvider {
         location_id: subscription.location.id,
         source_id: subscription.sourceId
       }
-    })
+    });
   }
 
-  private async ensureStripeCustomer(user: User, subscription: SubscriptionData): Promise<Stripe.customers.ICustomer> {
+  private formatPaymentSources(customer: Stripe.customers.ICustomer): CreditCardInfo[] {
+    const defaultSource = customer.default_source;
+    const defaultSourceId = _.isString(defaultSource) ?
+      defaultSource :
+      defaultSource && this.isCreditCard(defaultSource) ?
+        defaultSource.id :
+        '';
+
+    return (customer.sources ? customer.sources.data : []) 
+      .filter(source => 
+        source && !_.isString(source) && this.isCreditCard(source)
+      )
+      .map(source => {
+        const {
+          last4,
+          exp_month,
+          exp_year,
+          brand,
+          id
+        } = source as Stripe.cards.ICard;
+
+        return {
+          last4,
+          expMonth: exp_month,
+          expYear: exp_year,
+          brand,
+          isDefault: id === defaultSourceId 
+        };
+      });
+  }
+
+  private isCreditCard(object: StripeObject): object is Stripe.cards.ICard {
+    return object.object === 'card';
+  }
+
+  private async ensureStripeCustomer(user: User, subscription?: SubscriptionData): Promise<Stripe.customers.ICustomer> {
     const customer = await this.retrieveStripeCustomer(user);
     return customer || this.createStripeCustomer(user, subscription);
   }
@@ -55,33 +166,16 @@ class StripeSubscriptionProvider implements SubscriptionProvider {
     return _.head(customerList.data);
   }
 
-  private async createStripeCustomer(user: User, subscription: SubscriptionData): Promise<Stripe.customers.ICustomer> {
+  private async createStripeCustomer(user: User, subscription?: SubscriptionData): Promise<Stripe.customers.ICustomer> {
     return this.stripeClient.customers.create({
       email: user.email,
-      source: subscription.provider.token,
+      source: subscription && subscription.provider.token,
       metadata: {
-        location_id: subscription.location.id,
-        source_id: subscription.sourceId,
+        account_id: user.account.id,
+        ...(subscription ? { source_id: subscription.sourceId } : {}),
         is_from_flo_user_portal: 'true'
       }
     });
-  }
-
-  private toProviderInfo(customer: Stripe.customers.ICustomer, subscription: Stripe.subscriptions.ISubscription): SubscriptionProviderInfo {
-    return {
-      name: this.name,
-      isActive: isSubscriptionActive(subscription.status),
-      data: {
-        customerId: customer.id,
-        subscriptionId: subscription.id,
-        status: subscription.status,
-        currentPeriodStart: new Date(subscription.current_period_start * 1000).toISOString(),
-        currentPeriodEnd: new Date(subscription.current_period_end * 1000).toISOString(),
-        cancelAtPeriodEnd: subscription.cancel_at_period_end,
-        ...(subscription.canceled_at && { canceledAt: new Date(subscription.canceled_at * 1000).toISOString() }),
-        ...(subscription.ended_at && { endedAt: new Date(subscription.ended_at * 1000).toISOString() })
-      }
-    };
   }
 }
 

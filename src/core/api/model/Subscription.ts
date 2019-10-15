@@ -28,20 +28,31 @@ export interface SubscriptionProviderInfo {
 }
 
 export interface Subscription extends TimestampedModel {
-  id: string,
-  plan: Expandable<SubscriptionPlan>,
-  location: Expandable<Location>,
-  sourceId: string,
-  provider: SubscriptionProviderInfo
+  id: string;
+  plan: Expandable<SubscriptionPlan>;
+  location: Expandable<Location>;
+  sourceId: string;
+  provider: SubscriptionProviderInfo;
+  cancellationReason?: string;
+}
+
+export interface CreditCardInfo {
+  last4: string;
+  expMonth: number;
+  expYear: number;
+  brand: string;
+  isDefault?: boolean;
 }
 
 // TODO: Externalize providers somehow?
 // Use t.union when we have more than one Provider.
-const ProvidersCodec = t.strict({
+export const ProvidersCodec = t.strict({
   name: t.literal('stripe'),
   token: t.string,
   couponId: t.union([t.string, t.undefined])
 });
+
+export type ProviderPaymentData = t.TypeOf<typeof ProvidersCodec>;
 
 const SubscriptionCreateCodec = t.strict({
   user: t.strict({
