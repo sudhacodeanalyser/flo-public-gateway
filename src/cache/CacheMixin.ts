@@ -15,7 +15,7 @@ function formatCacheKey(entityType: string, target: any, propertyName: string | 
     return `${ entityType }_${ cacheKeyIds }`;
 }
 
-export function cached(entityType: string): MethodDecorator {
+export function cached(entityType: string, ttl?: number): MethodDecorator {
  
   return (target: any, propertyName: string | symbol, propertyDescriptor: PropertyDescriptor): void => {
     const method = propertyDescriptor.value;
@@ -36,7 +36,11 @@ export function cached(entityType: string): MethodDecorator {
 
       if (result && (cachePolicy === CachePolicy.WRITE_ONLY || cachePolicy === CachePolicy.READ_WRITE)) {
         // Don't wait on cache write
-        redisClient.set(key, JSON.stringify(result));
+        if (ttl) {
+          redisClient.setex(key, ttl, JSON.stringify(result));
+        } else {
+          redisClient.set(key, JSON.stringify(result));
+        }
       }
 
       return result;
