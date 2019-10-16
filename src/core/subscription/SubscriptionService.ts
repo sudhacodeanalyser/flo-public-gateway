@@ -1,8 +1,9 @@
 import { inject, injectable, multiInject } from 'inversify';
 import _ from 'lodash';
-import { Location, PartialBy, Subscription, SubscriptionCreate, SubscriptionProvider, User, PropExpand } from '../api';
+import { Location, PartialBy, Subscription, SubscriptionCreate, SubscriptionProvider, User, PropExpand, CreditCardInfo } from '../api';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import ValidationError from '../api/error/ValidationError';
+import NotFoundError from '../api/error/NotFoundError';
 import { LocationService, UserService } from '../service';
 import { SubscriptionResolver } from '../resolver';
 import { isNone, fromNullable, Option } from 'fp-ts/lib/Option';
@@ -18,6 +19,7 @@ class SubscriptionService {
 
   public async createSubscription(subscriptionCreate: SubscriptionCreate): Promise<Subscription> {
     const user = await this.userService.getUserById(subscriptionCreate.user.id);
+
     if (isNone(user)) {
       throw new ResourceDoesNotExistError('User does not exist.');
     }
@@ -26,37 +28,46 @@ class SubscriptionService {
     }
 
     const location = await this.validateLocationExists(subscriptionCreate.location.id);
+
     await this.validatePlanExists(subscriptionCreate.plan.id);
 
     const maybeExistingSubscription = await this.subscriptionResolver.getByRelatedEntityId((location as Location).id);
-    if (!_.isEmpty(maybeExistingSubscription)) {
+
+    if (!_.isEmpty(maybeExistingSubscription) && maybeExistingSubscription !== null && maybeExistingSubscription.provider.isActive) {
       throw new ValidationError('A Subscription already exists for the given Location.')
     }
 
-    const subscriptionProvider = this.getProvider(subscriptionCreate.provider.name);
+    const subscriptionId = maybeExistingSubscription ? maybeExistingSubscription.id : this.subscriptionResolver.generateSubscriptionId();
+    // Create stubbed location so race condition with webhook does not create duplicate record
+    const subscriptionStub = {
+      ...subscriptionCreate,
+      id: subscriptionId,
+      isActive: false,
+      provider: {
+        name: subscriptionCreate.provider.name,
+        status: '_PENDING_',
+        isActive: false,
+        data: {
+          customerId: '_UNKNOWN_',
+          subscriptionId: '_UNKNOWN_'
+        }
+      }
+    };
 
-    const subscriptionId = this.subscriptionResolver.generateSubscriptionId();
+    await this.createLocalSubscription(subscriptionStub);
+
+    const subscriptionProvider = this.getProvider(subscriptionCreate.provider.name);
     const providerSubscription = {
       id: subscriptionId,
       ...subscriptionCreate
     };
-
-    const providerInfo = await subscriptionProvider.createSubscription(user.value, providerSubscription);
-
-    const subscription = {
-      ...subscriptionCreate,
-      isActive: providerInfo.isActive,
-      provider: providerInfo
-    };
-
-    const createdSubscription = await this.createLocalSubscription(subscription);
-
+    const allowTrial = !maybeExistingSubscription || !!(await subscriptionProvider.getCanceledSubscriptions(user.value)).length;
+    const providerInfo = await subscriptionProvider.createSubscription(user.value, providerSubscription, allowTrial);
+    
     return {
-      ...createdSubscription,
-      provider: {
-        ...createdSubscription.provider,
-        ...providerInfo
-      }
+      ...subscriptionCreate,
+      id: subscriptionId,
+      provider: providerInfo
     };
   }
 
@@ -71,13 +82,7 @@ class SubscriptionService {
       return {};
     }
 
-    const subscriptionProvider = this.getProvider(subscription.provider.name);
-    const providerInfo = await subscriptionProvider.retrieveSubscription(subscription);
-
-    return {
-      ...subscription,
-      provider: providerInfo
-    };
+    return subscription;
   }
 
   public async getSubscriptionByRelatedEntityId(id: string): Promise<Option<Subscription>> {
@@ -87,13 +92,29 @@ class SubscriptionService {
   }
 
 
-  public async getSubscriptionByProviderCustomerId(customerId: string): Promise<Option<Subscription>> {
-    const subscription: Subscription | null = await this.subscriptionResolver.getByProviderCustomerId(customerId);
+  public async getSubscriptionByProviderCustomerId(customerId: string): Promise<Subscription[]> {
 
-    return fromNullable(subscription);
+    return this.subscriptionResolver.getByProviderCustomerId(customerId);
   }
 
+  public async cancelSubscription(id: string, shouldForce?: boolean, cancellationReason?: string): Promise<Subscription> {
+    const subscription = await this.subscriptionResolver.get(id);
 
+    if (subscription === null) {
+      throw new ResourceDoesNotExistError('Subscription does not exist.');
+    } else if (subscription.provider.data.status === 'canceled') {
+      throw new ValidationError('Subscription already canceled.');
+    }
+
+    const shouldCancelImmediately = shouldForce !== undefined ?
+      shouldForce :
+      subscription.provider.data.status === 'trialing';
+
+    const subscriptionProvider = this.getProvider(subscription.provider.name);
+    const canceledProviderSubscription = await subscriptionProvider.cancelSubscription(subscription, shouldCancelImmediately);
+
+    return this.subscriptionResolver.updatePartial(subscription.id, { cancellationReason, provider: canceledProviderSubscription });
+  }
 
   public async updateSubscription(id: string, subscription: Partial<Subscription>): Promise<Subscription> {
     if (subscription.plan) {
@@ -109,6 +130,30 @@ class SubscriptionService {
 
   public async removeSubscription(id: string): Promise<void> {
     return this.subscriptionResolver.remove(id);
+  }
+
+  public async getPaymentSourcesByUserId(userId: string, providerName: string): Promise<CreditCardInfo[]> {
+    const user = await this.userService.getUserById(userId);
+
+    if (isNone(user)) {
+      throw new NotFoundError('User not found.');
+    }
+
+    const subscriptionProvider = this.getProvider(providerName);
+    
+    return subscriptionProvider.getPaymentSources(user.value);
+  }
+
+  public async updatePaymentSourceByUserId(userId: string, providerName: string, token: string): Promise<CreditCardInfo[]> {
+    const user = await this.userService.getUserById(userId);
+
+    if (isNone(user)) {
+      throw new NotFoundError('User not found.');
+    }
+
+    const subscriptionProvider = this.getProvider(providerName);
+
+    return subscriptionProvider.updatePaymentSource(user.value, token);
   }
 
   private async validateLocationExists(locationId: string): Promise<Location> {

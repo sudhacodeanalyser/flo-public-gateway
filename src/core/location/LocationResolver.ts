@@ -64,9 +64,7 @@ class LocationResolver extends Resolver<Location> {
       return this.accountResolverFactory().getAccount(location.account.id);
     },
     subscription: async (location: Location, shouldExpand = false) => {
-      // TODO: Uncomment this line and remove next line when data migration is completed.
-      // const subscription = await this.subscriptionResolverFactory().getByRelatedEntityId(location.id);
-      const subscription = await this.subscriptionResolverFactory().getByAccountId(location.account.id);
+      const subscription = await this.subscriptionResolverFactory().getByRelatedEntityId(location.id);
 
       if (subscription === null) {
         return null;
@@ -157,6 +155,11 @@ class LocationResolver extends Resolver<Location> {
       };
     },
     notifications: async (location: Location, shouldExpand = false) => {
+      
+      if (!this.notificationService) {
+        return null;
+      }
+
       return this.notificationService.retrieveStatistics(`locationId=${location.id}`);
     },
     areas: async (location: Location, shouldExpand = false) => {
@@ -193,7 +196,7 @@ class LocationResolver extends Resolver<Location> {
     this.subscriptionResolverFactory = depFactoryFactory<SubscriptionResolver>('SubscriptionResolver');
     this.lookupServiceFactory = depFactoryFactory<LookupService>('LookupService');
 
-    if (!_.isEmpty(this.httpContext)) {
+    if (!_.isEmpty(this.httpContext) && this.httpContext.request.get('Authorization')) {
       this.notificationService = notificationServiceFactory.create(this.httpContext.request);
     }
   }

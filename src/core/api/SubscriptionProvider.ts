@@ -1,4 +1,4 @@
-import { Subscription, SubscriptionCreate, SubscriptionProviderInfo, User } from '../api';
+import { Subscription, SubscriptionCreate, SubscriptionProviderInfo, CreditCardInfo, User } from '../api';
 
 type Id = { id: string };
 export type SubscriptionData = SubscriptionCreate & Id;
@@ -6,9 +6,17 @@ export type SubscriptionData = SubscriptionCreate & Id;
 export interface SubscriptionProvider {
   readonly name: string;
 
-  createSubscription(user: User, subscription: SubscriptionData): Promise<SubscriptionProviderInfo>;
+  createSubscription(user: User, subscription: SubscriptionData, allowTrial?: boolean): Promise<SubscriptionProviderInfo>;
 
   retrieveSubscription(subscription: Subscription): Promise<SubscriptionProviderInfo>;
+
+  cancelSubscription(subscription: Subscription, shouldCancelImmediately?: boolean): Promise<SubscriptionProviderInfo>;
+
+  getPaymentSources(user: User): Promise<CreditCardInfo[]>;
+
+  updatePaymentSource(user: User, paymentSource: string): Promise<CreditCardInfo[]>;
+
+  getCanceledSubscriptions(user: User): Promise<SubscriptionProviderInfo[]>;
 }
 
 export interface SubscriptionProviderWebhookHandler {

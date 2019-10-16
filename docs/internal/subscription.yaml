@@ -71,14 +71,25 @@ paths:
           $ref: '#/components/responses/NotFoundError'
 
     delete:
-      summary: Deletes a Subscription by ID.
+      summary: Cancels a Subscription by ID. If cancelImmediately is set to true, then the subscription will be terminated immediately before the end of the billing period. If it is set to false, then it will defer to the end of the billing period. If left undefined, the default behavior is to cancel immediately for trialing or past due subscriptions, but to defer cancellation for active subscriptions.
       tags:
         - Subscriptions
       produces:
         - application/json
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                cancellationReason:
+                  type: string
+                cancelImmediately:
+                  type: boolean
       responses:
         200:
-          description: The Subscription was successfully deleted.
+          description: The Subscription was successfully canceled.
           content:
             application/json:
               schema:
@@ -89,6 +100,73 @@ paths:
           $ref: '#/components/responses/UnauthorizedError'
         403:
           $ref: '#/components/responses/ForbiddenError'
+  /api/v2/subscriptions/payment:
+    get:
+      parameters:
+        - in: query
+          required: true
+          name: userId
+          schema:
+            type: string
+            format: uuid
+          description: User ID
+      summary: Retrieves the payment sources (credit cards) on file for a user
+      tags:
+        - Subscriptions
+      produces: 
+        application/json
+      responses:
+        200: 
+          description: Payment sources (credit cards) on file for a user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentSources'
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        403:
+          $ref: '#/components/responses/ForbiddenError'
+        404:
+          $ref: '#/components/responses/NotFoundError'
+    post:
+      summary: Update default payment source for a user
+      tags:
+        - Subscriptions
+      produces:
+        application/json
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userId:
+                  type: string
+                  format: uuid
+                provider:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                      enum:
+                        - stripe
+                    token:
+                      type: string
+      responses:
+        200: 
+          description: Payment source updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentSources'
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        403:
+          $ref: '#/components/responses/ForbiddenError'
+        404:
+          $ref: '#/components/responses/NotFoundError'
+
 
 components:
   schemas:
@@ -132,6 +210,8 @@ components:
           properties:
             name:
               type: string
+              enum:
+                - stripe
             token:
               type: string
             couponId:
@@ -182,7 +262,24 @@ components:
               type: string
             isActive: 
               type: boolean
-
+    PaymentSources:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              last4: 
+                type: string
+              expMonth: 
+                type: number
+              expYear:
+                type: number
+              brand:
+                type: string
+              isDefault:
+                type: boolean
 
 
 
