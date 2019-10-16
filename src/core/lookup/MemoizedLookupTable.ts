@@ -13,7 +13,7 @@ class MemoizedLookupTable extends MemoizeMixin(LookupTable) {
   // TODO: Make memozied functions work properly with multi-argument functions.
   // This is a hack to get around the fact that memoized functions are currently restricted to single argument.
   @memoized((args: any[]) => ({ 
-    ids: args[0] && args[0].id && args[0].id.sort(), 
+    ids: args[0] && args[0].ids && args[0].ids.sort(), 
     prefixes: args[0] && args[0].prefixes && args[0].prefixes.sort(), 
     lang: args[0] && args[0].lang
   }))
