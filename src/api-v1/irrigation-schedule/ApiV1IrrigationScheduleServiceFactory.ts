@@ -8,7 +8,8 @@ import { ApiV1IrrigationScheduleService } from './ApiV1IrrigationScheduleService
 class ApiV1IrrigationScheduleServiceFactory implements IrrigationScheduleServiceFactory  {
 
   constructor(
-    @inject('ApiV1Url') private readonly apiV1Url: string
+    @inject('ApiV1Url') private readonly apiV1Url: string,
+    @inject('Factory<IrrigationScheduleService>')  private readonly irrigationScheduleServiceFactory: (apiV1Url: string, authToken: string) => IrrigationScheduleService
   ) {}
 
   public create(req: Request): IrrigationScheduleService {
@@ -18,7 +19,7 @@ class ApiV1IrrigationScheduleServiceFactory implements IrrigationScheduleService
       throw new UnauthorizedError();
     }
 
-    return new ApiV1IrrigationScheduleService(this.apiV1Url, authToken);
+    return this.irrigationScheduleServiceFactory(this.apiV1Url, authToken);
   }
 }
 

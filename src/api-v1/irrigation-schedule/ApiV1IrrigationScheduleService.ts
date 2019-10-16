@@ -1,17 +1,25 @@
+import { injectable } from 'inversify';
 import { HttpService } from '../../http/HttpService';
 import { IrrigationScheduleService, ComputedIrrigationSchedule, DeviceIrrigationAllowedState } from '../../core/device/IrrigationScheduleService';
 import { ResponseToComputedIrrigationSchedule, ResponseToDeviceIrrigationAllowedState } from './models';
 import { isLeft } from 'fp-ts/lib/Either';
+import { CacheMixin, cached, cacheKey, dropCache } from '../../cache/CacheMixin';
+import { MemoizeMixin, memoized } from '../../memoize/MemoizeMixin';
 
-class ApiV1IrrigationScheduleService extends HttpService implements IrrigationScheduleService {
+const TWELVE_HOURS = 1036800;
+
+@injectable()
+class ApiV1IrrigationScheduleService extends MemoizeMixin(CacheMixin(HttpService)) implements IrrigationScheduleService {
   constructor(
-    private readonly apiV1Url: string,
-    private readonly authToken: string
+    public apiV1Url: string = '',
+    public authToken: string = ''
   ) {
     super();
   }
 
-  public async getDeviceComputedIrrigationSchedule(id: string): Promise<ComputedIrrigationSchedule> {
+  @memoized()
+  @cached('IrrigationSchedule', TWELVE_HOURS)
+  public async getDeviceComputedIrrigationSchedule(@cacheKey() id: string): Promise<ComputedIrrigationSchedule> {
     const request = {
       method: 'GET',
       url: `${ this.apiV1Url }/awaymode/icd/${ id }/irrigation`,
@@ -27,7 +35,8 @@ class ApiV1IrrigationScheduleService extends HttpService implements IrrigationSc
     return result.right;
   }
 
-  public async enableDeviceIrrigationAllowedInAwayMode(id: string, times: string[][]): Promise<void> {
+  @dropCache('IrrigationScheduleEnabled')
+  public async enableDeviceIrrigationAllowedInAwayMode(@cacheKey() id: string, times: string[][]): Promise<void> {
     const request = {
       method: 'POST',
       url: `${ this.apiV1Url }/awaymode/icd/${ id }/enable`,
@@ -40,7 +49,8 @@ class ApiV1IrrigationScheduleService extends HttpService implements IrrigationSc
     await this.sendRequest(request);
   }
 
-  public async disableDeviceIrrigationAllowedInAwayMode(id: string): Promise<void> {
+  @dropCache('IrrigationScheduleEnabled')
+  public async disableDeviceIrrigationAllowedInAwayMode(@cacheKey() id: string): Promise<void> {
     const request = {
       method: 'POST',
       url: `${ this.apiV1Url }/awaymode/icd/${ id }/disable`,
@@ -50,7 +60,10 @@ class ApiV1IrrigationScheduleService extends HttpService implements IrrigationSc
     await this.sendRequest(request);
   }
 
-  public async getDeviceIrrigationAllowedState(id: string): Promise<DeviceIrrigationAllowedState> {
+
+  @memoized()
+  @cached('IrrigationScheduleEnabled')
+  public async getDeviceIrrigationAllowedState(@cacheKey() id: string): Promise<DeviceIrrigationAllowedState> {
     const request = {
       method: 'GET',
       url: `${ this.apiV1Url }/awaymode/icd/${ id }`,
