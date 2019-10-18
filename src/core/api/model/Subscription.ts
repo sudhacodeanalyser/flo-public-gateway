@@ -71,9 +71,12 @@ const SubscriptionCreateCodec = t.strict({
   location: t.strict({
     id: t.string
   }),
-  plan: t.strict({
-    id: t.string
-  }),
+  plan: t.union([
+    t.strict({
+      id: t.string
+    }),
+    t.undefined
+  ]),
   sourceId: t.union([t.string, t.undefined]),
   provider: ProviderCreateCodec 
 });
