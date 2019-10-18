@@ -19,6 +19,10 @@ class SubscriptionService {
 
   public async createSubscription(subscriptionCreate: SubscriptionCreate): Promise<Subscription> {
     const user = await this.userService.getUserById(subscriptionCreate.user.id);
+    const subscriptionData = {
+      ...subscriptionCreate,
+      sourceId: subscriptionCreate.sourceId || 'flo',
+    };
 
     if (isNone(user)) {
       throw new ResourceDoesNotExistError('User does not exist.');
@@ -40,7 +44,7 @@ class SubscriptionService {
     const subscriptionId = maybeExistingSubscription ? maybeExistingSubscription.id : this.subscriptionResolver.generateSubscriptionId();
     // Create stubbed location so race condition with webhook does not create duplicate record
     const subscriptionStub = {
-      ...subscriptionCreate,
+      ...subscriptionData,
       id: subscriptionId,
       isActive: false,
       provider: {
@@ -65,7 +69,7 @@ class SubscriptionService {
     const providerInfo = await subscriptionProvider.createSubscription(user.value, providerSubscription, allowTrial);
     
     return {
-      ...subscriptionCreate,
+      ...subscriptionData,
       id: subscriptionId,
       provider: providerInfo
     };

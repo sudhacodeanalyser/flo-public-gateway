@@ -4,6 +4,7 @@ import Stripe from 'stripe';
 import { Subscription, SubscriptionData, SubscriptionProvider, SubscriptionProviderInfo, CreditCardInfo, User } from '../../core/api';
 import { isSubscriptionActive } from './StripeUtils';
 import * as Option from 'fp-ts/lib/Option';
+import ValidationError from '../../core/api/error/ValidationError';
 
 type StripeObject = { object: string };
 
@@ -17,6 +18,11 @@ class StripeSubscriptionProvider implements SubscriptionProvider {
 
   public async createSubscription(user: User, subscription: SubscriptionData, allowTrial?: boolean): Promise<SubscriptionProviderInfo> {
     const customer = await this.ensureStripeCustomer(user, subscription);
+
+    if (!customer.default_source) {
+      throw new ValidationError('No payment method submitted or on file.');
+    }
+
     const stripeSubscription = await this.doCreateSubscription(customer, subscription, allowTrial);
 
     return this.formatProviderData(stripeSubscription);
@@ -116,7 +122,7 @@ class StripeSubscriptionProvider implements SubscriptionProvider {
         is_from_flo_user_portal: 'true',
         subscription_id: subscription.id,
         location_id: subscription.location.id,
-        source_id: subscription.sourceId
+        ...(subscription.sourceId ? { source_id: subscription.sourceId } : {})
       }
     });
   }
@@ -169,10 +175,10 @@ class StripeSubscriptionProvider implements SubscriptionProvider {
   private async createStripeCustomer(user: User, subscription?: SubscriptionData): Promise<Stripe.customers.ICustomer> {
     return this.stripeClient.customers.create({
       email: user.email,
-      source: subscription && subscription.provider.token,
+      source: subscription && (subscription.provider.token || undefined),
       metadata: {
         account_id: user.account.id,
-        ...(subscription ? { source_id: subscription.sourceId } : {}),
+        ...(subscription && subscription.sourceId ? { source_id: subscription.sourceId } : {}),
         is_from_flo_user_portal: 'true'
       }
     });
