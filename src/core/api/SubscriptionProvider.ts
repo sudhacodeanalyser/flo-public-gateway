@@ -12,6 +12,8 @@ export interface SubscriptionProvider {
 
   cancelSubscription(subscription: Subscription, shouldCancelImmediately?: boolean): Promise<SubscriptionProviderInfo>;
 
+  reactiveSubscription(subscription: Subscription): Promise<SubscriptionProviderInfo>;
+
   getPaymentSources(user: User): Promise<CreditCardInfo[]>;
 
   updatePaymentSource(user: User, paymentSource: string): Promise<CreditCardInfo[]>;

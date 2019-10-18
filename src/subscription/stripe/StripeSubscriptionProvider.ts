@@ -5,6 +5,7 @@ import { Subscription, SubscriptionData, SubscriptionProvider, SubscriptionProvi
 import { isSubscriptionActive } from './StripeUtils';
 import * as Option from 'fp-ts/lib/Option';
 import ValidationError from '../../core/api/error/ValidationError';
+import ResourceNotFoundError from '../../core/api/error/ResourceDoesNotExistError';
 
 type StripeObject = { object: string };
 
@@ -108,7 +109,40 @@ class StripeSubscriptionProvider implements SubscriptionProvider {
     return (subscriptions ? subscriptions.data : []).map(subscription => this.formatProviderData(subscription)); 
   }
 
+  public async reactiveSubscription(subscription: Subscription): Promise<SubscriptionProviderInfo> {
+    const stripeSubscriptionId = subscription.provider.data.subscriptionId;
+    const stripeSubscription = await this.stripeClient.subscriptions.retrieve(stripeSubscriptionId);
+
+    if (!stripeSubscription) {
+      throw new ResourceNotFoundError('Subscription does not exist.');
+    }
+
+    const updatedStripeSubscription = await this.stripeClient.subscriptions.update(stripeSubscriptionId, {
+      cancel_at_period_end: false,
+      ...(
+        subscription.plan && subscription.plan.id && 
+        (!stripeSubscription.plan || stripeSubscription.plan.id !== subscription.plan.id) ?
+          {
+            items: [
+              {
+                id: stripeSubscription.items.data[0].id,
+                plan: subscription.plan.id
+              }
+            ]
+          } :
+          {}
+      )
+    });
+
+    return this.formatProviderData(updatedStripeSubscription);
+  }
+
   private async doCreateSubscription(customer: Stripe.customers.ICustomer, subscription: SubscriptionData, allowTrial: boolean = true): Promise<Stripe.subscriptions.ISubscription> {
+
+    if (!subscription.plan) {
+     throw new ValidationError('A plan must be specified.');
+    }
+
     const trialOptions = {
       trial_from_plan: allowTrial,
       ...(!allowTrial && { trial_end: 'now' as 'now' })
