@@ -214,6 +214,7 @@ components:
                 - stripe
             token:
               type: string
+              nullable: true
             couponId:
               type: string
     SubscriptionPlanExpandable:
@@ -262,6 +263,30 @@ components:
               type: string
             isActive: 
               type: boolean
+            data:
+              type: object
+              properties:
+                customerId: 
+                  type: string
+                subscriptionId:
+                  type: string
+                status: 
+                  type: string
+                currentPeriodStart:
+                  type: string
+                  format: date-time
+                currentPeriodEnd:
+                  type: string
+                  format: date-time
+                cancelAtPeriodEnd:
+                  type: boolean
+                  format: date-time
+                canceledAt:
+                  type: string
+                  format: date-time
+                endedAt:
+                  type: string
+                  format: date-time
     PaymentSources:
       type: object
       properties:
