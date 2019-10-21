@@ -36,7 +36,8 @@ function getDefaults(): { [key: string]: any } {
         redisHost: 'redis-dev-cluster.9alsts.clustercfg.usw2.cache.amazonaws.com',
         redisPort: '6379',
         presenceServiceUrl: 'https://flo-core-service-dev.flocloud.co/presence',
-        telemetryTagsServiceUrl: 'https://flo-telemetry-tags.flocloud.co'
+        telemetryTagsServiceUrl: 'https://flo-telemetry-tags.flocloud.co',
+        waterMeterUrl: 'https://flo-water-meter.flosecurecloud.com'
       };
   }
 }
@@ -84,7 +85,8 @@ const config = {
   redisHost: process.env.REDIS_HOST,
   redisPort: process.env.REDIS_PORT,
   presenceServiceUrl: process.env.PRESENCE_SERVICE_URL,
-  telemetryTagsServiceUrl: process.env.TELEMETRY_TAGS_SERVICE_URL
+  telemetryTagsServiceUrl: process.env.TELEMETRY_TAGS_SERVICE_URL,
+  waterMeterUrl: process.env.WATER_METER_SERVICE_URL
 };
 
 export default {
