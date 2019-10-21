@@ -19,6 +19,10 @@ class SubscriptionService {
 
   public async createSubscription(subscriptionCreate: SubscriptionCreate): Promise<Subscription> {
     const user = await this.userService.getUserById(subscriptionCreate.user.id);
+    const subscriptionData = {
+      ...subscriptionCreate,
+      sourceId: subscriptionCreate.sourceId || 'flo',
+    };
 
     if (isNone(user)) {
       throw new ResourceDoesNotExistError('User does not exist.');
@@ -29,19 +33,56 @@ class SubscriptionService {
 
     const location = await this.validateLocationExists(subscriptionCreate.location.id);
 
-    await this.validatePlanExists(subscriptionCreate.plan.id);
-
     const maybeExistingSubscription = await this.subscriptionResolver.getByRelatedEntityId((location as Location).id);
 
-    if (!_.isEmpty(maybeExistingSubscription) && maybeExistingSubscription !== null && maybeExistingSubscription.provider.isActive) {
-      throw new ValidationError('A Subscription already exists for the given Location.')
+
+    // Reactivate a subscription that is set to be canceled at the end of the billing period
+    if (
+      !_.isEmpty(maybeExistingSubscription) && 
+      maybeExistingSubscription !== null && 
+      maybeExistingSubscription.provider.isActive &&
+      maybeExistingSubscription.provider.data &&
+      maybeExistingSubscription.provider.data.cancelAtPeriodEnd
+    ) { 
+      const subscriptionProvider = this.getProvider(subscriptionCreate.provider.name);
+
+      if (subscriptionCreate.provider.token) {
+        await subscriptionProvider.updatePaymentSource(user.value, subscriptionCreate.provider.token);
+      }
+
+      const providerInfo = await subscriptionProvider.reactiveSubscription({
+        ...maybeExistingSubscription,
+        plan: subscriptionCreate.plan || maybeExistingSubscription.plan
+      });
+
+      return {
+        ...subscriptionData,
+        plan: subscriptionCreate.plan || maybeExistingSubscription.plan,
+        id: maybeExistingSubscription.id,
+        provider: providerInfo
+      };
+
+    } else if (
+      !_.isEmpty(maybeExistingSubscription) && 
+      maybeExistingSubscription !== null && 
+      maybeExistingSubscription.provider.isActive
+    ) {
+      throw new ValidationError('A Subscription already exists for the given Location.');
     }
+
+    if (!subscriptionCreate.plan) {
+      throw new ValidationError('A plan must be specified.');
+    }
+
+    await this.validatePlanExists(subscriptionCreate.plan.id);
 
     const subscriptionId = maybeExistingSubscription ? maybeExistingSubscription.id : this.subscriptionResolver.generateSubscriptionId();
     // Create stubbed location so race condition with webhook does not create duplicate record
+    const plan = subscriptionData.plan as Record<'id', string>;
     const subscriptionStub = {
-      ...subscriptionCreate,
+      ...subscriptionData,
       id: subscriptionId,
+      plan,
       isActive: false,
       provider: {
         name: subscriptionCreate.provider.name,
@@ -65,7 +106,8 @@ class SubscriptionService {
     const providerInfo = await subscriptionProvider.createSubscription(user.value, providerSubscription, allowTrial);
     
     return {
-      ...subscriptionCreate,
+      ...subscriptionData,
+      plan,
       id: subscriptionId,
       provider: providerInfo
     };

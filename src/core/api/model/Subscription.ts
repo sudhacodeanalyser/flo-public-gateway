@@ -46,10 +46,20 @@ export interface CreditCardInfo {
 
 // TODO: Externalize providers somehow?
 // Use t.union when we have more than one Provider.
-export const ProvidersCodec = t.strict({
+export const ProvidersCodec = t.type({
   name: t.literal('stripe'),
   token: t.string,
   couponId: t.union([t.string, t.undefined])
+});
+
+const {
+  token,
+  ...providerProps
+} = ProvidersCodec.props;
+
+const ProviderCreateCodec = t.type({ 
+  ...providerProps,
+  token: t.union([t.string, t.undefined, t.null])
 });
 
 export type ProviderPaymentData = t.TypeOf<typeof ProvidersCodec>;
@@ -61,11 +71,14 @@ const SubscriptionCreateCodec = t.strict({
   location: t.strict({
     id: t.string
   }),
-  plan: t.strict({
-    id: t.string
-  }),
-  sourceId: t.string,
-  provider: ProvidersCodec
+  plan: t.union([
+    t.strict({
+      id: t.string
+    }),
+    t.undefined
+  ]),
+  sourceId: t.union([t.string, t.undefined]),
+  provider: ProviderCreateCodec 
 });
 
 export const SubscriptionCreateValidator = SubscriptionCreateCodec;
