@@ -9,7 +9,8 @@ export const LookupItemRecordCodec = t.type({
   short_display: t.string,
   long_display: t.string,
   state: t.number,
-  order: t.number
+  order: t.number,
+  data_json: t.union([t.string,t.undefined])
 });
 
 export type LookupItemRecord = t.TypeOf<typeof LookupItemRecordCodec>;
@@ -28,7 +29,16 @@ const LookupItemFromRecord = new t.Type<LookupItem, LookupItemRecord, unknown>(
       key: lookupItemRecord.key_id,
       lang: lookupItemRecord.lang,
       shortDisplay: lookupItemRecord.short_display,
-      longDisplay: lookupItemRecord.long_display
+      longDisplay: lookupItemRecord.long_display,
+      data: ((): any | null => {
+          try {
+              // Return undefined to not serialize the property in response
+              return lookupItemRecord.data_json ? JSON.parse(lookupItemRecord.data_json) : undefined
+          } catch (err) {
+              // TODO: maybe log error. Return null for error to hint there was an issue with payload
+              return null;
+          }
+      })(),
     })),
   (lookupItemRecord: LookupItem) => ({
     list_id: '',
@@ -37,7 +47,8 @@ const LookupItemFromRecord = new t.Type<LookupItem, LookupItemRecord, unknown>(
     short_display: lookupItemRecord.shortDisplay,
     long_display: lookupItemRecord.longDisplay,
     state: LookupItemState.DISABLED,
-    order: 0
+    order: 0,
+    data_json: lookupItemRecord.data ? JSON.stringify(lookupItemRecord.data) : "",
   })
 );
 
