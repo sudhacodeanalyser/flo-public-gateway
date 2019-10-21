@@ -5,7 +5,7 @@ export const LookupItemCodec = t.type({
   lang: t.string,
   shortDisplay: t.string,
   longDisplay: t.string,
-  data: t.any
+  data: t.union([t.any,t.undefined])
 });
 
 export type LookupItem = t.TypeOf<typeof LookupItemCodec>;

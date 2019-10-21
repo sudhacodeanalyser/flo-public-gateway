@@ -32,9 +32,10 @@ const LookupItemFromRecord = new t.Type<LookupItem, LookupItemRecord, unknown>(
       longDisplay: lookupItemRecord.long_display,
       data: ((): any | null => {
           try {
-              return lookupItemRecord.data_json ? JSON.parse(lookupItemRecord.data_json) : null
+              // Return undefined to not serialize the property in response
+              return lookupItemRecord.data_json ? JSON.parse(lookupItemRecord.data_json) : undefined
           } catch (err) {
-              // TODO maybe log error
+              // TODO: maybe log error. Return null for error to hint there was an issue with payload
               return null;
           }
       })(),
