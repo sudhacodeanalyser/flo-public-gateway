@@ -20,7 +20,7 @@ class StripeSubscriptionProvider implements SubscriptionProvider {
   public async createSubscription(user: User, subscription: SubscriptionData, allowTrial?: boolean): Promise<SubscriptionProviderInfo> {
     const customer = await this.ensureStripeCustomer(user);
 
-    if (!subscription.provider.token || !customer.default_source) {
+    if (!subscription.provider.token && !customer.default_source) {
       throw new ValidationError('No payment method submitted or on file.');
     }
 
