@@ -177,8 +177,8 @@ class WaterService {
   private aggregateAverageConsumptionResults(waterMeterReport: WaterMeterReport, dates: Array<{ startDate: string, endDate: string }>, timezone: string = 'Etc/UTC', interval: WaterConsumptionInterval = WaterConsumptionInterval.ONE_DAY): { averageConsumption: number, numRecords: number } {
     const aggregations = _.chain(waterMeterReport.items.map(deviceResults => deviceResults.items || []))
       .flatten()
-      .filter(({ date }) => 
-        dates.some(({ startDate, endDate }) => date >= startDate && date <= endDate)
+      .filter(({ missing, date }) => 
+        !missing && dates.some(({ startDate, endDate }) => date >= startDate && date <= endDate)
       )
       .groupBy(({ date }) => 
         interval === WaterConsumptionInterval.ONE_HOUR ?
@@ -189,7 +189,7 @@ class WaterService {
       )
       .mapValues(day => ({
         sum: _.sumBy(day, 'used'),
-        numRecords: day.filter(({ used }) => (used || used === 0)).length
+        numRecords: day.length
       }))
       .values()
       .value();
