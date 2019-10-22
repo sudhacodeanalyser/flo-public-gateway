@@ -1,7 +1,7 @@
 import { interfaces, controller, httpGet, requestParam, queryParam } from 'inversify-express-utils';
 import { inject, Container } from 'inversify';
 import { WaterService } from '../service';
-import { WaterConsumptionReport, WaterAveragesReport } from '../api';
+import { WaterConsumptionReport, WaterAveragesReport, WaterConsumptionInterval } from '../api';
 import { httpController } from '../api/controllerUtils';
 import moment from 'moment';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
@@ -34,7 +34,7 @@ export function WaterControllerFactory(container: Container, apiVersion: number)
       @queryParam('endDate') endDate?: string, 
       @queryParam('macAddress') macAddress?: string,
       @queryParam('locationId') locationId?: string,
-      @queryParam('interval') interval?: string,
+      @queryParam('interval') interval?: WaterConsumptionInterval,
       @queryParam('tz') timezone?: string
     ): Promise<WaterConsumptionReport | void> {
       if (locationId) {
