@@ -1,5 +1,6 @@
 import { HttpService } from '../../http/HttpService';
 import { inject, injectable } from 'inversify';
+import moment from 'moment-timezone';
 
 export interface WaterMeterReport {
   params: {
@@ -34,9 +35,8 @@ class WaterMeterService extends HttpService {
     const queryString = [
       `macAddress=${ macAddresses.join(',') }`,
       `interval=${ interval }`,
-      `tz=${ timezone }`,
-      `startDate=${ startDate }`,
-      endDate ? `endDate=${ endDate }` : ''
+      `startDate=${ moment(startDate).utc().format('YYYY-MM-DD') }`,
+      endDate ? `endDate=${ moment(endDate).add(1, 'days').utc().format('YYYY-MM-DD') }` : ''
     ]
     .filter(param => param)
     .join('&');

@@ -40,7 +40,7 @@ export const getConsumption = t.type({
   query: t.intersection([
     RestrictedDateRangeCodec,
     t.partial({
-      interval: t.union([t.literal('1h'), t.literal('1d')]),
+      interval: t.union([t.literal('1h'), t.literal('1d'), t.literal('1m')]),
       tz: t.string
     }),
     t.union([

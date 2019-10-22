@@ -31,7 +31,7 @@ class WaterService {
     this.locationServiceFactory = depFactoryFactory<LocationService>('LocationService');
   }
 
-  public async getLocationConsumption(locationId: string, startDate: string, endDate: string = new Date().toISOString(), interval: string = WaterConsumptionInterval.ONE_HOUR, timezone?: string): Promise<WaterConsumptionReport> {
+  public async getLocationConsumption(locationId: string, startDate: string, endDate: string = new Date().toISOString(), interval: WaterConsumptionInterval = WaterConsumptionInterval.ONE_HOUR, timezone?: string): Promise<WaterConsumptionReport> {
     const devices = await this.deviceServiceFactory().getAllByLocationId(locationId);
     const tz = timezone || pipe(
       await this.locationServiceFactory().getLocation(locationId),
@@ -43,12 +43,12 @@ class WaterService {
     const start = this.formatDate(startDate, tz);
     const end = this.formatDate(endDate, tz);
     const macAddresses = devices.map(({ macAddress }) => macAddress);
-    const results = await this.waterMeterService.getReport(macAddresses, start, end, interval, timezone);
+    const results = await this.getWaterMeterReport(macAddresses, start, end, interval, tz);
 
     return this.formatConsumptionReport(start, end, interval, tz, results, locationId);
   }
 
-  public async getDeviceConsumption(macAddress: string, startDate: string, endDate: string = new Date().toISOString(), interval: string = WaterConsumptionInterval.ONE_HOUR, timezone?: string): Promise<WaterConsumptionReport> {
+  public async getDeviceConsumption(macAddress: string, startDate: string, endDate: string = new Date().toISOString(), interval: WaterConsumptionInterval = WaterConsumptionInterval.ONE_HOUR, timezone?: string): Promise<WaterConsumptionReport> {
     const tz = timezone || pipe(
       await this.deviceServiceFactory().getByMacAddress(macAddress, ['location']),
       Option.fold(
@@ -58,7 +58,7 @@ class WaterService {
     );
     const start = this.formatDate(startDate, tz);
     const end = this.formatDate(endDate, tz);
-    const results = await this.waterMeterService.getReport([macAddress], start, end, interval, timezone);
+    const results = await this.getWaterMeterReport([macAddress], start, end, interval, tz);
 
     return this.formatConsumptionReport(start, end, interval, tz, results, undefined, macAddress);
   }
@@ -178,11 +178,11 @@ class WaterService {
     const aggregations = _.chain(waterMeterReport.items.map(deviceResults => deviceResults.items || []))
       .flatten()
       .filter(({ missing, date }) => 
-        !missing && dates.some(({ startDate, endDate }) => date >= startDate && date <= endDate)
+        !missing && dates.some(({ startDate, endDate }) => date >= startDate && date < endDate)
       )
       .groupBy(({ date }) => 
         interval === WaterConsumptionInterval.ONE_HOUR ?
-          date :
+          moment(date).tz(timezone).format('YYYY-MM-DDTHH:00:00:00') :
           interval === WaterConsumptionInterval.ONE_DAY ?
             moment(date).tz(timezone).format('YYYY-MM-DD') :
             moment(date).tz(timezone).format('YYYY-MM')
@@ -212,8 +212,8 @@ class WaterService {
 
     const dates = new Array(3).fill(null)
       .map((empty, i) => {
-        const startDate = moment(now).subtract(i + 1, 'weeks').startOf('day');
-        const endDate = moment(startDate).add(1, 'days');
+        const startDate = moment(now).tz(timezone).subtract(i + 1, 'weeks').startOf('day');
+        const endDate = moment(startDate).tz(timezone).add(1, 'days');
 
         return {
           startDate: startDate.toISOString(),
@@ -241,8 +241,8 @@ class WaterService {
       };
     }
 
-    const startDate = moment(now).subtract(1, 'weeks').startOf('week').toISOString();
-    const endDate = moment(startDate).endOf('week').toISOString();
+    const startDate = moment(now).tz(timezone).subtract(1, 'weeks').startOf('week').toISOString();
+    const endDate = moment(startDate).tz(timezone).endOf('week').toISOString();
     const results = await this.waterMeterService.getReport(macAddresses, startDate, endDate, '1h', timezone);
     const stats = this.aggregateAverageConsumptionResults(results, [{ startDate, endDate }], timezone);
 
@@ -263,8 +263,8 @@ class WaterService {
       };
     }
 
-    const endDate = moment(now).startOf('month').toISOString();
-    const startDate = moment(now).subtract(3, 'months').startOf('month').toISOString();
+    const endDate = moment(now).tz(timezone).startOf('month').toISOString();
+    const startDate = moment(now).tz(timezone).subtract(3, 'months').startOf('month').toISOString();
     const results = await this.waterMeterService.getReport(macAddresses, startDate, endDate, '1h', timezone);
     const stats = this.aggregateAverageConsumptionResults(results, [{ startDate, endDate }], timezone, WaterConsumptionInterval.ONE_MONTH);
 
@@ -307,6 +307,48 @@ class WaterService {
 
   private formatDate(date: string, timezone: string = 'Etc/UTC'): string {
     return (hasUTCOffset(date) ? moment(date) : moment.tz(date, timezone)).toISOString();
+  }
+
+  private async getWaterMeterReport(macAddresses: string[], startDate: string, endDate: string, interval: WaterConsumptionInterval, timezone: string = 'Etc/UTC'): Promise<WaterMeterReport> {
+    const results = await this.waterMeterService.getReport(macAddresses, startDate, endDate, '1h', timezone);
+    const deviceResults = results.items
+      .map(deviceItems => {
+        const items = _.chain(deviceItems.items || [])
+          .filter(({ date }) => {
+
+            return date >= startDate && date < endDate;
+          })
+          .groupBy(({ date }) => 
+            interval === WaterConsumptionInterval.ONE_HOUR ?
+              moment(date).tz(timezone).format('YYYY-MM-DDTHH:00:00') :
+              interval === WaterConsumptionInterval.ONE_DAY ?
+                moment(date).tz(timezone).format('YYYY-MM-DD') :
+                moment(date).tz(timezone).format('YYYY-MM')
+          )
+          .map((hours, aggregatedInterval) => {
+            const nonMissingData = hours.filter(({ missing }) => !missing);
+
+            return {
+              date: moment(aggregatedInterval).tz(timezone).toISOString(),
+              used: _.sumBy(hours, 'used'),
+              psi: _.meanBy(hours, 'psi'),
+              temp: _.meanBy(hours, 'temp'),
+              rate: _.meanBy(hours, 'rate')
+            };
+          })
+          .sortBy('date')
+          .value();
+
+          return {
+            ...deviceItems,
+            items
+          };
+      });
+
+    return {
+      ...results,
+      items: deviceResults
+    };
   }
 }
 
