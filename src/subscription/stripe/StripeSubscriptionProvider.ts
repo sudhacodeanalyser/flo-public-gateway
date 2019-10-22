@@ -18,10 +18,14 @@ class StripeSubscriptionProvider implements SubscriptionProvider {
   ) {}
 
   public async createSubscription(user: User, subscription: SubscriptionData, allowTrial?: boolean): Promise<SubscriptionProviderInfo> {
-    const customer = await this.ensureStripeCustomer(user, subscription);
+    const customer = await this.ensureStripeCustomer(user);
 
-    if (!customer.default_source) {
+    if (!subscription.provider.token && !customer.default_source) {
       throw new ValidationError('No payment method submitted or on file.');
+    }
+
+    if (subscription.provider.token) {
+      await this.createPaymentSource(customer.id, subscription.provider.token);
     }
 
     const stripeSubscription = await this.doCreateSubscription(customer, subscription, allowTrial);
@@ -65,8 +69,7 @@ class StripeSubscriptionProvider implements SubscriptionProvider {
 
   public async updatePaymentSource(user: User, token: string): Promise<CreditCardInfo[]> {
     const stripeCustomer = await this.ensureStripeCustomer(user);
-    const source = await this.stripeClient.customers.createSource(stripeCustomer.id, { source: token });
-    const updatedStripeCustomer = await this.stripeClient.customers.update(stripeCustomer.id, { default_source: source.id });
+    const updatedStripeCustomer = await this.createPaymentSource(stripeCustomer.id, token);
 
     return this.formatPaymentSources(updatedStripeCustomer);
   }
@@ -135,6 +138,12 @@ class StripeSubscriptionProvider implements SubscriptionProvider {
     });
 
     return this.formatProviderData(updatedStripeSubscription);
+  }
+
+  private async createPaymentSource(stripeCustomerId: string, token: string): Promise<Stripe.customers.ICustomer> {
+    const source = await this.stripeClient.customers.createSource(stripeCustomerId, { source: token });
+
+    return this.stripeClient.customers.update(stripeCustomerId, { default_source: source.id });
   }
 
   private async doCreateSubscription(customer: Stripe.customers.ICustomer, subscription: SubscriptionData, allowTrial: boolean = true): Promise<Stripe.subscriptions.ISubscription> {
