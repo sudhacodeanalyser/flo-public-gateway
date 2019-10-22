@@ -20,7 +20,8 @@ export interface WaterConsumptionReport {
 
 export enum WaterConsumptionInterval {
   ONE_HOUR = '1h',
-  ONE_DAY = '1d'
+  ONE_DAY = '1d',
+  ONE_MONTH = '1m'
 }
 
 export interface WaterAveragesReport {

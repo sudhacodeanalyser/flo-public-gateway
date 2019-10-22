@@ -10,7 +10,7 @@ export interface WaterMeterReport {
   };
   items: Array<{
     macAddress: string;
-    items: Array<{
+    items?: Array<{
       date: string;
       used?: number;
       rate?: number;
@@ -30,10 +30,11 @@ class WaterMeterService extends HttpService {
     super();
   }
 
-  public async getReport(macAddresses: string[],  startDate: string, endDate?: string, interval: string = '1h'): Promise<WaterMeterReport> {
+  public async getReport(macAddresses: string[],  startDate: string, endDate?: string, interval: string = '1h', timezone: string = 'Etc/UTC'): Promise<WaterMeterReport> {
     const queryString = [
       `macAddress=${ macAddresses.join(',') }`,
       `interval=${ interval }`,
+      `tz=${ timezone }`,
       `startDate=${ startDate }`,
       endDate ? `endDate=${ endDate }` : ''
     ]

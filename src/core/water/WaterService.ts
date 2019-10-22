@@ -1,5 +1,4 @@
 import { injectable, inject } from 'inversify';
-import { InfluxDB, IResults } from 'influx';
 import moment from 'moment-timezone';
 import _ from 'lodash';
 import { DeviceService, LocationService } from '../service';
@@ -25,11 +24,6 @@ class WaterService {
   private locationServiceFactory: () => LocationService;
 
   constructor(
-    @inject('InfluxDB') private influxClient: InfluxDB,
-    @inject('InfluxAnalyticsDb') private influxAnalyticsDb: string,
-    @inject('InfluxTelemetryDb') private influxTelemetryDb: string,
-    @inject('InfluxHourlyMeasurement') private influxHourlyMeasurement: string,
-    @inject('InfluxSecondMeasurement') private influxSecondMeasurement: string,
     @inject('DependencyFactoryFactory') depFactoryFactory: DependencyFactoryFactory,
     @inject('WaterMeterService') private waterMeterService: WaterMeterService
   ) {
@@ -49,7 +43,7 @@ class WaterService {
     const start = this.formatDate(startDate, tz);
     const end = this.formatDate(endDate, tz);
     const macAddresses = devices.map(({ macAddress }) => macAddress);
-    const results = await this.waterMeterService.getReport(macAddresses, start, end, interval);
+    const results = await this.waterMeterService.getReport(macAddresses, start, end, interval, timezone);
 
     return this.formatConsumptionReport(start, end, interval, tz, results, locationId);
   }
@@ -64,7 +58,7 @@ class WaterService {
     );
     const start = this.formatDate(startDate, tz);
     const end = this.formatDate(endDate, tz);
-    const results = await this.waterMeterService.getReport([macAddress], start, end, interval);
+    const results = await this.waterMeterService.getReport([macAddress], start, end, interval, timezone);
 
     return this.formatConsumptionReport(start, end, interval, tz, results, undefined, macAddress);
   }
@@ -180,6 +174,32 @@ class WaterService {
     };    
   }
 
+  private aggregateAverageConsumptionResults(waterMeterReport: WaterMeterReport, dates: Array<{ startDate: string, endDate: string }>, timezone: string = 'Etc/UTC', interval: WaterConsumptionInterval = WaterConsumptionInterval.ONE_DAY): { averageConsumption: number, numRecords: number } {
+    const aggregations = _.chain(waterMeterReport.items.map(deviceResults => deviceResults.items || []))
+      .flatten()
+      .filter(({ date }) => 
+         dates.some(({ startDate, endDate }) => date >= startDate && date <= endDate)
+      )
+      .groupBy(({ date }) => 
+        interval === WaterConsumptionInterval.ONE_HOUR ?
+          date :
+          interval === WaterConsumptionInterval.ONE_DAY ?
+            moment(date).tz(timezone).format('YYYY-MM-DD') :
+            moment(date).tz(timezone).format('YYYY-MM')
+      )
+      .mapValues(day => ({
+        sum: _.sumBy(day, 'used'),
+        numRecords: day.length
+      }))
+      .values()
+      .value();
+
+    return {
+      averageConsumption: _.meanBy(aggregations, 'sum'),
+      numRecords: _.sumBy(aggregations, 'numRecords')
+    };
+  }
+
   private async getDayOfWeekAverageConsumption(macAddresses: string[], timezone: string, now: moment.Moment): Promise<AveragesResult> {
    
     if (!macAddresses.length) {
@@ -200,12 +220,14 @@ class WaterService {
           endDate: endDate.toISOString()
         };
       });
-    const query = this.formatAveragesQuery(macAddresses, 'total_flow', this.influxHourlyMeasurement, dates, timezone);
-    const results = await this.influxClient.query<AveragesResult>(query, { database: this.influxAnalyticsDb });
+    const startDate = _.get(_.minBy(dates, 'startDate'), 'startDate', now.toISOString());
+    const endDate = _.get(_.maxBy(dates, 'endDate'), 'endDate', now.toISOString());
+    const results = await this.waterMeterService.getReport(macAddresses, startDate, endDate, '1h', timezone);
+    const stats =  this.aggregateAverageConsumptionResults(results, dates, timezone);
 
     return {
       startDate: now,
-      ...results[0]
+      ...stats
     };
   }
 
@@ -219,15 +241,15 @@ class WaterService {
       };
     }
 
-    const startDate = moment(now).subtract(1, 'weeks').startOf('week');
-    const endDate = moment(startDate).endOf('week');
-    const query = this.formatAveragesQuery(macAddresses, 'total_flow', this.influxHourlyMeasurement, [{ startDate: startDate.toISOString(), endDate: endDate.toISOString() }], timezone);
-    const results = await this.influxClient.query<AveragesResult>(query, { database: this.influxAnalyticsDb });
+    const startDate = moment(now).subtract(1, 'weeks').startOf('week').toISOString();
+    const endDate = moment(startDate).endOf('week').toISOString();
+    const results = await this.waterMeterService.getReport(macAddresses, startDate, endDate, '1h', timezone);
+    const stats = this.aggregateAverageConsumptionResults(results, [{ startDate, endDate }], timezone);
 
     return { 
-      startDate,
-      endDate,
-      ...results[0]
+     startDate: moment(startDate),
+     endDate: moment(endDate),
+      ...stats
     };
   }
 
@@ -241,53 +263,21 @@ class WaterService {
       };
     }
 
-    const endDate = moment(now).startOf('month');
-    const startDate = moment(now).subtract(3, 'months').startOf('month');
-    const query = this.formatAveragesQuery(
-      macAddresses,
-      'total_flow',
-      this.influxHourlyMeasurement,
-      [{ startDate: startDate.toISOString(), endDate: endDate.toISOString() }],
-      timezone,
-      '4w' // Influx does not support a calendar month interval
-    );
-    const results = await this.influxClient.query<AveragesResult>(query, { database: this.influxAnalyticsDb });
+    const endDate = moment(now).startOf('month').toISOString();
+    const startDate = moment(now).subtract(3, 'months').startOf('month').toISOString();
+    const results = await this.waterMeterService.getReport(macAddresses, startDate, endDate, '1h', timezone);
+    const stats = this.aggregateAverageConsumptionResults(results, [{ startDate, endDate }], timezone, WaterConsumptionInterval.ONE_MONTH);
 
     return {
-      startDate,
-      endDate,
-      ...results[0]
+      startDate: moment(startDate),
+      endDate: moment(endDate),
+      ...stats
     };
   }
 
-  private formatAveragesQuery(macAddresses: string[], column: string, measurement: string, ranges: Array<{ startDate: string, endDate: string }>, timezone: string, interval: string = '1d'): string {
-    const devices = macAddresses.map(macAddress => `did::tag = '${ macAddress }'`).join(' OR ');
-    const dateSubQueries = ranges
-      .map(({ startDate, endDate }) => {
-        
-        if (endDate < startDate) {
-          throw new Error('Invalid date range');
-        }
-
-        return `(
-          SELECT sum(${ column }) as gallonsConsumed, count(${ column }) as numRecords FROM ${ measurement }
-          WHERE (${ devices })
-          AND time >= '${ startDate }' 
-          AND time < '${ endDate }'
-          GROUP BY time(${ interval }) fill(none) tz('${ timezone }')
-        )`;
-      })
-      .reverse()
-      .join(', ');
-
-    return `
-      SELECT mean(gallonsConsumed) as averageConsumption, sum(numRecords) as numRecords FROM
-      ${ dateSubQueries }
-    `.replace(/\s+/g, ' ');    
-  }
 
   private formatConsumptionReport(startDate: string, endDate: string, interval: string, timezone: string, results: WaterMeterReport, locationId?: string, macAddress?: string): WaterConsumptionReport {
-    const items = _.zip(...results.items.map(({ items: deviceItems }) => deviceItems))
+    const items = _.zip(...results.items.map(({ items: deviceItems }) => deviceItems || []))
       .map(data => 
         data.reduce(({ time, sum }, item) => ({
             time: time || (item && item.date),
@@ -313,15 +303,6 @@ class WaterService {
         gallonsConsumed: sum
       }))
     };
-  }
-
-  private async queryDeviceConsumption(macAddresses: string[], startDate: string, endDate: string, interval: string, timezone: string = 'Etc/UTC'): Promise<InfluxRow[]> {
-    const results = await this.waterMeterService.getReport(macAddresses, startDate, endDate, interval);
-
-    return (results.items[0] || { items: [] }).items.map(({ date, used }) => ({
-      time: new Date(date),
-      sum: used || 0
-    }));
   }
 
   private formatDate(date: string, timezone: string = 'Etc/UTC'): string {
