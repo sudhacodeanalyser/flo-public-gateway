@@ -141,6 +141,7 @@ export interface LocationProfile {
   home_owners_insurance?: string,
   has_past_water_damage: boolean,
   past_water_damage_claim_amount?: string
+  water_utility?: string
 }
 
 interface AreaRecord {
@@ -356,6 +357,7 @@ const RecordToModelSchema: StrictSchema<Location, LocationRecordData> = {
     .filter(plumbingAppliance => plumbingAppliance) as PlumbingAppliance[];
   },
   pastWaterDamageClaimAmount: 'profile.past_water_damage_claim_amount',
+  waterUtility: 'profile.water_utility',
   notifications: () => undefined,
   areas: (input: LocationRecordData) => ({
     default: [],
@@ -405,7 +407,8 @@ const ModelToRecordSchema: StrictSchema<LocationRecordData, Location> = {
       plumbing_applicances: (input.plumbingAppliances || []),
       home_owners_insurance: input.homeownersInsurance,
       has_past_water_damage: input.hasPastWaterDamage || false,
-      past_water_damage_claim_amount: input.pastWaterDamageClaimAmount
+      past_water_damage_claim_amount: input.pastWaterDamageClaimAmount,
+      water_utility: input.waterUtility
     };
   },
   areas: (input: Partial<Location>) => _.get(input, 'areas.custom', undefined)
@@ -455,7 +458,8 @@ const PartialModelToPartialRecordSchema: StrictSchema<PartialLocationRecordData,
       plumbing_applicances: input.plumbingAppliances && input.plumbingAppliances,
       home_owners_insurance: input.homeownersInsurance,
       has_past_water_damage: input.hasPastWaterDamage,
-      past_water_damage_claim_amount: input.pastWaterDamageClaimAmount
+      past_water_damage_claim_amount: input.pastWaterDamageClaimAmount,
+      water_utility: input.waterUtility
     };
   },
   areas: (input: Partial<Location>) => _.get(input, 'areas.custom', undefined)
