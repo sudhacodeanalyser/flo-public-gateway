@@ -47,3 +47,21 @@ export interface WaterAveragesReport {
     }
   }
 }
+
+export interface WaterMetricsItem {
+  time: string;
+  averagePsi?: number;
+  averageGpm?: number;
+  averageTempF?: number;
+}
+
+export interface WaterMetricsReport {
+  params: {
+    startDate: string;
+    endDate: string;
+    interval: string;
+    tz: string;
+    macAddress?: string;
+  };
+  items: WaterMetricsItem[];
+}

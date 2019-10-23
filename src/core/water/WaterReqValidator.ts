@@ -17,7 +17,8 @@ const DateFromURIEncodedISOString = new t.Type<Date, string, unknown>(
 
 const DateRangeCodec = t.type({
   startDate: DateFromURIEncodedISOString,
-  endDate: t.union([t.undefined, DateFromURIEncodedISOString])
+  endDate: t.union([t.undefined, DateFromURIEncodedISOString]),
+  interval: t.union([t.undefined, t.literal('1h'), t.literal('1d'), t.literal('1m')])
 });
 type DateRange = t.TypeOf<typeof DateRangeCodec>;
 
@@ -28,10 +29,21 @@ interface RestrictedDateRangeBrand {
 const RestrictedDateRangeCodec = t.brand(
   DateRangeCodec,
   (dateRange): dateRange is t.Branded<DateRange, RestrictedDateRangeBrand> => {
+
+    // Start date must be after NOW
+    if (moment().isBefore(dateRange.startDate)) {
+      return false;
+    }
+
     const endDate = dateRange.endDate || new Date().toISOString();
     const diff = moment(endDate).diff(dateRange.startDate, 'days');
 
-    return diff >= 0 && diff <= 31;
+    if (diff >= 93 && dateRange.interval !== '1m') {
+      return false;
+    }
+
+    // 1 year max
+    return diff >= 0 && diff <= 397; // 365 days + 1 for leap year + 31 for an extra month
   },
   'RestrictedDateRange'
 );
@@ -40,7 +52,6 @@ export const getConsumption = t.type({
   query: t.intersection([
     RestrictedDateRangeCodec,
     t.partial({
-      interval: t.union([t.literal('1h'), t.literal('1d'), t.literal('1m')]),
       tz: t.string
     }),
     t.union([
@@ -67,5 +78,17 @@ export const getAverages = t.type({
         locationId: t.string
       })
     ])
+  ])
+});
+
+export const getMetrics = t.type({
+  query: t.intersection([
+    RestrictedDateRangeCodec,
+    t.partial({
+      tz: t.string
+    }),
+    t.type({
+      macAddress: t.string
+    })
   ])
 });
