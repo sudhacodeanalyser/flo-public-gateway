@@ -1,4 +1,4 @@
-import { fromNullable, fold } from 'fp-ts/lib/Option';
+import { fromNullable, fold, Option } from 'fp-ts/lib/Option';
 import _ from 'lodash';
 import { ApiService } from '../ApiService';
 import {
@@ -82,12 +82,9 @@ class ApiNotificationService {
     const devices =  await this.getDevicesInfo(data);
     const requestBody = {
       locationId: data.locationId,
-      devices,
+      devices: devices.map((device: Device) => ({ id: device.id, macAddress: device.macAddress })),
       snoozeSeconds: data.snoozeSeconds
     };
-
-    // tslint:disable-next-line:no-console
-    console.log(requestBody);
 
     return this.notificationApi.sendRequest({
       method: 'put',

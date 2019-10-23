@@ -132,9 +132,6 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
       }))
     )
     private async clearAlarm(@request() req: Request, @requestBody() data: ClearAlertBody): Promise<ClearAlertResponse> {
-      // TODO: In case we receive the locationId we need to retrieve location devices to send the notification response
-      // TODO: In case we receive the deviceId we need to retrieve macAddress to send the notification response
-
       const hasDeviceId = (obj: any): obj is { deviceId: string } => {
         return obj.deviceId !== undefined;
       };
