@@ -134,10 +134,10 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
     private async clearAlarm(@request() req: Request, @requestBody() data: ClearAlertBody): Promise<ClearAlertResponse> {
       const hasDeviceId = (obj: any): obj is { deviceId: string } => {
         return obj.deviceId !== undefined;
-      }
+      };
       const hasLocationId = (obj: any): obj is { locationId: string } => {
         return obj.locationId !== undefined;
-      }
+      };
 
       const service = this.notificationServiceFactory.create(req);
 
