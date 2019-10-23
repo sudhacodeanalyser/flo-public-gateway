@@ -70,14 +70,6 @@ class ApiNotificationService {
     });
   }
 
-  public async clearAlarms(data: any): Promise<ClearAlertResponse> {
-    return this.notificationApi.sendRequest({
-      method: 'put',
-      url: '/alarms/clear',
-      body: data
-    });
-  }
-
   public async getAlarmSettings(userId: string, deviceId: string): Promise<Option<DeviceAlarmSettings>> {
     const settingsArray = await this.getAlarmSettingsInBulk(userId, [deviceId]);
 
