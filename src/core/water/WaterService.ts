@@ -329,7 +329,7 @@ class WaterService {
             const nonMissingData = hours.filter(({ missing }) => !missing);
 
             return {
-              date: moment(aggregatedInterval).tz(timezone).toISOString(),
+              date: moment.tz(aggregatedInterval, timezone).toISOString(),
               used: _.sumBy(hours, 'used'),
               psi: _.meanBy(hours, 'psi'),
               temp: _.meanBy(hours, 'temp'),
