@@ -110,7 +110,8 @@ paths:
           enum:
             - 1h
             - 1d
-        description: Time interval to aggregate consumption. Default is 1h.
+            - 1m
+        description: Time interval to aggregate consumption. Default is 1h. Requests over 3 months must be in 1m intervals.
       - in: query
         name: tz
         schema:
@@ -166,3 +167,92 @@ paths:
                           format: date-time
                         gallonsConsumed:
                           type: number
+  /api/v2/water/metrics:
+    parameters:
+      - in: query
+        name: startDate
+        required: true
+        schema:
+          type: string
+          format: date-time
+        description: Inclusive start of date range of data. Recommend to round to the closest hour and not specify timezone.
+      - in: query
+        name: endDate
+        schema:
+          type: string
+          format: date-time
+        description: Exclusive end of date range of data. Recommend to round to the closest hour and not specify timezone.
+      - in: query
+        name: macAddress
+        required: true
+        schema:
+          type: string
+        description: MAC address of device to retrieve water consumption for. The param macAddress is exclusive with locationId, only one can be specified
+      - in: query
+        name: interval
+        schema:
+          type: string
+          enum:
+            - 1h
+            - 1d
+            - 1m
+        description: Time interval to aggregate consumption. Default is 1h. Requests over 3 months must be in 1m intervals.
+      - in: query
+        name: tz
+        schema:
+          type: string
+        description: If timezone is not specified as part of the date range, then this timezone will be applied to the date. Defaults to the location or device's local timezone. 
+    get:
+      summary: Retrieve water flowrate, temperature, and pressure metrics
+      tags:
+        - Water Usage
+      produces:
+        - application/json
+      responses:
+        200:
+          description: Responds with 200 OK if system is up
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  params:
+                    type: object
+                    properties:
+                      startDate:
+                        type: string
+                        format: date-time
+                      endDate:
+                        type: string
+                        format: date-time
+                      interval:
+                        type: string
+                        enum:
+                          - 1h
+                          - 1d
+                      macAddress:
+                        type: string
+                      tz: 
+                        type: string
+                  aggregations: 
+                    type: object
+                    properties:
+                      sumTotalGallonsConsumed:
+                        type: number
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        time: 
+                          type: string
+                          format: date-time
+                        averagePsi:
+                          type: number
+                          nullable: true
+                        averageGpm:
+                          type: number
+                          nullable: true
+                        averageTempF:
+                          type: number
+                          nullable: true

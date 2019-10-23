@@ -2,7 +2,7 @@ import { injectable, inject } from 'inversify';
 import moment from 'moment-timezone';
 import _ from 'lodash';
 import { DeviceService, LocationService } from '../service';
-import { DependencyFactoryFactory, WaterConsumptionItem, WaterConsumptionReport, WaterConsumptionInterval, WaterAveragesReport } from '../api';
+import { DependencyFactoryFactory, WaterConsumptionItem, WaterConsumptionReport, WaterConsumptionInterval, WaterAveragesReport, WaterMetricsReport } from '../api';
 import * as Option from 'fp-ts/lib/Option';
 import { pipe } from 'fp-ts/lib/pipeable';
 import { WaterMeterService, WaterMeterReport } from './WaterMeterService';
@@ -133,6 +133,37 @@ class WaterService {
       timezone,
       macAddress
     );
+  }
+
+  public async getMetricsAveragesByDevice(macAddress: string, startDate: string, endDate: string = new Date().toISOString(), interval: WaterConsumptionInterval = WaterConsumptionInterval.ONE_DAY, tz?: string): Promise<WaterMetricsReport> {
+    const device = await this.deviceServiceFactory().getByMacAddress(macAddress, ['location']);
+    const timezone = tz || pipe(
+      device,
+      Option.fold(
+        () => 'Etc/UTC',
+        d => d.location.timezone || 'Etc/UTC'
+      )
+    );
+    const start = this.formatDate(startDate, tz);
+    const end = this.formatDate(endDate, tz);
+    const results = await this.getWaterMeterReport([macAddress], start, end, interval, timezone);
+    const items = (results.items.length && results.items[0].items) || [];
+
+    return {
+      params: {
+        tz: timezone,
+        startDate: start,
+        endDate: end,
+        macAddress,
+        interval
+      },
+      items: items.map(item => ({
+        time: moment(item.date).tz(timezone).format(),
+        averageGpm: item.rate,
+        averagePsi: item.psi,
+        averageTempF: item.temp
+      }))
+    };
   }
 
   private formatAveragesReport(
@@ -274,7 +305,6 @@ class WaterService {
       ...stats
     };
   }
-
 
   private formatConsumptionReport(startDate: string, endDate: string, interval: string, timezone: string, results: WaterMeterReport, locationId?: string, macAddress?: string): WaterConsumptionReport {
     const items = _.zip(...results.items.map(({ items: deviceItems }) => deviceItems || []))
