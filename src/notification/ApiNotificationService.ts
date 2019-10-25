@@ -1,10 +1,15 @@
-import { fromNullable, Option } from 'fp-ts/lib/Option';
+import { fold, fromNullable, Option } from 'fp-ts/lib/Option';
+import { pipe } from 'fp-ts/lib/pipeable';
 import _ from 'lodash';
 import { ApiService } from '../ApiService';
-import { Alarm, AlarmEvent, AlarmListResult, AlarmSettings, ClearAlertResponse, DeviceAlarmSettings, NotificationStatistics, PaginatedResult, UpdateDeviceAlarmSettings } from '../core/api';
+import { Alarm, AlarmEvent, AlarmListResult, ClearAlertResponse, Device, DeviceAlarmSettings, NotificationStatistics, PaginatedResult, UpdateDeviceAlarmSettings } from '../core/api';
+import { DeviceService } from '../core/device/DeviceService';
 
 class ApiNotificationService {
-  constructor(private notificationApi: ApiService) {}
+  constructor(
+    private readonly deviceServiceFactory: () => DeviceService,
+    private notificationApi: ApiService
+  ) {}
 
   public async getAlarmById(id: string): Promise<Alarm> {
     return this.notificationApi.sendRequest({
@@ -63,18 +68,17 @@ class ApiNotificationService {
   }
 
   public async clearAlarm(alarmId: string | number, data: any): Promise<ClearAlertResponse> {
+    const devices =  await this.getDevicesInfo(data);
+    const requestBody = {
+      locationId: data.locationId,
+      devices: devices.map((device: Device) => ({ id: device.id, macAddress: device.macAddress })),
+      snoozeSeconds: data.snoozeSeconds
+    };
+
     return this.notificationApi.sendRequest({
       method: 'put',
       url: `/alarms/${alarmId}/clear`,
-      body: data
-    });
-  }
-
-  public async clearAlarms(data: any): Promise<ClearAlertResponse> {
-    return this.notificationApi.sendRequest({
-      method: 'put',
-      url: '/alarms/clear',
-      body: data
+      body: requestBody
     });
   }
 
@@ -115,6 +119,30 @@ class ApiNotificationService {
       method: 'get',
       url: `/statistics?${filters}`
     });
+  }
+
+  private async getDevicesInfo(data: any): Promise<Device[]> {
+    const hasLocationId = (obj: any): obj is { locationId: string } => {
+      return obj.locationId !== undefined;
+    };
+
+    const hasDeviceId = (obj: any): obj is { deviceId: string } => {
+      return obj.deviceId !== undefined;
+    };
+
+    if (hasLocationId(data)) {
+      return this.deviceServiceFactory().getAllByLocationId(data.locationId);
+    } else if (hasDeviceId(data)) {
+      return pipe(
+        await this.deviceServiceFactory().getDeviceById(data.deviceId),
+        fold(
+          () => [],
+          (device: Device) => [device]
+        )
+      );
+    } else {
+      return Promise.resolve([]);
+    }
   }
 }
 
