@@ -159,9 +159,11 @@ class SubscriptionService {
   }
 
   public async updateSubscription(id: string, subscription: Partial<Subscription>): Promise<Subscription> {
-    if (subscription.plan) {
-      await this.validatePlanExists(subscription.plan.id);
-    }
+    // Disabling for now to prevent webhook errors caused by internal plans that users
+    // cannot directly subscribe to themselves and therefore do not exist in Dynamo
+    // if (subscription.plan) {
+    //   await this.validatePlanExists(subscription.plan.id);
+    // }
 
     if (subscription.location) {
       await this.validateLocationExists(subscription.location.id);
@@ -208,6 +210,7 @@ class SubscriptionService {
 
   private async validatePlanExists(planId: string): Promise<void> {
     const plan = await this.subscriptionResolver.getPlanById(planId);
+
     if (_.isEmpty(plan)) {
       throw new ResourceDoesNotExistError('Plan does not exist.');
     }
