@@ -53,16 +53,7 @@ class SubscriptionResolver extends Resolver<Subscription> {
   }
 
   public async create(subscription: PartialBy<Subscription, 'id'>): Promise<Subscription> {
-    const plan = await this.getPlanById(subscription.plan.id);
-    if (plan === null) {
-      throw new ResourceDoesNotExistError('Plan does not exist.');
-    }
-    const location = await this.locationResolverFactory().get(subscription.location.id);
-    if (location === null) {
-      throw new ResourceDoesNotExistError('Location does not exist.');
-    }
-
-    const subscriptionWithId: Subscription = {
+     const subscriptionWithId: Subscription = {
       id: uuid.v4(),
       ...subscription // This may deliberately overwrite id.
     }
