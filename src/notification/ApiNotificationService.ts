@@ -1,20 +1,9 @@
-import { fromNullable, fold, Option } from 'fp-ts/lib/Option';
+import { fold, fromNullable, Option } from 'fp-ts/lib/Option';
+import { pipe } from 'fp-ts/lib/pipeable';
 import _ from 'lodash';
 import { ApiService } from '../ApiService';
-import {
-  Alarm,
-  AlarmEvent,
-  AlarmListResult,
-  AlarmSettings,
-  ClearAlertResponse,
-  Device,
-  DeviceAlarmSettings,
-  NotificationStatistics,
-  PaginatedResult,
-  UpdateDeviceAlarmSettings
-} from '../core/api';
+import { Alarm, AlarmEvent, AlarmListResult, ClearAlertResponse, Device, DeviceAlarmSettings, NotificationStatistics, PaginatedResult, UpdateDeviceAlarmSettings } from '../core/api';
 import { DeviceService } from '../core/device/DeviceService';
-import { pipe } from 'fp-ts/lib/pipeable';
 
 class ApiNotificationService {
   constructor(
@@ -141,9 +130,9 @@ class ApiNotificationService {
       return obj.deviceId !== undefined;
     };
 
-    if(hasLocationId) {
+    if (hasLocationId(data)) {
       return this.deviceServiceFactory().getAllByLocationId(data.locationId);
-    } else if (hasDeviceId) {
+    } else if (hasDeviceId(data)) {
       return pipe(
         await this.deviceServiceFactory().getDeviceById(data.deviceId),
         fold(
