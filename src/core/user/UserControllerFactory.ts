@@ -17,6 +17,7 @@ export function UserControllerFactory(container: Container, apiVersion: number):
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
   const authMiddlewareFactory = container.get<AuthMiddlewareFactory>('AuthMiddlewareFactory');
   const authWithId = authMiddlewareFactory.create(async ({ params: { id } }: Request) => ({ user_id: id }));
+  const auth = authMiddlewareFactory.create();
 
   @httpController({ version: apiVersion }, '/users')
   class UserController extends BaseHttpController {
@@ -139,6 +140,27 @@ export function UserControllerFactory(container: Container, apiVersion: number):
     @withResponseType<User, Responses.UserResponse>(Responses.User.fromModel)
     private async updatePartialUser(@requestParam('id') id: string, @requestBody() userUpdate: UserUpdate): Promise<Option<User>> {
       return some(await this.userService.updatePartialUser(id, userUpdate));
+    }
+
+    @httpGet('/me',
+      auth,
+      reqValidator.create(t.type({
+        query: t.partial({
+          expand: t.string
+        })
+      }))
+    )
+    @withResponseType<User, Responses.UserResponse>(Responses.User.fromModel)
+    private async getSelf(@request() req: Request, @queryParam('expand') expand?: string): Promise<Option<User>> {
+      const tokenMetadata = req.token;
+      const userId = tokenMetadata && tokenMetadata.user_id;
+      const expandProps = parseExpand(expand);
+
+      if (!userId) {
+        throw new UnauthorizedError();
+      }
+
+      return this.userService.getUserById(userId, expandProps);
     }
 
     @httpGet('/:id',
