@@ -13,6 +13,7 @@ import healthTestServiceContainerModule from '../health-test/containerModule';
 import internalDeviceServiceFetcherModule from '../internal-device-service/containerModule';
 import kafkaContainerModule from '../kafka/containerModule';
 import localizationContainerModule from '../localization/containerModule';
+import iftttContainerModule from '../ifttt/containerModule';
 // Shared container modules
 import loggerFactoryContainerModule from '../logging/containerModule';
 import memoizeContainerModule from '../memoize/containerModule';
@@ -43,6 +44,7 @@ export default function ContainerFactory(container: Container = new Container())
     cacheContainerModule,
     presenceContainerModule,
     telemetryTagsContainerModule,
+    iftttContainerModule,
     ...coreContainerModules
   );
 

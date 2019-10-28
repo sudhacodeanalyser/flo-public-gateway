@@ -37,7 +37,8 @@ function getDefaults(): { [key: string]: any } {
         redisPort: '6379',
         presenceServiceUrl: 'https://flo-core-service-dev.flocloud.co/presence',
         telemetryTagsServiceUrl: 'https://flo-telemetry-tags.flocloud.co',
-        waterMeterUrl: 'https://flo-water-meter.flosecurecloud.com'
+        waterMeterUrl: 'https://flo-water-meter.flosecurecloud.com',
+        apiV1IFTTTTestSetupUrl: 'https://api-dev.flocloud.co/api/v1/ifttt/v1/test/setup'
       };
   }
 }
@@ -86,7 +87,9 @@ const config = {
   redisPort: process.env.REDIS_PORT,
   presenceServiceUrl: process.env.PRESENCE_SERVICE_URL,
   telemetryTagsServiceUrl: process.env.TELEMETRY_TAGS_SERVICE_URL,
-  waterMeterUrl: process.env.WATER_METER_SERVICE_URL
+  waterMeterUrl: process.env.WATER_METER_SERVICE_URL,
+  iftttServiceKey: process.env.IFTTT_SERVICE_KEY,
+  apiV1IFTTTTestSetupUrl: process.env.API_V1_IFTTT_TEST_SETUP_URL
 };
 
 export default {
