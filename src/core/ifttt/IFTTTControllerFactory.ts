@@ -2,7 +2,6 @@ import _ from 'lodash';
 import { Container, inject } from 'inversify';
 import { BaseHttpController, httpDelete, httpGet, httpPost, interfaces, request, requestBody, requestParam } from 'inversify-express-utils';
 import { createMethod, httpController } from '../api/controllerUtils';
-import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import { IFTTTServiceFactory } from './IFTTTService';
 import UnauthorizedError from '../api/error/UnauthorizedError';
 import Request from '../api/Request';
@@ -14,9 +13,10 @@ import { DirectiveServiceFactory } from '../device/DirectiveService';
 import { DeviceSystemModeServiceFactory } from '../device/DeviceSystemModeService';
 import { RealtimeData } from './request/RealtimeData';
 import { $enum } from 'ts-enum-util';
+import IFTTTAuthMiddlewareFactory from './IFTTTAuthMiddlewareFactory';
 
 export function IFTTTControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
-  const authMiddlewareFactory = container.get<AuthMiddlewareFactory>('AuthMiddlewareFactory');
+  const authMiddlewareFactory = container.get<IFTTTAuthMiddlewareFactory>('IFTTTAuthMiddlewareFactory');
   const auth = authMiddlewareFactory.create();
 
   @httpController({ version: apiVersion }, '/ifttt/v1')
@@ -32,7 +32,7 @@ export function IFTTTControllerFactory(container: Container, apiVersion: number)
     }
 
     @httpGet('/status')
-    private async getStatus(@request() req: Request): Promise<void> {
+    private async getStatus(@request() req: Request): Promise<any> {
       if (req.header('ifttt-service-key') !== this.iftttServiceKey) {
         throw new UnauthorizedError();
       }

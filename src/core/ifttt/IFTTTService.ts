@@ -8,7 +8,7 @@ import { DeviceSystemModeService } from '../device/DeviceSystemModeService';
 export type IFTTTServiceFactory = (isTest: boolean) => IFTTTService;
 
 export interface IFTTTService {
-  getStatus(): Promise<void>
+  getStatus(): Promise<any>
   getTestSetup(): Promise<TestSetupResponse>
   getUserInfo(userId: string): Promise<UserInfoResponse>
   getEventsBySeverityTrigger(userId: string, severity: AlarmSeverity, floTriggerId: TriggerId, triggerData: TriggerData): Promise<AlertTriggerResponse>

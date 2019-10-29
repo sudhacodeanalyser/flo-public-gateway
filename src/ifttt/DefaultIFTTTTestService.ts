@@ -10,6 +10,8 @@ import { SystemMode, AlarmSeverity } from '../core/api';
 import { DirectiveService } from '../core/device/DirectiveService';
 import { ActionData } from '../core/ifttt/model/Action';
 import { DeviceSystemModeService } from '../core/device/DeviceSystemModeService';
+import TriggerFieldsError from '../core/ifttt/error/TriggerFieldsError';
+import ActionFieldsError from '../core/ifttt/error/ActionFieldsError';
 
 @injectable()
 class DefaultIFTTTTestService extends HttpService implements IFTTTService {
@@ -27,8 +29,8 @@ class DefaultIFTTTTestService extends HttpService implements IFTTTService {
     };
   }
 
-  public async getStatus(): Promise<void> {
-    return Promise.resolve();
+  public async getStatus(): Promise<any> {
+    return {};
   }
 
   public async deleteTriggerIdentity(userId: string, triggerIdentity: string): Promise<void> {
@@ -80,6 +82,9 @@ class DefaultIFTTTTestService extends HttpService implements IFTTTService {
   public async getEventsBySeverityTrigger(userId: string, severity: AlarmSeverity, floTriggerId: TriggerId, triggerData: TriggerData): Promise<AlertTriggerResponse> {
     // If they send limit 0, doing triggerData.limit || 50 will return 50
     const limit = (triggerData.limit || triggerData.limit === 0) ? triggerData.limit : 50;
+    if (!triggerData.triggerFields || !triggerData.triggerFields.alert_ids) {
+      throw new TriggerFieldsError();
+    }
     const alertIds = triggerData.triggerFields.alert_ids;
     const alertsFilter = alertIds && alertIds.split(',').filter(alarmId => alarmId).map(alarmId => parseInt(alarmId.trim(), 10));
 
@@ -103,6 +108,9 @@ class DefaultIFTTTTestService extends HttpService implements IFTTTService {
   }
 
   public async changeSystemModeAction(userId: string, userAction: ActionData, systemModeService: DeviceSystemModeService): Promise<ActionResponse> {
+    if (!userAction.actionFields || !userAction.actionFields.device_mode) {
+      throw new ActionFieldsError('Missing system mode field');
+    }
     return {
       data: [{
         id: new Date().getTime()
