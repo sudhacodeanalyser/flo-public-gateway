@@ -17,5 +17,5 @@ export interface TriggerData {
 export enum TriggerId {
   CRITICAL_ALERT_DETECTED = 1,
   WARNING_ALERT_DETECTED = 2,
-  INFO_ALERT_DETECTED,
+  INFO_ALERT_DETECTED = 3,
 };

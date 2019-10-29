@@ -38,7 +38,8 @@ function getDefaults(): { [key: string]: any } {
         presenceServiceUrl: 'https://flo-core-service-dev.flocloud.co/presence',
         telemetryTagsServiceUrl: 'https://flo-telemetry-tags.flocloud.co',
         waterMeterUrl: 'https://flo-water-meter.flosecurecloud.com',
-        apiV1IFTTTTestSetupUrl: 'https://api-dev.flocloud.co/api/v1/ifttt/v1/test/setup'
+        apiV1IFTTTTestSetupUrl: 'https://api-dev.flocloud.co/api/v1/ifttt/v1/test/setup',
+        iftttRealtimeNotificationsUrl: 'https://realtime.ifttt.com/v1/notifications'
       };
   }
 }
@@ -89,7 +90,8 @@ const config = {
   telemetryTagsServiceUrl: process.env.TELEMETRY_TAGS_SERVICE_URL,
   waterMeterUrl: process.env.WATER_METER_SERVICE_URL,
   iftttServiceKey: process.env.IFTTT_SERVICE_KEY,
-  apiV1IFTTTTestSetupUrl: process.env.API_V1_IFTTT_TEST_SETUP_URL
+  apiV1IFTTTTestSetupUrl: process.env.API_V1_IFTTT_TEST_SETUP_URL,
+  iftttRealtimeNotificationsUrl: process.env.IFTTT_REALTIME_NOTIFICATIONS_URL,
 };
 
 export default {

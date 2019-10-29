@@ -7,13 +7,19 @@ import { TestSetupResponse, UserInfoResponse, AlertTriggerResponse, ActionRespon
 import { UserInfo } from '../core/ifttt/model/UserInfo';
 import { TriggerData, TriggerId } from '../core/ifttt/model/Trigger';
 import { SystemMode, AlarmSeverity } from '../core/api';
+import { DirectiveService } from '../core/device/DirectiveService';
+import { ActionData } from '../core/ifttt/model/Action';
+import { DeviceSystemModeService } from '../core/device/DeviceSystemModeService';
 
 @injectable()
 class DefaultIFTTTTestService extends HttpService implements IFTTTService {
 
   private user: UserInfo;
 
-  constructor(@inject('ApiV1IFTTTTestSetupUrl') private readonly apiV1IFTTTTestSetupUrl: string) {
+  constructor(
+      @inject('ApiV1IFTTTTestSetupUrl') private readonly apiV1IFTTTTestSetupUrl: string,
+      @inject('IFTTTServiceKey') private readonly iftttServiceKey: string,
+    ) {
     super();
     this.user = {
       id: uuid.v4(),
@@ -25,18 +31,22 @@ class DefaultIFTTTTestService extends HttpService implements IFTTTService {
     return Promise.resolve();
   }
 
+  public async deleteTriggerIdentity(userId: string, triggerIdentity: string): Promise<void> {
+    return Promise.resolve();
+  }
+
   public async getUserInfo(userId: string): Promise<UserInfoResponse> {
     return {
       data: this.user
     };
   }
 
-  public async getTestSetup(iftttServiceKey: string): Promise<TestSetupResponse> {
+  public async getTestSetup(): Promise<TestSetupResponse> {
     const request = {
       method: 'POST',
       url: this.apiV1IFTTTTestSetupUrl,
       customHeaders: {
-        "IFTTT-Service-Key": iftttServiceKey
+        "IFTTT-Service-Key": this.iftttServiceKey
       },
     };
     const response: TestSetupResponse = await this.sendRequest(request);
@@ -76,7 +86,7 @@ class DefaultIFTTTTestService extends HttpService implements IFTTTService {
     return this.generateAlertEvents(severity, alertsFilter || undefined, limit);
   }
 
-  public async openValveAction(userId: string): Promise<ActionResponse> {
+  public async openValveAction(userId: string, directiveService: DirectiveService): Promise<ActionResponse> {
     return {
       data: [{
         id: uuid.v4()
@@ -84,7 +94,7 @@ class DefaultIFTTTTestService extends HttpService implements IFTTTService {
     };
   }
 
-  public async closeValveAction(userId: string): Promise<ActionResponse> {
+  public async closeValveAction(userId: string, directiveService: DirectiveService): Promise<ActionResponse> {
     return {
       data: [{
         id: uuid.v4()
@@ -92,12 +102,16 @@ class DefaultIFTTTTestService extends HttpService implements IFTTTService {
     };
   }
 
-  public async changeSystemModeAction(userId: string, userAction: any): Promise<ActionResponse> {
+  public async changeSystemModeAction(userId: string, userAction: ActionData, systemModeService: DeviceSystemModeService): Promise<ActionResponse> {
     return {
       data: [{
         id: new Date().getTime()
       }]
     };
+  }
+
+  public async notifyRealtimeAlert(deviceId: string, triggerId: TriggerId): Promise<void> {
+    return Promise.resolve();
   }
 
   private generateAlertEvents(severity: AlarmSeverity, alertIds: number[] | undefined, limit: number): AlertTriggerResponse {

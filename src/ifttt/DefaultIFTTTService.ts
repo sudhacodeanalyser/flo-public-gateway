@@ -1,22 +1,32 @@
-import { IFTTTService, UserService, AlertService } from '../core/service';
+import { IFTTTService, UserService, AlertService, DeviceService } from '../core/service';
 import { inject, injectable } from 'inversify';
 import _ from 'lodash';
-import { TestSetupResponse, UserInfoResponse, AlertTriggerResponse } from '../core/ifttt/response/IFTTTResponse';
+import uuid from 'uuid';
+import { TestSetupResponse, UserInfoResponse, AlertTriggerResponse, ActionResponse } from '../core/ifttt/response/IFTTTResponse';
 import { TriggerData, TriggerId } from '../core/ifttt/model/Trigger';
 import { isNone } from 'fp-ts/lib/Option';
 import NotFoundError from '../core/api/error/NotFoundError';
-import { ResidenceType, AlarmSeverity, PaginatedResult, AlarmEvent } from '../core/api';
+import { ResidenceType, AlarmSeverity, PaginatedResult, AlarmEvent, SystemMode } from '../core/api';
 import moment from 'moment';
 import TriggerIdentityLogTable from '../core/ifttt/TriggerIdentityLogTable';
+import { DirectiveService } from '../core/device/DirectiveService';
+import { ActionData } from '../core/ifttt/model/Action';
+import { DeviceSystemModeService } from '../core/device/DeviceSystemModeService';
+import ActionFieldsError from '../core/ifttt/error/ActionFieldsError';
+import { HttpService } from '../http/HttpService';
 
 @injectable()
-class DefaultIFTTTService implements IFTTTService {
+class DefaultIFTTTService extends HttpService implements IFTTTService {
 
   constructor(
-    @inject('UserService') private userService: UserService,
-    @inject('AlertService') private alertService: AlertService,
-    @inject('TriggerIdentityLogTable') private triggerIdentityTable: TriggerIdentityLogTable,
+    @inject('UserService') private readonly userService: UserService,
+    @inject('AlertService') private readonly alertService: AlertService,
+    @inject('TriggerIdentityLogTable') private readonly triggerIdentityTable: TriggerIdentityLogTable,
+    @inject('DeviceService') private readonly deviceService: DeviceService,
+    @inject('IFTTTServiceKey') private readonly iftttServiceKey: string,
+    @inject('IftttRealtimeNotificationsUrl') private readonly iftttRealtimeNotificationsUrl: string,
   ) {
+    super();
   }
 
   public async getStatus(): Promise<void> {
@@ -37,7 +47,7 @@ class DefaultIFTTTService implements IFTTTService {
     }
   }
 
-  public async getTestSetup(iftttServiceKey: string): Promise<TestSetupResponse> {
+  public async getTestSetup(): Promise<TestSetupResponse> {
     throw new Error("Method not implemented.");
   }
 
@@ -74,16 +84,99 @@ class DefaultIFTTTService implements IFTTTService {
     return { data: result };
   }
 
-  public async openValveAction(userId: string): Promise<any> {
-    throw new Error("Method not implemented.");
+  public async openValveAction(userId: string, directiveService: DirectiveService): Promise<ActionResponse> {
+    const deviceId = await this.getDefaultDeviceId(userId);
+    await directiveService.openValve(deviceId);
+    return {
+      data: [{
+        id: new Date().getTime()
+      }]
+    };
   }
 
-  public async closeValveAction(userId: string): Promise<any> {
-    throw new Error("Method not implemented.");
+  public async closeValveAction(userId: string, directiveService: DirectiveService): Promise<ActionResponse> {
+    const deviceId = await this.getDefaultDeviceId(userId);
+    await directiveService.closeValve(deviceId);
+    return {
+      data: [{
+        id: new Date().getTime()
+      }]
+    };
   }
 
-  public async changeSystemModeAction(userId: string, userAction: any): Promise<any> {
-    throw new Error("Method not implemented.");
+  public async changeSystemModeAction(userId: string, userAction: ActionData, systemModeService: DeviceSystemModeService): Promise<ActionResponse> {
+    const deviceId = await this.getDefaultDeviceId(userId);
+    let systemMode: SystemMode;
+    // TODO: change action field configuration in IFTTT to use 'home' | 'away' instead of numbers.
+    if (userAction.actionFields.device_mode === '2') {
+      systemMode = SystemMode.HOME;
+    } else if (userAction.actionFields.device_mode === '3') {
+      systemMode = SystemMode.AWAY;
+    } else {
+      throw new ActionFieldsError('Invalid system mode');
+    }
+    await systemModeService.setSystemMode(deviceId, systemMode);
+    return {
+      data: [{
+        id: new Date().getTime()
+      }]
+    };
+  }
+
+  public async notifyRealtimeAlert(deviceId: string, triggerId: TriggerId): Promise<void> {
+    const device = await this.deviceService.getDeviceById(deviceId, ['location']);
+    if (isNone(device)) {
+      throw new NotFoundError('Device not found.');
+    }
+    if (!device.value.location.users) {
+      throw new NotFoundError('Device has no associated users.');
+    }
+    const users = device.value.location.users;
+    const queryPromises = users.map(user => this.triggerIdentityTable.getByUserIdAndTriggerId(user.id, triggerId.valueOf()));
+    const userTriggerIdentities = await Promise.all(queryPromises);
+    const triggerIdentities = _.chain(userTriggerIdentities)
+      .flatten()
+      .map(({ trigger_identity }) => ({
+        trigger_identity
+      }))
+      .value();
+
+    const request = {
+      method: 'POST',
+      url: this.iftttRealtimeNotificationsUrl,
+      customHeaders: {
+        'IFTTT-Service-Key': this.iftttServiceKey,
+        'Accept': 'application/json',
+        'Accept-Charset': 'utf-8',
+        'Accept-Encoding': 'gzip, deflate',
+        'Content-Type': 'application/json',
+        'X-Request-ID': uuid.v4()
+      },
+      body: {
+        data: triggerIdentities
+      }
+    };
+    await this.sendRequest(request);
+  }
+
+  public async deleteTriggerIdentity(userId: string, triggerIdentity: string): Promise<void> {
+    return this.triggerIdentityTable.remove({ user_id: userId, trigger_identity: triggerIdentity });
+  }
+
+  private async getDefaultDeviceId(userId: string): Promise<string> {
+    // TODO: Implement multi entity targeting the action to the correspoinding device.
+    const userData = await this.userService.getUserById(userId, ['locations']);
+    if (isNone(userData)) {
+      throw new NotFoundError('User not found.');
+    }
+    if (_.isEmpty(userData.value.locations)) {
+      throw new NotFoundError('User has no locations');
+    }
+    const location = userData.value.locations.find(loc => loc.residenceType === ResidenceType.PRIMARY) || userData.value.locations[0];
+    if (!location.devices) {
+      throw new NotFoundError('User has no devices');
+    }
+    return location.devices[0].id;
   }
 
   private async getEventsByFilter(locationId: string, severity: AlarmSeverity, alertsFilter: number[]): Promise<AlarmEvent[]> {

@@ -1,5 +1,4 @@
-import { UserInfo } from "../model/UserInfo";
-import { TriggerData } from "../model/Trigger";
+import { UserInfo } from '../model/UserInfo';
 
 interface TestSetupData {
   accessToken: string;
