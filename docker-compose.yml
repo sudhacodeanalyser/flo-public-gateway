@@ -27,3 +27,8 @@ services:
     image: "${CI_REGISTRY_IMAGE:-registry.gitlab.com/flotechnologies/app}:${CI_PIPELINE_ID:-latest}"
     ports: []
     <<: *app
+networks:
+  default:
+    driver: bridge
+    driver_opts:
+      com.docker.network.driver.mtu: 1440
