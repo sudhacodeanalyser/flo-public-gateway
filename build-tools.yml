@@ -56,3 +56,8 @@ services:
       - ./tests:/app/tests
       - "./test-results:/app/test-results"
       - "./logs:${CI_ARTIFACTS_DIR:-/app}/logs"
+networks:
+  default:
+    driver: bridge
+    driver_opts:
+      com.docker.network.driver.mtu: 1440
