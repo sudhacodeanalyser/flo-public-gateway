@@ -114,13 +114,22 @@ class DefaultIFTTTService extends HttpService implements IFTTTService {
     if (!userAction.actionFields || !userAction.actionFields.device_mode) {
       throw new ActionFieldsError('Missing system mode field');
     }
-    const systemMode = $enum(SystemMode).asValueOrThrow(userAction.actionFields.device_mode);
-    await systemModeService.setSystemMode(deviceId, systemMode);
-    return {
-      data: [{
-        id: new Date().getTime()
-      }]
-    };
+    try {
+      const systemMode = $enum(SystemMode).asValueOrThrow(userAction.actionFields.device_mode);
+      await systemModeService.setSystemMode(deviceId, systemMode);
+
+      return {
+        data: [{
+          id: new Date().getTime()
+        }]
+      };
+    } catch (error) {
+      if (error.message.includes('Unexpected value')) {
+        throw new ActionFieldsError(error.message);
+      } else {
+        throw error;
+      }
+    }
   }
 
   public async notifyRealtimeAlert(deviceId: string, triggerId: TriggerId): Promise<void> {
