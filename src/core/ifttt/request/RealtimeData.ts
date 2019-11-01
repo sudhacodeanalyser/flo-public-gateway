@@ -1,4 +1,4 @@
 export interface RealtimeData {
-  icd_id: string;
+  deviceId: string;
   severity: number;
 }
