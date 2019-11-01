@@ -101,7 +101,7 @@ export function IFTTTControllerFactory(container: Container, apiVersion: number)
     @httpPost('/notifications/alert', auth)
     private async notifyRealtimeAlert(@requestBody() realtimeData: RealtimeData): Promise<any> {
       const triggerId = $enum(TriggerId).asValueOrThrow(realtimeData.severity);
-      return this.iftttServiceFactory(false).notifyRealtimeAlert(realtimeData.icd_id, triggerId);
+      return this.iftttServiceFactory(false).notifyRealtimeAlert(realtimeData.deviceId, triggerId);
     }
 
     @httpDelete('/triggers/:trigger_slug/trigger_identity/:trigger_identity', auth)
