@@ -171,3 +171,34 @@ export const AdditionalDevicePropsCodec  = t.type({
 });
 
 export interface AdditionalDeviceProps extends t.TypeOf<typeof AdditionalDevicePropsCodec> {}
+
+export const DeviceActionRuleTypeUpsertCodec = t.type({
+  action: NonEmptyString,
+  event: NonEmptyString,
+  targetDeviceId: NonEmptyString,
+  order: t.number,
+  enabled: t.boolean,
+});
+
+export const DeviceActionRulesCreateCodec = t.type({
+  actionRules: t.array(DeviceActionRuleTypeUpsertCodec)
+});
+
+const DeviceActionsRuleTypeCodec = t.intersection([
+  t.type({
+    id: NonEmptyString
+  }),
+  DeviceActionRuleTypeUpsertCodec
+]);
+
+const DeviceActionRulesCodec = t.type({
+  actionRules: t.array(DeviceActionsRuleTypeCodec)
+});
+
+export type DeviceActionRuleTypeUpsert = t.TypeOf<typeof DeviceActionRuleTypeUpsertCodec>;
+
+export type DeviceActionRule = t.TypeOf<typeof DeviceActionsRuleTypeCodec>;
+
+export type DeviceActionRulesCreate = t.TypeOf<typeof DeviceActionRulesCreateCodec>;
+
+export type DeviceActionRules = t.TypeOf<typeof DeviceActionRulesCodec>;

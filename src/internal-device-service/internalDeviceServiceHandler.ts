@@ -1,11 +1,11 @@
 import axios from 'axios';
+import { injectable } from 'inversify';
 import InternalDeviceServiceError from './internalDeviceServiceError';
-import {injectable} from 'inversify';
 
 export interface InternalDeviceServiceRequest {
   method: string,
   url: string,
-  body: any
+  body?: any
 }
 
 @injectable()
@@ -35,4 +35,4 @@ class InternalDeviceServiceHandler {
   }
 }
 
-export {InternalDeviceServiceHandler, InternalDeviceServiceError};
+export { InternalDeviceServiceHandler, InternalDeviceServiceError };
