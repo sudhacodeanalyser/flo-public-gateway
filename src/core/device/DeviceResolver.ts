@@ -315,11 +315,16 @@ class DeviceResolver extends Resolver<Device> {
         return device.irrigationType;
       }
 
-      const otherDevices = await this.getAllByLocationId(device.location.id);
+      const otherDevices = (await this.getAllByLocationId(device.location.id))
+        .filter(otherDevice => otherDevice.id !== device.id);
 
-      // If there are multiple devices on the location, then
-      // it is undecidable if this has irrigation
-      if (otherDevices.length > 1) {
+      // If there's at least one other device with irrigation or an undecided status, then it's undecidable
+      if (
+        otherDevices.length && 
+        otherDevices.some(otherDevice => 
+          otherDevice.irrigationType !== 'none' || otherDevice.irrigationType !== 'not_plumbed'
+        )
+      ) {
         return NonEmptyStringFactory.create('not_sure');
       }
 
