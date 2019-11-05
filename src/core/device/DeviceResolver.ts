@@ -20,6 +20,8 @@ import { PairingService } from '../../api-v1/pairing/PairingService';
 import * as t from 'io-ts';
 import * as Either from 'fp-ts/lib/Either';
 import { HealthTestServiceFactory, HealthTestService } from './HealthTestService';
+import LocationTable from '../location/LocationTable';
+import { NonEmptyString, NonEmptyStringFactory } from '../api/validator/NonEmptyString';
 
 @injectable()
 class DeviceResolver extends Resolver<Device> {
@@ -306,6 +308,35 @@ class DeviceResolver extends Resolver<Device> {
         this.logger.error({ err });
         return null;
       }      
+    },
+    irrigationType: async (device: Device, shouldExpand = false) => {
+      
+      if (device.irrigationType) {
+        return device.irrigationType;
+      }
+
+      const otherDevices = await this.getAllByLocationId(device.location.id);
+
+      // If there are multiple devices on the location, then
+      // it is undecidable if this has irrigation
+      if (otherDevices.length > 1) {
+        return NonEmptyStringFactory.create('not_sure');
+      }
+
+      const locationRecord = await this.locationTable.getByLocationId(device.location.id);
+
+      if (!locationRecord) {
+        return NonEmptyStringFactory.create('not_sure');
+      }
+
+      const hasSprinklers = (locationRecord.outdoor_amenities || []).some(amenity => amenity.toLowerCase() === 'sprinklers');
+      const isIrrigationOnly = (locationRecord.location_type || '').toLowerCase() === 'irrigation';
+
+      if (hasSprinklers || isIrrigationOnly) {
+        return NonEmptyStringFactory.create('sprinklers');
+      } else {
+        return NonEmptyStringFactory.create('not_sure');
+      }
     }
   };
   private locationResolverFactory: () => LocationResolver;
@@ -324,6 +355,7 @@ class DeviceResolver extends Resolver<Device> {
    @inject('NotificationServiceFactory') notificationServiceFactory: NotificationServiceFactory,
    @inject('PairingService') private pairingService: PairingService,
    @inject('HealthTestServiceFactory') healthTestServiceFactory: HealthTestServiceFactory,
+   @inject('LocationTable') private locationTable: LocationTable,
    @injectHttpContext private readonly httpContext: interfaces.HttpContext
   ) {
     super();
