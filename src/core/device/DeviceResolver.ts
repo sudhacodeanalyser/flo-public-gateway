@@ -313,10 +313,11 @@ class DeviceResolver extends Resolver<Device> {
       
       if (device.irrigationType) {
         return device.irrigationType;
-      }
+      } 
 
-      const otherDevices = (await this.getAllByLocationId(device.location.id))
-        .filter(otherDevice => otherDevice.id !== device.id);
+      const otherDevices = (await this.deviceTable.getAllByLocationId(device.location.id))
+        .filter(deviceRecord => deviceRecord.id !== device.id)
+        .map(deviceRecord => new DeviceRecord(deviceRecord).toModel());
 
       // If there's at least one other device with irrigation or an undecided status, then it's undecidable
       if (
