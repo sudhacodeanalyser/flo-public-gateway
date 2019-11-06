@@ -19,7 +19,7 @@ import UserTable from './UserTable';
 @injectable()
 class UserResolver extends Resolver<User> {
   protected propertyResolverMap: PropertyResolverMap<User> = {
-    locations: async (model: User, shouldExpand = false) => {
+    locations: async (model: User, shouldExpand: boolean = false, expandProps?: PropExpand) => {
       const userLocationRoleRecordData: UserLocationRoleRecordData[] = await this.userLocationRoleTable.getAllByUserId(model.id);
 
       if (!shouldExpand) {
@@ -28,7 +28,7 @@ class UserResolver extends Resolver<User> {
 
       return Promise.all(userLocationRoleRecordData.map(
         async (userLocationRoleRecordDatum) => {
-          const location = await this.locationResolverFactory().get(userLocationRoleRecordDatum.location_id);
+          const location = await this.locationResolverFactory().get(userLocationRoleRecordDatum.location_id, expandProps);
 
           return {
             ...location,
