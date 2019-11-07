@@ -77,7 +77,7 @@ deploy:
 		--install $(APP) \
 		./k8s/$(APP) \
 		--values ./k8s/pipeline.yaml \
-		--set environment=${params.environment} \
+		--set environment=$(ENV) \
 		--namespace=$(APP) \
 		--wait --timeout $(HELM_DEPLOY_TIMEOUT)
 
