@@ -177,7 +177,7 @@ export const DeviceActionRuleTypeUpsertCodec = t.type({
   event: NonEmptyString,
   targetDeviceId: NonEmptyString,
   order: t.number,
-  enabled: t.boolean,
+  enabled: t.boolean
 });
 
 export const DeviceActionRulesCreateCodec = t.type({
@@ -186,7 +186,9 @@ export const DeviceActionRulesCreateCodec = t.type({
 
 const DeviceActionsRuleTypeCodec = t.intersection([
   t.type({
-    id: NonEmptyString
+    id: NonEmptyString,
+    createdAt: NonEmptyString,
+    updatedAt: NonEmptyString
   }),
   DeviceActionRuleTypeUpsertCodec
 ]);
