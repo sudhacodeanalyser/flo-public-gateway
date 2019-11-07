@@ -439,6 +439,19 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       return device.value.macAddress;
     }
 
+    @httpGet('/:id/actionRules',
+      authWithId,
+      reqValidator.create(t.type({
+        params: t.type({
+          id: t.string
+        })
+      }))
+    )
+    private async getActionRules(@requestParam('id') id: string): Promise<DeviceActionRules> {
+      return this.internalDeviceService.getActionRules(id);
+    }
+
+
     @httpPost('/:id/actionRules',
       authWithId,
       reqValidator.create(t.type({

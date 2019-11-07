@@ -105,6 +105,15 @@ class InternalDeviceService extends MemoizeMixin(InternalDeviceServiceHandler) i
     }
   }
 
+  public async getActionRules(deviceId: string): Promise<DeviceActionRules> {
+    const request = {
+      method: 'get',
+      url: `${ this.internalDeviceServiceBaseUrl }/devices/${deviceId}/actionRules`
+    };
+
+    return this.sendRequest(request);
+  }
+
   public async addActionRules(deviceId: string, actionRules: DeviceActionRulesCreate): Promise<DeviceActionRules> {
     const request = {
       method: 'post',
