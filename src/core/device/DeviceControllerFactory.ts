@@ -22,6 +22,7 @@ import { DeviceSystemModeServiceFactory } from './DeviceSystemModeService';
 import { DirectiveServiceFactory } from './DirectiveService';
 import { HealthTest, HealthTestServiceFactory } from './HealthTestService';
 import { PairingResponse, PuckPairingResponse } from './PairingService';
+import moment from 'moment';
 
 enum HealthTestActions {
   RUN = 'run'
@@ -307,7 +308,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
           ...(!isSleep ? {} : {
             revertMode: data.revertMode,
             revertMinutes: data.revertMinutes,
-            revertScheduledAt: now
+            revertScheduledAt: moment(now).add(data.revertMinutes, 'minutes').toISOString()
           })
         }
       });
