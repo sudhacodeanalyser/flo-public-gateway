@@ -3,10 +3,12 @@ kind: Service
 metadata:
   name: {{ include "flo-public-gateway.fullname" . }}
   labels:
+    app: {{ include "flo-public-gateway.name" . }}
     app.kubernetes.io/name: {{ include "flo-public-gateway.name" . }}
-    helm.sh/chart: {{ include "flo-public-gateway.chart" . }}
+    app.kubernetes.io/environment: {{ .Values.secrets.datas.ENVIRONMENT }}
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
+    helm.sh/chart: {{ include "flo-public-gateway.chart" . }}
 spec:
   type: {{ .Values.service.type }}
   ports:

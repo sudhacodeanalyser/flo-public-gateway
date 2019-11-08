@@ -12,6 +12,7 @@ import * as Option from 'fp-ts/lib/Option';
 import { pipe } from 'fp-ts/lib/pipeable';
 import * as TaskEither from 'fp-ts/lib/TaskEither';
 import { TokenMetadata, OAuth2TokenCodec, LegacyAuthTokenCodec } from './Token';
+import Logger from 'bunyan';
 import crypto from 'crypto';
 
 type Params = { [param: string]: any };
@@ -31,11 +32,12 @@ class AuthMiddlewareFactory {
         return next(new UnauthorizedError('Missing or invalid access token.'));
       }
 
+      const logger = req.log;
       const path = overrideMethodId || req.route.path.split('/').map((p: string) => p.replace(/:.+/g, '$')).join('/');
       const methodId = req.method + path;
       const params = getParams && (await getParams(req));
       const tokenMetadata = await pipe(
-        await this.checkCache(methodId, token, params),
+        await this.checkCache(methodId, token, params, logger),
         Option.fold(
           () => async () => this.callAuthService(methodId, token, params),
           tokenMedata => TaskEither.right(tokenMedata)
@@ -43,7 +45,6 @@ class AuthMiddlewareFactory {
         TaskEither.getOrElse((err): TokenMetadata => async () => next(err))
       )();
 
-      const logger = req.log;
 
       if (logger !== undefined) {
         logger.info({ token: tokenMetadata });
@@ -77,20 +78,29 @@ class AuthMiddlewareFactory {
     return cacheKeyPrefix && [cacheKeyPrefix, methodId, ...formattedParams].join(':');
   }
 
-  private async checkCache(methodId: string, token: string, params?: Params): Promise<Option.Option<TokenMetadata>> {
-    const cacheKey = this.formatCacheKey(methodId, token, params);
-    const cacheResult = cacheKey && (await this.redisClient.get(cacheKey));
+  private async checkCache(methodId: string, token: string, params?: Params, logger?: Logger): Promise<Option.Option<TokenMetadata>> {
+    try {
+      const cacheKey = this.formatCacheKey(methodId, token, params);
+      const cacheResult = cacheKey && (await this.redisClient.get(cacheKey));
 
-    if (cacheResult == null) {
-      return Option.none;
-    } else {
-      const tokenMetadata = JSON.parse(cacheResult);
-
-      if (!tokenMetadata._token_hash || tokenMetadata._token_hash !== this.hashToken(token)) {
+      if (cacheResult == null) {
         return Option.none;
+      } else {
+        const tokenMetadata = JSON.parse(cacheResult);
+
+        if (!tokenMetadata._token_hash || tokenMetadata._token_hash !== this.hashToken(token)) {
+          return Option.none;
+        }
+        
+        return Option.some(tokenMetadata);
       }
+    } catch (err) {
       
-      return Option.some(tokenMetadata);
+      if (logger) {
+        logger.error({ err });
+      }
+
+      return Option.none;
     }
   }
 
@@ -139,7 +149,7 @@ class AuthMiddlewareFactory {
     const tokenHash = this.hashToken(token);
 
     if (cacheKey !== null) {
-      // TTL 1 hour, this means that a token can live max 1 hour after it's true expiration in the cache
+      // TTL 1 hour, this means that a token can live max 1 hour after its true expiration in the cache
       await this.redisClient.setex(cacheKey, 3600, JSON.stringify({ ...tokenMetadata, _token_hash: tokenHash }));
     }
   }

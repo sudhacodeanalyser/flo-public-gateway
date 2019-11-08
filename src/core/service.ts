@@ -14,3 +14,4 @@ export * from './alert/AlertService';
 export * from './flo-detect/FloDetectService';
 export * from './entity-activity/EntityActivityService';
 export * from './telemetry/TelemetryService';
+export * from './ifttt/IFTTTService';

@@ -263,14 +263,14 @@ class LocationResolver extends Resolver<Location> {
     }
   }
 
-  public async getAllByAccountId(accountId: string): Promise<Location[]> {
+  public async getAllByAccountId(accountId: string, expandProps: PropExpand = []): Promise<Location[]> {
     const locationRecordData = await this.locationTable.getAllByAccountId(accountId);
 
     return Promise.all(
       locationRecordData
         .map(async (datum) => {
           const location = new LocationRecord(datum).toModel();
-          const resolvedProps = await this.resolveProps(location);
+          const resolvedProps = await this.resolveProps(location, expandProps);
 
           return {
             ...location,

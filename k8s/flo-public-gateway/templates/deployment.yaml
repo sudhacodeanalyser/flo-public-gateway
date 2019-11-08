@@ -5,9 +5,10 @@ metadata:
   labels:
     app: {{ include "flo-public-gateway.name" . }}
     app.kubernetes.io/name: {{ include "flo-public-gateway.name" . }}
-    helm.sh/chart: {{ include "flo-public-gateway.chart" . }}
+    app.kubernetes.io/environment: {{ .Values.secrets.datas.ENVIRONMENT }}
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
+    helm.sh/chart: {{ include "flo-public-gateway.chart" . }}
 spec:
 {{ if eq .Values.environment "production" }}
   replicas: {{ .Values.replicaCount }}
@@ -16,6 +17,7 @@ spec:
 {{ end }}
   selector:
     matchLabels:
+      app: {{ include "flo-public-gateway.name" . }}
       app.kubernetes.io/name: {{ include "flo-public-gateway.name" . }}
       app.kubernetes.io/instance: {{ .Release.Name }}
   template:
@@ -23,8 +25,12 @@ spec:
       annotations:
         checksum/secrets: {{ include (print $.Template.BasePath "/secrets.yaml") . | sha256sum }}
       labels:
+        app: {{ include "flo-public-gateway.name" . }}
         app.kubernetes.io/name: {{ include "flo-public-gateway.name" . }}
+        app.kubernetes.io/environment: {{ .Values.secrets.datas.ENVIRONMENT }}
         app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/managed-by: {{ .Release.Service }}
+        helm.sh/chart: {{ include "flo-public-gateway.chart" . }}
     spec:
       imagePullSecrets:
         - name: gitlab-registry

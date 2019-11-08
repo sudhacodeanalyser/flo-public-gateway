@@ -12,6 +12,7 @@ import { DeviceSystemModeService } from '../device/DeviceSystemModeService';
 import { IrrigationScheduleService, IrrigationScheduleServiceFactory } from '../device/IrrigationScheduleService';
 import { LocationResolver } from '../resolver';
 import { AccountService, DeviceService } from '../service';
+import moment from 'moment';
 
 @injectable()
 class LocationService {
@@ -130,6 +131,7 @@ class LocationService {
 
     } else if (target === SystemMode.SLEEP) {
       const now = new Date().toISOString();
+      const revertScheduledAt = moment(now).add(revertMinutes, 'minutes').toISOString();
       const promises = unlockedDevices
         .map(async device => {
 
@@ -140,7 +142,7 @@ class LocationService {
               target,
               revertMinutes,
               revertMode,
-              revertScheduledAt: now,
+              revertScheduledAt,
               shouldInherit: true
             }
           });
@@ -152,7 +154,7 @@ class LocationService {
           target,
           revertMinutes,
           revertMode,
-          revertScheduledAt: now
+          revertScheduledAt
         }
       });
 
