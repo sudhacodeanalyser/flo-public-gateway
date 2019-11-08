@@ -100,6 +100,8 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
             })
           ]),
           t.partial({
+            accountId: t.string,
+            groupId: t.string,
             status: t.union([t.string, t.array(AlertStatusCodec)]),
             severity: t.union([t.string, t.array(AlarmSeverityCodec)]),
             reason: t.union([t.string, t.array(IncidentStatusReasonCodec)]),
