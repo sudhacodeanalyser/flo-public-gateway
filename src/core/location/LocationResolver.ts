@@ -12,6 +12,7 @@ import { LookupService } from '../service';
 import { UserLocationRoleRecord } from '../user/UserLocationRoleRecord';
 import UserLocationRoleTable from '../user/UserLocationRoleTable';
 import { LocationRecord, LocationRecordData } from './LocationRecord';
+import moment from 'moment';
 
 const DEFAULT_LANG = 'en';
 const DEFAULT_AREAS_ID = 'areas.default';
@@ -96,7 +97,13 @@ class LocationResolver extends Resolver<Location> {
           revertMode: undefined,
           revertMinutes: undefined
         };
-        const revertData = target !== SystemMode.SLEEP ?
+
+        // TODO: Computed target is a hack to work around the fact that system mode reconciliation does not operate at
+        // the system mode level. Once that is implemented at the reconcilation service level, remove this code. 
+        const computedTarget = target === SystemMode.SLEEP && revertScheduledAt && moment().isAfter(revertScheduledAt) ?
+          revertMode || SystemMode.HOME :
+          target;
+        const revertData = computedTarget !== SystemMode.SLEEP ?
           {} :
           {
             revertScheduledAt,
@@ -107,7 +114,7 @@ class LocationResolver extends Resolver<Location> {
         return {
           ...systemModeData,
           ...revertData,
-          target
+          target: computedTarget
         };
       }
 
