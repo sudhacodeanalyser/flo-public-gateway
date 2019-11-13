@@ -340,19 +340,6 @@ class WaterService {
   }
 
   private async getWaterMeterReport(macAddresses: string[], startDate: string, endDate: string, interval: WaterConsumptionInterval, timezone: string = 'Etc/UTC'): Promise<WaterMeterReport> {
-
-     if (!macAddresses.length) {
-      return {
-        params: {
-          macAddressList: [],
-          startDate,
-          endDate,
-          interval
-        },
-        items: []
-      };
-    }
-
     const results = await this.waterMeterService.getReport(macAddresses, startDate, endDate, '1h', timezone);
     const deviceResults = results.items
       .map(deviceItems => {
