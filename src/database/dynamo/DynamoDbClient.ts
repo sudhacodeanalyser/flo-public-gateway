@@ -224,7 +224,7 @@ class DynamoDbClient implements DatabaseClient {
         name: setOp.key,
         exprName: `#${ setOp.key }`,
         value: setOp.value,
-        exprValue: `:${ setOp.key }`
+        exprValue: setOp.ifNotExists ? `if_not_exists(#${ setOp.key }, :${ setOp.key })` : `:${ setOp.key }`
       }));
     const setStrs = setExprTuples
       .map(({ exprName, exprValue }) => `${ exprName } = ${ exprValue }`);

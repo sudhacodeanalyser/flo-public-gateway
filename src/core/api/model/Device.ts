@@ -80,6 +80,11 @@ export const DeviceUpdateValidator = t.exact(t.intersection([
     systemMode: t.partial({
       shouldInherit: MutableSystemModeCodec.props.shouldInherit
     })
+  }),
+  t.partial({
+    puckConfig: t.type({
+      isConfigured: t.literal(true)
+    })
   })
 ]));
 export interface DeviceUpdate extends t.TypeOf<typeof DeviceUpdateValidator> {
@@ -115,7 +120,7 @@ export const PairingDataCodec = t.type({
 
 export type PairingData = t.TypeOf<typeof PairingDataCodec>;
 
-export interface Device extends Omit<DeviceUpdate, 'valve'>, TimestampedModel {
+export interface Device extends Omit<DeviceUpdate, 'valve' | 'puckConfig'>, TimestampedModel {
   id: string,
   macAddress: string;
   location: Expandable<Location>;
@@ -148,6 +153,10 @@ export interface Device extends Omit<DeviceUpdate, 'valve'>, TimestampedModel {
   healthTest?: {
     latest?: HealthTest
   };
+  puckConfig?: {
+    isConfigured: boolean;
+    configuredAt?: string;
+  }
 }
 
 interface FwProperties {
