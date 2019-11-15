@@ -93,6 +93,9 @@ components:
           properties:
             id:
               type: integer
+        userActions:
+          type: object
+          $ref: '#/components/schemas/UserActions'
         actions:
           type: array
           items:
@@ -129,6 +132,18 @@ components:
                 supported:
                   type: boolean
 
+    UserActions:
+      type: object
+      properties:
+        displayTitle:
+          type: string
+        displayDescription:
+          type: string
+        actions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Action'
+
     Action:
       type: object
       properties:
@@ -163,7 +178,7 @@ components:
         titleText:
           type: string
         type:
-          enum: 
+          enum:
             - list
             - text
         options:
@@ -181,7 +196,7 @@ components:
           type: string
         sortOrder:
           type: string
-        action: 
+        action:
           enum:
             - sleep_2h
             - sleep_24h
@@ -208,7 +223,7 @@ components:
             - home
             - away
             - sleep
-        flow: 
+        flow:
           $ref: '#/components/schemas/AlertFeedbackStep'
         flowTags:
           type: object
