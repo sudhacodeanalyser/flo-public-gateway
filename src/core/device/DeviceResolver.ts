@@ -343,6 +343,17 @@ class DeviceResolver extends Resolver<Device> {
       } else {
         return NonEmptyStringFactory.create('not_sure');
       }
+    },
+    shutoff: async (device: Device, shouldExpand = false) => {
+      const additionalProperties = await this.internalDeviceService.getDevice(device.macAddress);
+      const shutoffTimeSeconds = Math.max(
+        _.get(additionalProperties, 'fwProperties.alarm_shutoff_time_epoch_sec', 0), 
+        0
+      );
+
+      return {
+        scheduledAt: new Date(shutoffTimeSeconds * 1000).toISOString()
+      };
     }
   };
   private locationResolverFactory: () => LocationResolver;
