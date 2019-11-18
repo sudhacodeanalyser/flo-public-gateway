@@ -54,30 +54,39 @@ class StripeWebhookHandler implements SubscriptionProviderWebhookHandler {
     }
 
     const stripeSubscription = data.object;
-    const locationId = stripeSubscription.metadata.location_id;
+    const locationId = stripeSubscription.metadata.location_id as string | undefined;
     const customerId = _.isString(stripeSubscription.customer) ? stripeSubscription.customer : stripeSubscription.customer.id;
     const subscription = {
       plan: {
         id: stripeSubscription.plan ? stripeSubscription.plan.id : 'unknown'
       },
-      location: {
+      location: locationId ? {
         id: locationId
-      },
+      } : undefined,
       sourceId: stripeSubscription.metadata.source_id || 'stripe',
       provider: this.stripeSubscriptionProvider.formatProviderData(stripeSubscription)
     };
 
     await pipe(
-      async () => this.subscriptionService.getSubscriptionByRelatedEntityId(locationId),
+      async () => locationId ? this.subscriptionService.getSubscriptionByRelatedEntityId(locationId) : AsyncOption.none(),
       AsyncOption.alt(() => 
-        async () => Option.fromNullable((await this.subscriptionService.getSubscriptionByProviderCustomerId(customerId))[0]),
+        async () => Option.fromNullable((await this.subscriptionService.getSubscriptionByProviderCustomerId(customerId))[0])
       ),
       AsyncOption.fold(
         () => {
-          return async () => this.subscriptionService.createLocalSubscription(subscription);
+          return async () => {
+            if (subscription.location && locationId) {
+              await this.subscriptionService.createLocalSubscription({
+                ...subscription,
+                location: { id: locationId || '' }
+              });
+            }
+          };
         },
         existingSubscription => {
-          return async () => this.subscriptionService.updateSubscription(existingSubscription.id, subscription);
+          return async () => {
+            await this.subscriptionService.updateSubscription(existingSubscription.id, _.pickBy(subscription, prop => !_.isEmpty(prop)))
+          };
         }
       )
     )();
