@@ -104,7 +104,7 @@ class DeviceService {
 
     if (device !== null && !_.isEmpty(device) && !device.isPaired) {
       throw new ConflictError('Device already paired.');
-    } else if (isNone(location)) {
+    } else if (!location || isNone(location)) {
       throw new ResourceDoesNotExistError('Location does not exist');
     }
 

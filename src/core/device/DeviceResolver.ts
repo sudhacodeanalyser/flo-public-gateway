@@ -437,6 +437,28 @@ class DeviceResolver extends Resolver<Device> {
     return this.toModel(createdDeviceRecordData);
   }
 
+  protected async resolveProp<K extends keyof Device>(model: Device, prop: K, shouldExpand: boolean = false, expandProps?: PropExpand): Promise<{ [prop: string]: Device[K] }> {
+    // Don't resolve these properties for the Puck
+    const puckExcludedProps = [
+      'valve',
+      'irrigationSchedule',
+      'installStatus',
+      'learning',
+      'healthTest',
+      'hardwareThresholds',
+      'pairingData',
+      'irrigationType',
+      'irrigationSchedule',
+      'systemMode'
+    ];
+
+    if (model.deviceType === DeviceType.PUCK && puckExcludedProps.indexOf(prop) >= 0) {
+      return {};
+    } else {
+      return super.resolveProp<K>(model, prop, shouldExpand, expandProps);
+    }
+  }
+
   private async toModel(deviceRecordData: DeviceRecordData, expandProps: PropExpand = []): Promise<Device> {
     const device = new DeviceRecord(deviceRecordData).toModel();
     const expandedProps = await this.resolveProps(device, expandProps);

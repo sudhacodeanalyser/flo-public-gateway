@@ -17,12 +17,14 @@ import ResourceDoesNotExistError from "../api/error/ResourceDoesNotExistError";
 import UnauthorizedError from '../api/error/UnauthorizedError';
 import Request from '../api/Request';
 import * as Responses from '../api/response';
-import { DeviceService } from '../service';
+import { DeviceService, PuckTokenService } from '../service';
 import { DeviceSystemModeServiceFactory } from './DeviceSystemModeService';
 import { DirectiveServiceFactory } from './DirectiveService';
 import { HealthTest, HealthTestServiceFactory } from './HealthTestService';
 import { PairingResponse, PuckPairingResponse } from './PairingService';
 import moment from 'moment';
+import E from 'fp-ts/lib/Either';
+import { pipe } from 'fp-ts/lib/pipeable';
 
 enum HealthTestActions {
   RUN = 'run'
@@ -30,32 +32,62 @@ enum HealthTestActions {
 
 const HealthTestActionsCodec = convertEnumtoCodec(HealthTestActions);
 
-// TODO: PUCK. Remove me once Puck Auth is implemented.
-const PUCK_TOKEN = '$$Extr3m3ly_S3cur3_Str1ng!!'
-
 export function DeviceControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
   const authMiddlewareFactory = container.get<AuthMiddlewareFactory>('AuthMiddlewareFactory');
+  const puckTokenService = container.get<PuckTokenService>('PuckTokenService');
   const auth = authMiddlewareFactory.create();
   const authWithId = authMiddlewareFactory.create(async ({ params: { id } }: Request) => ({icd_id: id}));
   const authWithLocation = authMiddlewareFactory.create(async ({ body: { location: { id } } }: Request) => ({ location_id: id }));
 
-  // TODO: PUCK. Remove me once Puck Auth is implemented.
-  const isPuck = (req: Request) => {
-    return req.body && (req.body.deviceType === DeviceType.PUCK || req.body.cloud_token_access === PUCK_TOKEN);
-  }
+  const authUnion: (...authHandlers: express.Handler[]) => express.Handler = 
+    (...authHandlers: express.Handler[]) => async (req: Request, res: express.Response, next: express.NextFunction): Promise<void> => {
+      let isAuthorized = false; 
 
-  const hardcodedPuckTokenAuth: (fallbackAuth: express.Handler) => express.Handler = (fallbackAuth: express.Handler) => async (req: Request, res: express.Response, next: express.NextFunction): Promise<void> => {
-    if (isPuck(req)) {
-      const token = req.get('Authorization');
-      if (token === PUCK_TOKEN) {
-        return next();
-      } else {
-        return next(new UnauthorizedError('Missing or invalid access token.'));
+      for (let i = 0; i < authHandlers.length && !isAuthorized; i++) {
+        const authHandler = authHandlers[i];
+
+        isAuthorized = await (new Promise((resolve, reject) => authHandler(req, res, err => {
+          if (err) {
+            // TODO: Revisit this log level?
+            if (req.log) {
+              req.log.warn({ err });
+            }
+
+            resolve(false);
+          } else {
+            resolve(true);
+          }
+        })));
       }
-    }
 
-    return fallbackAuth(req, res, next);
+      if (isAuthorized) {
+        next();
+      } else {
+        next(new UnauthorizedError());
+      }
+    };
+
+  const puckTokenAuth: express.Handler = async (req: Request, res: express.Response, next: express.NextFunction): Promise<void> => {
+    const token = req.get('Authorization');
+
+    if (token) {
+      pipe(
+        await puckTokenService.verifyToken(token),
+        E.fold(
+          err => {
+            next(err);
+          },
+          tokenMetadata => {
+            req.token = tokenMetadata;
+
+            next();
+          }
+        )
+      );
+    } else {
+      next(new UnauthorizedError('Missing or invalid access token.'));
+    }
   }
 
 
@@ -110,7 +142,8 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       @inject('InternalDeviceService') private internalDeviceService: InternalDeviceService,
       @inject('DeviceSystemModeServiceFactory') private deviceSystemModeServiceFactory: DeviceSystemModeServiceFactory,
       @inject('DirectiveServiceFactory') private directiveServiceFactory: DirectiveServiceFactory,
-      @inject('HealthTestServiceFactory') private healthTestServiceFactory: HealthTestServiceFactory
+      @inject('HealthTestServiceFactory') private healthTestServiceFactory: HealthTestServiceFactory,
+      @inject('PuckPairingTokenTTL') private readonly puckPairingTokenTTL: number
     ) {
       super();
     }
@@ -226,15 +259,6 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       }))
     )
     private async scanQrCode(@authorizationHeader() authToken: string, @request() req: Request, @requestBody() qrData: QrData): Promise<PairingResponse | PuckPairingResponse> {
-
-      // TODO: PUCK. Revisit this.
-      if (req.body.deviceType === DeviceType.PUCK) {
-        return Promise.resolve({
-          id: uuid.v4(),
-          loginToken: PUCK_TOKEN
-        })
-      }
-
       const tokenMetadata = req.token;
 
       if (!tokenMetadata) {
@@ -243,26 +267,47 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
         throw new ForbiddenError();
       }
 
+      // TODO: PUCK. Revisit this.
+      if (req.body.deviceType === DeviceType.PUCK) {
+        const puckId = uuid.v4()
+        const token = await puckTokenService.issueToken(puckId, this.puckPairingTokenTTL, tokenMetadata.client_id);
+
+        return { id: puckId, loginToken: token };
+      }
+
       return this.deviceService.scanQrCode(authToken, tokenMetadata.user_id || tokenMetadata.client_id, qrData);
     }
 
     @httpPost('/pair/complete',
-      // TODO: PUCK. Implement proper auth.
-      hardcodedPuckTokenAuth(authWithLocation),
+      authUnion(puckTokenAuth, authWithLocation),
       reqValidator.create(t.type({
         body: DeviceCreateValidator
       }))
     )
     @createMethod
     @withResponseType<Device, Responses.Device>(Responses.Device.fromModel)
-    private async pairDevice(@authorizationHeader() authToken: string, @requestBody() deviceCreate: DeviceCreate): Promise<Option<Device>> {
+    private async pairDevice(@authorizationHeader() authToken: string, @request() req: Request, @requestBody() deviceCreate: DeviceCreate): Promise<Option<Device>> {
+      const tokenMetadata = req.token;
+
+      if (!tokenMetadata) {
+        throw new UnauthorizedError();
+      } else if (!tokenMetadata.user_id && !tokenMetadata.client_id) {
+        throw new ForbiddenError();
+      } else if (deviceCreate.deviceType === DeviceType.PUCK && !tokenMetadata.puckId) {
+        throw new ForbiddenError(); 
+      }
+
       const device = await this.deviceService.pairDevice(authToken, deviceCreate);
 
       if (deviceCreate.deviceType === DeviceType.PUCK) {
-        // TODO: PUCK. Revisit this.
+
         return some({
           ...device,
-          accessToken: PUCK_TOKEN
+          // Puck token has no expiration
+          accessToken: await puckTokenService.issueToken(tokenMetadata.puckId, undefined, tokenMetadata.client_id, {
+            macAddress: device.macAddress,
+            locationId: device.location.id
+          })
         });
       } else {
         return some(device);
