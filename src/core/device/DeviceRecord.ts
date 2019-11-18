@@ -73,7 +73,8 @@ const RecordToModelSchema: StrictSchema<Device, DeviceRecordData>  = {
   connectivity: () => undefined,
   telemetry: () => undefined,
   healthTest: () => undefined,
-  area: (input: DeviceRecordData) => input.area_id ? { id: input.area_id } : undefined
+  area: (input: DeviceRecordData) => input.area_id ? { id: input.area_id } : undefined,
+  shutoff: () => undefined
 };
 
 const ModelToRecordSchema: StrictSchema<DeviceRecordData, Device> = {
