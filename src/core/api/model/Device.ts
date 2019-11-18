@@ -148,6 +148,9 @@ export interface Device extends Omit<DeviceUpdate, 'valve'>, TimestampedModel {
   healthTest?: {
     latest?: HealthTest
   };
+  shutoff?: {
+    scheduledAt: string;
+  }
 }
 
 interface FwProperties {
