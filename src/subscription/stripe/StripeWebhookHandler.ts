@@ -5,6 +5,7 @@ import { Subscription, SubscriptionProviderWebhookHandler, SubscriptionProviderI
 import { SubscriptionService } from '../../core/service';
 import { isSubscriptionActive } from './StripeUtils';
 import * as Option from 'fp-ts/lib/Option';
+import * as AsyncOption from 'fp-ts-contrib/lib/TaskOption';
 import { pipe } from 'fp-ts/lib/pipeable';
 import StripeSubscriptionProvider from './StripeSubscriptionProvider';
 
@@ -54,6 +55,7 @@ class StripeWebhookHandler implements SubscriptionProviderWebhookHandler {
 
     const stripeSubscription = data.object;
     const locationId = stripeSubscription.metadata.location_id;
+    const customerId = _.isString(stripeSubscription.customer) ? stripeSubscription.customer : stripeSubscription.customer.id;
     const subscription = {
       plan: {
         id: stripeSubscription.plan ? stripeSubscription.plan.id : 'unknown'
@@ -66,16 +68,19 @@ class StripeWebhookHandler implements SubscriptionProviderWebhookHandler {
     };
 
     await pipe(
-      await this.subscriptionService.getSubscriptionByRelatedEntityId(locationId),
-      Option.fold(
-        async () => {
-          await this.subscriptionService.createLocalSubscription(subscription);
+      async () => this.subscriptionService.getSubscriptionByRelatedEntityId(locationId),
+      AsyncOption.alt(() => 
+        async () => Option.fromNullable((await this.subscriptionService.getSubscriptionByProviderCustomerId(customerId))[0]),
+      ),
+      AsyncOption.fold(
+        () => {
+          return async () => this.subscriptionService.createLocalSubscription(subscription);
         },
-        async existingSubscription => {
-          await this.subscriptionService.updateSubscription(existingSubscription.id, subscription);
+        existingSubscription => {
+          return async () => this.subscriptionService.updateSubscription(existingSubscription.id, subscription);
         }
       )
-    );
+    )();
   }
 
   private async handleSubscriptionUpdated(getSubscription: GetSubscription, data: EventData): Promise<void> {
