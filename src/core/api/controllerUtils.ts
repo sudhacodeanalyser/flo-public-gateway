@@ -30,8 +30,7 @@ export function parseExpand(expand?: string): PropExpand {
         .reduce((subAcc, subProp) => ({
           ...subAcc,
           [subProp]: {
-            $expand: true,
-            $select: true
+            $expand: true
           }
         }), {});
 
@@ -42,7 +41,7 @@ export function parseExpand(expand?: string): PropExpand {
         [property]: {
           $expand: true,
           $select: {
-            subProps,
+            ...subProps,
             $rest: true
           }
         }

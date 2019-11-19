@@ -23,6 +23,7 @@ class Resolver<T extends {}> {
         const shouldSelectProp = 
           shouldExpandAll || 
           expandProps.$select === true ||  
+          expandProps.$expand === true ||
           (expandProps.$select && expandProps.$select.$rest) || 
           propSelect
         const shouldExpandProp = 
@@ -38,7 +39,6 @@ class Resolver<T extends {}> {
             !!shouldExpandProp,
             expandProps.$select && (
               expandProps.$select === true || 
-              expandProps.$select.$rest ||
               expandProps.$select[keyString] === true
             ) ? 
               { $select: true } :
