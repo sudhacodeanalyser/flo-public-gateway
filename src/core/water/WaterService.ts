@@ -38,7 +38,11 @@ class WaterService {
       }
     });
     const tz = timezone || pipe(
-      await this.locationServiceFactory().getLocation(locationId),
+      await this.locationServiceFactory().getLocation(locationId, {
+        $select: {
+          timezone: true
+        }
+      }),
       Option.fold(
         () => 'Etc/UTC',
         location => location.timezone || 'Etc/UTC'
