@@ -26,12 +26,12 @@ import { NonEmptyString, NonEmptyStringFactory } from '../api/validator/NonEmpty
 @injectable()
 class DeviceResolver extends Resolver<Device> {
   protected propertyResolverMap: PropertyResolverMap<Device> = {
-    location: async (device: Device, shouldExpand = false) => {
+    location: async (device: Device, shouldExpand = false, expandProps?: PropExpand) => {
       if (!shouldExpand) {
         return null;
       }
 
-      return this.locationResolverFactory().get(device.location.id);
+      return this.locationResolverFactory().get(device.location.id, expandProps);
     },
     additionalProps: async (device: Device, shouldExpand = false) => {
       try {
