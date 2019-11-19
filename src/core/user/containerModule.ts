@@ -8,10 +8,12 @@ import { UserResolver } from './UserResolver';
 import UserTable from './UserTable';
 import CachedUserTable from './CachedUserTable';
 import CachedUserDetailTable from './CachedUserDetailTable';
+import MemoizedUserLocationRoleTable from './MemoizedUserLocationRoleTable';
+import MemoziedUserAccountRoleTable from './MemoizedUserAccountRoleTable';
 
 export default new ContainerModule((bind: interfaces.Bind) => {
-  bind<UserAccountRoleTable>('UserAccountRoleTable').to(UserAccountRoleTable);
-  bind<UserLocationRoleTable>('UserLocationRoleTable').to(UserLocationRoleTable);
+  bind<UserAccountRoleTable>('UserAccountRoleTable').to(MemoziedUserAccountRoleTable);
+  bind<UserLocationRoleTable>('UserLocationRoleTable').to(MemoizedUserLocationRoleTable);
   bind<UserDetailTable>('UserDetailTable').to(CachedUserDetailTable);
   bind<UserTable>('UserTable').to(CachedUserTable);
   bind<UserResolver>('UserResolver').to(UserResolver);
