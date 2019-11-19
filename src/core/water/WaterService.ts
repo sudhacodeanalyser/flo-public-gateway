@@ -32,7 +32,11 @@ class WaterService {
   }
 
   public async getLocationConsumption(locationId: string, startDate: string, endDate: string = new Date().toISOString(), interval: WaterConsumptionInterval = WaterConsumptionInterval.ONE_HOUR, timezone?: string): Promise<WaterConsumptionReport> {
-    const devices = await this.deviceServiceFactory().getAllByLocationId(locationId);
+    const devices = await this.deviceServiceFactory().getAllByLocationId(locationId, {
+      $select: {
+        macAddress: true
+      }
+    });
     const tz = timezone || pipe(
       await this.locationServiceFactory().getLocation(locationId),
       Option.fold(
