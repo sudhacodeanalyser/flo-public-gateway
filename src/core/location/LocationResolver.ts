@@ -35,13 +35,13 @@ class LocationResolver extends Resolver<Location> {
         return device;
       });
     },
-    users: async (location: Location, shouldExpand = false) => {
+    users: async (location: Location, shouldExpand = false, expandProps?: PropExpand) => {
       const locationUserRoles = await this.getAllUserRolesByLocationId(location.id);
 
       if (shouldExpand) {
         return Promise.all(
           locationUserRoles.map(async (locationUserRole) => {
-            const user = await this.userResolverFactory().getUserById(locationUserRole.userId);
+            const user = await this.userResolverFactory().getUserById(locationUserRole.userId, expandProps);
 
             return {
               ...user,
@@ -56,13 +56,13 @@ class LocationResolver extends Resolver<Location> {
     userRoles: async (location: Location, shouldExpand = false) => {
       return this.getAllUserRolesByLocationId(location.id);
     },
-    account: async (location: Location, shouldExpand = false) => {
+    account: async (location: Location, shouldExpand = false, expandProps?: PropExpand) => {
 
       if (!shouldExpand) {
         return location.account;
       }
 
-      return this.accountResolverFactory().getAccount(location.account.id);
+      return this.accountResolverFactory().getAccount(location.account.id, expandProps);
     },
     subscription: async (location: Location, shouldExpand = false) => {
       const subscription = await this.subscriptionResolverFactory().getByRelatedEntityId(location.id);
