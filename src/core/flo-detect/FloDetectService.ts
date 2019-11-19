@@ -29,7 +29,11 @@ class FloDetectService {
      604800;
 
     return pipe(
-      TaskEitherOption.fromOption<FloDetectLearning, Device>(await this.deviceServiceFactory().getByMacAddress(macAddress, ['location'])),
+      TaskEitherOption.fromOption<FloDetectLearning, Device>(await this.deviceServiceFactory().getByMacAddress(macAddress, {
+        $select: {
+          installStatus: true
+        }
+      })),
       TaskEitherOption.chain(device => {
         if (
           !device.installStatus.isInstalled || 

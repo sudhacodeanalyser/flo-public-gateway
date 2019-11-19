@@ -63,7 +63,13 @@ class LocationService {
       const deviceService = this.deviceServiceFactory();
 
       if (_.get(locationUpdate, 'irrigationSchedule.isEnabled', false)) {
-         const devices = await deviceService.getAllByLocationId(id, ['irrigationSchedule']);
+         const devices = await deviceService.getAllByLocationId(id, { 
+          $select: { 
+            irrigationSchedule: { 
+              $expand: true 
+            } 
+          } 
+        });
          const promises = devices
            .map(async (device) => {
              if  (
