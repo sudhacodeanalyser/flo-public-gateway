@@ -18,7 +18,13 @@ class SessionService {
   }
 
   public async issueFirestoreToken(userId: string, additionalAssets?: FirestoreAssests): Promise<FirestoreTokenResponse> {
-    const user = await this.userServiceFactory().getUserById(userId, ['locations']);
+    const user = await this.userServiceFactory().getUserById(userId, {
+      $select: {
+        locations: {
+          $expand: true
+        }
+      }
+    });
 
     const devicesAsset = Option.isNone(user) ? [] : _.flatMap(
       user.value.locations,

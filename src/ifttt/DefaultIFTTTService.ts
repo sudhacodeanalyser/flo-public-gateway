@@ -62,7 +62,13 @@ class DefaultIFTTTService extends HttpService implements IFTTTService {
     const alertIds = triggerData.triggerFields.alert_ids;
     const alertsFilter = alertIds && alertIds.split(',').filter(alarmId => alarmId).map(alarmId => parseInt(alarmId.trim(), 10));
 
-    const userData = await this.userService.getUserById(userId, ['locations']);
+    const userData = await this.userService.getUserById(userId, {
+      $select: {
+        locations: {
+          $expand: true
+        }
+      }
+    });
     if (isNone(userData)) {
       throw new NotFoundError('User not found.');
     }
@@ -133,7 +139,15 @@ class DefaultIFTTTService extends HttpService implements IFTTTService {
   }
 
   public async notifyRealtimeAlert(deviceId: string, triggerId: TriggerId): Promise<void> {
-    const device = await this.deviceService.getDeviceById(deviceId, ['location']);
+    const device = await this.deviceService.getDeviceById(deviceId, {
+      $select: {
+        location: {
+          $select: {
+            users: true
+          }
+        }
+      }
+    });
     if (isNone(device)) {
       throw new NotFoundError('Device not found.');
     }
@@ -174,7 +188,20 @@ class DefaultIFTTTService extends HttpService implements IFTTTService {
 
   private async getDefaultDeviceId(userId: string): Promise<string> {
     // TODO: Implement multi entity targeting the action to the correspoinding device.
-    const userData = await this.userService.getUserById(userId, ['locations']);
+    const userData = await this.userService.getUserById(userId, {
+      $select: {
+        locations: {
+          $select: {
+            devices: {
+              $select: {
+                id: true
+              }
+            },
+            residenceType: true
+          }
+        }
+      }
+    });
     if (isNone(userData)) {
       throw new NotFoundError('User not found.');
     }

@@ -56,7 +56,7 @@ class AccountResolver extends Resolver<Account> {
     this.userResolverFactory = depFactoryFactory<UserResolver>('UserResolver');
   }
 
-  public async getAccount(id: string, expandProps: PropExpand = []): Promise<Account | null> {
+  public async getAccount(id: string, expandProps?: PropExpand): Promise<Account | null> {
     const accountRecordData: AccountRecordData | null = await this.accountTable.get({ id });
 
     if (accountRecordData === null) {

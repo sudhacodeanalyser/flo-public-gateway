@@ -50,7 +50,15 @@ class WaterService {
 
   public async getDeviceConsumption(macAddress: string, startDate: string, endDate: string = new Date().toISOString(), interval: WaterConsumptionInterval = WaterConsumptionInterval.ONE_HOUR, timezone?: string): Promise<WaterConsumptionReport> {
     const tz = timezone || pipe(
-      await this.deviceServiceFactory().getByMacAddress(macAddress, ['location']),
+      await this.deviceServiceFactory().getByMacAddress(macAddress, {
+        $select: {
+          location: {
+            $select: {
+              timezone: true
+            }
+          }
+        }
+      }),
       Option.fold(
         () => 'Etc/UTC',
         device => device.location.timezone || 'Etc/UTC'
@@ -64,7 +72,16 @@ class WaterService {
   }
 
   public async getDailyAverageConsumptionByLocationId(locationId: string, tz?: string): Promise<WaterAveragesReport> {
-    const devices = await this.deviceServiceFactory().getAllByLocationId(locationId, ['location']);
+    const devices = await this.deviceServiceFactory().getAllByLocationId(locationId, {
+      $select: {
+        macAddress: true,
+        location: {
+          $select: {
+            timezone: true
+          }
+        }
+      }
+    });
     const timezone = tz || _.get(devices[0], 'location.timezone', 'Etc/UTC');
     const now = moment.tz(timezone);
     const macAddresses = devices.map(({ macAddress }) => macAddress);
@@ -89,7 +106,15 @@ class WaterService {
   }
 
   public async getDailyAverageConsumptionByDevice(macAddress: string, tz?: string): Promise<WaterAveragesReport> {
-    const device = await this.deviceServiceFactory().getByMacAddress(macAddress, ['location']);
+    const device = await this.deviceServiceFactory().getByMacAddress(macAddress, {
+      $select: {
+        location: {
+          $select: {
+            timezone: true
+          }
+        }
+      }
+    });
     const timezone = tz || pipe(
       device,
       Option.fold(
@@ -136,7 +161,15 @@ class WaterService {
   }
 
   public async getMetricsAveragesByDevice(macAddress: string, startDate: string, endDate: string = new Date().toISOString(), interval: WaterConsumptionInterval = WaterConsumptionInterval.ONE_DAY, tz?: string): Promise<WaterMetricsReport> {
-    const device = await this.deviceServiceFactory().getByMacAddress(macAddress, ['location']);
+    const device = await this.deviceServiceFactory().getByMacAddress(macAddress, {
+      $select: {
+        location: {
+          $select: {
+            timezone: true
+          }
+        }
+      }
+    });
     const timezone = tz || pipe(
       device,
       Option.fold(
