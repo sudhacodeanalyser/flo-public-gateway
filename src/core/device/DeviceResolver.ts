@@ -386,7 +386,7 @@ class DeviceResolver extends Resolver<Device> {
     }
   }
 
-  public async get(id: string, expandProps: PropExpand = []): Promise<Device | null> {
+  public async get(id: string, expandProps?: PropExpand): Promise<Device | null> {
     const deviceRecordData: DeviceRecordData | null = await this.deviceTable.get({ id });
 
     if (deviceRecordData === null) {
@@ -396,7 +396,7 @@ class DeviceResolver extends Resolver<Device> {
     return this.toModel(deviceRecordData, expandProps);
   }
 
-  public async getByMacAddress(macAddress: string, expandProps: PropExpand = []): Promise<Device | null> {
+  public async getByMacAddress(macAddress: string, expandProps?: PropExpand): Promise<Device | null> {
     const deviceRecordData = await this.deviceTable.getByMacAddress(macAddress);
 
     if (deviceRecordData === null) {
@@ -406,7 +406,7 @@ class DeviceResolver extends Resolver<Device> {
     return this.toModel(deviceRecordData, expandProps);
   }
 
-  public async getAllByLocationId(locationId: string, expandProps: PropExpand = []): Promise<Device[]> {
+  public async getAllByLocationId(locationId: string, expandProps?: PropExpand): Promise<Device[]> {
     const deviceRecordData = await this.deviceTable.getAllByLocationId(locationId);
 
     return Promise.all(
@@ -448,7 +448,7 @@ class DeviceResolver extends Resolver<Device> {
     return this.toModel(createdDeviceRecordData);
   }
 
-  private async toModel(deviceRecordData: DeviceRecordData, expandProps: PropExpand = []): Promise<Device> {
+  private async toModel(deviceRecordData: DeviceRecordData, expandProps?: PropExpand): Promise<Device> {
     const device = new DeviceRecord(deviceRecordData).toModel();
     const expandedProps = await this.resolveProps(device, expandProps);
 

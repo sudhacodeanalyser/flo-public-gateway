@@ -14,21 +14,37 @@ class Resolver<T extends {}> {
   protected propertyResolverMap: PropertyResolverMap<T>
 
 
-  protected async resolveProps<K extends keyof T>(model: T, expandProps?: PropExpand) : Promise<Partial<T>> {
-    const shouldExpandAll = expandProps !== undefined && _.includes(expandProps, EXPAND_ALL);
+  protected async resolveProps<K extends keyof T>(model: T, expandProps: PropExpand = { $select: true }) : Promise<Partial<T>> {
+    const shouldExpandAll = expandProps.$select && expandProps.$select !== true && expandProps.$select.$expandAll;
     const resolvedProps = await Promise.all(
       _.map(model, async (value: any, key: K) => {
-        const expandProp = expandProps &&
-          _.find(expandProps, prop => (_.isArray(prop) ? prop[0] : prop) === key);
+        const keyString = key as string;
+        const propSelect = expandProps.$select && expandProps.$select !== true ? expandProps.$select[keyString] : undefined;
+        const shouldSelectProp = 
+          shouldExpandAll || 
+          expandProps.$select === true ||  
+          (expandProps.$select && expandProps.$select.$rest) || 
+          propSelect
+        const shouldExpandProp = 
+          shouldExpandAll ||
+          (
+            propSelect && propSelect !== true && propSelect.$expand 
+          );
 
-        return this.resolveProp(
-          model, 
-          key, 
-          expandProp !== undefined || shouldExpandAll, 
-          shouldExpandAll ? 
-            [EXPAND_ALL] :
-            _.isArray(expandProp) ? expandProp.slice(1) : undefined
-        );
+        return shouldSelectProp ?
+          this.resolveProp(
+            model, 
+            key, 
+            !!shouldExpandProp,
+            expandProps.$select && (
+              expandProps.$select === true || 
+              expandProps.$select.$rest ||
+              expandProps.$select[keyString] === true
+            ) ? 
+              { $select: true } :
+              (expandProps.$select && expandProps.$select[keyString]) as PropExpand | undefined
+          ) :
+          { [key]: null };
       })
     );
 
