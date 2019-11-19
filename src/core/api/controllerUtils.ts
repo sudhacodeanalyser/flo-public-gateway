@@ -8,18 +8,52 @@ import { Option, isNone } from 'fp-ts/lib/Option';
 import express from 'express';
 
 export function parseExpand(expand?: string): PropExpand {
+  
+  if (!expand) {
+    return { $select: true }
+  } else if (expand.includes('_all')) {
+    return {
+      $select: {
+        $expandAll: true
+      }
+    };
+  }
 
-  return (expand === undefined ? '' : expand).split(/,(?![^(]*\))/)
+  const select = (expand === undefined ? '' : expand).split(/,(?![^(]*\))/)
     .filter(prop => !_.isEmpty(prop))
-    .map(prop => {
+    .reduce((acc, prop) => {
       const match = prop.match(/([^()]+)\((.*)\)$/);
 
-      if (!match) {
-        return prop;
-      }
+ 
+      const property = !match ? prop : match[1];
+      const subProps = (match ? match[2].split(',') : [])
+        .reduce((subAcc, subProp) => ({
+          ...subAcc,
+          [subProp]: {
+            $expand: true
+          }
+        }), {});
 
-      return [match[1], ...match[2].split(',')];
-    });
+
+
+      return {
+        ...acc,
+        [property]: {
+          $expand: true,
+          $select: {
+            ...subProps,
+            $rest: true
+          }
+        }
+      }
+    }, {});
+
+  return {
+    $select: {
+      ...select,
+      $rest: true
+    }
+  };
 }
 
 export interface ControllerOptions {
