@@ -22,7 +22,7 @@
   },
   "author": "Flo Technologies",
   "dependencies": {
-    "@instana/collector": "^1.72.0",
+    "@instana/collector": "1.72.1",
     "@types/glob": "^7.1.1",
     "@types/js-yaml": "^3.12.1",
     "aws-sdk": "^2.437.0",
