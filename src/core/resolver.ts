@@ -29,7 +29,7 @@ class Resolver<T extends {}> {
         const shouldExpandProp = 
           shouldExpandAll ||
           (
-            propSelect && propSelect !== true && propSelect.$expand 
+            propSelect && propSelect !== true && (propSelect.$expand || propSelect.$select) 
           );
 
         return shouldSelectProp ?

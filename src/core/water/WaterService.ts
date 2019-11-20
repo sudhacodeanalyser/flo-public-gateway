@@ -61,7 +61,6 @@ class WaterService {
       await this.deviceServiceFactory().getByMacAddress(macAddress, {
         $select: {
           location: {
-            $expand: true,
             $select: {
               timezone: true
             }
@@ -85,7 +84,6 @@ class WaterService {
       $select: {
         macAddress: true,
         location: {
-          $expand: true,
           $select: {
             timezone: true
           }
