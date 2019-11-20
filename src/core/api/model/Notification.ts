@@ -37,7 +37,8 @@ export interface Alarm {
   severity: number;
   isInternal: boolean;
   isShutoff: boolean;
-  triggersAlarm?: TriggersAlarmResponse,
+  triggersAlarm?: TriggersAlarmResponse;
+  userActions: UserActions;
   actions: Action[];
   supportOptions: SupportOption[];
   active: boolean;
@@ -136,6 +137,12 @@ export interface AlarmSettings extends t.TypeOf<typeof AlarmSettingsCodec> {}
 export interface UpdateDeviceAlarmSettings extends t.TypeOf<typeof UpdateDeviceAlarmSettingsCodec> {}
 
 export interface DeviceAlarmSettings extends t.TypeOf<typeof DeviceAlarmSettingsCodec> {}
+
+export interface UserActions {
+  displayTitle: string;
+  displayDescription: string;
+  actions: Action[];
+}
 
 export interface Action {
   id: number;

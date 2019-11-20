@@ -590,6 +590,12 @@ components:
               properties:
                 latest:
                   $ref: '#/components/schemas/HealthTest'
+            shutoff:
+              type: object
+              properties:
+                scheduledAt:
+                  type: string
+                  format: date-time
     DeviceExpandable:
       oneOf:
         - type: object

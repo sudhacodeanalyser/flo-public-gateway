@@ -12,6 +12,7 @@ import { LookupService } from '../service';
 import { UserLocationRoleRecord } from '../user/UserLocationRoleRecord';
 import UserLocationRoleTable from '../user/UserLocationRoleTable';
 import { LocationRecord, LocationRecordData } from './LocationRecord';
+import moment from 'moment';
 
 const DEFAULT_LANG = 'en';
 const DEFAULT_AREAS_ID = 'areas.default';
@@ -34,13 +35,13 @@ class LocationResolver extends Resolver<Location> {
         return device;
       });
     },
-    users: async (location: Location, shouldExpand = false) => {
+    users: async (location: Location, shouldExpand = false, expandProps?: PropExpand) => {
       const locationUserRoles = await this.getAllUserRolesByLocationId(location.id);
 
       if (shouldExpand) {
         return Promise.all(
           locationUserRoles.map(async (locationUserRole) => {
-            const user = await this.userResolverFactory().getUserById(locationUserRole.userId);
+            const user = await this.userResolverFactory().getUserById(locationUserRole.userId, expandProps);
 
             return {
               ...user,
@@ -55,13 +56,13 @@ class LocationResolver extends Resolver<Location> {
     userRoles: async (location: Location, shouldExpand = false) => {
       return this.getAllUserRolesByLocationId(location.id);
     },
-    account: async (location: Location, shouldExpand = false) => {
+    account: async (location: Location, shouldExpand = false, expandProps?: PropExpand) => {
 
       if (!shouldExpand) {
         return location.account;
       }
 
-      return this.accountResolverFactory().getAccount(location.account.id);
+      return this.accountResolverFactory().getAccount(location.account.id, expandProps);
     },
     subscription: async (location: Location, shouldExpand = false) => {
       const subscription = await this.subscriptionResolverFactory().getByRelatedEntityId(location.id);
@@ -96,7 +97,13 @@ class LocationResolver extends Resolver<Location> {
           revertMode: undefined,
           revertMinutes: undefined
         };
-        const revertData = target !== SystemMode.SLEEP ?
+
+        // TODO: Computed target is a hack to work around the fact that system mode reconciliation does not operate at
+        // the system mode level. Once that is implemented at the reconcilation service level, remove this code. 
+        const computedTarget = target === SystemMode.SLEEP && revertScheduledAt && moment().isAfter(revertScheduledAt) ?
+          revertMode || SystemMode.HOME :
+          target;
+        const revertData = computedTarget !== SystemMode.SLEEP ?
           {} :
           {
             revertScheduledAt,
@@ -107,11 +114,15 @@ class LocationResolver extends Resolver<Location> {
         return {
           ...systemModeData,
           ...revertData,
-          target
+          target: computedTarget
         };
       }
 
-      const devices = await this.deviceResolverFactory().getAllByLocationId(location.id);
+      const devices = await this.deviceResolverFactory().getAllByLocationId(location.id, {
+        $select: {
+          systemMode: true
+        }
+      });
       const unlockedDevices = devices
         .filter((d: Device) =>
           d.systemMode &&
@@ -147,8 +158,14 @@ class LocationResolver extends Resolver<Location> {
         return location.irrigationSchedule;
       }
 
-      const devices = (await this.deviceResolverFactory().getAllByLocationId(location.id, ['irrigationSchedule']))
-        .filter(device => device.irrigationSchedule !== undefined);
+      const devices = (await this.deviceResolverFactory().getAllByLocationId(location.id, { 
+        $select: { 
+          irrigationSchedule: { 
+            $expand: true 
+          } 
+        } 
+      }))
+      .filter(device => device.irrigationSchedule !== undefined);
 
       return {
         isEnabled: _.get(devices[0], 'irrigationSchedule.isEnabled', false)
@@ -201,7 +218,7 @@ class LocationResolver extends Resolver<Location> {
     }
   }
 
-  public async get(id: string, expandProps: PropExpand = []): Promise<Location | null> {
+  public async get(id: string, expandProps?: PropExpand): Promise<Location | null> {
     const locationRecordData: LocationRecordData | null = await this.locationTable.getByLocationId(id);
 
     if (locationRecordData === null) {
@@ -263,14 +280,14 @@ class LocationResolver extends Resolver<Location> {
     }
   }
 
-  public async getAllByAccountId(accountId: string): Promise<Location[]> {
+  public async getAllByAccountId(accountId: string, expandProps?: PropExpand): Promise<Location[]> {
     const locationRecordData = await this.locationTable.getAllByAccountId(accountId);
 
     return Promise.all(
       locationRecordData
         .map(async (datum) => {
           const location = new LocationRecord(datum).toModel();
-          const resolvedProps = await this.resolveProps(location);
+          const resolvedProps = await this.resolveProps(location, expandProps);
 
           return {
             ...location,

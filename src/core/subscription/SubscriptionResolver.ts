@@ -64,7 +64,7 @@ class SubscriptionResolver extends Resolver<Subscription> {
     return new SubscriptionRecord(createdSubscriptionRecordData).toModel();
   }
 
-  public async get(id: string, expandProps: PropExpand = []): Promise<Subscription | null> {
+  public async get(id: string, expandProps?: PropExpand): Promise<Subscription | null> {
     const subscriptionRecordData: SubscriptionRecordData | null = await this.subscriptionTable.get({ id });
 
     if (subscriptionRecordData !== null) {
@@ -159,7 +159,7 @@ class SubscriptionResolver extends Resolver<Subscription> {
     return this.subscriptionPlanTable.get({ plan_id: planId });
   }
 
-  private async toModel(subscriptionRecordData: SubscriptionRecordData | OldSubscriptionRecordData, expandProps: PropExpand = []): Promise<Subscription> {
+  private async toModel(subscriptionRecordData: SubscriptionRecordData | OldSubscriptionRecordData, expandProps?: PropExpand): Promise<Subscription> {
     const subscription = OldSubscriptionRecord.isOldSubscriptionRecord(subscriptionRecordData) ?
       OldSubscriptionRecord.toModel(subscriptionRecordData) :
       new SubscriptionRecord(subscriptionRecordData).toModel();

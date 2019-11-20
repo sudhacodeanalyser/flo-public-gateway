@@ -12,6 +12,7 @@ import { DeviceSystemModeService } from '../device/DeviceSystemModeService';
 import { IrrigationScheduleService, IrrigationScheduleServiceFactory } from '../device/IrrigationScheduleService';
 import { LocationResolver } from '../resolver';
 import { AccountService, DeviceService } from '../service';
+import moment from 'moment';
 
 @injectable()
 class LocationService {
@@ -62,7 +63,13 @@ class LocationService {
       const deviceService = this.deviceServiceFactory();
 
       if (_.get(locationUpdate, 'irrigationSchedule.isEnabled', false)) {
-         const devices = await deviceService.getAllByLocationId(id, ['irrigationSchedule']);
+         const devices = await deviceService.getAllByLocationId(id, { 
+          $select: { 
+            irrigationSchedule: { 
+              $expand: true 
+            } 
+          } 
+        });
          const promises = devices
            .map(async (device) => {
              if  (
@@ -130,6 +137,7 @@ class LocationService {
 
     } else if (target === SystemMode.SLEEP) {
       const now = new Date().toISOString();
+      const revertScheduledAt = moment(now).add(revertMinutes, 'minutes').toISOString();
       const promises = unlockedDevices
         .map(async device => {
 
@@ -140,7 +148,7 @@ class LocationService {
               target,
               revertMinutes,
               revertMode,
-              revertScheduledAt: now,
+              revertScheduledAt,
               shouldInherit: true
             }
           });
@@ -152,7 +160,7 @@ class LocationService {
           target,
           revertMinutes,
           revertMode,
-          revertScheduledAt: now
+          revertScheduledAt
         }
       });
 

@@ -1,5 +1,5 @@
 import { injectable, inject } from 'inversify';
-import Kafka from 'node-rdkafka';
+import { Kafka, Producer } from 'kafkajs';
 
 export interface KafkaProducerConfig {
   host: string,
@@ -8,37 +8,23 @@ export interface KafkaProducerConfig {
 
 @injectable()
 class KafkaProducer {
-  private kafkaProducer: Kafka.Producer;
+  private kafkaProducer: Producer;
 
   constructor(
     @inject('KafkaProducerConfig') kafkaProducerConfig: KafkaProducerConfig
   ) {
-    this.kafkaProducer = new Kafka.Producer({
-      'metadata.broker.list': kafkaProducerConfig.host,
-      'request.timeout.ms': kafkaProducerConfig.timeout || 5000
-    }, undefined);
+    const kafka = new Kafka({
+      brokers: (kafkaProducerConfig.host || '').split(','),
+      requestTimeout: kafkaProducerConfig.timeout || 5000
+    });
+
+    this.kafkaProducer = kafka.producer();
   }
 
   public async connect(): Promise<KafkaProducer> {
+    await this.kafkaProducer.connect();
 
-    if (this.kafkaProducer.isConnected()) {
-     return this;
-    }
-
-    return new Promise((resolve, reject) => {
-      const onReady = () => {
-        this.kafkaProducer.removeListener('event.error', onError);
-        resolve(this);
-      };
-      const onError = (err: any) => {
-        this.kafkaProducer.removeListener('ready', onReady);
-        reject(err);
-      };
-      
-      this.kafkaProducer.connect();
-      this.kafkaProducer.once('ready', onReady);
-      this.kafkaProducer.once('event.error', onError);
-    });
+    return this;
   }
 
   public async send(topic: string, message: any): Promise<void> {
@@ -51,7 +37,14 @@ class KafkaProducer {
 
     const self = await this.connect();
 
-    self.kafkaProducer.produce(topic, null, Buffer.from(JSON.stringify(message)), undefined, Date.now());
+    await self.kafkaProducer.send({
+      topic,
+      acks: 1,
+      messages: [{
+        value: Buffer.from(JSON.stringify(message)),
+        timestamp: new Date().toISOString()
+      }]
+    });
   }
 }
 
