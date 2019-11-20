@@ -14,7 +14,7 @@ class KafkaProducer {
     @inject('KafkaProducerConfig') kafkaProducerConfig: KafkaProducerConfig
   ) {
     const kafka = new Kafka({
-      brokers: kafkaProducerConfig.host.split(','),
+      brokers: (kafkaProducerConfig.host || '').split(','),
       requestTimeout: kafkaProducerConfig.timeout || 5000
     });
 
@@ -42,7 +42,7 @@ class KafkaProducer {
       acks: 1,
       messages: [{
         value: Buffer.from(JSON.stringify(message)),
-        timestamp: `${ Date.now() }`
+        timestamp: new Date().toISOString()
       }]
     });
   }
