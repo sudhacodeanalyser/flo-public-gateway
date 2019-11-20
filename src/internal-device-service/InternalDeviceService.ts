@@ -7,6 +7,7 @@ import { memoized, MemoizeMixin } from '../memoize/MemoizeMixin';
 import InternalDeviceServiceError from "./internalDeviceServiceError";
 import { InternalDeviceServiceHandler } from "./internalDeviceServiceHandler";
 import { InternalDevice, InternalDeviceCodec } from './models';
+import ResourceDoesNotExistError from 'src/core/api/error/ResourceDoesNotExistError';
 
 @injectable()
 class InternalDeviceService extends MemoizeMixin(InternalDeviceServiceHandler) implements FirestoreAuthService {
@@ -114,7 +115,7 @@ class InternalDeviceService extends MemoizeMixin(InternalDeviceServiceHandler) i
     return this.sendRequest(request);
   }
 
-  public async addActionRules(deviceId: string, actionRules: DeviceActionRulesCreate): Promise<DeviceActionRules> {
+  public async upsertActionRules(deviceId: string, actionRules: DeviceActionRulesCreate): Promise<DeviceActionRules> {
     const request = {
       method: 'post',
       url: `${ this.internalDeviceServiceBaseUrl }/devices/${deviceId}/actionRules`,
@@ -124,25 +125,21 @@ class InternalDeviceService extends MemoizeMixin(InternalDeviceServiceHandler) i
     return this.sendRequest(request);
   }
 
-  public async modifyActionRule(deviceId: string, actionRuleId: string, actionRule: DeviceActionRulesTypeUpsert): Promise<DeviceActionRule> {
-    const request = {
-      method: 'post',
-      url: `${ this.internalDeviceServiceBaseUrl }/devices/${deviceId}/actionRules/${actionRuleId}`,
-      body: actionRule
-    };
-
-    return this.sendRequest(request);
-  }
-
   public async removeActionRule(deviceId: string, actionRuleId: string): Promise<void> {
-    const request = {
-      method: 'delete',
-      url: `${ this.internalDeviceServiceBaseUrl }/devices/${deviceId}/actionRules/${actionRuleId}`
-    };
+    try {
+      const request = {
+        method: 'delete',
+        url: `${ this.internalDeviceServiceBaseUrl }/devices/${deviceId}/actionRules/${actionRuleId}`
+      };
 
-    return this.sendRequest(request);
+      await this.sendRequest(request);
+    } catch (err) {
+      if (err instanceof InternalDeviceServiceError && err.statusCode === 404) {
+        throw new ResourceDoesNotExistError('Action Rule does not exist.');
+      }
+      throw err;
+    }
   }
 }
 
 export { InternalDeviceService };
-

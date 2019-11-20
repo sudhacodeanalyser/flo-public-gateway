@@ -462,22 +462,8 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
         body: DeviceActionRulesCreateCodec
       }))
     )
-    private async addActionRules(@requestParam('id') id: string, @requestBody() actionRules: DeviceActionRulesCreate): Promise<DeviceActionRules> {
-      return this.internalDeviceService.addActionRules(id, actionRules);
-    }
-
-    @httpPost('/:id/actionRules/:actionRuleId',
-      authWithId,
-      reqValidator.create(t.type({
-        params: t.type({
-          id: t.string,
-          actionRuleId: t.string
-        }),
-        body: DeviceActionRuleTypeUpsertCodec
-      }))
-    )
-    private async modifyActionRule(@requestParam('id') id: string, @requestParam('actionRuleId') actionRuleId: string, @requestBody() actionRule: DeviceActionRuleTypeUpsert): Promise<DeviceActionRule> {
-      return this.internalDeviceService.modifyActionRule(id, actionRuleId, actionRule);
+    private async upsertActionRules(@requestParam('id') id: string, @requestBody() actionRules: DeviceActionRulesCreate): Promise<DeviceActionRules> {
+      return this.internalDeviceService.upsertActionRules(id, actionRules);
     }
 
     @httpDelete('/:id/actionRules/:actionRuleId',
