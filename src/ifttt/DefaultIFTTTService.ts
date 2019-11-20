@@ -142,6 +142,7 @@ class DefaultIFTTTService extends HttpService implements IFTTTService {
     const device = await this.deviceService.getDeviceById(deviceId, {
       $select: {
         location: {
+          $expand: true,
           $select: {
             users: true
           }
@@ -191,6 +192,7 @@ class DefaultIFTTTService extends HttpService implements IFTTTService {
     const userData = await this.userService.getUserById(userId, {
       $select: {
         locations: {
+          $expand: true,
           $select: {
             devices: {
               $select: {
