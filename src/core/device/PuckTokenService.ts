@@ -2,9 +2,9 @@ import { inject, injectable } from 'inversify';
 import moment from 'moment';
 import jwt from 'jsonwebtoken';
 import uuid from 'uuid';
-import E from 'fp-ts/lib/Either';
+import * as E from 'fp-ts/lib/Either';
 import { pipe } from 'fp-ts/lib/pipeable';
-import AsyncEither from 'fp-ts/lib/TaskEither';
+import * as AsyncEither from 'fp-ts/lib/TaskEither';
 import Logger from 'bunyan';
 import PuckTokenMetadataTable from './PuckTokenMetadataTable';
 
@@ -22,7 +22,7 @@ class PuckTokenService {
     const expiresAt = moment(createdAt).add(ttl, 'seconds').toISOString();
     const tokenData = {
       ...data,
-      iat: createdAt,
+      iat: moment(createdAt).unix(),
       puckId,
       clientId,
     };
@@ -46,7 +46,7 @@ class PuckTokenService {
     return pipe(
       () => this.decodeToken(token),
       AsyncEither.chain((decodedToken: any) =>
-        () => this.lookupToken(decodedToken.id)
+        () => this.lookupToken(decodedToken.jti)
       ),
     )();
   }
@@ -58,7 +58,7 @@ class PuckTokenService {
         this.puckTokenSecret,
         {
           jwtid: tokenId,
-          expiresIn: ttl || undefined,
+          ...(ttl && { expiresIn: ttl }),
         },
         (err: any, encodedToken: string) => {
           if (err) {
@@ -88,20 +88,24 @@ class PuckTokenService {
   }
 
   private async lookupToken(tokenId: string): Promise<E.Either<Error, any>> {
-    const tokenMetadata = await this.puckTokenMetadataTable.get({ id: tokenId });
+    try {
+      const tokenMetadata = await this.puckTokenMetadataTable.get({ id: tokenId });
 
-    // Doesn't exist or is expired
-    if (tokenMetadata) {
-      return E.left(new Error('Token not found.'));
-    } else if (
-      moment().isAfter(
-        moment(tokenMetadata.createdAt).add(2, 'hours')
-      )
-    ) {
-      return E.left(new Error('Token expired.'));
+      // Doesn't exist or is expired
+      if (!tokenMetadata) {
+        return E.left(new Error('Token not found.'));
+      } else if (
+        moment().isAfter(
+          moment(tokenMetadata.createdAt).add(2, 'hours')
+        )
+      ) {
+        return E.left(new Error('Token expired.'));
+      }
+
+      return E.right(tokenMetadata);
+    } catch (err) {
+      return E.left(err);
     }
-
-    return E.right(tokenMetadata);
   }
 }
 

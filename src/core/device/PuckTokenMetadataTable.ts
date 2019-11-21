@@ -7,7 +7,7 @@ import { DynamoDbQuery } from '../../database/dynamo/DynamoDbClient';
 @injectable()
 class PuckTokenMetadataTable extends DatabaseTable<any> {
   constructor(@inject('DatabaseClient') dbClient: DatabaseClient) {
-    super(dbClient, 'PuckTokenMetadataTable');
+    super(dbClient, 'PuckTokenMetadata');
   }
 }
 

@@ -14,6 +14,7 @@ import { convertEnumtoCodec } from '../api/enumUtils';
 import ForbiddenError from '../api/error/ForbiddenError';
 import NotFoundError from '../api/error/NotFoundError';
 import ResourceDoesNotExistError from "../api/error/ResourceDoesNotExistError";
+import ValidationError from '../api/error/ValidationError'
 import UnauthorizedError from '../api/error/UnauthorizedError';
 import Request from '../api/Request';
 import * as Responses from '../api/response';
@@ -23,7 +24,7 @@ import { DirectiveServiceFactory } from './DirectiveService';
 import { HealthTest, HealthTestServiceFactory } from './HealthTestService';
 import { PairingResponse, PuckPairingResponse } from './PairingService';
 import moment from 'moment';
-import E from 'fp-ts/lib/Either';
+import * as E from 'fp-ts/lib/Either';
 import { pipe } from 'fp-ts/lib/pipeable';
 
 enum HealthTestActions {
@@ -247,18 +248,10 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     @httpPost('/pair/init',
       auth,
       reqValidator.create(t.type({
-        body: t.union(
-          [
-            QrDataValidator,
-            t.type({
-              deviceType: t.string,
-              deviceModel: t.string
-            })
-          ]
-        )
+        body: QrDataValidator
       }))
     )
-    private async scanQrCode(@authorizationHeader() authToken: string, @request() req: Request, @requestBody() qrData: QrData): Promise<PairingResponse | PuckPairingResponse> {
+    private async scanQrCode(@authorizationHeader() authToken: string, @request() req: Request, @requestBody() qrData: QrData): Promise<PairingResponse> {
       const tokenMetadata = req.token;
 
       if (!tokenMetadata) {
@@ -267,31 +260,47 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
         throw new ForbiddenError();
       }
 
-      // TODO: PUCK. Revisit this.
-      if (req.body.deviceType === DeviceType.PUCK) {
-        const puckId = uuid.v4()
-        const token = await puckTokenService.issueToken(puckId, this.puckPairingTokenTTL, tokenMetadata.client_id);
-
-        return { id: puckId, loginToken: token };
-      }
-
       return this.deviceService.scanQrCode(authToken, tokenMetadata.user_id || tokenMetadata.client_id, qrData);
     }
 
+    @httpPost('/pair/init/puck',
+      auth,
+      reqValidator.create(t.type({
+        body: t.partial({
+          deviceType: t.literal(DeviceType.PUCK),
+          deviceModel: t.string
+        })
+      }))
+    )
+    private async initiatePuckPairing(@authorizationHeader() authToken: string, @request() req: Request, @requestBody() qrData: QrData): Promise<PuckPairingResponse> {
+      const tokenMetadata = req.token;
+
+      if (!tokenMetadata) {
+        throw new UnauthorizedError();
+      } else if (!tokenMetadata.user_id && !tokenMetadata.client_id) {
+        throw new ForbiddenError();
+      }
+
+      const puckId = uuid.v4()
+      const token = await puckTokenService.issueToken(puckId, this.puckPairingTokenTTL, tokenMetadata.client_id);
+
+      return { id: puckId, token };
+    }
+
     @httpPost('/pair/complete',
-      authUnion(puckTokenAuth, authWithLocation),
+      authWithLocation,
       reqValidator.create(t.type({
         body: DeviceCreateValidator
       }))
     )
     @createMethod
     @withResponseType<Device, Responses.Device>(Responses.Device.fromModel)
-    private async pairDevice(@authorizationHeader() authToken: string, @request() req: Request, @requestBody() deviceCreate: DeviceCreate): Promise<Option<Device>> {
+    private async pairDevice(@authorizationHeader() authToken: string, @request() req: Request, @requestBody() deviceCreate: DeviceCreate): Promise<Option<Device | { device: Device, token: string }>> {
       const tokenMetadata = req.token;
 
       if (!tokenMetadata) {
         throw new UnauthorizedError();
-      } else if (!tokenMetadata.user_id && !tokenMetadata.client_id) {
+      } else if (!tokenMetadata.user_id && !tokenMetadata.client_id && !tokenMetadata.puckId) {
         throw new ForbiddenError();
       } else if (deviceCreate.deviceType === DeviceType.PUCK && !tokenMetadata.puckId) {
         throw new ForbiddenError(); 
@@ -302,9 +311,9 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       if (deviceCreate.deviceType === DeviceType.PUCK) {
 
         return some({
-          ...device,
+          device,
           // Puck token has no expiration
-          accessToken: await puckTokenService.issueToken(tokenMetadata.puckId, undefined, tokenMetadata.client_id, {
+          token: await puckTokenService.issueToken(tokenMetadata.puckId, undefined, tokenMetadata.client_id, {
             macAddress: device.macAddress,
             locationId: device.location.id
           })
@@ -312,6 +321,37 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       } else {
         return some(device);
       }
+    }
+
+    @httpPost('/pair/complete/puck',
+      puckTokenAuth,
+      reqValidator.create(t.type({
+        body: DeviceCreateValidator
+      }))
+    )
+    @createMethod
+    @withResponseType<Device, Responses.Device>(Responses.Device.fromModel)
+    private async completePuckPairing(@authorizationHeader() authToken: string, @request() req: Request, @requestBody() deviceCreate: DeviceCreate): Promise<Option<{ device: Device, token: string }>> {
+      const tokenMetadata = req.token;
+
+      if (!tokenMetadata) {
+        throw new UnauthorizedError();
+      } else if (!tokenMetadata.puckId) {
+        throw new ForbiddenError();
+      } else if (deviceCreate.deviceType !== DeviceType.PUCK) {
+        throw new ValidationError(); 
+      }
+
+      const device = await this.deviceService.pairDevice(authToken, deviceCreate);
+
+      return some({
+        device,
+        // Puck token has no expiration
+        token: await puckTokenService.issueToken(tokenMetadata.puckId, undefined, tokenMetadata.client_id, {
+          macAddress: device.macAddress,
+          locationId: device.location.id
+        })
+      });
     }
 
     @httpPost('/:id/systemMode',

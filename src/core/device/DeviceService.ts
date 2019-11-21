@@ -102,7 +102,7 @@ class DeviceService {
       this.locationServiceFactory().getLocation(deviceCreate.location.id)
     ]);
 
-    if (device !== null && !_.isEmpty(device) && !device.isPaired) {
+    if (device !== null && !_.isEmpty(device) && device.isPaired) {
       throw new ConflictError('Device already paired.');
     } else if (!location || isNone(location)) {
       throw new ResourceDoesNotExistError('Location does not exist');
