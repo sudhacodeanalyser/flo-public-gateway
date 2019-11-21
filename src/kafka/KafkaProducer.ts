@@ -42,7 +42,7 @@ class KafkaProducer {
       acks: 1,
       messages: [{
         value: Buffer.from(JSON.stringify(message)),
-        timestamp: new Date().toISOString()
+        timestamp: `${ Date.now() }`
       }]
     });
   }
