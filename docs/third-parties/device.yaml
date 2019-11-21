@@ -304,6 +304,12 @@ components:
                   format: date-time
             serialNumber:
               type: string
+            shutoff:
+              type: object
+              properties:
+                scheduledAt:
+                  type: string
+                  format: date-time
     DeviceExpandable:
       oneOf:
         - type: object

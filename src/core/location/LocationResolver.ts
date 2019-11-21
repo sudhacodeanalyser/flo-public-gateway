@@ -35,13 +35,13 @@ class LocationResolver extends Resolver<Location> {
         return device;
       });
     },
-    users: async (location: Location, shouldExpand = false) => {
+    users: async (location: Location, shouldExpand = false, expandProps?: PropExpand) => {
       const locationUserRoles = await this.getAllUserRolesByLocationId(location.id);
 
       if (shouldExpand) {
         return Promise.all(
           locationUserRoles.map(async (locationUserRole) => {
-            const user = await this.userResolverFactory().getUserById(locationUserRole.userId);
+            const user = await this.userResolverFactory().getUserById(locationUserRole.userId, expandProps);
 
             return {
               ...user,
@@ -56,13 +56,13 @@ class LocationResolver extends Resolver<Location> {
     userRoles: async (location: Location, shouldExpand = false) => {
       return this.getAllUserRolesByLocationId(location.id);
     },
-    account: async (location: Location, shouldExpand = false) => {
+    account: async (location: Location, shouldExpand = false, expandProps?: PropExpand) => {
 
       if (!shouldExpand) {
         return location.account;
       }
 
-      return this.accountResolverFactory().getAccount(location.account.id);
+      return this.accountResolverFactory().getAccount(location.account.id, expandProps);
     },
     subscription: async (location: Location, shouldExpand = false) => {
       const subscription = await this.subscriptionResolverFactory().getByRelatedEntityId(location.id);
@@ -118,7 +118,11 @@ class LocationResolver extends Resolver<Location> {
         };
       }
 
-      const devices = await this.deviceResolverFactory().getAllByLocationId(location.id);
+      const devices = await this.deviceResolverFactory().getAllByLocationId(location.id, {
+        $select: {
+          systemMode: true
+        }
+      });
       const unlockedDevices = devices
         .filter((d: Device) =>
           d.systemMode &&
@@ -154,8 +158,14 @@ class LocationResolver extends Resolver<Location> {
         return location.irrigationSchedule;
       }
 
-      const devices = (await this.deviceResolverFactory().getAllByLocationId(location.id, ['irrigationSchedule']))
-        .filter(device => device.irrigationSchedule !== undefined);
+      const devices = (await this.deviceResolverFactory().getAllByLocationId(location.id, { 
+        $select: { 
+          irrigationSchedule: { 
+            $expand: true 
+          } 
+        } 
+      }))
+      .filter(device => device.irrigationSchedule !== undefined);
 
       return {
         isEnabled: _.get(devices[0], 'irrigationSchedule.isEnabled', false)
@@ -208,7 +218,7 @@ class LocationResolver extends Resolver<Location> {
     }
   }
 
-  public async get(id: string, expandProps: PropExpand = []): Promise<Location | null> {
+  public async get(id: string, expandProps?: PropExpand): Promise<Location | null> {
     const locationRecordData: LocationRecordData | null = await this.locationTable.getByLocationId(id);
 
     if (locationRecordData === null) {
@@ -270,7 +280,7 @@ class LocationResolver extends Resolver<Location> {
     }
   }
 
-  public async getAllByAccountId(accountId: string, expandProps: PropExpand = []): Promise<Location[]> {
+  public async getAllByAccountId(accountId: string, expandProps?: PropExpand): Promise<Location[]> {
     const locationRecordData = await this.locationTable.getAllByAccountId(accountId);
 
     return Promise.all(

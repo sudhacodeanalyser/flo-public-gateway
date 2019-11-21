@@ -76,7 +76,15 @@ class UserResolver extends Resolver<User> {
         const devices = _.flatten(await Promise.all(
             userLocationRoleRecordData
                 .map(async ({ location_id }) => {
-                  const location = await locationResolver.get(location_id);
+                  const location = await locationResolver.get(location_id, {
+                    $select: {
+                      devices: {
+                        $select: {
+                          id: true
+                        }
+                      }
+                    }
+                  });
                   return location ? location.devices: [];
                 })
         ));
@@ -130,7 +138,7 @@ class UserResolver extends Resolver<User> {
     return new UserRecord({ ...userRecord, ...updatedUserDetailRecord }).toModel();
   }
 
-  public async getUserById(id: string, expandProps: PropExpand = []): Promise<User | null> {
+  public async getUserById(id: string, expandProps?: PropExpand): Promise<User | null> {
     const [userRecord, userDetailRecord] = await Promise.all([
       this.userTable.get({ id }),
       this.userDetailTable.get({ user_id: id })

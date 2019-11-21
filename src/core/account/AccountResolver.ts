@@ -10,9 +10,9 @@ import { fromPartialRecord } from '../../database/Patch';
 @injectable()
 class AccountResolver extends Resolver<Account> {
   protected propertyResolverMap: PropertyResolverMap<Account> = {
-    owner: async (account: Account, shouldExpand: boolean = false) => {
+    owner: async (account: Account, shouldExpand: boolean = false, expandProps?: PropExpand) => {
       if (shouldExpand) {
-        return this.userResolverFactory().getUserById(account.owner.id);
+        return this.userResolverFactory().getUserById(account.owner.id, expandProps);
       } else {
         return account.owner;
       }
@@ -20,13 +20,13 @@ class AccountResolver extends Resolver<Account> {
     locations: async (account: Account, shouldExpand: boolean = false, expandProps?: PropExpand) => {
       return this.locationResolverFactory().getAllByAccountId(account.id, expandProps);
     },
-    users: async (account: Account, shouldExpand: boolean = false) => {
+    users: async (account: Account, shouldExpand: boolean = false, expandProps?: PropExpand) => {
       const accountUserRoles = await this.getAllAccountUserRolesByAccountId(account.id);
 
       if (shouldExpand) {
         return Promise.all(
           accountUserRoles.map(async (accountUserRole) => {
-            const user = await this.userResolverFactory().getUserById(accountUserRole.userId);
+            const user = await this.userResolverFactory().getUserById(accountUserRole.userId, expandProps);
 
             return {
               ...user,
@@ -56,7 +56,7 @@ class AccountResolver extends Resolver<Account> {
     this.userResolverFactory = depFactoryFactory<UserResolver>('UserResolver');
   }
 
-  public async getAccount(id: string, expandProps: PropExpand = []): Promise<Account | null> {
+  public async getAccount(id: string, expandProps?: PropExpand): Promise<Account | null> {
     const accountRecordData: AccountRecordData | null = await this.accountTable.get({ id });
 
     if (accountRecordData === null) {

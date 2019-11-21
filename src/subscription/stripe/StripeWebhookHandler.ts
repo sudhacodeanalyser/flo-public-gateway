@@ -5,6 +5,7 @@ import { Subscription, SubscriptionProviderWebhookHandler, SubscriptionProviderI
 import { SubscriptionService } from '../../core/service';
 import { isSubscriptionActive } from './StripeUtils';
 import * as Option from 'fp-ts/lib/Option';
+import * as AsyncOption from 'fp-ts-contrib/lib/TaskOption';
 import { pipe } from 'fp-ts/lib/pipeable';
 import StripeSubscriptionProvider from './StripeSubscriptionProvider';
 
@@ -53,29 +54,42 @@ class StripeWebhookHandler implements SubscriptionProviderWebhookHandler {
     }
 
     const stripeSubscription = data.object;
-    const locationId = stripeSubscription.metadata.location_id;
+    const locationId = stripeSubscription.metadata.location_id as string | undefined;
+    const customerId = _.isString(stripeSubscription.customer) ? stripeSubscription.customer : stripeSubscription.customer.id;
     const subscription = {
       plan: {
         id: stripeSubscription.plan ? stripeSubscription.plan.id : 'unknown'
       },
-      location: {
+      location: locationId ? {
         id: locationId
-      },
+      } : undefined,
       sourceId: stripeSubscription.metadata.source_id || 'stripe',
       provider: this.stripeSubscriptionProvider.formatProviderData(stripeSubscription)
     };
 
     await pipe(
-      await this.subscriptionService.getSubscriptionByRelatedEntityId(locationId),
-      Option.fold(
-        async () => {
-          await this.subscriptionService.createLocalSubscription(subscription);
+      async () => locationId ? this.subscriptionService.getSubscriptionByRelatedEntityId(locationId) : AsyncOption.none(),
+      AsyncOption.alt(() => 
+        async () => Option.fromNullable((await this.subscriptionService.getSubscriptionByProviderCustomerId(customerId))[0])
+      ),
+      AsyncOption.fold(
+        () => {
+          return async () => {
+            if (subscription.location && locationId) {
+              await this.subscriptionService.createLocalSubscription({
+                ...subscription,
+                location: { id: locationId || '' }
+              });
+            }
+          };
         },
-        async existingSubscription => {
-          await this.subscriptionService.updateSubscription(existingSubscription.id, subscription);
+        existingSubscription => {
+          return async () => {
+            await this.subscriptionService.updateSubscription(existingSubscription.id, _.pickBy(subscription, prop => !_.isEmpty(prop)))
+          };
         }
       )
-    );
+    )();
   }
 
   private async handleSubscriptionUpdated(getSubscription: GetSubscription, data: EventData): Promise<void> {

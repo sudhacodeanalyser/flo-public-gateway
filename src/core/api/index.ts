@@ -22,5 +22,20 @@ export type DependencyFactoryFactory = <T>(dep: string) => () => T;
 
 export type Omit<T, K> = Pick<T, Exclude<keyof T, K>>;
 export type PartialBy<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
-export type PropExpand = Array<string | string[]>;
+
+interface PropSelect {
+  [prop: string]: PropExpand | true;
+}
+
+interface PropSelectOptions {
+  '$rest'?: true;
+  '$expandAll'?: true;
+}
+
+type PropSelectRestIntersection = PropSelect & PropSelectOptions;
+
+export interface PropExpand {
+  '$expand'?: boolean;
+  '$select'?: true | PropSelectRestIntersection
+}
 
