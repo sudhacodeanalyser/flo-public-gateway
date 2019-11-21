@@ -463,6 +463,21 @@ paths:
         403:
           $ref: '#/components/responses/ForbiddenError'
   /api/v2/devices/{id}/actionRules/{actionRuleId}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Device ID
+      - in: path
+        name: actionRuleId
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Action Rule ID
     delete:
       summary: Deletes an Action Rule for the given Device ID and Action Rule ID
       tags:
