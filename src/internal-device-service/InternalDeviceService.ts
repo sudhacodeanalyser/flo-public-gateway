@@ -1,11 +1,13 @@
-import {inject, injectable} from 'inversify';
-import InternalDeviceServiceError from "./internalDeviceServiceError";
-import {InternalDeviceServiceHandler} from "./internalDeviceServiceHandler";
-import {InternalDevice, InternalDeviceCodec} from './models';
-import { isLeft } from 'fp-ts/lib/Either';
-import { FirestoreAuthService, FirestoreAssests, FirestoreTokenResponse } from '../core/session/FirestoreAuthService';
-import { memoized, MemoizeMixin } from '../memoize/MemoizeMixin';
 import Logger from 'bunyan';
+import { isLeft } from 'fp-ts/lib/Either';
+import { inject, injectable } from 'inversify';
+import { DeviceActionRules, DeviceActionRulesCreate } from '../core/api';
+import { FirestoreAssests, FirestoreAuthService, FirestoreTokenResponse } from '../core/session/FirestoreAuthService';
+import { memoized, MemoizeMixin } from '../memoize/MemoizeMixin';
+import InternalDeviceServiceError from "./internalDeviceServiceError";
+import { InternalDeviceServiceHandler } from "./internalDeviceServiceHandler";
+import { InternalDevice, InternalDeviceCodec } from './models';
+import ResourceDoesNotExistError from '../core/api/error/ResourceDoesNotExistError';
 
 @injectable()
 class InternalDeviceService extends MemoizeMixin(InternalDeviceServiceHandler) implements FirestoreAuthService {
@@ -17,8 +19,7 @@ class InternalDeviceService extends MemoizeMixin(InternalDeviceServiceHandler) i
     try {
       const request = {
         method: 'get',
-        url: `${this.internalDeviceServiceBaseUrl}/devices/${macAddress}`,
-        body: null,
+        url: `${this.internalDeviceServiceBaseUrl}/devices/${macAddress}`
       };
 
       const response = await this.sendRequest(request);
@@ -50,8 +51,7 @@ class InternalDeviceService extends MemoizeMixin(InternalDeviceServiceHandler) i
   public async syncDevice(macAddress: string): Promise<void> {
     const request = {
       method: 'post',
-      url: `${this.internalDeviceServiceBaseUrl}/devices/${macAddress}/sync`,
-      body: null,
+      url: `${this.internalDeviceServiceBaseUrl}/devices/${macAddress}/sync`
     };
 
     await this.sendRequest(request);
@@ -71,8 +71,7 @@ class InternalDeviceService extends MemoizeMixin(InternalDeviceServiceHandler) i
     try {
       const request = {
         method: 'delete',
-        url: `${this.internalDeviceServiceBaseUrl}/firestore/devices/${macAddress}`,
-        body: null,
+        url: `${this.internalDeviceServiceBaseUrl}/firestore/devices/${macAddress}`
       };
       // TODO: do the same ^^ for locations
       await this.sendRequest(request);
@@ -106,6 +105,41 @@ class InternalDeviceService extends MemoizeMixin(InternalDeviceServiceHandler) i
       this.logger.error({ err });
     }
   }
+
+  public async getActionRules(deviceId: string): Promise<DeviceActionRules> {
+    const request = {
+      method: 'get',
+      url: `${ this.internalDeviceServiceBaseUrl }/devices/${deviceId}/actionRules`
+    };
+
+    return this.sendRequest(request);
+  }
+
+  public async upsertActionRules(deviceId: string, actionRules: DeviceActionRulesCreate): Promise<DeviceActionRules> {
+    const request = {
+      method: 'post',
+      url: `${ this.internalDeviceServiceBaseUrl }/devices/${deviceId}/actionRules`,
+      body: actionRules
+    };
+
+    return this.sendRequest(request);
+  }
+
+  public async removeActionRule(deviceId: string, actionRuleId: string): Promise<void> {
+    try {
+      const request = {
+        method: 'delete',
+        url: `${ this.internalDeviceServiceBaseUrl }/devices/${deviceId}/actionRules/${actionRuleId}`
+      };
+
+      await this.sendRequest(request);
+    } catch (err) {
+      if (err instanceof InternalDeviceServiceError && err.statusCode === 404) {
+        throw new ResourceDoesNotExistError('Action Rule does not exist.');
+      }
+      throw err;
+    }
+  }
 }
 
-export {InternalDeviceService};
+export { InternalDeviceService };
