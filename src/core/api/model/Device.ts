@@ -176,6 +176,7 @@ export const AdditionalDevicePropsCodec  = t.type({
 export interface AdditionalDeviceProps extends t.TypeOf<typeof AdditionalDevicePropsCodec> {}
 
 export const DeviceActionRuleTypeUpsertCodec = t.type({
+  id: t.union([t.undefined, NonEmptyString]),
   action: NonEmptyString,
   event: NonEmptyString,
   targetDeviceId: NonEmptyString,
@@ -189,7 +190,6 @@ export const DeviceActionRulesCreateCodec = t.type({
 
 const DeviceActionsRuleTypeCodec = t.intersection([
   t.type({
-    id: NonEmptyString,
     createdAt: NonEmptyString,
     updatedAt: NonEmptyString
   }),
