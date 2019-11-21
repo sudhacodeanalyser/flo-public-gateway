@@ -1,13 +1,13 @@
 import Logger from 'bunyan';
 import { isLeft } from 'fp-ts/lib/Either';
 import { inject, injectable } from 'inversify';
-import { DeviceActionRule, DeviceActionRules, DeviceActionRulesCreate, DeviceActionRulesTypeUpsert } from '../core/api';
+import { DeviceActionRules, DeviceActionRulesCreate } from '../core/api';
 import { FirestoreAssests, FirestoreAuthService, FirestoreTokenResponse } from '../core/session/FirestoreAuthService';
 import { memoized, MemoizeMixin } from '../memoize/MemoizeMixin';
 import InternalDeviceServiceError from "./internalDeviceServiceError";
 import { InternalDeviceServiceHandler } from "./internalDeviceServiceHandler";
 import { InternalDevice, InternalDeviceCodec } from './models';
-import ResourceDoesNotExistError from 'src/core/api/error/ResourceDoesNotExistError';
+import ResourceDoesNotExistError from '../core/api/error/ResourceDoesNotExistError';
 
 @injectable()
 class InternalDeviceService extends MemoizeMixin(InternalDeviceServiceHandler) implements FirestoreAuthService {
