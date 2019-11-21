@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { injectable } from 'inversify';
 import InternalDeviceServiceError from './internalDeviceServiceError';
+import config from '../config/config';
 
 export interface InternalDeviceServiceRequest {
   method: string,
@@ -18,7 +19,8 @@ class InternalDeviceServiceHandler {
         headers: {
           'Content-Type': 'application/json'
         },
-        data: request.body
+        data: request.body,
+        timeout: config.externalServiceHttpTimeoutMs
       });
 
       return response.data;
