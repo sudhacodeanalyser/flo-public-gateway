@@ -10,6 +10,10 @@ import { TelemetryService } from '../service';
 import { TelemetryTagsService } from './TelemetryTagsService';
 import { PuckAuthMiddleware } from '../../auth/PuckAuthMiddleware';
 import { authUnion } from '../../auth/authUnion';
+import * as E from 'fp-ts/lib/Either';
+import { pipe } from 'fp-ts/lib/pipeable';
+import UnauthorizedError from '../api/error/UnauthorizedError';
+import ForbiddenError from '../api/error/ForbiddenError';
 
 export function TelemetryControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
@@ -35,8 +39,33 @@ export function TelemetryControllerFactory(container: Container, apiVersion: num
       }))
     )
     @asyncMethod
-    private async publishTelemetry(@requestBody() telemetry: Telemetry): Promise<void> {
-      return this.telemetryService.publishTelemetry(telemetry);
+    private async publishTelemetry(@request() req: Request, @requestBody() telemetry: Telemetry): Promise<void> {
+      const tokenMetadata = req.token;
+
+      if (!tokenMetadata) {
+        throw new UnauthorizedError();
+      }
+
+      return pipe(
+        PuckTelemetryCodec.decode(telemetry),
+        E.fold(
+          async () => this.telemetryService.publishTelemetry(telemetry),
+          async puckTelemetry => {
+            if (!tokenMetadata.puckId || !tokenMetadata.macAddress) {
+              throw new ForbiddenError();
+            }
+
+            return this.telemetryService.publishTelemetry({
+              ...puckTelemetry,
+              deviceId: tokenMetadata.macAddress,
+              data: {
+                ...puckTelemetry.data,
+                device_id: tokenMetadata.macAddress
+              }
+            });
+          }
+        )
+      );
     }
 
     @httpGet('/tags', auth)
