@@ -8,6 +8,7 @@ export interface KafkaProducerConfig {
 
 @injectable()
 class KafkaProducer {
+  private isConnected: boolean = false;
   private kafkaProducer: Producer;
 
   constructor(
@@ -22,7 +23,11 @@ class KafkaProducer {
   }
 
   public async connect(): Promise<KafkaProducer> {
-    await this.kafkaProducer.connect();
+    
+    if (!this.isConnected) {
+      await this.kafkaProducer.connect();
+      this.isConnected = true;
+    }
 
     return this;
   }

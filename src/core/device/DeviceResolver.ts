@@ -211,7 +211,7 @@ class DeviceResolver extends Resolver<Device> {
         minValue: 0
       };
 
-      const gpm = device.deviceType !== 'flo_device_075_v2' ?
+      const gpm = device.deviceModel !== 'flo_device_075_v2' ?
         {
           ...minZero,
           okMax: 29,
@@ -223,7 +223,7 @@ class DeviceResolver extends Resolver<Device> {
           maxValue: 125
         };
 
-      const lpm = device.deviceType !== 'flo_device_075_v2' ?
+      const lpm = device.deviceModel !== 'flo_device_075_v2' ?
         {
           ...minZero,
           okMax: 110,

@@ -1,14 +1,14 @@
 import { fold, fromNullable, Option } from 'fp-ts/lib/Option';
 import { pipe } from 'fp-ts/lib/pipeable';
 import _ from 'lodash';
-import { ApiService } from '../ApiService';
 import { Alarm, AlarmEvent, AlarmListResult, ClearAlertResponse, Device, DeviceAlarmSettings, NotificationStatistics, PaginatedResult, UpdateDeviceAlarmSettings } from '../core/api';
 import { DeviceService } from '../core/device/DeviceService';
+import { HttpService } from '../http/HttpService';
 
 class ApiNotificationService {
   constructor(
     private readonly deviceServiceFactory: () => DeviceService,
-    private notificationApi: ApiService
+    private notificationApi: HttpService
   ) {}
 
   public async getAlarmById(id: string): Promise<Alarm> {

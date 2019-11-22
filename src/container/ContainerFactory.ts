@@ -3,6 +3,7 @@ import apiV1ContainerModule from '../api-v1/containerModule';
 import authContainerModule from '../auth/containerModule';
 import cacheContainerModule from '../cache/containerModule';
 import config from '../config/config';
+import httpContainerModule from '../http/containerModule';
 // Core container modules
 import coreContainerModules from '../core/containerModule';
 import dynamoDbContainerModule from '../database/dynamo/containerModule';
@@ -27,6 +28,7 @@ export default function ContainerFactory(container: Container = new Container())
   container.bind<typeof config>('Config').toConstantValue(config);
 
   container.load(
+    httpContainerModule,
     loggerFactoryContainerModule,
     validationContainerModule,
     dynamoDbContainerModule,
