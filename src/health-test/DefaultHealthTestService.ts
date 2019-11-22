@@ -4,13 +4,9 @@ import { HealthTest, HealthTestService } from '../core/device/HealthTestService'
 import { HttpService } from '../http/HttpService';
 
 @injectable()
-export class DefaulthHealthTestService extends HttpService implements HealthTestService {
-  constructor(
-    private readonly healthTestServiceUrl: string,
-    public readonly authToken: string
-  ) {
-    super();
-  }
+class DefaultHealthTestService extends HttpService implements HealthTestService {
+  public healthTestServiceUrl: string;
+  public authToken: string;
 
   public async run(deviceMacAddress: string, icdId: string): Promise<HealthTest> {
     const request = {
@@ -50,3 +46,5 @@ export class DefaulthHealthTestService extends HttpService implements HealthTest
     return item || null;
   }
 }
+
+export { DefaultHealthTestService };
