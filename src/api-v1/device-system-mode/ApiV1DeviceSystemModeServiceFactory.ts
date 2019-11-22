@@ -8,7 +8,8 @@ import { ApiV1DeviceSystemModeService } from './ApiV1DeviceSystemModeService';
 class ApiV1DeviceSystemModeServiceFactory implements DeviceSystemModeServiceFactory  {
 
   constructor(
-    @inject('ApiV1Url') private readonly apiV1Url: string
+    @inject('ApiV1Url') private readonly apiV1Url: string,
+    @inject('Factory<DeviceSystemModeService>') private deviceSystemModeServiceFactory: (apiV1Url: string, authToken: string) => DeviceSystemModeService
   ) {}
 
   public create(req: Request): DeviceSystemModeService {
@@ -18,7 +19,7 @@ class ApiV1DeviceSystemModeServiceFactory implements DeviceSystemModeServiceFact
       throw new UnauthorizedError();
     }
 
-    return new ApiV1DeviceSystemModeService(this.apiV1Url, authToken);
+    return this.deviceSystemModeServiceFactory(this.apiV1Url, authToken);
   }
 }
 

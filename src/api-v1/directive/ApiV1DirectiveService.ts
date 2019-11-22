@@ -1,13 +1,11 @@
+import { injectable } from 'inversify';
 import { DirectiveService } from '../../core/device/DirectiveService';
 import { HttpService } from '../../http/HttpService';
 
-export class ApiV1DirectiveService extends HttpService implements DirectiveService {
-    constructor(
-    private readonly apiV1Url: string,
-    private readonly authToken: string
-  ) {
-    super();
-  }
+@injectable()
+class ApiV1DirectiveService extends HttpService implements DirectiveService {
+  public apiV1Url: string;
+  public authToken: string;
 
   public async openValve(id: string): Promise<void> {
     const request = {
@@ -39,3 +37,5 @@ export class ApiV1DirectiveService extends HttpService implements DirectiveServi
     await this.sendRequest(request);
   }
 }
+
+export { ApiV1DirectiveService };

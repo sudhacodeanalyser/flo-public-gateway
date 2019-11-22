@@ -1,14 +1,15 @@
 import {inject, injectable} from 'inversify';
-import InternalDeviceServiceError from "./internalDeviceServiceError";
-import {InternalDeviceServiceHandler} from "./internalDeviceServiceHandler";
+import { HttpService, HttpError } from '../http/HttpService'
 import {InternalDevice, InternalDeviceCodec} from './models';
 import { isLeft } from 'fp-ts/lib/Either';
 import { FirestoreAuthService, FirestoreAssests, FirestoreTokenResponse } from '../core/session/FirestoreAuthService';
 import { memoized, MemoizeMixin } from '../memoize/MemoizeMixin';
 import Logger from 'bunyan';
 
+const InternalDeviceServiceError = HttpError;
+
 @injectable()
-class InternalDeviceService extends MemoizeMixin(InternalDeviceServiceHandler) implements FirestoreAuthService {
+class InternalDeviceService extends MemoizeMixin(HttpService) implements FirestoreAuthService {
   @inject('InternalDeviceServiceBaseUrl') private internalDeviceServiceBaseUrl: string;
   @inject('Logger') private readonly logger: Logger;
 
