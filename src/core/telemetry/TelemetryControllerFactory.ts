@@ -8,11 +8,14 @@ import { asyncMethod, httpController } from '../api/controllerUtils';
 import Request from '../api/Request';
 import { TelemetryService } from '../service';
 import { TelemetryTagsService } from './TelemetryTagsService';
+import { PuckAuthMiddleware } from '../../auth/PuckAuthMiddleware';
+import { authUnion } from '../../auth/authUnion';
 
 export function TelemetryControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
   const authMiddlewareFactory = container.get<AuthMiddlewareFactory>('AuthMiddlewareFactory');
   const auth = authMiddlewareFactory.create();
+  const puckAuthMiddleware = container.get<PuckAuthMiddleware>('PuckAuthMiddleware');
 
   @httpController({ version: apiVersion }, '/telemetry')
   class TelemetryController implements interfaces.Controller {
@@ -21,8 +24,9 @@ export function TelemetryControllerFactory(container: Container, apiVersion: num
       @inject('TelemetryTagsService') private readonly telemetryTagsService: TelemetryTagsService
     ) {}
 
+
     @httpPost('/',
-      // TODO: PUCK. Implement proper auth.
+      authUnion(auth, puckAuthMiddleware.handler.bind(puckAuthMiddleware)),
       reqValidator.create(t.type({
         body: t.union([
           DeviceTelemetryCodec,

@@ -14,15 +14,18 @@ import { convertEnumtoCodec } from '../api/enumUtils';
 import ForbiddenError from '../api/error/ForbiddenError';
 import NotFoundError from '../api/error/NotFoundError';
 import ResourceDoesNotExistError from "../api/error/ResourceDoesNotExistError";
+import ValidationError from '../api/error/ValidationError'
 import UnauthorizedError from '../api/error/UnauthorizedError';
 import Request from '../api/Request';
 import * as Responses from '../api/response';
-import { DeviceService } from '../service';
+import { DeviceService, PuckTokenService } from '../service';
 import { DeviceSystemModeServiceFactory } from './DeviceSystemModeService';
 import { DirectiveServiceFactory } from './DirectiveService';
 import { HealthTest, HealthTestServiceFactory } from './HealthTestService';
 import { PairingResponse, PuckPairingResponse } from './PairingService';
 import moment from 'moment';
+import { authUnion } from '../../auth/authUnion';
+import { PuckAuthMiddleware } from '../../auth/PuckAuthMiddleware';
 
 enum HealthTestActions {
   RUN = 'run'
@@ -30,34 +33,14 @@ enum HealthTestActions {
 
 const HealthTestActionsCodec = convertEnumtoCodec(HealthTestActions);
 
-// TODO: PUCK. Remove me once Puck Auth is implemented.
-const PUCK_TOKEN = '$$Extr3m3ly_S3cur3_Str1ng!!'
-
 export function DeviceControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
   const authMiddlewareFactory = container.get<AuthMiddlewareFactory>('AuthMiddlewareFactory');
+  const puckTokenService = container.get<PuckTokenService>('PuckTokenService');
   const auth = authMiddlewareFactory.create();
   const authWithId = authMiddlewareFactory.create(async ({ params: { id } }: Request) => ({icd_id: id}));
   const authWithLocation = authMiddlewareFactory.create(async ({ body: { location: { id } } }: Request) => ({ location_id: id }));
-
-  // TODO: PUCK. Remove me once Puck Auth is implemented.
-  const isPuck = (req: Request) => {
-    return req.body && (req.body.deviceType === DeviceType.PUCK || req.body.cloud_token_access === PUCK_TOKEN);
-  }
-
-  const hardcodedPuckTokenAuth: (fallbackAuth: express.Handler) => express.Handler = (fallbackAuth: express.Handler) => async (req: Request, res: express.Response, next: express.NextFunction): Promise<void> => {
-    if (isPuck(req)) {
-      const token = req.get('Authorization');
-      if (token === PUCK_TOKEN) {
-        return next();
-      } else {
-        return next(new UnauthorizedError('Missing or invalid access token.'));
-      }
-    }
-
-    return fallbackAuth(req, res, next);
-  }
-
+  const puckAuthMiddleware = container.get<PuckAuthMiddleware>('PuckAuthMiddleware');
 
   interface SystemModeRequestBrand {
     readonly SystemModeRequest: unique symbol;
@@ -110,7 +93,8 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       @inject('InternalDeviceService') private internalDeviceService: InternalDeviceService,
       @inject('DeviceSystemModeServiceFactory') private deviceSystemModeServiceFactory: DeviceSystemModeServiceFactory,
       @inject('DirectiveServiceFactory') private directiveServiceFactory: DirectiveServiceFactory,
-      @inject('HealthTestServiceFactory') private healthTestServiceFactory: HealthTestServiceFactory
+      @inject('HealthTestServiceFactory') private healthTestServiceFactory: HealthTestServiceFactory,
+      @inject('PuckPairingTokenTTL') private readonly puckPairingTokenTTL: number
     ) {
       super();
     }
@@ -131,8 +115,35 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       return this.deviceService.getByMacAddress(macAddress, expandProps);
     }
 
+    // Special endpoint for puck to retrieve its own data
+    @httpGet('/me',
+      'PuckAuthMiddleware',
+      reqValidator.create(t.type({
+        params: t.type({
+          id: t.string
+        }),
+        query: t.partial({
+          expand: t.string
+        })
+      }))
+    )
+    @withResponseType<Device, Responses.Device>(Responses.Device.fromModel)
+    private async getOwnDevice(@request() req: Request, @queryParam('expand') expand?: string): Promise<Option<Device>> {
+      const tokenMetadata = req.token;
+
+      if (!tokenMetadata) {
+        throw new UnauthorizedError();
+      } else if (!tokenMetadata.puckId) {
+        throw new ForbiddenError();
+      }
+
+      const expandProps = parseExpand(expand);
+
+      return this.deviceService.getDeviceById(tokenMetadata.puckId, expandProps);
+    }
+
     @httpGet('/:id',
-      authWithId,
+      authUnion(authWithId, puckAuthMiddleware.handler.bind(puckAuthMiddleware)),
       reqValidator.create(t.type({
         params: t.type({
           id: t.string
@@ -214,27 +225,10 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     @httpPost('/pair/init',
       auth,
       reqValidator.create(t.type({
-        body: t.union(
-          [
-            QrDataValidator,
-            t.type({
-              deviceType: t.string,
-              deviceModel: t.string
-            })
-          ]
-        )
+        body: QrDataValidator
       }))
     )
-    private async scanQrCode(@authorizationHeader() authToken: string, @request() req: Request, @requestBody() qrData: QrData): Promise<PairingResponse | PuckPairingResponse> {
-
-      // TODO: PUCK. Revisit this.
-      if (req.body.deviceType === DeviceType.PUCK) {
-        return Promise.resolve({
-          id: uuid.v4(),
-          loginToken: PUCK_TOKEN
-        })
-      }
-
+    private async scanQrCode(@authorizationHeader() authToken: string, @request() req: Request, @requestBody() qrData: QrData): Promise<PairingResponse> {
       const tokenMetadata = req.token;
 
       if (!tokenMetadata) {
@@ -246,27 +240,84 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       return this.deviceService.scanQrCode(authToken, tokenMetadata.user_id || tokenMetadata.client_id, qrData);
     }
 
+    @httpPost('/pair/init/puck',
+      auth,
+      reqValidator.create(t.type({
+        body: t.partial({
+          deviceType: t.literal(DeviceType.PUCK),
+          deviceModel: t.string
+        })
+      }))
+    )
+    private async initiatePuckPairing(@authorizationHeader() authToken: string, @request() req: Request, @requestBody() qrData: QrData): Promise<PuckPairingResponse> {
+      const tokenMetadata = req.token;
+
+      if (!tokenMetadata) {
+        throw new UnauthorizedError();
+      } else if (!tokenMetadata.user_id && !tokenMetadata.client_id) {
+        throw new ForbiddenError();
+      }
+
+      const puckId = uuid.v4()
+      const token = await puckTokenService.issueToken(puckId, this.puckPairingTokenTTL, tokenMetadata.client_id, { isInit: true });
+
+      return { id: puckId, token };
+    }
+
     @httpPost('/pair/complete',
-      // TODO: PUCK. Implement proper auth.
-      hardcodedPuckTokenAuth(authWithLocation),
+      authWithLocation,
       reqValidator.create(t.type({
         body: DeviceCreateValidator
       }))
     )
     @createMethod
     @withResponseType<Device, Responses.Device>(Responses.Device.fromModel)
-    private async pairDevice(@authorizationHeader() authToken: string, @requestBody() deviceCreate: DeviceCreate): Promise<Option<Device>> {
+    private async pairDevice(@authorizationHeader() authToken: string, @request() req: Request, @requestBody() deviceCreate: DeviceCreate): Promise<Option<Device | { device: Device, token: string }>> {
+      const tokenMetadata = req.token;
+
+      if (!tokenMetadata) {
+        throw new UnauthorizedError();
+      } else if (!tokenMetadata.user_id && !tokenMetadata.client_id) {
+        throw new ForbiddenError();
+      } else if (deviceCreate.deviceType === DeviceType.PUCK) {
+        throw new ValidationError('Cannot pair puck.'); 
+      }
+
       const device = await this.deviceService.pairDevice(authToken, deviceCreate);
 
-      if (deviceCreate.deviceType === DeviceType.PUCK) {
-        // TODO: PUCK. Revisit this.
-        return some({
-          ...device,
-          accessToken: PUCK_TOKEN
-        });
-      } else {
-        return some(device);
+
+      return some(device); 
+    }
+
+    @httpPost('/pair/complete/puck',
+      'PuckAuthMiddleware',
+      reqValidator.create(t.type({
+        body: DeviceCreateValidator
+      }))
+    )
+    @createMethod
+    @withResponseType<Device, Responses.Device>(Responses.Device.fromModel)
+    private async completePuckPairing(@authorizationHeader() authToken: string, @request() req: Request, @requestBody() deviceCreate: DeviceCreate): Promise<Option<{ device: Device, token: string }>> {
+      const tokenMetadata = req.token;
+
+      if (!tokenMetadata) {
+        throw new UnauthorizedError();
+      } else if (!tokenMetadata.puckId || !tokenMetadata.isInit) {
+        throw new ForbiddenError();
+      } else if (deviceCreate.deviceType !== DeviceType.PUCK) {
+        throw new ValidationError(); 
       }
+
+      const device = await this.deviceService.pairDevice(authToken, deviceCreate);
+
+      return some({
+        device,
+        // Puck token has no expiration
+        token: await puckTokenService.issueToken(tokenMetadata.puckId, undefined, tokenMetadata.client_id, {
+          macAddress: device.macAddress,
+          locationId: device.location.id
+        })
+      });
     }
 
     @httpPost('/:id/systemMode',
