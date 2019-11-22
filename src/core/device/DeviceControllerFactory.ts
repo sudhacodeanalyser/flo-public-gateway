@@ -24,8 +24,8 @@ import { DirectiveServiceFactory } from './DirectiveService';
 import { HealthTest, HealthTestServiceFactory } from './HealthTestService';
 import { PairingResponse, PuckPairingResponse } from './PairingService';
 import moment from 'moment';
-import * as E from 'fp-ts/lib/Either';
-import { pipe } from 'fp-ts/lib/pipeable';
+import { authUnion } from '../../auth/authUnion';
+import { PuckAuthMiddleware } from '../../auth/PuckAuthMiddleware';
 
 enum HealthTestActions {
   RUN = 'run'
@@ -40,57 +40,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
   const auth = authMiddlewareFactory.create();
   const authWithId = authMiddlewareFactory.create(async ({ params: { id } }: Request) => ({icd_id: id}));
   const authWithLocation = authMiddlewareFactory.create(async ({ body: { location: { id } } }: Request) => ({ location_id: id }));
-
-  const authUnion: (...authHandlers: express.Handler[]) => express.Handler = 
-    (...authHandlers: express.Handler[]) => async (req: Request, res: express.Response, next: express.NextFunction): Promise<void> => {
-      let isAuthorized = false; 
-
-      for (let i = 0; i < authHandlers.length && !isAuthorized; i++) {
-        const authHandler = authHandlers[i];
-
-        isAuthorized = await (new Promise((resolve, reject) => authHandler(req, res, err => {
-          if (err) {
-            // TODO: Revisit this log level?
-            if (req.log) {
-              req.log.warn({ err });
-            }
-
-            resolve(false);
-          } else {
-            resolve(true);
-          }
-        })));
-      }
-
-      if (isAuthorized) {
-        next();
-      } else {
-        next(new UnauthorizedError());
-      }
-    };
-
-  const puckTokenAuth: express.Handler = async (req: Request, res: express.Response, next: express.NextFunction): Promise<void> => {
-    const token = req.get('Authorization');
-
-    if (token) {
-      pipe(
-        await puckTokenService.verifyToken(token),
-        E.fold(
-          err => {
-            next(err);
-          },
-          tokenMetadata => {
-            req.token = tokenMetadata;
-
-            next();
-          }
-        )
-      );
-    } else {
-      next(new UnauthorizedError('Missing or invalid access token.'));
-    }
-  }
-
+  const puckAuthMiddleware = container.get<PuckAuthMiddleware>('PuckAuthMiddleware');
 
   interface SystemModeRequestBrand {
     readonly SystemModeRequest: unique symbol;
@@ -165,8 +115,35 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       return this.deviceService.getByMacAddress(macAddress, expandProps);
     }
 
+    // Special endpoint for puck to retrieve it's own data
+    @httpGet('/me',
+      'PuckAuthMiddleware',
+      reqValidator.create(t.type({
+        params: t.type({
+          id: t.string
+        }),
+        query: t.partial({
+          expand: t.string
+        })
+      }))
+    )
+    @withResponseType<Device, Responses.Device>(Responses.Device.fromModel)
+    private async getOwnDevice(@request() req: Request, @queryParam('expand') expand?: string): Promise<Option<Device>> {
+      const tokenMetadata = req.token;
+
+      if (!tokenMetadata) {
+        throw new UnauthorizedError();
+      } else if (!tokenMetadata.puckId) {
+        throw new ForbiddenError();
+      }
+
+      const expandProps = parseExpand(expand);
+
+      return this.deviceService.getDeviceById(tokenMetadata.puckId, expandProps);
+    }
+
     @httpGet('/:id',
-      authWithId,
+      authUnion(authWithId, puckAuthMiddleware.handler.bind(puckAuthMiddleware)),
       reqValidator.create(t.type({
         params: t.type({
           id: t.string
@@ -282,7 +259,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       }
 
       const puckId = uuid.v4()
-      const token = await puckTokenService.issueToken(puckId, this.puckPairingTokenTTL, tokenMetadata.client_id);
+      const token = await puckTokenService.issueToken(puckId, this.puckPairingTokenTTL, tokenMetadata.client_id, { isInit: true });
 
       return { id: puckId, token };
     }
@@ -300,31 +277,20 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
 
       if (!tokenMetadata) {
         throw new UnauthorizedError();
-      } else if (!tokenMetadata.user_id && !tokenMetadata.client_id && !tokenMetadata.puckId) {
+      } else if (!tokenMetadata.user_id && !tokenMetadata.client_id) {
         throw new ForbiddenError();
-      } else if (deviceCreate.deviceType === DeviceType.PUCK && !tokenMetadata.puckId) {
-        throw new ForbiddenError(); 
+      } else if (deviceCreate.deviceType === DeviceType.PUCK) {
+        throw new ValidationError('Cannot pair puck.'); 
       }
 
       const device = await this.deviceService.pairDevice(authToken, deviceCreate);
 
-      if (deviceCreate.deviceType === DeviceType.PUCK) {
 
-        return some({
-          device,
-          // Puck token has no expiration
-          token: await puckTokenService.issueToken(tokenMetadata.puckId, undefined, tokenMetadata.client_id, {
-            macAddress: device.macAddress,
-            locationId: device.location.id
-          })
-        });
-      } else {
-        return some(device);
-      }
+      return some(device); 
     }
 
     @httpPost('/pair/complete/puck',
-      puckTokenAuth,
+      'PuckAuthMiddleware',
       reqValidator.create(t.type({
         body: DeviceCreateValidator
       }))
@@ -336,7 +302,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
 
       if (!tokenMetadata) {
         throw new UnauthorizedError();
-      } else if (!tokenMetadata.puckId) {
+      } else if (!tokenMetadata.puckId || !tokenMetadata.isInit) {
         throw new ForbiddenError();
       } else if (deviceCreate.deviceType !== DeviceType.PUCK) {
         throw new ValidationError(); 
