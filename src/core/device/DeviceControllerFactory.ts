@@ -115,7 +115,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       return this.deviceService.getByMacAddress(macAddress, expandProps);
     }
 
-    // Special endpoint for puck to retrieve it's own data
+    // Special endpoint for puck to retrieve its own data
     @httpGet('/me',
       'PuckAuthMiddleware',
       reqValidator.create(t.type({
