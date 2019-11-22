@@ -1,11 +1,11 @@
 import { inject, injectable } from 'inversify';
-import { ApiService } from "../ApiService";
 import UnauthorizedError from '../auth/UnauthorizedError';
 import Request from '../core/api/Request';
 import { NotificationService, NotificationServiceFactory } from '../core/notification/NotificationService';
 import { ApiNotificationService } from './ApiNotificationService';
 import { DeviceService } from '../core/device/DeviceService';
 import { DependencyFactoryFactory } from '../core/api';
+import { HttpService, HttpServiceFactory } from '../http/HttpService';
 
 @injectable()
 class ApiNotificationServiceFactory implements NotificationServiceFactory  {
@@ -15,6 +15,7 @@ class ApiNotificationServiceFactory implements NotificationServiceFactory  {
   constructor(
     @inject('notificationApiUrl') private readonly notificationApiUrl: string,
     @inject('DependencyFactoryFactory') depFactoryFactory: DependencyFactoryFactory,
+    @inject('HttpServiceFactory') private httpServiceFactory: HttpServiceFactory
   ) {
     this.deviceServiceFactory = depFactoryFactory<DeviceService>('DeviceService');
   }
@@ -26,7 +27,7 @@ class ApiNotificationServiceFactory implements NotificationServiceFactory  {
       throw new UnauthorizedError();
     }
 
-    return new ApiNotificationService(this.deviceServiceFactory, new ApiService(this.notificationApiUrl, authToken));
+    return new ApiNotificationService(this.deviceServiceFactory, this.httpServiceFactory(this.notificationApiUrl, authToken));
   }
 }
 

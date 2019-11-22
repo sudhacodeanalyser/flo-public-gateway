@@ -1,5 +1,5 @@
-import axios from 'axios';
-import { injectable } from 'inversify';
+import { AxiosInstance } from 'axios';
+import { injectable, inject } from 'inversify';
 import HttpError from './HttpError';
 import config from '../config/config';
 
@@ -14,14 +14,18 @@ export interface HttpRequest {
 
 @injectable()
 class HttpService {
-  protected async sendRequest(request: HttpRequest): Promise<any> {
+  public baseUrl?: string;
+  public authToken?: string;
+  @inject('HttpClient') protected readonly httpClient: AxiosInstance;
+
+  public async sendRequest(request: HttpRequest): Promise<any> {
     try {
-      const response = await axios({
+      const response = await this.httpClient.request({
         method: request.method,
-        url: request.url,
+        url: this.baseUrl ? `${this.baseUrl}${request.url}` : request.url,
         headers: {
           'Content-Type': 'application/json',
-          ...(request.authToken && { Authorization: request.authToken }),
+          ...((request.authToken || this.authToken) && { Authorization: request.authToken || this.authToken }),
           ...(request.customHeaders)
         },
         ...(request.body && { data: request.body }),
@@ -42,5 +46,7 @@ class HttpService {
     }
   }
 }
+
+export type HttpServiceFactory = (baseUrl?: string, authToken?: string) => HttpService;
 
 export { HttpService, HttpError };
