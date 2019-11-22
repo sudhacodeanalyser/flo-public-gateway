@@ -12,7 +12,7 @@ export default new ContainerModule((bind: interfaces.Bind) => {
     return (url: string, authToken: string) => {
       const healthTestService = context.container.get<DefaultHealthTestService>('DefaultHealthTestService');
 
-      healthTestService.healthTestServiceUrl = authToken;
+      healthTestService.healthTestServiceUrl = url;
       healthTestService.authToken = authToken;
 
       return healthTestService;
