@@ -8,7 +8,7 @@ import { QrData, QrDataValidator } from '../../api-v1/pairing/PairingService';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import { InternalDeviceService } from '../../internal-device-service/InternalDeviceService';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
-import { Device, DeviceCreate, DeviceCreateValidator, DeviceType, DeviceUpdate, DeviceUpdateValidator, SystemMode as DeviceSystemMode, SystemModeCodec as DeviceSystemModeCodec } from '../api';
+import { Device, DeviceActionRule, DeviceActionRules, DeviceActionRulesCreate, DeviceActionRulesCreateCodec, DeviceActionRuleTypeUpsert, DeviceActionRuleTypeUpsertCodec, DeviceCreate, DeviceCreateValidator, DeviceType, DeviceUpdate, DeviceUpdateValidator, SystemMode as DeviceSystemMode, SystemModeCodec as DeviceSystemModeCodec } from '../api';
 import { asyncMethod, authorizationHeader, createMethod, deleteMethod, httpController, parseExpand, withResponseType } from '../api/controllerUtils';
 import { convertEnumtoCodec } from '../api/enumUtils';
 import ForbiddenError from '../api/error/ForbiddenError';
@@ -440,6 +440,45 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       return device.value.macAddress;
     }
 
+    @httpGet('/:id/actionRules',
+      authWithId,
+      reqValidator.create(t.type({
+        params: t.type({
+          id: t.string
+        })
+      }))
+    )
+    private async getActionRules(@requestParam('id') id: string): Promise<DeviceActionRules> {
+      return this.internalDeviceService.getActionRules(id);
+    }
+
+
+    @httpPost('/:id/actionRules',
+      authWithId,
+      reqValidator.create(t.type({
+        params: t.type({
+          id: t.string
+        }),
+        body: DeviceActionRulesCreateCodec
+      }))
+    )
+    private async upsertActionRules(@requestParam('id') id: string, @requestBody() actionRules: DeviceActionRulesCreate): Promise<DeviceActionRules> {
+      return this.internalDeviceService.upsertActionRules(id, actionRules);
+    }
+
+    @httpDelete('/:id/actionRules/:actionRuleId',
+      authWithId,
+      reqValidator.create(t.type({
+        params: t.type({
+          id: t.string,
+          actionRuleId: t.string
+        })
+      }))
+    )
+    @deleteMethod
+    private async removeActionRule(@requestParam('id') id: string, @requestParam('actionRuleId') actionRuleId: string): Promise<void> {
+      return this.internalDeviceService.removeActionRule(id, actionRuleId);
+    }
   }
 
   return DeviceController;
