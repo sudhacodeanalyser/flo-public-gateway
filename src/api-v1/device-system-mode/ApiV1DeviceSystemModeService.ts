@@ -1,16 +1,13 @@
+import { injectable } from 'inversify';
 import { HttpService } from '../../http/HttpService';
 import { DeviceSystemModeServiceFactory, DeviceSystemModeService } from '../../core/device/DeviceSystemModeService';
 import { SystemMode, DeviceSystemModeNumeric } from '../../core/api';
 import { translateStringToNumericEnum } from '../../core/api/enumUtils';
 
+@injectable()
 class ApiV1DeviceSystemModeService extends HttpService implements DeviceSystemModeService {
-
-  constructor(
-    private readonly apiV1Url: string,
-    private readonly authToken: string
-  ) {
-    super();
-  }
+  public apiV1Url: string;
+  public authToken: string;
 
   public async setSystemMode(id: string, systemMode: SystemMode): Promise<void> {
     const request = {

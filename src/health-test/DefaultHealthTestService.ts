@@ -7,7 +7,7 @@ import { HttpService } from '../http/HttpService';
 export class DefaulthHealthTestService extends HttpService implements HealthTestService {
   constructor(
     private readonly healthTestServiceUrl: string,
-    private readonly authToken: string
+    public readonly authToken: string
   ) {
     super();
   }
