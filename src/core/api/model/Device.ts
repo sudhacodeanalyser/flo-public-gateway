@@ -43,6 +43,9 @@ const DeviceMutableCodec = t.type({
   irrigationType: NonEmptyString,
   valve: t.partial({
     target: t.keyof(_.pick(ValveStateCodec.keys, ['open', 'closed']))
+  }),
+  area: t.type({
+    id: t.string
   })
 });
 
