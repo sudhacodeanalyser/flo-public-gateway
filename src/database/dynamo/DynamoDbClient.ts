@@ -146,6 +146,46 @@ class DynamoDbClient implements DatabaseClient {
     return Items.map(item => this.sanitizeRead(item as T)) as T[];
   }
 
+  public async batchGet<T>(tableName: string, keys: KeyMap[], batchSize: number = 75): Promise<Array<T | null>> {
+
+    if (!keys.length) {
+      return [];
+    }
+
+    const fullTableName = this.tablePrefix + tableName;
+    const batches = _.chunk(keys, batchSize)
+      .map(batch => {
+        return {
+          RequestItems: {
+            [fullTableName]: {
+              Keys: batch
+            }
+          }
+        }
+      });
+    const results = _.flatten(await Promise.all(
+      batches.map(async batch => {
+        const result = await this.dynamoDb.batchGet(batch).promise();
+
+        // TODO: Implement smart retry
+        if (result.UnprocessedKeys && result.UnprocessedKeys[fullTableName]) {
+          throw new Error('Unable to process batch.');
+        }
+
+        return ((result.Responses && result.Responses[fullTableName]) || [])
+          .map(item => item as T)
+      })
+    ));
+    const items = keys.map(keyMap => {
+      // TODO: Naive search, potentially optimize
+      const item = _.find(results, keyMap) as T | undefined;
+
+      return item || null;
+    });
+
+    return items;
+  }
+
   private createCondition(key: KeyMap): Partial<AWS.DynamoDB.DocumentClient.UpdateItemInput> {
     const condTuples = _.map(key, (value, name) => ({
       name,
