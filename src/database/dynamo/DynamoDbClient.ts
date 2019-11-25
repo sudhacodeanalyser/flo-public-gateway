@@ -152,6 +152,8 @@ class DynamoDbClient implements DatabaseClient {
       return [];
     }
 
+    // Assumes all key maps contain the same key properties
+    const keyProps = _.keys(keys[0]);
     const fullTableName = this.tablePrefix + tableName;
     const batches = _.chunk(keys, batchSize)
       .map(batch => {
@@ -163,7 +165,8 @@ class DynamoDbClient implements DatabaseClient {
           }
         }
       });
-    const results = _.flatten(await Promise.all(
+
+    const resultsMap = _.flatten(await Promise.all(
       batches.map(async batch => {
         const result = await this.dynamoDb.batchGet(batch).promise();
 
@@ -175,10 +178,18 @@ class DynamoDbClient implements DatabaseClient {
         return ((result.Responses && result.Responses[fullTableName]) || [])
           .map(item => item as T)
       })
-    ));
+    ))
+    .reduce((keyItemMap, item) => {
+      const itemKeys = keyProps.map(keyProp => (item as any)[keyProp]).join('_');
+
+      keyItemMap.set(itemKeys, item);
+
+      return keyItemMap;
+    }, new Map<string, T>());
+
     const items = keys.map(keyMap => {
-      // TODO: Naive search, potentially optimize
-      const item = _.find(results, keyMap) as T | undefined;
+      const itemKey = keyProps.map(keyProp => keyMap[keyProp]).join('_');
+      const item = resultsMap.get(itemKey);
 
       return item || null;
     });
