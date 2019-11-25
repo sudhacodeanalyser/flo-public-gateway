@@ -3,8 +3,8 @@ import { injectHttpContext, interfaces } from 'inversify-express-utils';
 import { NotificationServiceFactory, NotificationService } from '../notification/NotificationService';
 import _ from 'lodash';
 import AlertFeedbackFlowTable from './AlertFeedbackFlowTable';
-import { AlarmListResult, Alarm } from '../api';
-import { AlertFeedbackFlowRecord } from './AlertFeedbackFlowRecord';
+import { AlarmListResult, Alarm, DeviceSystemModeNumeric } from '../api';
+import { AlertFeedbackFlowRecord, AlertFeedbackFlowRecordData } from './AlertFeedbackFlowRecord';
 
 @injectable()
 class AlarmService {
@@ -45,12 +45,16 @@ class AlarmService {
   }
 
   private async joinAlarmWithFeedbackFlow(alarm: Alarm): Promise<Alarm> {
-    const alertFeedbackFlowRecords = await this.alertFeedbackFlowTable.getByAlarmId(alarm.id);
+    const alertFeedbackFlowRecords = await Promise.all([
+      this.alertFeedbackFlowTable.get({ alarm_id: alarm.id, system_mode: DeviceSystemModeNumeric.HOME }),
+      this.alertFeedbackFlowTable.get({ alarm_id: alarm.id, system_mode: DeviceSystemModeNumeric.AWAY })
+    ]);
 
     return {
       ...alarm,
-      userFeedbackFlow: (_.isEmpty(alertFeedbackFlowRecords) ? [] : alertFeedbackFlowRecords)
-        .map(alertFeedbackFlow => AlertFeedbackFlowRecord.toModel(alertFeedbackFlow))
+      userFeedbackFlow: alertFeedbackFlowRecords
+        .filter(alertFeedbackFlow => alertFeedbackFlow !== null && !_.isEmpty(alertFeedbackFlow))
+        .map(alertFeedbackFlow => AlertFeedbackFlowRecord.toModel(alertFeedbackFlow as AlertFeedbackFlowRecordData))
     };
   }
 }

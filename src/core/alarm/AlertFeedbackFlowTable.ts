@@ -1,11 +1,11 @@
 import { inject, injectable } from 'inversify';
 import DatabaseClient from '../../database/DatabaseClient';
-import DatabaseTable from '../../database/DatabaseTable';
+import BatchedDatabaseTable from '../../database/BatchedDatabaseTable';
 import { AlertFeedbackFlowRecordData } from './AlertFeedbackFlowRecord';
 import { DynamoDbQuery } from '../../database/dynamo/DynamoDbClient';
 
 @injectable()
-class AlertFeedbackFlowTable extends DatabaseTable<AlertFeedbackFlowRecordData> {
+class AlertFeedbackFlowTable extends BatchedDatabaseTable<AlertFeedbackFlowRecordData> {
   constructor(@inject('DatabaseClient') dbClient: DatabaseClient) {
     super(dbClient, 'AlertFeedbackFlow');
   }
