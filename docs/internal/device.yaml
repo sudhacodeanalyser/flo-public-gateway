@@ -122,6 +122,84 @@ paths:
           description: Invalid request body
         409:
           description: Device already paired
+  /api/v2/devices/pair/init/puck:
+    post:
+      summary: Begins pairing process
+      tags:
+        - Pairing
+      produces:
+        - application/json
+      requestBody:
+        required: false
+      responses:
+        200:
+          description: Pairing data
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  token:
+                    type: string
+        400:
+          description: Invalid request body
+  /api/v2/devices/pair/complete/puck:
+    post:
+      summary: Completes the pairing process, adding the puck to the location
+      tags:
+        - Pairing
+      produces:
+        - application/json
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - macAddress
+                - location
+                - deviceType
+                - deviceModel
+              properties:
+                macAddress:
+                  type: string
+                nickname:
+                  type: string
+                location:
+                  type: object
+                  required:
+                    - id
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                deviceType:
+                  type: string
+                deviceModel:
+                  type: string
+      responses:
+        200:
+          description: A Device with the specified MAC address or an empty object if not found.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  device:
+                    $ref: '#/components/schemas/Device'
+                  token:
+                    type: string
+        400:
+          description: Invalid request body
+        401:
+          description: Invalid or expired pairing token
+        409:
+          description: Device already paired
   /api/v2/devices:
     get:
       summary: Retrieves a Device by MAC address.
