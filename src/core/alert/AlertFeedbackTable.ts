@@ -12,6 +12,8 @@ class AlertFeedbackTable extends BatchedDatabaseTable<AlertFeedbackRecordData> {
 
   constructor(@inject('DatabaseClient') dbClient: DynamoDbClient) {
     super(dbClient, 'AlertFeedback');
+
+    this.defaultBatchSize = 50;
   }
 }
 
