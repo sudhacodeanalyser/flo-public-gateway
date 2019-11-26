@@ -637,6 +637,11 @@ components:
           properties:
             id:
               type: string
+        puckConfig:
+          type: object
+          properties:
+            isConfigured:
+              type: boolean
 
     IrrigationType:
       type: string
@@ -793,6 +798,14 @@ components:
               type: object
               properties:
                 scheduledAt:
+                  type: string
+                  format: date-time
+            puckConfig: 
+              type: object
+              properties: 
+                isConfigured:
+                  type: boolean
+                configuredAt:
                   type: string
                   format: date-time
     DeviceExpandable:
