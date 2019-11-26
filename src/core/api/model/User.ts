@@ -1,6 +1,7 @@
 import * as t from 'io-ts';
 import { Account, DeviceAlarmSettings, Expandable, Location, TimestampedModel } from '../../api';
 import { NonEmptyString } from '../../api/validator/NonEmptyString';
+import { PhoneNumber } from '../../api/validator/PhoneNumber';
 
 export interface UserLocationRole {
   locationId: string;
@@ -29,7 +30,7 @@ const UserMutableCodec = t.type({
   prefixName: t.string,
   suffixName: t.string,
   unitSystem: UnitSystemCodec,
-  phoneMobile: NonEmptyString,
+  phoneMobile: PhoneNumber,
   locale: NonEmptyString
 });
 
