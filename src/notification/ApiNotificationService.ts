@@ -71,7 +71,7 @@ class ApiNotificationService {
     const devices =  await this.getDevicesInfo(data);
     const requestBody = {
       locationId: data.locationId,
-      devices: devices.map((device: Device) => ({ id: device.id, macAddress: device.macAddress })),
+      devices: devices.map(device => ({ id: device.id, macAddress: device.macAddress })),
       snoozeSeconds: data.snoozeSeconds
     };
 
@@ -121,7 +121,7 @@ class ApiNotificationService {
     });
   }
 
-  private async getDevicesInfo(data: any): Promise<Device[]> {
+  private async getDevicesInfo(data: any): Promise<Array<Pick<Device, 'macAddress' | 'id'>>> {
     const hasLocationId = (obj: any): obj is { locationId: string } => {
       return obj.locationId !== undefined;
     };
@@ -131,10 +131,20 @@ class ApiNotificationService {
     };
 
     if (hasLocationId(data)) {
-      return this.deviceServiceFactory().getAllByLocationId(data.locationId);
+      return this.deviceServiceFactory().getAllByLocationId(data.locationId, {
+        $select: {
+          macAddress: true,
+          id: true
+        }
+      });
     } else if (hasDeviceId(data)) {
       return pipe(
-        await this.deviceServiceFactory().getDeviceById(data.deviceId),
+        await this.deviceServiceFactory().getDeviceById(data.deviceId, {
+          $select: {
+            macAddress: true,
+            id: true
+          }
+        }),
         fold(
           () => [],
           (device: Device) => [device]
