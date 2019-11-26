@@ -63,10 +63,17 @@ class LocationService {
       const deviceService = this.deviceServiceFactory();
 
       if (_.get(locationUpdate, 'irrigationSchedule.isEnabled', false)) {
-         const devices = await deviceService.getAllByLocationId(id, ['irrigationSchedule']);
-         const promises = devices
-           .map(async (device) => {
-             if  (
+        const devices = await deviceService.getAllByLocationId(id, { 
+          $select: { 
+            id: true,
+            irrigationSchedule: { 
+              $expand: true 
+            } 
+          } 
+        });
+        const promises = devices
+          .map(async (device) => {
+            if  (
                device.irrigationSchedule === undefined ||
                device.irrigationSchedule.computed === undefined ||
                device.irrigationSchedule.computed.times === undefined
@@ -81,7 +88,11 @@ class LocationService {
 
         await Promise.all(promises);
       } else {
-        const devices = await deviceService.getAllByLocationId(id);
+        const devices = await deviceService.getAllByLocationId(id, {
+          $select: {
+            id: true
+          }
+        });
         const promises = devices
           .map(async (device) =>
             this.irrigationScheduleService.disableDeviceIrrigationAllowedInAwayMode(device.id)

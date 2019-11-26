@@ -16,6 +16,11 @@ class DatabaseReadTable<T> {
   public async query<Q>(queryOptions: Q): Promise<T[]> {
     return this.dbClient.query<Q, T>(this.tableName, queryOptions);
   }
+
+  public async batchGet(keys: KeyMap[], batchSize?: number): Promise<Array<T | null>> {
+    return this.dbClient.batchGet(this.tableName, keys, batchSize);
+  }
+
 }
 
 export { DatabaseReadTable };

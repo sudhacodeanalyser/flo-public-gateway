@@ -26,12 +26,12 @@ import { NonEmptyString, NonEmptyStringFactory } from '../api/validator/NonEmpty
 @injectable()
 class DeviceResolver extends Resolver<Device> {
   protected propertyResolverMap: PropertyResolverMap<Device> = {
-    location: async (device: Device, shouldExpand = false) => {
+    location: async (device: Device, shouldExpand = false, expandProps?: PropExpand) => {
       if (!shouldExpand) {
         return null;
       }
 
-      return this.locationResolverFactory().get(device.location.id);
+      return this.locationResolverFactory().get(device.location.id, expandProps);
     },
     additionalProps: async (device: Device, shouldExpand = false) => {
       try {
@@ -211,7 +211,7 @@ class DeviceResolver extends Resolver<Device> {
         minValue: 0
       };
 
-      const gpm = device.deviceType !== 'flo_device_075_v2' ?
+      const gpm = device.deviceModel !== 'flo_device_075_v2' ?
         {
           ...minZero,
           okMax: 29,
@@ -223,7 +223,7 @@ class DeviceResolver extends Resolver<Device> {
           maxValue: 125
         };
 
-      const lpm = device.deviceType !== 'flo_device_075_v2' ?
+      const lpm = device.deviceModel !== 'flo_device_075_v2' ?
         {
           ...minZero,
           okMax: 110,
@@ -343,6 +343,17 @@ class DeviceResolver extends Resolver<Device> {
       } else {
         return NonEmptyStringFactory.create('not_sure');
       }
+    },
+    shutoff: async (device: Device, shouldExpand = false) => {
+      const additionalProperties = await this.internalDeviceService.getDevice(device.macAddress);
+      const shutoffTimeSeconds = Math.max(
+        _.get(additionalProperties, 'fwProperties.alarm_shutoff_time_epoch_sec', 0), 
+        0
+      );
+
+      return {
+        scheduledAt: new Date(shutoffTimeSeconds * 1000).toISOString()
+      };
     }
   };
   private locationResolverFactory: () => LocationResolver;
@@ -375,7 +386,7 @@ class DeviceResolver extends Resolver<Device> {
     }
   }
 
-  public async get(id: string, expandProps: PropExpand = []): Promise<Device | null> {
+  public async get(id: string, expandProps?: PropExpand): Promise<Device | null> {
     const deviceRecordData: DeviceRecordData | null = await this.deviceTable.get({ id });
 
     if (deviceRecordData === null) {
@@ -385,7 +396,7 @@ class DeviceResolver extends Resolver<Device> {
     return this.toModel(deviceRecordData, expandProps);
   }
 
-  public async getByMacAddress(macAddress: string, expandProps: PropExpand = []): Promise<Device | null> {
+  public async getByMacAddress(macAddress: string, expandProps?: PropExpand): Promise<Device | null> {
     const deviceRecordData = await this.deviceTable.getByMacAddress(macAddress);
 
     if (deviceRecordData === null) {
@@ -395,7 +406,7 @@ class DeviceResolver extends Resolver<Device> {
     return this.toModel(deviceRecordData, expandProps);
   }
 
-  public async getAllByLocationId(locationId: string, expandProps: PropExpand = []): Promise<Device[]> {
+  public async getAllByLocationId(locationId: string, expandProps?: PropExpand): Promise<Device[]> {
     const deviceRecordData = await this.deviceTable.getAllByLocationId(locationId);
 
     return Promise.all(
@@ -417,9 +428,9 @@ class DeviceResolver extends Resolver<Device> {
 
   public async createDevice(deviceCreate: DeviceCreate, isPaired: boolean = false): Promise<Device> {
     const device = {
-      ...deviceCreate,
       deviceType: DeviceType.FLO_DEVICE_V2,
       deviceModel: DeviceModelType.FLO_0_75,
+      ...deviceCreate,
       additionalProps: null,
       isPaired,
       id: uuid.v4(),
@@ -437,7 +448,29 @@ class DeviceResolver extends Resolver<Device> {
     return this.toModel(createdDeviceRecordData);
   }
 
-  private async toModel(deviceRecordData: DeviceRecordData, expandProps: PropExpand = []): Promise<Device> {
+  protected async resolveProp<K extends keyof Device>(model: Device, prop: K, shouldExpand: boolean = false, expandProps?: PropExpand): Promise<{ [prop: string]: Device[K] }> {
+    // Don't resolve these properties for the Puck
+    const puckExcludedProps = [
+      'valve',
+      'irrigationSchedule',
+      'installStatus',
+      'learning',
+      'healthTest',
+      'hardwareThresholds',
+      'pairingData',
+      'irrigationType',
+      'irrigationSchedule',
+      'systemMode'
+    ];
+
+    if (model.deviceType === DeviceType.PUCK && puckExcludedProps.indexOf(prop) >= 0) {
+      return {};
+    } else {
+      return super.resolveProp<K>(model, prop, shouldExpand, expandProps);
+    }
+  }
+
+private async toModel(deviceRecordData: DeviceRecordData, expandProps?: PropExpand): Promise<Device> {
     const device = new DeviceRecord(deviceRecordData).toModel();
     const expandedProps = await this.resolveProps(device, expandProps);
 

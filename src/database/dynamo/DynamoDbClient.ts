@@ -146,6 +146,57 @@ class DynamoDbClient implements DatabaseClient {
     return Items.map(item => this.sanitizeRead(item as T)) as T[];
   }
 
+  public async batchGet<T>(tableName: string, keys: KeyMap[], batchSize: number = 75): Promise<Array<T | null>> {
+
+    if (!keys.length) {
+      return [];
+    }
+
+    // Assumes all key maps contain the same key properties
+    const keyProps = _.keys(keys[0]);
+    const fullTableName = this.tablePrefix + tableName;
+    const batches = _.chunk(keys, batchSize)
+      .map(batch => {
+        return {
+          RequestItems: {
+            [fullTableName]: {
+              Keys: batch
+            }
+          }
+        }
+      });
+
+    const resultsMap = _.flatten(await Promise.all(
+      batches.map(async batch => {
+        const result = await this.dynamoDb.batchGet(batch).promise();
+
+        // TODO: Implement smart retry
+        if (result.UnprocessedKeys && result.UnprocessedKeys[fullTableName]) {
+          throw new Error('Unable to process batch.');
+        }
+
+        return ((result.Responses && result.Responses[fullTableName]) || [])
+          .map(item => item as T)
+      })
+    ))
+    .reduce((keyItemMap, item) => {
+      const itemKeys = keyProps.map(keyProp => (item as any)[keyProp]).join('_');
+
+      keyItemMap.set(itemKeys, item);
+
+      return keyItemMap;
+    }, new Map<string, T>());
+
+    const items = keys.map(keyMap => {
+      const itemKey = keyProps.map(keyProp => keyMap[keyProp]).join('_');
+      const item = resultsMap.get(itemKey);
+
+      return item || null;
+    });
+
+    return items;
+  }
+
   private createCondition(key: KeyMap): Partial<AWS.DynamoDB.DocumentClient.UpdateItemInput> {
     const condTuples = _.map(key, (value, name) => ({
       name,

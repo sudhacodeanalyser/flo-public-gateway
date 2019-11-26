@@ -122,6 +122,84 @@ paths:
           description: Invalid request body
         409:
           description: Device already paired
+  /api/v2/devices/pair/init/puck:
+    post:
+      summary: Begins pairing process
+      tags:
+        - Pairing
+      produces:
+        - application/json
+      requestBody:
+        required: false
+      responses:
+        200:
+          description: Pairing data
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  token:
+                    type: string
+        400:
+          description: Invalid request body
+  /api/v2/devices/pair/complete/puck:
+    post:
+      summary: Completes the pairing process, adding the puck to the location
+      tags:
+        - Pairing
+      produces:
+        - application/json
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - macAddress
+                - location
+                - deviceType
+                - deviceModel
+              properties:
+                macAddress:
+                  type: string
+                nickname:
+                  type: string
+                location:
+                  type: object
+                  required:
+                    - id
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                deviceType:
+                  type: string
+                deviceModel:
+                  type: string
+      responses:
+        200:
+          description: A Device with the specified MAC address or an empty object if not found.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  device:
+                    $ref: '#/components/schemas/Device'
+                  token:
+                    type: string
+        400:
+          description: Invalid request body
+        401:
+          description: Invalid or expired pairing token
+        409:
+          description: Device already paired
   /api/v2/devices:
     get:
       summary: Retrieves a Device by MAC address.
@@ -411,9 +489,130 @@ paths:
           description: A Device with the specified ID was not found.
           schema:
             $ref: '#/components/schemas/Error'
+  /api/v2/devices/{id}/actionRules:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Device ID
+    get:
+      summary: Retrieves Action Rules for the given Device ID
+      tags:
+        - Devices
+        - Action Rules
+      produces:
+        - application/json
+      responses:
+        200:
+          description: All Action Rules for the given Device ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionRules'
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        403:
+          $ref: '#/components/responses/ForbiddenError'
+    post:
+      summary: Upserts Action Rules for the given Device ID
+      tags:
+        - Devices
+        - Action Rules
+      produces:
+        - application/json
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActionRules'
+      responses:
+        200:
+          description: All Action Rules for the given Device ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionRules'
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        403:
+          $ref: '#/components/responses/ForbiddenError'
+  /api/v2/devices/{id}/actionRules/{actionRuleId}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Device ID
+      - in: path
+        name: actionRuleId
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Action Rule ID
+    delete:
+      summary: Deletes an Action Rule for the given Device ID and Action Rule ID
+      tags:
+        - Devices
+        - Action Rules
+      produces:
+        - application/json
+      responses:
+        200:
+          description: The Action Rule was successfully deleted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Empty'
+        204:
+          description: An Action Rule with the specified ID was not found.
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        403:
+          $ref: '#/components/responses/ForbiddenError'
 
 components:
   schemas:
+    ActionRules:
+      type: object
+      properties:
+        actionRules:
+          type: array
+          items:
+            $ref: '#/components/schemas/ActionRule'
+
+    ActionRule:
+      allOf:
+        - type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            action:
+              type: string
+            event:
+              type: string
+            targetDeviceId:
+              type: string
+              format: uuid
+            order:
+              type: number
+            enabled:
+              type: boolean
+          required:
+            - action
+            - event
+            - targetDeviceId
+            - order
+            - enabled
+        - $ref: '#/components/schemas/Timestamped'
+
     DeviceMutable:
       type: object
       properties:
@@ -590,6 +789,12 @@ components:
               properties:
                 latest:
                   $ref: '#/components/schemas/HealthTest'
+            shutoff:
+              type: object
+              properties:
+                scheduledAt:
+                  type: string
+                  format: date-time
     DeviceExpandable:
       oneOf:
         - type: object

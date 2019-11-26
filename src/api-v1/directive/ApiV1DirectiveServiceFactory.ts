@@ -8,7 +8,8 @@ import { ApiV1DirectiveService } from './ApiV1DirectiveService';
 class ApiV1DirectiveServiceFactory implements DirectiveServiceFactory  {
 
   constructor(
-    @inject('ApiV1Url') private readonly apiV1Url: string
+    @inject('ApiV1Url') private readonly apiV1Url: string,
+    @inject('Factory<DirectiveService>') private directiveServiceFactory: (apiV1Url: string, authToken: string) => DirectiveService
   ) {}
 
   public create(req: Request): DirectiveService {
@@ -18,7 +19,7 @@ class ApiV1DirectiveServiceFactory implements DirectiveServiceFactory  {
       throw new UnauthorizedError();
     }
 
-    return new ApiV1DirectiveService(this.apiV1Url, authToken);
+    return this.directiveServiceFactory(this.apiV1Url, authToken);
   }
 }
 

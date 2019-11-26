@@ -75,6 +75,7 @@ const RecordToModelSchema: StrictSchema<Device, DeviceRecordData>  = {
   telemetry: () => undefined,
   healthTest: () => undefined,
   area: (input: DeviceRecordData) => input.area_id ? { id: input.area_id } : undefined,
+  shutoff: () => undefined,
   puckConfig: (input: DeviceRecordData) => {
     if (input.device_type !== DeviceType.PUCK) {
       return undefined;

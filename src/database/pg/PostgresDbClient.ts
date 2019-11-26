@@ -32,6 +32,13 @@ class PostgresDbClient implements DatabaseReadClient {
     return (result.rows.length && result.rows[0]) || null;
   }
 
+  public async batchGet<T>(tableName: string, keys: KeyMap[]): Promise<Array<T | null>> {
+    // TODO: Implement real batch retrieval from Postgres
+    return Promise.all(
+      keys.map(key => this.get<T>(tableName, key))
+    );
+  }
+
   public async query<T>(tableName: string, { query }: PostgresQuery): Promise<T[]> {
 
     if (!query) {
