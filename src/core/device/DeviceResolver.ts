@@ -416,7 +416,7 @@ class DeviceResolver extends Resolver<Device> {
 
   public async updatePartial(id: string, deviceUpdate: DeviceUpdate): Promise<Device> {
     const deviceRecordData = DeviceRecord.fromPartialModel(deviceUpdate);
-    const patch = fromPartialRecord<DeviceRecordData>(deviceRecordData);
+    const patch = fromPartialRecord<DeviceRecordData>(deviceRecordData, ['puck_configured_at']);
     const updatedDeviceRecordData = await this.deviceTable.update({ id }, patch);
 
     return this.toModel(updatedDeviceRecordData);

@@ -23,6 +23,7 @@ export interface DeviceRecordData {
   revert_minutes?: number;
   target_valve_state: ValveState;
   area_id?: string;
+  puck_configured_at?: string;
 }
 
 const RecordToModelSchema: StrictSchema<Device, DeviceRecordData>  = {
@@ -74,7 +75,17 @@ const RecordToModelSchema: StrictSchema<Device, DeviceRecordData>  = {
   telemetry: () => undefined,
   healthTest: () => undefined,
   area: (input: DeviceRecordData) => input.area_id ? { id: input.area_id } : undefined,
-  shutoff: () => undefined
+  shutoff: () => undefined,
+  puckConfig: (input: DeviceRecordData) => {
+    if (input.device_type !== DeviceType.PUCK) {
+      return undefined;
+    }
+
+    return {
+      isConfigured: !!input.puck_configured_at,
+      configuredAt: input.puck_configured_at
+    };
+  }
 };
 
 const ModelToRecordSchema: StrictSchema<DeviceRecordData, Device> = {
@@ -96,7 +107,12 @@ const ModelToRecordSchema: StrictSchema<DeviceRecordData, Device> = {
   device_model: 'deviceModel',
   prv_installation: 'prvInstallation',
   irrigation_type: 'irrigationType',
-  area_id: (input: Device) => _.get(input, 'area.id', undefined)
+  area_id: (input: Device) => _.get(input, 'area.id', undefined),
+  puck_configured_at: (input: Device) => {
+    return input.puckConfig ?
+      input.puckConfig.configuredAt || (input.puckConfig.isConfigured ? new Date().toISOString() : undefined) :
+      undefined;
+  }
 };
 
 const PartialModelToRecordSchema: StrictSchema<Partial<DeviceRecordData>, Partial<Device>> = {
@@ -118,7 +134,12 @@ const PartialModelToRecordSchema: StrictSchema<Partial<DeviceRecordData>, Partia
   device_model: 'deviceModel',
   prv_installation: 'prvInstallation',
   irrigation_type: 'irrigationType',
-  area_id: (input: Partial<Device>) => _.get(input, 'area.id', undefined)
+  area_id: (input: Partial<Device>) => _.get(input, 'area.id', undefined),  
+  puck_configured_at: (input: Partial<Device>) => {
+    return input.puckConfig ?
+      input.puckConfig.configuredAt || (input.puckConfig.isConfigured ? new Date().toISOString() : undefined) :
+      undefined;
+  }
 };
 
 export class DeviceRecord {
