@@ -141,6 +141,26 @@ class InternalDeviceService extends MemoizeMixin(HttpService) implements Firesto
       throw err;
     }
   }
+
+  public async registerDevice(macAddress: string, deviceMake: string, deviceModel: string): Promise<void> {
+    try {
+      const request = {
+        method: 'post',
+        url: `${ this.internalDeviceServiceBaseUrl }/devices/${macAddress}/register`,
+        body: {
+          make: deviceMake,
+          model: deviceModel
+        }
+      };
+
+      await this.sendRequest(request);
+    } catch (err) {
+      if (err instanceof InternalDeviceServiceError && err.statusCode === 404) {
+        throw new ResourceDoesNotExistError('Device does not exist.');
+      }
+      throw err;
+    }
+  }
 }
 
 export { InternalDeviceService };

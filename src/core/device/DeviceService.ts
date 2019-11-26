@@ -125,6 +125,8 @@ class DeviceService {
       }
     }
 
+    await this.internalDeviceService.registerDevice(deviceCreate.macAddress, deviceCreate.deviceType, deviceCreate.deviceModel);
+
     return createdDevice;
   }
 
@@ -134,4 +136,3 @@ class DeviceService {
 }
 
 export { DeviceService };
-
