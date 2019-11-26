@@ -78,7 +78,7 @@ class PuckTokenService {
         this.puckTokenSecret,
         (err, data) => {
           if (err) {
-            reject(E.left(err));
+            resolve(E.left(err));
           } else {
             resolve(E.right(data));
           }
