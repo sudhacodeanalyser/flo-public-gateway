@@ -3,7 +3,7 @@ image:
 secrets:
   datas:
     APPLICATION_NAME: "${APPLICATION_NAME}"
-    ENVIRONMENT: "development"
+    ENVIRONMENT: "${ENV}"
     ACL_URL: "${ACL_URL}"
     API_V1_URL: "${API_V1_URL}"
     AUTH_URL: "${AUTH_URL}"
@@ -44,5 +44,4 @@ secrets:
 internalIngress:
   host: internal-ingress.flocloud.co
 routingIngress:
-  annotations:
-    nginx.ingress.kubernetes.io/upstream-vhost: internal-ingress.flocloud.co
+  annotations: {}

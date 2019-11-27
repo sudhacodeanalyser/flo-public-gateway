@@ -4,12 +4,18 @@ APP ?= flo-public-gateway
 ENV ?= dev
 AWS_REGION ?= us-west-2
 EB_DEPLOY_TIMEOUT ?= 15
+HELM_CHART ?= $(APP)
 HELM_DEPLOY_TIMEOUT ?= 180
+HELM_HISTORY_MAX ?= 3
+HELM_HISTORY_MAX ?= 3
+HELM_RELEASE_NAME ?= $(APP)
+KUBE_NAMESPACE ?= $(APP)
 DOCKER_IMAGE ?= ${CI_REGISTRY_IMAGE}
 DOCKER_REGISTRY ?= registry.gitlab.com/flotechnologies
 DOCKER_TAG ?= latest
 DOCKER  ?= $(shell which docker)
 COMPOSE ?= $(shell which docker-compose)
+CURL ?= $(shell which curl)
 NODE_ENV ?= development
 NPM ?= $(COMPOSE) -f build-tools.yml run --rm npm --node-env=$(NODE_ENV)
 GRADLE ?= $(COMPOSE) -f build-tools.yml run --rm gradle
@@ -67,23 +73,28 @@ push: docker
 	$(COMPOSE) $(@)
 	$(COMPOSE) -f build-tools.yml $(@) || true
 
-debug-helm: environment-dev
-	$(HELM) ls
-	$(HELM) template ./k8s/$(APP) -f k8s/pipeline.yaml --namespace=$(APP)
+debug-helm:
+	$(HELM) template \
+		./k8s/$(HELM_CHART) \
+		--name $(HELM_RELEASE_NAME) \
+		--values k8s/pipeline.yaml \
+		--set environment=$(ENV) \
+		--namespace=$(KUBE_NAMESPACE)
 
 deploy:
 	$(HELM) init --upgrade --wait --force-upgrade
 	$(HELM) upgrade \
-		--install $(APP) \
-		./k8s/$(APP) \
+		$(HELM_RELEASE_NAME) \
+		./k8s/$(HELM_CHART) \
+		--install \
 		--values ./k8s/pipeline.yaml \
 		--set environment=$(ENV) \
-		--namespace=$(APP) \
+		--namespace=$(KUBE_NAMESPACE) \
 		--wait --timeout $(HELM_DEPLOY_TIMEOUT)
 
 deploy-status:
-	$(HELM) status $(APP)
-	$(HELM) history $(APP)
+	$(HELM) history --max $(HELM_HISTORY_MAX) $(HELM_RELEASE_NAME)
+	$(HELM) status $(HELM_RELEASE_NAME)
 
 environment-dev:
 	chmod +x ./k8s/env-dev.sh
@@ -92,6 +103,9 @@ environment-dev:
 environment-prod:
 	chmod +x ./k8s/env-prod.sh
 	./k8s/env-prod.sh
+
+runscope:
+	$(CURL) -i "$(RUNSCOPE_URL)" 1>/dev/null
 
 clean: down ## Remove build arifacts & related images
 	rm -rf node_modules
