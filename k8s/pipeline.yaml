@@ -1,0 +1,47 @@
+image:
+  tag: "97123465"
+secrets:
+  datas:
+    APPLICATION_NAME: "flo-public-gateway"
+    ENVIRONMENT: "rc"
+    ACL_URL: "https://api-dev.flocloud.co/api/v1/accesscontrol/refresh"
+    API_V1_URL: "https://api-dev.flocloud.co/api/v1"
+    AUTH_URL: "https://api-dev.flocloud.co/api/v1/accesscontrol/authorize"
+    DOCS_ENDPOINT_PASSWORD: "fl0Acc3ssPl3as3!"
+    DOCS_ENDPOINT_USER: "docuser"
+    DYNAMO_TABLE_PREFIX: "dev_"
+    EXTERNAL_DOCS_ENDPOINT_PASSWORD: "partnerFloDocs!"
+    EXTERNAL_DOCS_ENDPOINT_USER: "partner"
+    EXTERNAL_SERVICE_HTTP_TIMEOUT_MS: "10000"
+    HEALTH_TEST_SERVICE_URL: "http://flo-device-manager-dev.flocloud.co"
+    INFLUX_ANALYTICS_DB: "telemetry_analytics_dev"
+    INFLUX_HOST: "mcfly-da662558.influxcloud.net"
+    INFLUX_HOURLY_MEASUREMENT: "telemetry_hourly"
+    INFLUX_PASSWORD: "umm6@IzEqFHzX_ChY8qIq?FwhiUBR?Jssv6EkQ_Q-EoGMu@6gD29"
+    INFLUX_PORT: "8086"
+    INFLUX_SECOND_MEASUREMNT: 'twelve_weeks.telemetry_raw'
+    INFLUX_TELEMETRY_DB: "telemetry_dev"
+    INFLUX_USERNAME: "flo_api_dev"
+    INTERNAL_DEVICE_SERVICE_BASE_URL: "https://flo-device-service.flocloud.co/v1"
+    KAFKA_HOST: "kafka-cherry-broker-1.dev.flocloud.co:9092,kafka-cherry-broker-2.dev.flocloud.co:9092,kafka-cherry-broker-3.dev.flocloud.co:9092"
+    KAFKA_TIMEOUT_MS: "10000"
+    LOCALIZATION_API_URL: "https://flo-localization-service.flocloud.co/v1"
+    NOTIFICATION_API_URL: "https://flo-notification-api.flocloud.co"
+    POSTGRES_DATABASE: "list-service"
+    POSTGRES_HOST: "dev-rds-cherry.dev.flocloud.co"
+    POSTGRES_PASSWORD: "KrirtyifCidv@hakIt2admaquoag"
+    POSTGRES_PORT: "5432"
+    POSTGRES_USER: "flo-list-service"
+    PRESENCE_SERVICE_URL: "https://flo-core-service-dev.flocloud.co/presence"
+    REDIS_HOST: "redis-dev-cluster.9alsts.clustercfg.usw2.cache.amazonaws.com"
+    STRIPE_SECRET_KEY: "sk_test_57NpkUrDqV5hOvuxbaLS546k"
+    STRIPE_WEBHOOK_SECRET: "whsec_q0JAr0l00e1roSQBk3KZBXxbJRSXjl8j"
+    TELEMETRY_TAGS_SERVICE_URL: "https://flo-telemetry-tags.flocloud.co"
+    IFTTT_SERVICE_KEY: "mY2o-MhK74bIv4Gap1sZ2E9UZmjtl9GsNdpgasPyV2gLg_cqO7u_u_3dn-3mvveR"
+    API_V1_IFTTT_TEST_SETUP_URL: "https://api-dev.flocloud.co/api/v1/ifttt/v1/test/setup"
+    IFTTT_REALTIME_NOTIFICATIONS_URL: "https://realtime.ifttt.com/v1/notifications"
+    INSTANA_SERVICE_NAME: "flo-public-gateway-development"
+internalIngress:
+  host: internal-ingress.flocloud.co
+routingIngress:
+  annotations: {}

@@ -3,7 +3,7 @@ image:
 secrets:
   datas:
     APPLICATION_NAME: "${APPLICATION_NAME}"
-    ENVIRONMENT: "production"
+    ENVIRONMENT: "${ENV}"
     ACL_URL: "${ACL_URL_PROD}"
     API_V1_URL: "${API_V1_URL_PROD}"
     AUTH_URL: "${AUTH_URL_PROD}"
@@ -44,7 +44,6 @@ secrets:
 internalIngress:
   host: internal-ingress.flosecurecloud.com
 routingIngress:
-  annotations:
-    nginx.ingress.kubernetes.io/upstream-vhost: internal-ingress.flosecurecloud.com
+  annotations: {}
 v1ProxyService:
   floApiV1Hostname: not-for-public-use-api-gw.meetflo.com

@@ -1,7 +1,7 @@
 ---
-replicaCount: 5
+replicaCount: 8
 
-environment: dev
+environment: rc
 
 image:
   repository: registry.gitlab.com/flotechnologies/flo-public-gateway
@@ -27,34 +27,54 @@ service:
     timeoutSeconds: 3
 
 v1ProxyService:
-  floApiV1Hostname: api-dev.flocloud.co
+  production: "not-for-public-use-api-gw.meetflo.com"
+  development: "api-dev.flocloud.co"
+  rc: "api-dev.flocloud.co"
 
 routingIngress:
   enabled: true
   annotations:
-    nginx.ingress.kubernetes.io/upstream-vhost: internal-ingress.flocloud.co
-    nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
     kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
   hosts:
-    - api.meetflo.com
-    - api-gw-dev.flocloud.co
-    - api-gw.meetflo.com
-    - flo-public-gateway-k8s.flocloud.co
-    - flo-public-gateway.flosecurecloud.com
-    - flo-public-gateway-prod.flosecurecloud.com
+    production:
+      - api.meetflo.com
+      - api-gw.meetflo.com
+      - flo-public-gateway.flosecurecloud.com
+      - flo-public-gateway-prod.flosecurecloud.com
+    development:
+      - api-gw-dev.flocloud.co
+      - flo-public-gateway-k8s.flocloud.co
+    rc:
+      - api-gw-rc.flocloud.co
+      - flo-public-gateway-rc.flocloud.co
   tls: []
   #  - secretName: chart-example-tls
   #    hosts:
   #      - chart-example.local
+
+routingPaths:
+  - name: /api/v2
+    servicePrefix: proxy-k8s
+  - name: /docs
+    servicePrefix: proxy-k8s
+  - name: /legacy
+    servicePrefix: proxy-k8s
+  - name: /swagger
+    servicePrefix: proxy-k8s
+  - name: /api/v1
+    servicePrefix: proxy-eb
 
 internalIngress:
   enabled: true
   path: /
   annotations:
     kubernetes.io/ingress.class: nginx
-  host: internal-ingress.flocloud.co
 
-resources: {}
+internalIngressHosts:
+  production: "internal-ingress.flosecurecloud.com"
+  development: "internal-ingress.flocloud.co"
+  rc: "internal-ingress-rc.flocloud.co"
 
 nodeSelector:
   kops.k8s.io/instancegroup: nodes
@@ -68,8 +88,8 @@ secrets:
 
 resources:
   requests:
-    cpu: 1000m
+    cpu: 200m
     memory: 256Mi
   limits:
-    cpu: 2000m
+    cpu: 1500m
     memory: 1024Mi
