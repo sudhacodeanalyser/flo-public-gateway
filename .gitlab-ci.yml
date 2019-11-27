@@ -157,7 +157,7 @@ ReleaseCandidate:
     - Compile
   only:
     - master
-    - rc-prod
+    - prod-rc
   environment:
     name: rc
     url: https://api-gw-rc.flosecurecloud.com/api/v2/ping
