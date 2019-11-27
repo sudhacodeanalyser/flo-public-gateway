@@ -218,7 +218,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     @deleteMethod
     private async removeDevice(@requestParam('id') id: string): Promise<void> {
       const deviceId = await this.mapIcdToMacAddress(id);
-      await this.internalDeviceService.cleanup(deviceId);
+      await this.internalDeviceService.removeDevice(deviceId);
       return this.deviceService.removeDevice(id);
     }
 
@@ -280,13 +280,13 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       } else if (!tokenMetadata.user_id && !tokenMetadata.client_id) {
         throw new ForbiddenError();
       } else if (deviceCreate.deviceType === DeviceType.PUCK) {
-        throw new ValidationError('Cannot pair puck.'); 
+        throw new ValidationError('Cannot pair puck.');
       }
 
       const device = await this.deviceService.pairDevice(authToken, deviceCreate);
 
 
-      return some(device); 
+      return some(device);
     }
 
     @httpPost('/pair/complete/puck',
@@ -305,7 +305,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       } else if (!tokenMetadata.puckId || !tokenMetadata.isInit) {
         throw new ForbiddenError();
       } else if (deviceCreate.deviceType !== DeviceType.PUCK) {
-        throw new ValidationError(); 
+        throw new ValidationError();
       }
 
       const device = await this.deviceService.pairDevice(authToken, deviceCreate);
