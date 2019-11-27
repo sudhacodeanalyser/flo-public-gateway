@@ -167,7 +167,7 @@ ReleaseCandidate:
     - make deploy
     - make deploy-status
   tags:
-    - dev
+    - deploy-prod
 
 K8sProd:
   variables:
