@@ -1,8 +1,9 @@
+---
 version: '3'
 
 services:
   app: &app
-    image: "${CI_REGISTRY_IMAGE:-registry.gitlab.com/flotechnologies/app}:latest"
+    image: "${CI_REGISTRY_IMAGE:-registry.gitlab.com/flotechnologies/flo-public-gateway}:latest"
     environment:
       NODE_ENV: "${NODE_ENV:-development}"
       DYNAMO_TABLE_PREFIX: "${DYNAMO_TABLE_PREFIX}"
@@ -24,7 +25,7 @@ services:
   # This is used to automatically tag the image with CI_PIPELINE_ID
   app-tag:
     entrypoint: "true"
-    image: "${CI_REGISTRY_IMAGE:-registry.gitlab.com/flotechnologies/app}:${CI_PIPELINE_ID:-latest}"
+    image: "${CI_REGISTRY_IMAGE:-registry.gitlab.com/flotechnologies/flo-public-gateway}:${CI_PIPELINE_ID:-latest}"
     ports: []
     <<: *app
 networks:
