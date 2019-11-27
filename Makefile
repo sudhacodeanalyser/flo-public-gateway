@@ -9,7 +9,7 @@ HELM_DEPLOY_TIMEOUT ?= 180
 HELM_HISTORY_MAX ?= 3
 HELM_HISTORY_MAX ?= 3
 HELM_RELEASE_NAME ?= $(APP)
-KUBE_NAMESPACE ?= $(APP)
+K8S_NAMESPACE ?= $(APP)
 DOCKER_IMAGE ?= ${CI_REGISTRY_IMAGE}
 DOCKER_REGISTRY ?= registry.gitlab.com/flotechnologies
 DOCKER_TAG ?= latest
@@ -80,7 +80,7 @@ debug-helm:
 		--name $(HELM_RELEASE_NAME) \
 		--values k8s/pipeline.yaml \
 		--set environment=$(ENV) \
-		--namespace=$(KUBE_NAMESPACE)
+		--namespace=$(K8S_NAMESPACE)
 
 deploy:
 	$(HELM) init --upgrade --wait --force-upgrade
@@ -90,7 +90,7 @@ deploy:
 		--install \
 		--values ./k8s/pipeline.yaml \
 		--set environment=$(ENV) \
-		--namespace=$(KUBE_NAMESPACE) \
+		--namespace=$(K8S_NAMESPACE) \
 		--wait --timeout $(HELM_DEPLOY_TIMEOUT)
 
 deploy-status:
