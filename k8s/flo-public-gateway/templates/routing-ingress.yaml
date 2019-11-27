@@ -37,7 +37,7 @@ spec:
 {{- end }}
   rules:
   {{- if eq .Values.environment "production" }}
-  {{- range $.Values.routingIngress.hosts.production -}}
+  {{- range $.Values.routingIngress.hosts.production }}
     - host: {{ . }}
       http:
         paths:
@@ -61,7 +61,7 @@ spec:
         {{- end }}
   {{- end }}
   {{- else  }}
-  {{- range $.Values.routingIngress.hosts.development -}}
+  {{- range $.Values.routingIngress.hosts.development }}
     - host: {{ . }}
       http:
         paths:
