@@ -9,7 +9,6 @@ variables:
   DOCKER_HOST: "tcp://localhost:2375"
   CI_REGISTRY: "registry.gitlab.com"
   CI_REGISTRY_IMAGE: "${CI_REGISTRY}/flotechnologies/flo-public-gateway"
-  KUBERNETES_SERVICE_ACCOUNT_OVERWRITE: tiller
   APPLICATION_NAME: "flo-public-gateway"
   AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID_DEV}"
   AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY_DEV}"
@@ -100,10 +99,10 @@ Sanity:
 
 Dev:
   variables:
+    KUBERNETES_SERVICE_ACCOUNT_OVERWRITE: tiller
     ENV: "development"
     INSTANA_SERVICE_NAME: "flo-public-gateway-${ENV}"
     KUBE_NAMESPACE: "flo-public-gateway"
-    KUBERNETES_SERVICE_ACCOUNT_OVERWRITE: tiller
   image: kloiadocker/kloiahelm:0.0.1
   stage: deploy
   dependencies:
@@ -123,10 +122,10 @@ Dev:
 
 ReleaseCandidate:
   variables:
+    KUBERNETES_SERVICE_ACCOUNT_OVERWRITE: tiller
     ENV: "rc"
     HELM_RELEASE_NAME: "flo-public-gateway-rc"
-    KUBE_NAMESPACE: "${HELM_RELEASE_NAME}"
-    KUBERNETES_SERVICE_ACCOUNT_OVERWRITE: tiller
+    KUBE_NAMESPACE: "flo-public-gateway-rc"
     API_V1_URL_PROD: "https://api.meetflo.com/api/v1"
     ACL_URL_PROD: "${API_V1_URL_PROD}/accesscontrol/refresh"
     AUTH_URL_PROD: "${API_V1_URL_PROD}/accesscontrol/authorize"
@@ -174,8 +173,8 @@ ReleaseCandidate:
 
 K8sProd:
   variables:
-    KUBE_NAMESPACE: "flo-public-gateway"
     KUBERNETES_SERVICE_ACCOUNT_OVERWRITE: tiller
+    KUBE_NAMESPACE: "flo-public-gateway"
     ENV: "production"
     AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID_PROD}"
     AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY_PROD}"
