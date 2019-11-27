@@ -122,7 +122,6 @@ Dev:
 
 ReleaseCandidate:
   variables:
-    KUBERNETES_SERVICE_ACCOUNT_OVERWRITE: tiller
     ENV: "rc"
     HELM_RELEASE_NAME: "flo-public-gateway-rc"
     K8S_NAMESPACE: "flo-public-gateway-rc"
@@ -174,7 +173,6 @@ ReleaseCandidate:
 
 K8sProd:
   variables:
-    KUBERNETES_SERVICE_ACCOUNT_OVERWRITE: tiller
     K8S_NAMESPACE: "flo-public-gateway"
     ENV: "production"
     AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID_PROD}"
