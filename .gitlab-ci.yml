@@ -165,7 +165,6 @@ ReleaseCandidate:
     url: https://api-gw-rc.flosecurecloud.com/api/v2/ping
   script:
     - make environment-prod
-    - make debug-helm
     - make deploy
     - make deploy-status
   tags:
