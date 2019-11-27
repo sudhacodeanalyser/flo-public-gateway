@@ -110,7 +110,7 @@ Dev:
     - dev
   environment:
     name: dev
-    url: https://flo-public-gateway.flocloud.co/ping
+    url: https://flo-public-gateway.flocloud.co/api/v2/ping
   script:
     - make environment-dev
     - make deploy
@@ -166,7 +166,7 @@ ReleaseCandidate:
     - make deploy
     - make deploy-status
   tags:
-    - dev
+    - deploy-prod
     - dev-prod
 
 K8sProd:
@@ -210,7 +210,7 @@ K8sProd:
     - master
   environment:
     name: prod
-    url: https://flo-public-gateway.flosecurecloud.co/ping
+    url: https://api-gw.meetflo.com/api/v2/ping
   script:
     - make environment-prod
     - make deploy
@@ -221,25 +221,27 @@ K8sProd:
 
 RunscopeRC:
   variables:
-    RUNSCOPE_URL: "https://api.runscope.com/radar/68e4a198-9132-4560-bb08-a2e746c8c3e6/trigger?runscope_environment=755b5795-c9d2-464f-9372-d2aaa106e5cc"
+    RS_ENV: "afe789b6-72d2-4270-a03e-44ea3562150d"
+    RUNSCOPE_TRIGGER_URL: "https://api.runscope.com/radar/68e4a198-9132-4560-bb08-a2e746c8c3e6/trigger?runscope_environment=${RS_ENV}"
   stage: verify-rc
   dependencies:
     - Compile
   only:
     - master
-    - runscope-rc
+    - prod-rc
   environment:
     name: rc
-    url: https://flo-public-gateway-rc.flocloud.co/ping
+    url: https://api-gw-rc.flosecurecloud.com/api/v2/ping
   script:
-    - sleep 60
-    - curl -i "${RUNSCOPE_URL}" 1>/dev/null
+    - sleep 20
+    - make runscope
   tags:
     - dev
 
 RunscopeProd:
   variables:
-    RUNSCOPE_URL: "https://api.runscope.com/radar/68e4a198-9132-4560-bb08-a2e746c8c3e6/trigger?runscope_environment=755b5795-c9d2-464f-9372-d2aaa106e5cc"
+    RS_ENV: "755b5795-c9d2-464f-9372-d2aaa106e5cc"
+    RUNSCOPE_TRIGGER_URL: "https://api.runscope.com/radar/68e4a198-9132-4560-bb08-a2e746c8c3e6/trigger?runscope_environment=${RS_ENV}"
   stage: verify
   dependencies:
     - Compile
@@ -247,9 +249,9 @@ RunscopeProd:
     - master
   environment:
     name: prod
-    url: https://flo-public-gateway.flosecurecloud.com/ping
+    url: https://api-gw.meetflo.com/api/v2/ping
   script:
-    - sleep 60
-    - curl -i "${RUNSCOPE_URL}" 1>/dev/null
+    - sleep 20
+    - make runscope
   tags:
     - dev
