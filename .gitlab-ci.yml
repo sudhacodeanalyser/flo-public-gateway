@@ -170,7 +170,6 @@ ReleaseCandidate:
     - make deploy-status
   tags:
     - deploy-prod
-    - dev-prod
 
 K8sProd:
   variables:
@@ -220,7 +219,6 @@ K8sProd:
     - make deploy-status
   tags:
     - deploy-prod
-    - dev-prod
 
 RunscopeRC:
   variables:
