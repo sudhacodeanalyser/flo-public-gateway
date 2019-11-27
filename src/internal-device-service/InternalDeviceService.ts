@@ -68,20 +68,17 @@ class InternalDeviceService extends MemoizeMixin(HttpService) implements Firesto
     return this.sendRequest(request);
   }
 
-  public async cleanup(macAddress: string): Promise<void> {
+  public async removeDevice(macAddress: string): Promise<void> {
     try {
       const request = {
         method: 'delete',
-        url: `${this.internalDeviceServiceBaseUrl}/firestore/devices/${macAddress}`
+        url: `${this.internalDeviceServiceBaseUrl}/devices/${macAddress}`
       };
-      // TODO: do the same ^^ for locations
       await this.sendRequest(request);
     } catch (err) {
       if (err instanceof InternalDeviceServiceError) {
-        // Failure to complete the deletion of the firestore document should not cause the unpairing to completely fail.
-        const errMsg = `failed to delete ${macAddress} document from devices collection in the Firestore`;
-        this.logger.error( errMsg, err );
-        return;
+        const errMsg = `Failed to delete Device with MAC Address ${macAddress} from Device Service`;
+        this.logger.error({ err }, errMsg);
       } else {
         throw err;
       }
