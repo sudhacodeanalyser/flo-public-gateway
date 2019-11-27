@@ -158,7 +158,6 @@ ReleaseCandidate:
   dependencies:
     - Compile
   only:
-    - master
     - prod-rc
   environment:
     name: rc
@@ -227,7 +226,6 @@ RunscopeRC:
   dependencies:
     - Compile
   only:
-    - master
     - prod-rc
   environment:
     name: rc
