@@ -98,6 +98,7 @@ Dev:
     AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID_DEV}"
     AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY_DEV}"
     ENV: "development"
+    KUBE_NAMESPACE: "flo-public-gateway"
     KUBERNETES_SERVICE_ACCOUNT_OVERWRITE: tiller
   image: kloiadocker/kloiahelm:0.0.1
   stage: deploy
@@ -146,6 +147,7 @@ ReleaseCandidate:
 
 K8sProd:
   variables:
+    KUBE_NAMESPACE: "flo-public-gateway"
     ENV: "production"
     AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID_PROD}"
     AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY_PROD}"
