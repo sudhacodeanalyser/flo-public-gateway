@@ -426,14 +426,14 @@ class DeviceResolver extends Resolver<Device> {
     return this.deviceTable.remove({ id });
   }
 
-  public async createDevice(deviceCreate: DeviceCreate, isPaired: boolean = false): Promise<Device> {
+  public async createDevice(deviceCreate: DeviceCreate & { id?: string }, isPaired: boolean = false): Promise<Device> {
     const device = {
       deviceType: DeviceType.FLO_DEVICE_V2,
       deviceModel: DeviceModelType.FLO_0_75,
+      id: uuid.v4(),
       ...deviceCreate,
       additionalProps: null,
       isPaired,
-      id: uuid.v4(),
       systemMode: {
         isLocked: false,
         shouldInherit: true
