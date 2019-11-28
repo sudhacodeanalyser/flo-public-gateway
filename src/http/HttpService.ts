@@ -2,6 +2,7 @@ import { AxiosInstance } from 'axios';
 import { injectable, inject } from 'inversify';
 import HttpError from './HttpError';
 import config from '../config/config';
+import { injectHttpContext, interfaces } from 'inversify-express-utils';
 
 export interface HttpRequest {
   method: string;
@@ -17,16 +18,19 @@ class HttpService {
   public baseUrl?: string;
   public authToken?: string;
   @inject('HttpClient') protected readonly httpClient: AxiosInstance;
+  @injectHttpContext private readonly httpContext: interfaces.HttpContext 
 
   public async sendRequest(request: HttpRequest): Promise<any> {
     try {
+      const httpContextReq = this.httpContext && this.httpContext.request;
       const response = await this.httpClient.request({
         method: request.method,
         url: this.baseUrl ? `${this.baseUrl}${request.url}` : request.url,
         headers: {
           'Content-Type': 'application/json',
           ...((request.authToken || this.authToken) && { Authorization: request.authToken || this.authToken }),
-          ...(request.customHeaders)
+          ...(request.customHeaders),
+          ...(httpContextReq && { Referer: httpContextReq.protocol + '://' + httpContextReq.get('host') + httpContextReq.originalUrl })
         },
         ...(request.body && { data: request.body }),
         ...(request.params && { params: request.params }),
