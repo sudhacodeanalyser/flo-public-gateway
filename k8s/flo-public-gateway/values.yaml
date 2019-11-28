@@ -29,7 +29,7 @@ service:
 v1ProxyService:
   production: "not-for-public-use-api-gw.meetflo.com"
   development: "api-dev.flocloud.co"
-  rc: "api-dev.flocloud.co"
+  rc: "not-for-public-use-api-gw.meetflo.com"
 
 routingIngress:
   enabled: true
