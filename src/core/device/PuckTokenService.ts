@@ -7,6 +7,7 @@ import { pipe } from 'fp-ts/lib/pipeable';
 import * as AsyncEither from 'fp-ts/lib/TaskEither';
 import Logger from 'bunyan';
 import PuckTokenMetadataTable from './PuckTokenMetadataTable';
+import _ from 'lodash';
 
 @injectable()
 class PuckTokenService {
@@ -19,21 +20,22 @@ class PuckTokenService {
   public async issueToken(puckId: string, ttl?: number, clientId?: string, data: any = {}): Promise<string> {
     const tokenId = uuid.v4();
     const createdAt = new Date().toISOString();
-    const expiresAt = moment(createdAt).add(ttl, 'seconds').toISOString();
+    const expiresAt = ttl && moment(createdAt).add(ttl, 'seconds').toISOString();
     const tokenData = {
       ...data,
       iat: moment(createdAt).unix(),
       puckId,
       clientId,
     };
-    const tokenMetadata = {
+    const tokenMetadata = _.pickBy({
       ...data,
       id: tokenId,
       createdAt,
       expiresAt,
       puckId,
       clientId
-    };
+    }, value => !_.isEmpty(value));
+    
     const encodedToken = await this.encodeToken(tokenId, tokenData, createdAt, ttl);
 
     await this.puckTokenMetadataTable.put(tokenMetadata);
@@ -95,9 +97,7 @@ class PuckTokenService {
       if (!tokenMetadata) {
         return E.left(new Error('Token not found.'));
       } else if (
-        moment().isAfter(
-          moment(tokenMetadata.createdAt).add(2, 'hours')
-        )
+        tokenMetadata.expiresAt && moment().isAfter(tokenMetadata.expiresAt)
       ) {
         return E.left(new Error('Token expired.'));
       }
