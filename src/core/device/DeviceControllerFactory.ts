@@ -308,7 +308,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
         throw new ValidationError(); 
       }
 
-      const device = await this.deviceService.pairDevice(authToken, deviceCreate);
+      const device = await this.deviceService.pairDevice(authToken, { ...deviceCreate, id: tokenMetadata.puckId });
 
       return some({
         device,

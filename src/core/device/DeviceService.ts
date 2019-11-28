@@ -96,7 +96,7 @@ class DeviceService {
      };
   }
 
-  public async pairDevice(authToken: string, deviceCreate: DeviceCreate): Promise<Device> {
+  public async pairDevice(authToken: string, deviceCreate: DeviceCreate & { id?: string }): Promise<Device> {
     const [device, location] = await Promise.all([
       this.deviceResolver.getByMacAddress(deviceCreate.macAddress),
       this.locationServiceFactory().getLocation(deviceCreate.location.id)
