@@ -29,7 +29,7 @@ service:
 v1ProxyService:
   production: "not-for-public-use-api-gw.meetflo.com"
   development: "api-dev.flocloud.co"
-  rc: "api-dev.flocloud.co"
+  rc: "not-for-public-use-api-gw.meetflo.com"
 
 routingIngress:
   enabled: true
@@ -46,8 +46,8 @@ routingIngress:
       - api-gw-dev.flocloud.co
       - flo-public-gateway-k8s.flocloud.co
     rc:
-      - api-gw-rc.flocloud.co
-      - flo-public-gateway-rc.flocloud.co
+      - api-gw-rc.flosecurecloud.com
+      - flo-public-gateway-rc.flosecurecloud.com
   tls: []
   #  - secretName: chart-example-tls
   #    hosts:
@@ -74,7 +74,7 @@ internalIngress:
 internalIngressHosts:
   production: "internal-ingress.flosecurecloud.com"
   development: "internal-ingress.flocloud.co"
-  rc: "internal-ingress-rc.flocloud.co"
+  rc: "internal-ingress-rc.flosecurecloud.com"
 
 nodeSelector:
   kops.k8s.io/instancegroup: nodes

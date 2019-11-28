@@ -9,7 +9,7 @@ HELM_DEPLOY_TIMEOUT ?= 180
 HELM_HISTORY_MAX ?= 3
 HELM_HISTORY_MAX ?= 3
 HELM_RELEASE_NAME ?= $(APP)
-KUBE_NAMESPACE ?= $(APP)
+K8S_NAMESPACE ?= $(APP)
 DOCKER_IMAGE ?= ${CI_REGISTRY_IMAGE}
 DOCKER_REGISTRY ?= registry.gitlab.com/flotechnologies
 DOCKER_TAG ?= latest
@@ -22,6 +22,7 @@ GRADLE ?= $(COMPOSE) -f build-tools.yml run --rm gradle
 GIT ?= $(COMPOSE) -f build-tools.yml run --rm git
 RUN ?= $(COMPOSE) -f build-tools.yml run --rm --service-ports run --node-env=$(NODE_ENV) run
 HELM ?= $(shell which helm)
+RUNSCOPE_IMAGE ?= $(DOCKER_REGISTRY)/devops/runscope-python-trigger:latest
 
 .PHONY: help auth
 help: ## Display this help screen (default)
@@ -79,18 +80,18 @@ debug-helm:
 		--name $(HELM_RELEASE_NAME) \
 		--values k8s/pipeline.yaml \
 		--set environment=$(ENV) \
-		--namespace=$(KUBE_NAMESPACE)
+		--namespace=$(K8S_NAMESPACE)
 
 deploy:
-	$(HELM) init --upgrade --wait --force-upgrade
+	$(HELM) init --upgrade --wait --force-upgrade --debug
 	$(HELM) upgrade \
 		$(HELM_RELEASE_NAME) \
 		./k8s/$(HELM_CHART) \
 		--install \
 		--values ./k8s/pipeline.yaml \
 		--set environment=$(ENV) \
-		--namespace=$(KUBE_NAMESPACE) \
-		--wait --timeout $(HELM_DEPLOY_TIMEOUT)
+		--namespace=$(K8S_NAMESPACE) \
+		--wait --timeout $(HELM_DEPLOY_TIMEOUT) --debug
 
 deploy-status:
 	$(HELM) history --max $(HELM_HISTORY_MAX) $(HELM_RELEASE_NAME)
@@ -105,7 +106,11 @@ environment-prod:
 	./k8s/env-prod.sh
 
 runscope:
-	$(CURL) -i "$(RUNSCOPE_URL)" 1>/dev/null
+	$(DOCKER) \
+		run --rm --tty\
+		--env RUNSCOPE_ACCESS_TOKEN="$(RUNSCOPE_ACCESS_TOKEN)" \
+		--env RUNSCOPE_TRIGGER_URL="$(RUNSCOPE_TRIGGER_URL)" \
+		$(RUNSCOPE_IMAGE)
 
 clean: down ## Remove build arifacts & related images
 	rm -rf node_modules
