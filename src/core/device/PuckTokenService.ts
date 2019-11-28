@@ -34,7 +34,7 @@ class PuckTokenService {
       expiresAt,
       puckId,
       clientId
-    }, value => !_.isEmpty(value));
+    }, value => value === true || !_.isEmpty(value));
     
     const encodedToken = await this.encodeToken(tokenId, tokenData, createdAt, ttl);
 
