@@ -1,5 +1,5 @@
 ---
-replicaCount: 8
+replicaCount: 9
 
 environment: rc
 
