@@ -3,13 +3,13 @@ kind: HorizontalPodAutoscaler
 metadata:
   name: {{ template "flo-public-gateway.fullname" . }}-hpa
 spec:
-{{ if eq .Values.environment "production" }}
+{{- if eq .Values.environment "production" }}
   minReplicas: {{ .Values.replicaCount }}
   maxReplicas: {{ add .Values.replicaCount 2 }}
-{{ else  }}
+{{- else  }}
   minReplicas: 2
   maxReplicas: 4
-{{ end }}
+{{- end }}
   metrics:
   - type: Resource
     resource:

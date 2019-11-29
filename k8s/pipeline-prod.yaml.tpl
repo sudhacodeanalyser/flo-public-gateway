@@ -3,7 +3,7 @@ image:
 secrets:
   datas:
     APPLICATION_NAME: "${APPLICATION_NAME}"
-    ENVIRONMENT: "production"
+    ENVIRONMENT: "${ENV}"
     ACL_URL: "${ACL_URL_PROD}"
     API_V1_URL: "${API_V1_URL_PROD}"
     AUTH_URL: "${AUTH_URL_PROD}"
@@ -40,11 +40,10 @@ secrets:
     IFTTT_SERVICE_KEY: "${IFTTT_SERVICE_KEY_PROD}"
     API_V1_IFTTT_TEST_SETUP_URL: "${API_V1_IFTTT_TEST_SETUP_URL_PROD}"
     IFTTT_REALTIME_NOTIFICATIONS_URL: "${IFTTT_REALTIME_NOTIFICATIONS_URL_PROD}"
-    INSTANA_SERVICE_NAME: "${APPLICATION_NAME}"
+    INSTANA_SERVICE_NAME: "${INSTANA_SERVICE_NAME}"
 internalIngress:
   host: internal-ingress.flosecurecloud.com
 routingIngress:
-  annotations:
-    nginx.ingress.kubernetes.io/upstream-vhost: internal-ingress.flosecurecloud.com
+  annotations: {}
 v1ProxyService:
   floApiV1Hostname: not-for-public-use-api-gw.meetflo.com

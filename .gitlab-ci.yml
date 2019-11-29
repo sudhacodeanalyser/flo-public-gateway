@@ -5,10 +5,13 @@ services:
   - docker:18.09-dind
 
 variables:
+  DOCKER_DRIVER: overlay2
   DOCKER_HOST: "tcp://localhost:2375"
   CI_REGISTRY: "registry.gitlab.com"
   CI_REGISTRY_IMAGE: "${CI_REGISTRY}/flotechnologies/flo-public-gateway"
   APPLICATION_NAME: "flo-public-gateway"
+  AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID_DEV}"
+  AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY_DEV}"
   API_V1_URL: "https://api-dev.flocloud.co/api/v1"
   ACL_URL: "${API_V1_URL}/accesscontrol/refresh"
   AUTH_URL: "${API_V1_URL}/accesscontrol/authorize"
@@ -25,10 +28,13 @@ variables:
   INFLUX_TELEMETRY_DB: "telemetry_dev"
   INFLUX_USERNAME: "telemetry_dev"
   INTERNAL_DEVICE_SERVICE_BASE_URL: "https://flo-device-service.flocloud.co/v1"
+  INSTANA_SERVICE_NAME: "flo-public-gateway"
+  KAFKA_HOST: "kafka-cherry-broker-1.dev.flocloud.co:9092,kafka-cherry-broker-2.dev.flocloud.co:9092,kafka-cherry-broker-3.dev.flocloud.co:9092"
   KAFKA_TIMEOUT_MS: "10000"
   LOCALIZATION_API_URL: "https://flo-localization-service-dev.flocloud.co/v1"
   NOTIFICATION_API_URL: "https://flo-notification-api.flocloud.co"
   POSTGRES_DATABASE: "list-service"
+  POSTGRES_HOST: "dev-rds-cherry.dev.flocloud.co"
   POSTGRES_PORT: "5432"
   POSTGRES_USER: "flo-list-service"
   PRESENCE_SERVICE_URL: "https://flo-core-service-dev.flocloud.co/presence"
@@ -38,6 +44,8 @@ variables:
 stages:
   - build
   - test
+  - deploy-rc
+  - verify-rc
   - deploy
   - verify
 
@@ -89,23 +97,21 @@ Sanity:
   tags:
     - test
 
-K8sDev:
+Dev:
   variables:
-    AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID_DEV}"
-    AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY_DEV}"
-    KAFKA_HOST: "kafka-cherry-broker-1.dev.flocloud.co:9092,kafka-cherry-broker-2.dev.flocloud.co:9092,kafka-cherry-broker-3.dev.flocloud.co:9092"
-    POSTGRES_HOST: "dev-rds-cherry.dev.flocloud.co"
     KUBERNETES_SERVICE_ACCOUNT_OVERWRITE: tiller
+    ENV: "development"
+    INSTANA_SERVICE_NAME: "flo-public-gateway-${ENV}"
+    K8S_NAMESPACE: "flo-public-gateway"
   image: kloiadocker/kloiahelm:0.0.1
   stage: deploy
   dependencies:
     - Compile
   only:
     - dev
-    - reduce-probe-times
   environment:
     name: dev
-    url: https://flo-public-gateway.flocloud.co/ping
+    url: https://flo-public-gateway.flocloud.co/api/v2/ping
   script:
     - make environment-dev
     - make deploy
@@ -114,8 +120,59 @@ K8sDev:
     - dev
     - dev-prod
 
+ReleaseCandidate:
+  variables:
+    ENV: "rc"
+    HELM_RELEASE_NAME: "flo-public-gateway-rc"
+    K8S_NAMESPACE: "flo-public-gateway-rc"
+    API_V1_URL_PROD: "https://api.meetflo.com/api/v1"
+    ACL_URL_PROD: "${API_V1_URL_PROD}/accesscontrol/refresh"
+    AUTH_URL_PROD: "${API_V1_URL_PROD}/accesscontrol/authorize"
+    DOCS_ENDPOINT_USER_PROD: "${DOCS_ENDPOINT_USER}"
+    DYNAMO_TABLE_PREFIX_PROD: "prod_"
+    EXTERNAL_DOCS_ENDPOINT_USER_PROD: "${EXTERNAL_DOCS_ENDPOINT_USER}"
+    EXTERNAL_SERVICE_HTTP_TIMEOUT_MS_PROD: "10000"
+    HEALTH_TEST_SERVICE_URL_PROD: "https://flo-device-manager.flosecurecloud.com"
+    INFLUX_ANALYTICS_DB_PROD: "telemetry_analytics_prod"
+    INFLUX_HOST_PROD: "mcfly-da662558.influxcloud.net"
+    INFLUX_HOURLY_MEASUREMENT_PROD: "telemetry_hourly"
+    INFLUX_PORT_PROD: "8086"
+    INFLUX_SECOND_MEASUREMNT_PROD: '"twelve_weeks".telemetry_raw'
+    INFLUX_TELEMETRY_DB_PROD: "telemetry_prod"
+    INFLUX_USERNAME_PROD: "flo_api_prod"
+    INSTANA_SERVICE_NAME: "flo-public-gateway-${ENV}"
+    INTERNAL_DEVICE_SERVICE_BASE_URL_PROD: "https://flo-device-service.flosecurecloud.com/v1"
+    KAFKA_HOST_PROD: "kafka-cherry-broker-1.prod.flosecurecloud.com:9092,kafka-cherry-broker-2.prod.flosecurecloud.com:9092,kafka-cherry-broker-3.prod.flosecurecloud.com:9092"
+    KAFKA_TIMEOUT_MS_PROD: "${KAFKA_TIMEOUT_MS}"
+    POSTGRES_DATABASE_PROD: "${POSTGRES_DATABASE}"
+    POSTGRES_HOST_PROD: "prod-rds.cutnsvmodttf.us-west-2.rds.amazonaws.com"
+    POSTGRES_PORT_PROD: 5432
+    POSTGRES_USER_PROD: "${POSTGRES_USER}"
+    LOCALIZATION_API_URL_PROD: "https://flo-localization-service.flosecurecloud.com/v1"
+    NOTIFICATION_API_URL_PROD: "https://flo-notification-api.flosecurecloud.com"
+    PRESENCE_SERVICE_URL_PROD: "https://flo-core-service.flosecurecloud.com/presence"
+    REDIS_HOST_PROD: "flo-api.k5ahfc.clustercfg.usw2.cache.amazonaws.com"
+    TELEMETRY_TAGS_SERVICE_URL_PROD: "https://flo-telemetry-tags.flosecurecloud.com"
+  image: kloiadocker/kloiahelm:0.0.1
+  stage: deploy-rc
+  dependencies:
+    - Compile
+  only:
+    - master
+  environment:
+    name: rc
+    url: https://api-gw-rc.flosecurecloud.com/api/v2/ping
+  script:
+    - make environment-prod
+    - make deploy
+    - make deploy-status
+  tags:
+    - deploy-prod
+
 K8sProd:
   variables:
+    K8S_NAMESPACE: "flo-public-gateway"
+    ENV: "production"
     AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID_PROD}"
     AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY_PROD}"
     API_V1_URL_PROD: "https://api.meetflo.com/api/v1"
@@ -153,18 +210,36 @@ K8sProd:
     - master
   environment:
     name: prod
-    url: https://flo-public-gateway.flosecurecloud.co/ping
+    url: https://api-gw.meetflo.com/api/v2/ping
   script:
     - make environment-prod
     - make deploy
     - make deploy-status
   tags:
     - deploy-prod
-    - dev-prod
+
+RunscopeRC:
+  variables:
+    RS_ENV: "afe789b6-72d2-4270-a03e-44ea3562150d"
+    RUNSCOPE_TRIGGER_URL: "https://api.runscope.com/radar/68e4a198-9132-4560-bb08-a2e746c8c3e6/trigger?runscope_environment=${RS_ENV}"
+  stage: verify-rc
+  dependencies:
+    - Compile
+  only:
+    - master
+  environment:
+    name: rc
+    url: https://api-gw-rc.flosecurecloud.com/api/v2/ping
+  script:
+    - sleep 20
+    - make runscope
+  tags:
+    - dev
 
 RunscopeProd:
   variables:
-    RUNSCOPE_URL: "https://api.runscope.com/radar/68e4a198-9132-4560-bb08-a2e746c8c3e6/trigger?runscope_environment=755b5795-c9d2-464f-9372-d2aaa106e5cc"
+    RS_ENV: "755b5795-c9d2-464f-9372-d2aaa106e5cc"
+    RUNSCOPE_TRIGGER_URL: "https://api.runscope.com/radar/68e4a198-9132-4560-bb08-a2e746c8c3e6/trigger?runscope_environment=${RS_ENV}"
   stage: verify
   dependencies:
     - Compile
@@ -172,9 +247,9 @@ RunscopeProd:
     - master
   environment:
     name: prod
-    url: https://flo-public-gateway.flosecurecloud.co/ping
+    url: https://api-gw.meetflo.com/api/v2/ping
   script:
-    - sleep 60
-    - curl -i "${RUNSCOPE_URL}" 1>/dev/null
+    - sleep 20
+    - make runscope
   tags:
-    - kubernetes
+    - dev

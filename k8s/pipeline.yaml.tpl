@@ -3,7 +3,7 @@ image:
 secrets:
   datas:
     APPLICATION_NAME: "${APPLICATION_NAME}"
-    ENVIRONMENT: "development"
+    ENVIRONMENT: "${ENV}"
     ACL_URL: "${ACL_URL}"
     API_V1_URL: "${API_V1_URL}"
     AUTH_URL: "${AUTH_URL}"
@@ -40,9 +40,8 @@ secrets:
     IFTTT_SERVICE_KEY: "${IFTTT_SERVICE_KEY}"
     API_V1_IFTTT_TEST_SETUP_URL: "${API_V1_IFTTT_TEST_SETUP_URL}"
     IFTTT_REALTIME_NOTIFICATIONS_URL: "${IFTTT_REALTIME_NOTIFICATIONS_URL}"
-    INSTANA_SERVICE_NAME: "${APPLICATION_NAME}-development"
+    INSTANA_SERVICE_NAME: "${INSTANA_SERVICE_NAME}"
 internalIngress:
   host: internal-ingress.flocloud.co
 routingIngress:
-  annotations:
-    nginx.ingress.kubernetes.io/upstream-vhost: internal-ingress.flocloud.co
+  annotations: {}
