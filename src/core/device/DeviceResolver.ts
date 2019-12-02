@@ -43,7 +43,7 @@ class DeviceResolver extends Resolver<Device> {
             t.exact(AdditionalDevicePropsCodec).decode(additionalProps),
             Either.fold(() => null, result => result)
           );
-        } 
+        }
 
         return null;
 
@@ -168,7 +168,7 @@ class DeviceResolver extends Resolver<Device> {
 
       return {
         isInstalled: pipe(
-          maybeOnboardingLog, 
+          maybeOnboardingLog,
           Option.fold(() => false, () => true)
         ),
         installDate: pipe(
@@ -214,13 +214,13 @@ class DeviceResolver extends Resolver<Device> {
       const gpm = device.deviceModel !== 'flo_device_075_v2' ?
         {
           ...minZero,
-          okMax: 29,
-          maxValue: 35
+          okMax: 100,
+          maxValue: 125
         } :
         {
           ...minZero,
-          okMax: 100,
-          maxValue: 125
+          okMax: 29,
+          maxValue: 35
         };
 
       const lpm = device.deviceModel !== 'flo_device_075_v2' ?
@@ -307,13 +307,13 @@ class DeviceResolver extends Resolver<Device> {
       } catch (err) {
         this.logger.error({ err });
         return null;
-      }      
+      }
     },
     irrigationType: async (device: Device, shouldExpand = false) => {
-      
+
       if (device.irrigationType) {
         return device.irrigationType;
-      } 
+      }
 
       const otherDevices = (await this.deviceTable.getAllByLocationId(device.location.id))
         .filter(deviceRecord => deviceRecord.id !== device.id)
@@ -321,8 +321,8 @@ class DeviceResolver extends Resolver<Device> {
 
       // If there's at least one other device with irrigation or an undecided status, then it's undecidable
       if (
-        otherDevices.length && 
-        otherDevices.some(otherDevice => 
+        otherDevices.length &&
+        otherDevices.some(otherDevice =>
           otherDevice.irrigationType !== 'none' || otherDevice.irrigationType !== 'not_plumbed'
         )
       ) {
@@ -347,7 +347,7 @@ class DeviceResolver extends Resolver<Device> {
     shutoff: async (device: Device, shouldExpand = false) => {
       const additionalProperties = await this.internalDeviceService.getDevice(device.macAddress);
       const shutoffTimeSeconds = Math.max(
-        _.get(additionalProperties, 'fwProperties.alarm_shutoff_time_epoch_sec', 0), 
+        _.get(additionalProperties, 'fwProperties.alarm_shutoff_time_epoch_sec', 0),
         0
       );
 
@@ -482,4 +482,3 @@ private async toModel(deviceRecordData: DeviceRecordData, expandProps?: PropExpa
 }
 
 export { DeviceResolver };
-
