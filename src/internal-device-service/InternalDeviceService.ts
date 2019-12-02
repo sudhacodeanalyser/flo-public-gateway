@@ -3,7 +3,7 @@ import { isLeft } from 'fp-ts/lib/Either';
 import { inject, injectable } from 'inversify';
 import { HttpService, HttpError } from '../http/HttpService'
 import { FirestoreAssests, FirestoreAuthService, FirestoreTokenResponse } from '../core/session/FirestoreAuthService';
-import { DeviceActionRules, DeviceActionRulesCreate, DeviceCreate } from '../core/api';
+import { DeviceActionRules, DeviceActionRulesCreate, DeviceCreate, HardwareThresholds } from '../core/api';
 import { memoized, MemoizeMixin } from '../memoize/MemoizeMixin';
 import { InternalDevice, InternalDeviceCodec } from './models';
 import ResourceDoesNotExistError from '../core/api/error/ResourceDoesNotExistError';
@@ -147,6 +147,16 @@ class InternalDeviceService extends MemoizeMixin(HttpService) implements Firesto
       }
       throw err;
     }
+  }
+
+  public async setHardwareThresholds(macAddress: string, hardwareThresholds: HardwareThresholds): Promise<void> {
+    const request = {
+      method: 'put',
+      url: `${this.internalDeviceServiceBaseUrl}/devices/${macAddress}/hardwareThresholds`,
+      body: hardwareThresholds
+    };
+
+    return this.sendRequest(request);
   }
 }
 

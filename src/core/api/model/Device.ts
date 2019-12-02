@@ -97,18 +97,23 @@ export interface DeviceUpdate extends t.TypeOf<typeof DeviceUpdateValidator> {
   }
 }
 
-interface ThresholdDefinition {
-  okMin: number;
-  okMax: number;
-  maxValue: number;
-  minValue: number;
-}
+const ThresholdDefinitionCodec = t.type({
+  okMin: t.number,
+  okMax: t.number,
+  maxValue: t.number,
+  minValue: t.number
+});
 
-interface HardwareThresholds {
-  gpm: ThresholdDefinition;
-  psi: ThresholdDefinition;
-  temp: ThresholdDefinition;
-}
+export const HardwareThresholdsCodec = t.type({
+  gpm: ThresholdDefinitionCodec,
+  psi: ThresholdDefinitionCodec,
+  lpm: ThresholdDefinitionCodec,
+  kPa: ThresholdDefinitionCodec,
+  tempF: ThresholdDefinitionCodec,
+  tempC: ThresholdDefinitionCodec
+})
+
+export type HardwareThresholds = t.TypeOf<typeof HardwareThresholdsCodec>;
 
 export const PairingDataCodec = t.type({
   apName: t.string,
