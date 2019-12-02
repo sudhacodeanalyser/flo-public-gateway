@@ -127,7 +127,7 @@ class DeviceResolver extends Resolver<Device> {
 
         return {
           ...device.valve,
-          lastKnown: _.get(additionalProperties, 'valveState.lastKnown') || translateNumericToStringEnum(
+          lastKnown: _.get(additionalProperties, 'valve.lastKnown') || translateNumericToStringEnum(
             ValveState,
             ValveStateNumeric,
             _.get(additionalProperties, 'fwProperties.valve_state')
