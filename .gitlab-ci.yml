@@ -158,7 +158,7 @@ ReleaseCandidate:
   dependencies:
     - Compile
   only:
-    - master
+    - notabranch
   environment:
     name: rc
     url: https://api-gw-rc.flosecurecloud.com/api/v2/ping
@@ -226,7 +226,7 @@ RunscopeRC:
   dependencies:
     - Compile
   only:
-    - master
+    - notabranch
   environment:
     name: rc
     url: https://api-gw-rc.flosecurecloud.com/api/v2/ping
