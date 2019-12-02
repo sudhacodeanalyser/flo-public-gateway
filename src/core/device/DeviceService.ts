@@ -84,7 +84,7 @@ class DeviceService {
     const pairingData = await this.apiV1PairingService.initPairing(authToken, qrData);
     const { deviceId } = pairingData;
 
-    await this.internalDeviceService.createFirestoreStubDevice(deviceId);
+    await this.internalDeviceService.createDeviceStub(deviceId);
 
     const { token } = await this.sessionServiceFactory().issueFirestoreToken(userId, { devices: [deviceId] });
 
@@ -125,7 +125,7 @@ class DeviceService {
       }
     }
 
-    await this.internalDeviceService.registerDevice(deviceCreate.macAddress, deviceCreate.deviceType, deviceCreate.deviceModel);
+    await this.internalDeviceService.createDevice(deviceCreate);
 
     return createdDevice;
   }

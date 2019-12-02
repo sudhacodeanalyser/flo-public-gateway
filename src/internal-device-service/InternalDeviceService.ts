@@ -3,7 +3,7 @@ import { isLeft } from 'fp-ts/lib/Either';
 import { inject, injectable } from 'inversify';
 import { HttpService, HttpError } from '../http/HttpService'
 import { FirestoreAssests, FirestoreAuthService, FirestoreTokenResponse } from '../core/session/FirestoreAuthService';
-import { DeviceActionRules, DeviceActionRulesCreate } from '../core/api';
+import { DeviceActionRules, DeviceActionRulesCreate, DeviceCreate } from '../core/api';
 import { memoized, MemoizeMixin } from '../memoize/MemoizeMixin';
 import { InternalDevice, InternalDeviceCodec } from './models';
 import ResourceDoesNotExistError from '../core/api/error/ResourceDoesNotExistError';
@@ -14,6 +14,21 @@ const InternalDeviceServiceError = HttpError;
 class InternalDeviceService extends MemoizeMixin(HttpService) implements FirestoreAuthService {
   @inject('InternalDeviceServiceBaseUrl') private internalDeviceServiceBaseUrl: string;
   @inject('Logger') private readonly logger: Logger;
+
+  public async createDevice(device: DeviceCreate): Promise<void> {
+    const request = {
+      method: 'post',
+      url: `${this.internalDeviceServiceBaseUrl}/devices/${device.macAddress}`,
+      body: {
+        nickname: device.nickname,
+        locationId: device.location.id,
+        make: device.deviceType,
+        model: device.deviceModel
+      }
+    };
+
+    await this.sendRequest(request);
+  }
 
   @memoized()
   public async getDevice(macAddress: string): Promise<InternalDevice | null> {
@@ -58,10 +73,24 @@ class InternalDeviceService extends MemoizeMixin(HttpService) implements Firesto
     await this.sendRequest(request);
   }
 
+  public async createDeviceStub(macAddress: string): Promise<void> {
+    try {
+      const request = {
+        method: 'post',
+        url: `${this.internalDeviceServiceBaseUrl}/devices/${macAddress}/stub`
+      };
+
+      await this.sendRequest(request);
+    } catch (err) {
+      // Error should not break pairing
+      this.logger.error({ err }, `Error creating device stub for MAC Address ${macAddress}`);
+    }
+  }
+
   public async issueToken(assets: FirestoreAssests): Promise<FirestoreTokenResponse> {
     const request = {
       method: 'post',
-      url: `${ this.internalDeviceServiceBaseUrl }/firestore/auth`,
+      url: `${this.internalDeviceServiceBaseUrl}/firestore/auth`,
       body: assets
     };
 
@@ -85,29 +114,10 @@ class InternalDeviceService extends MemoizeMixin(HttpService) implements Firesto
     }
   }
 
-  public async createFirestoreStubDevice(macAddress: string): Promise<void> {
-    try {
-      const request = {
-        method: 'post',
-        url: `${ this.internalDeviceServiceBaseUrl }/firestore/devices/${macAddress}`,
-        body: {
-          value: {
-            deviceId: macAddress
-          }
-        }
-      };
-
-      await this.sendRequest(request);
-    } catch (err) {
-      // Error should not break pairing
-      this.logger.error({ err });
-    }
-  }
-
   public async getActionRules(deviceId: string): Promise<DeviceActionRules> {
     const request = {
       method: 'get',
-      url: `${ this.internalDeviceServiceBaseUrl }/devices/${deviceId}/actionRules`
+      url: `${this.internalDeviceServiceBaseUrl}/devices/${deviceId}/actionRules`
     };
 
     return this.sendRequest(request);
@@ -116,7 +126,7 @@ class InternalDeviceService extends MemoizeMixin(HttpService) implements Firesto
   public async upsertActionRules(deviceId: string, actionRules: DeviceActionRulesCreate): Promise<DeviceActionRules> {
     const request = {
       method: 'post',
-      url: `${ this.internalDeviceServiceBaseUrl }/devices/${deviceId}/actionRules`,
+      url: `${this.internalDeviceServiceBaseUrl}/devices/${deviceId}/actionRules`,
       body: actionRules
     };
 
@@ -127,33 +137,13 @@ class InternalDeviceService extends MemoizeMixin(HttpService) implements Firesto
     try {
       const request = {
         method: 'delete',
-        url: `${ this.internalDeviceServiceBaseUrl }/devices/${deviceId}/actionRules/${actionRuleId}`
+        url: `${ this.internalDeviceServiceBaseUrl}/devices/${deviceId}/actionRules/${actionRuleId}`
       };
 
       await this.sendRequest(request);
     } catch (err) {
       if (err instanceof InternalDeviceServiceError && err.statusCode === 404) {
         throw new ResourceDoesNotExistError('Action Rule does not exist.');
-      }
-      throw err;
-    }
-  }
-
-  public async registerDevice(macAddress: string, deviceMake: string, deviceModel: string): Promise<void> {
-    try {
-      const request = {
-        method: 'post',
-        url: `${ this.internalDeviceServiceBaseUrl }/devices/${macAddress}/register`,
-        body: {
-          make: deviceMake,
-          model: deviceModel
-        }
-      };
-
-      await this.sendRequest(request);
-    } catch (err) {
-      if (err instanceof InternalDeviceServiceError && err.statusCode === 404) {
-        throw new ResourceDoesNotExistError('Device does not exist.');
       }
       throw err;
     }
