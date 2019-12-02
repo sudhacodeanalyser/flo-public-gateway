@@ -13,7 +13,10 @@ export default new ContainerModule((bind: interfaces.Bind) => {
       host: config.postgresHost,
       database: config.postgresDatabase,
       password: config.postgresPassword,
-      port: config.postgresPort      
+      port: config.postgresPort,
+      max: config.postgresMaxPoolClients,
+      connectionTimeoutMillis: config.postgresConnectionTimeoutMS,
+      idleTimeoutMillis: config.postgresIdleTimeoutMS    
     }) 
   );
 
