@@ -226,13 +226,13 @@ class DeviceResolver extends Resolver<Device> {
       const lpm = device.deviceModel !== 'flo_device_075_v2' ?
         {
           ...minZero,
-          okMax: 110,
-          maxValue: 130
+          okMax: 378,
+          maxValue: 470
         } :
         {
           ...minZero,
-          okMax: 378,
-          maxValue: 470
+          okMax: 110,
+          maxValue: 130
         };
 
       const psi = {
