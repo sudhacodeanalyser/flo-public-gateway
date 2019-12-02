@@ -209,7 +209,7 @@ class DefaultIFTTTService extends HttpService implements IFTTTService {
       throw new NotFoundError('User has no locations');
     }
     const location = userData.value.locations.find(loc => loc.residenceType === ResidenceType.PRIMARY) || userData.value.locations[0];
-    if (!location.devices) {
+    if (!location.devices || _.isEmpty(location.devices)) {
       throw new NotFoundError('User has no devices');
     }
     return location.devices[0].id;
