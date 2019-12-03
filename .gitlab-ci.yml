@@ -226,7 +226,7 @@ RunscopeRC:
   dependencies:
     - Compile
   only:
-    - notabranch
+    - master
   environment:
     name: rc
     url: https://api-gw-rc.flosecurecloud.com/api/v2/ping
