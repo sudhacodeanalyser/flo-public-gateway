@@ -164,6 +164,10 @@ class DefaultIFTTTService extends HttpService implements IFTTTService {
       }))
       .value();
 
+    if (!triggerIdentities.length) {
+      return;
+    }
+
     const request = {
       method: 'POST',
       url: this.iftttRealtimeNotificationsUrl,
