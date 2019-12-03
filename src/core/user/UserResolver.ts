@@ -89,6 +89,10 @@ class UserResolver extends Resolver<User> {
                 })
         ));
 
+        if (_.isEmpty(devices)) {
+          return null;
+        }
+
         return (await this.notificationServiceFactory().getAlarmSettingsInBulk(model.id, devices.map(device => device.id)));
       } catch (err) {
         this.logger.error({ err });
@@ -197,4 +201,3 @@ class UserResolver extends Resolver<User> {
 }
 
 export { UserResolver };
-
