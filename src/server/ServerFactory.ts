@@ -77,7 +77,10 @@ function ServerConfigurationFactory(container: Container): (app: express.Applica
       const reqLogger = logger.child({
         type: 'request',
         req_id: reqId,
-        serializers: Logger.stdSerializers
+        serializers: {
+          ...Logger.stdSerializers,
+          req: serializeReq
+        }
       });
 
       req.log = reqLogger;
@@ -166,3 +169,48 @@ export default function ServerFactory(container: Container): InversifyExpressSer
 
   return server;
 }
+
+function serializeReq(req?: Request | null): any {
+  if (!req || !req.connection) {
+    return req;
+  }
+
+  const headers = req.headers;
+  const authorizationHeader = req.get('authorization');
+  const {
+    authorization,
+    Authorization,
+    ...sanitizedHeaders
+  } = headers;
+
+  return {
+    method: req.method,
+    url: req.url,
+    headers: {
+      ...sanitizedHeaders,
+      // Do not log signature of token
+      authorization: authorizationHeader ?
+        authorizationHeader.split('.').slice(0, -1).join('.') :
+        authorizationHeader
+    },
+    remoteAddress: req.connection.remoteAddress,
+    remotePort: req.connection.remotePort,
+    body: _.isEmpty(req.body) ?
+      req.body :
+      _.mapValues(req.body, (value, key) => {
+        const normalizedKey = key.toLowerCase();
+        const sensitiveKeys = [
+          'password',
+          'token',
+          'secret'
+        ];
+        const isSensitive = sensitiveKeys
+          .some(sensitiveKey => normalizedKey.includes(sensitiveKey));
+
+        return isSensitive ? 
+          '[REDACTED]' :
+          value;
+      })
+  };
+}
+
