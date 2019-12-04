@@ -5,9 +5,20 @@ import { SubscriptionProvider, SubscriptionProviderWebhookHandler } from '../cor
 import StripeSubscriptionProvider from './stripe/StripeSubscriptionProvider';
 import StripeWebhookHandler from './stripe/StripeWebhookHandler';
 import StripeWebhookAuthMiddleware from './stripe/StripeWebhookAuthMiddleware';
+import HttpAgent, { HttpsAgent } from 'agentkeepalive';
 
 export default new ContainerModule((bind: interfaces.Bind) => {
-  bind<Stripe>('StripeClient').toConstantValue(new Stripe(config.stripeSecretKey));
+
+  bind<Stripe>('StripeClient').toDynamicValue((context: interfaces.Context) => {
+    const httpsAgent = context.container.get<HttpsAgent>('HttpsAgent');
+    const stripeClient = new Stripe(config.stripeSecretKey);
+
+    stripeClient.setHttpAgent(httpsAgent);
+
+
+    return stripeClient;
+  })
+  .inSingletonScope();
   bind<StripeSubscriptionProvider>('StripeSubscriptionProvider').to(StripeSubscriptionProvider);
   bind<SubscriptionProvider>('SubscriptionProvider').to(StripeSubscriptionProvider);
   bind<SubscriptionProviderWebhookHandler>('SubscriptionProviderWebhookHandler').to(StripeWebhookHandler);
