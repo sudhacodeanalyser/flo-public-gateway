@@ -108,7 +108,7 @@ class DynamoDbClient implements DatabaseClient {
         // This exception likely due to a nested object not existing on the record. 
         // Therefore we will try once more without flattening the nested properties in order to 
         // upsert the nested object.
-        return this.update(tableName, key, patch, false);
+        return this.update(tableName, key, rawPatch, false);
       } else {
         throw err;
       }
