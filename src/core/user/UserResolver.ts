@@ -3,7 +3,7 @@ import { inject, injectable } from 'inversify';
 import { injectHttpContext, interfaces } from 'inversify-express-utils';
 import _ from 'lodash';
 import { fromPartialRecord } from '../../database/Patch';
-import { DependencyFactoryFactory, PropExpand, UpdateDeviceAlarmSettings, User } from '../api';
+import { DependencyFactoryFactory, PropExpand, UpdateDeviceAlarmSettings, User, UnitSystem } from '../api';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import { NotificationService, NotificationServiceFactory } from '../notification/NotificationService';
 import { AccountResolver, LocationResolver, PropertyResolverMap, Resolver } from '../resolver';
@@ -99,6 +99,9 @@ class UserResolver extends Resolver<User> {
 
         return null;
       }
+    },
+    unitSystem: async (model: User, shouldExpand = false) => {
+      return model.unitSystem || UnitSystem.IMPERIAL_US;
     }
   };
 
