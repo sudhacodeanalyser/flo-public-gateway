@@ -43,7 +43,9 @@ function getDefaults(): { [key: string]: any } {
         puckTokenSecret: '$$Extr3m3ly_S3cur3_Str1ng!!',
         postgresMaxPoolClients: 15,
         postgresConnectionTimeoutMS: 10000,
-        postgresIdleTimeoutMS: 60000
+        postgresIdleTimeoutMS: 60000,
+        dynamoDBTimeout: 4000,
+        authTimeoutMS: 4000
       };
   }
 }
@@ -100,7 +102,9 @@ const config = {
   postgresMaxPoolClients: process.env.POSTGRES_MAX_POOL_CLIENTS,
   postgresConnectionTimeoutMS: process.env.POSTGRES_CONNECTION_TIMEOUT_MS,
   postgresIdleTimeoutMS: process.env.POSTGRES_IDLE_TIMEOUT_MS,
-  numWorkers: process.env.NUM_WORKERS
+  numWorkers: process.env.NUM_WORKERS,
+  dynamoDBTimeoutMS: process.env.DYNAMODB_TIMEOUT_MS,
+  authTimeoutMS: process.env.AUTH_TIMEOUT_MS
 };
 
 export default {
