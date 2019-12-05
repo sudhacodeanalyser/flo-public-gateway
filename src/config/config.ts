@@ -99,7 +99,8 @@ const config = {
   puckTokenSecret: process.env.PUCK_TOKEN_SECRET,
   postgresMaxPoolClients: process.env.POSTGRES_MAX_POOL_CLIENTS,
   postgresConnectionTimeoutMS: process.env.POSTGRES_CONNECTION_TIMEOUT_MS,
-  postgresIdleTimeoutMS: process.env.POSTGRES_IDLE_TIMEOUT_MS
+  postgresIdleTimeoutMS: process.env.POSTGRES_IDLE_TIMEOUT_MS,
+  numWorkers: process.env.NUM_WORKERS
 };
 
 export default {
