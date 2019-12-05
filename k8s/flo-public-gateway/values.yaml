@@ -88,8 +88,8 @@ secrets:
 
 resources:
   requests:
-    cpu: 200m
+    cpu: 500m
     memory: 256Mi
   limits:
-    cpu: 1500m
+    cpu: "3"
     memory: 1024Mi
