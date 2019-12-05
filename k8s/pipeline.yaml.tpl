@@ -41,6 +41,7 @@ secrets:
     API_V1_IFTTT_TEST_SETUP_URL: "${API_V1_IFTTT_TEST_SETUP_URL}"
     IFTTT_REALTIME_NOTIFICATIONS_URL: "${IFTTT_REALTIME_NOTIFICATIONS_URL}"
     INSTANA_SERVICE_NAME: "${INSTANA_SERVICE_NAME}"
+    NUM_WORKERS: "${NUM_WORKERS}"
 internalIngress:
   host: internal-ingress.flocloud.co
 routingIngress:
