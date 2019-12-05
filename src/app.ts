@@ -7,17 +7,40 @@ import ContainerFactory from './container/ContainerFactory';
 import ServerFactory from './server/ServerFactory';
 import Logger from 'bunyan';
 import ControllerFactory from './core/ControllerFactory';
+import * as cluster from 'cluster';
+import * as os from 'os';
 
-const container = ContainerFactory();
-const server = ServerFactory(container);
-const config = container.get<typeof Config>('Config');
+const numWorkers = Config.numWorkers || os.cpus().length || 1;
 
-ControllerFactory(container, config.apiVersion);
+if (cluster.isMaster) {
 
-const app = server.build();
-const logger = container.get<Logger>('Logger');
+  for (let i = 0; i < numWorkers; i++) {
+    forkWorker();
+  }
 
-app.listen(config.port, () => {
-  logger.info('Started', { port: config.port });
-});
+} else {
 
+  const container = ContainerFactory();
+  const server = ServerFactory(container);
+  const config = container.get<typeof Config>('Config');
+
+  ControllerFactory(container, config.apiVersion);
+
+  const app = server.build();
+  const logger = container.get<Logger>('Logger');
+
+  app.listen(config.port, () => {
+    logger.info('Started', { port: config.port });
+  });
+
+}
+
+function forkWorker(): cluster.Worker {
+  const worker = cluster.fork();
+
+  worker.on('exit', () => {
+    forkWorker();
+  });
+
+  return worker;
+}
