@@ -220,7 +220,7 @@ class DefaultIFTTTService extends HttpService implements IFTTTService {
   }
 
   private async getEventsByFilter(locationId: string, severity: AlarmSeverity, alertsFilter: number[]): Promise<AlarmEvent[]> {
-    const filters = { isInternalAlarm: false, locationId, status: 'triggered', severity, page: 1, size: 100 };
+    const filters = { isInternalAlarm: false, locationId, severity, page: 1, size: 100 };
     const query = _.map(filters, (val: any, key: string) => `${key}=${val}`).join('&');
     const result: PaginatedResult<AlarmEvent> = await this.alertService.getAlarmEventsByFilter(query);
     // TODO: At this time getAlarmEventsByFilter does not provide a way to filter by alarm id.
