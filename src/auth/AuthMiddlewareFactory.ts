@@ -14,6 +14,7 @@ import * as TaskEither from 'fp-ts/lib/TaskEither';
 import { TokenMetadata, OAuth2TokenCodec, LegacyAuthTokenCodec } from './Token';
 import Logger from 'bunyan';
 import crypto from 'crypto';
+import config from '../config/config';
 
 type Params = { [param: string]: any };
 type GetParams = (req: Request) => Promise<Params>;
@@ -117,7 +118,8 @@ class AuthMiddlewareFactory {
           data: {
             method_id: methodId,
             params
-          }
+          },
+          timeout: config.authTimeoutMS
         });
 
         if (authResponse.status === 200) {
