@@ -5,9 +5,10 @@ import * as Either from 'fp-ts/lib/Either';
 import * as Option from 'fp-ts/lib/Option';
 import { pipe } from 'fp-ts/lib/pipeable';
 import _ from 'lodash';
+import { CacheMixin, cached, cacheKey } from '../../cache/CacheMixin';
 
 @injectable()
-class PairingService extends HttpService {
+class PairingService extends CacheMixin(HttpService) {
   constructor(
     @inject('ApiV1Url') private readonly apiV1Url: string
   ) {
@@ -46,7 +47,8 @@ class PairingService extends HttpService {
     await this.sendRequest(request);
   }
 
-  public async retrievePairingData(authToken: string, id: string): Promise<Option.Option<PairingData>> {
+  @cached('PairingData')
+  public async retrievePairingData(authToken: string, @cacheKey() id: string): Promise<Option.Option<PairingData>> {
     try {
       const request = {
         method: 'GET',
