@@ -39,7 +39,13 @@ function getDefaults(): { [key: string]: any } {
         telemetryTagsServiceUrl: 'https://flo-telemetry-tags.flocloud.co',
         waterMeterUrl: 'https://flo-water-meter.flosecurecloud.com',
         apiV1IFTTTTestSetupUrl: 'https://api-dev.flocloud.co/api/v1/ifttt/v1/test/setup',
-        iftttRealtimeNotificationsUrl: 'https://realtime.ifttt.com/v1/notifications'
+        iftttRealtimeNotificationsUrl: 'https://realtime.ifttt.com/v1/notifications',
+        puckTokenSecret: '$$Extr3m3ly_S3cur3_Str1ng!!',
+        postgresMaxPoolClients: 15,
+        postgresConnectionTimeoutMS: 10000,
+        postgresIdleTimeoutMS: 60000,
+        dynamoDBTimeout: 4000,
+        authTimeoutMS: 4000
       };
   }
 }
@@ -63,11 +69,11 @@ const config = {
   docsEndpointPassword: process.env.DOCS_ENDPOINT_PASSWORD,
   externalDocsEndpointUser: process.env.EXTERNAL_DOCS_ENDPOINT_USER,
   externalDocsEndpointPassword: process.env.EXTERNAL_DOCS_ENDPOINT_PASSWORD,
-  postgresUser: process.env.POSTGRES_USER,
   postgresHost: process.env.POSTGRES_HOST,
+  postgresPort: process.env.POSTGRES_PORT,
+  postgresUser: process.env.POSTGRES_USER,
   postgresPassword: process.env.POSTGRES_PASSWORD,
   postgresDatabase: process.env.POSTGRES_DATABASE,
-  postgresPort: process.env.POSTGRES_PORT,
   defaultUserLocale: process.env.DEFAULT_USER_LOCALE,
   localizationApiUrl: process.env.LOCALIZATION_API_URL,
   notificationApiUrl: process.env.NOTIFICATION_API_URL,
@@ -92,6 +98,13 @@ const config = {
   iftttServiceKey: process.env.IFTTT_SERVICE_KEY,
   apiV1IFTTTTestSetupUrl: process.env.API_V1_IFTTT_TEST_SETUP_URL,
   iftttRealtimeNotificationsUrl: process.env.IFTTT_REALTIME_NOTIFICATIONS_URL,
+  puckTokenSecret: process.env.PUCK_TOKEN_SECRET,
+  postgresMaxPoolClients: process.env.POSTGRES_MAX_POOL_CLIENTS,
+  postgresConnectionTimeoutMS: process.env.POSTGRES_CONNECTION_TIMEOUT_MS,
+  postgresIdleTimeoutMS: process.env.POSTGRES_IDLE_TIMEOUT_MS,
+  numWorkers: process.env.NUM_WORKERS,
+  dynamoDBTimeoutMS: process.env.DYNAMODB_TIMEOUT_MS,
+  authTimeoutMS: process.env.AUTH_TIMEOUT_MS
 };
 
 export default {

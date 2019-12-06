@@ -84,7 +84,7 @@ class DeviceService {
     const pairingData = await this.apiV1PairingService.initPairing(authToken, qrData);
     const { deviceId } = pairingData;
 
-    await this.internalDeviceService.createFirestoreStubDevice(deviceId);
+    await this.internalDeviceService.createDeviceStub(deviceId);
 
     const { token } = await this.sessionServiceFactory().issueFirestoreToken(userId, { devices: [deviceId] });
 
@@ -96,15 +96,15 @@ class DeviceService {
      };
   }
 
-  public async pairDevice(authToken: string, deviceCreate: DeviceCreate): Promise<Device> {
+  public async pairDevice(authToken: string, deviceCreate: DeviceCreate & { id?: string }): Promise<Device> {
     const [device, location] = await Promise.all([
       this.deviceResolver.getByMacAddress(deviceCreate.macAddress),
       this.locationServiceFactory().getLocation(deviceCreate.location.id)
     ]);
 
-    if (device !== null && !_.isEmpty(device) && !device.isPaired) {
+    if (device !== null && !_.isEmpty(device) && device.isPaired) {
       throw new ConflictError('Device already paired.');
-    } else if (isNone(location)) {
+    } else if (!location || isNone(location)) {
       throw new ResourceDoesNotExistError('Location does not exist');
     }
 
@@ -125,6 +125,8 @@ class DeviceService {
       }
     }
 
+    await this.internalDeviceService.createDevice(deviceCreate);
+
     return createdDevice;
   }
 
@@ -134,4 +136,3 @@ class DeviceService {
 }
 
 export { DeviceService };
-

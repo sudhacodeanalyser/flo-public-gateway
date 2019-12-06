@@ -43,6 +43,9 @@ const DeviceMutableCodec = t.type({
   irrigationType: NonEmptyString,
   valve: t.partial({
     target: t.keyof(_.pick(ValveStateCodec.keys, ['open', 'closed']))
+  }),
+  area: t.type({
+    id: t.string
   })
 });
 
@@ -80,6 +83,11 @@ export const DeviceUpdateValidator = t.exact(t.intersection([
     systemMode: t.partial({
       shouldInherit: MutableSystemModeCodec.props.shouldInherit
     })
+  }),
+  t.partial({
+    puckConfig: t.type({
+      isConfigured: t.literal(true)
+    })
   })
 ]));
 export interface DeviceUpdate extends t.TypeOf<typeof DeviceUpdateValidator> {
@@ -115,7 +123,7 @@ export const PairingDataCodec = t.type({
 
 export type PairingData = t.TypeOf<typeof PairingDataCodec>;
 
-export interface Device extends Omit<DeviceUpdate, 'valve'>, TimestampedModel {
+export interface Device extends Omit<DeviceUpdate, 'valve' | 'puckConfig'>, TimestampedModel {
   id: string,
   macAddress: string;
   location: Expandable<Location>;
@@ -148,9 +156,13 @@ export interface Device extends Omit<DeviceUpdate, 'valve'>, TimestampedModel {
   healthTest?: {
     latest?: HealthTest
   };
+  puckConfig?: {
+    isConfigured: boolean;
+    configuredAt?: string;
+  };
   shutoff?: {
     scheduledAt: string;
-  }
+  };
 }
 
 interface FwProperties {
@@ -174,3 +186,36 @@ export const AdditionalDevicePropsCodec  = t.type({
 });
 
 export interface AdditionalDeviceProps extends t.TypeOf<typeof AdditionalDevicePropsCodec> {}
+
+export const DeviceActionRuleTypeUpsertCodec = t.type({
+  id: t.union([t.undefined, NonEmptyString]),
+  action: NonEmptyString,
+  event: NonEmptyString,
+  targetDeviceId: NonEmptyString,
+  order: t.number,
+  enabled: t.boolean
+});
+
+export const DeviceActionRulesCreateCodec = t.type({
+  actionRules: t.array(DeviceActionRuleTypeUpsertCodec)
+});
+
+const DeviceActionsRuleTypeCodec = t.intersection([
+  t.type({
+    createdAt: NonEmptyString,
+    updatedAt: NonEmptyString
+  }),
+  DeviceActionRuleTypeUpsertCodec
+]);
+
+const DeviceActionRulesCodec = t.type({
+  actionRules: t.array(DeviceActionsRuleTypeCodec)
+});
+
+export type DeviceActionRuleTypeUpsert = t.TypeOf<typeof DeviceActionRuleTypeUpsertCodec>;
+
+export type DeviceActionRule = t.TypeOf<typeof DeviceActionsRuleTypeCodec>;
+
+export type DeviceActionRulesCreate = t.TypeOf<typeof DeviceActionRulesCreateCodec>;
+
+export type DeviceActionRules = t.TypeOf<typeof DeviceActionRulesCodec>;

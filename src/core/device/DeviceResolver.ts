@@ -43,7 +43,7 @@ class DeviceResolver extends Resolver<Device> {
             t.exact(AdditionalDevicePropsCodec).decode(additionalProps),
             Either.fold(() => null, result => result)
           );
-        } 
+        }
 
         return null;
 
@@ -127,7 +127,7 @@ class DeviceResolver extends Resolver<Device> {
 
         return {
           ...device.valve,
-          lastKnown: _.get(additionalProperties, 'valveState.lastKnown') || translateNumericToStringEnum(
+          lastKnown: _.get(additionalProperties, 'valve.lastKnown') || translateNumericToStringEnum(
             ValveState,
             ValveStateNumeric,
             _.get(additionalProperties, 'fwProperties.valve_state')
@@ -168,7 +168,7 @@ class DeviceResolver extends Resolver<Device> {
 
       return {
         isInstalled: pipe(
-          maybeOnboardingLog, 
+          maybeOnboardingLog,
           Option.fold(() => false, () => true)
         ),
         installDate: pipe(
@@ -211,28 +211,28 @@ class DeviceResolver extends Resolver<Device> {
         minValue: 0
       };
 
-      const gpm = device.deviceType !== 'flo_device_075_v2' ?
-        {
-          ...minZero,
-          okMax: 29,
-          maxValue: 35
-        } :
+      const gpm = device.deviceModel !== 'flo_device_075_v2' ?
         {
           ...minZero,
           okMax: 100,
           maxValue: 125
-        };
-
-      const lpm = device.deviceType !== 'flo_device_075_v2' ?
+        } :
         {
           ...minZero,
-          okMax: 110,
-          maxValue: 130
-        } :
+          okMax: 29,
+          maxValue: 35
+        };
+
+      const lpm = device.deviceModel !== 'flo_device_075_v2' ?
         {
           ...minZero,
           okMax: 378,
           maxValue: 470
+        } :
+        {
+          ...minZero,
+          okMax: 110,
+          maxValue: 130
         };
 
       const psi = {
@@ -307,13 +307,13 @@ class DeviceResolver extends Resolver<Device> {
       } catch (err) {
         this.logger.error({ err });
         return null;
-      }      
+      }
     },
     irrigationType: async (device: Device, shouldExpand = false) => {
-      
+
       if (device.irrigationType) {
         return device.irrigationType;
-      } 
+      }
 
       const otherDevices = (await this.deviceTable.getAllByLocationId(device.location.id))
         .filter(deviceRecord => deviceRecord.id !== device.id)
@@ -321,8 +321,8 @@ class DeviceResolver extends Resolver<Device> {
 
       // If there's at least one other device with irrigation or an undecided status, then it's undecidable
       if (
-        otherDevices.length && 
-        otherDevices.some(otherDevice => 
+        otherDevices.length &&
+        otherDevices.some(otherDevice =>
           otherDevice.irrigationType !== 'none' || otherDevice.irrigationType !== 'not_plumbed'
         )
       ) {
@@ -347,7 +347,7 @@ class DeviceResolver extends Resolver<Device> {
     shutoff: async (device: Device, shouldExpand = false) => {
       const additionalProperties = await this.internalDeviceService.getDevice(device.macAddress);
       const shutoffTimeSeconds = Math.max(
-        _.get(additionalProperties, 'fwProperties.alarm_shutoff_time_epoch_sec', 0), 
+        _.get(additionalProperties, 'fwProperties.alarm_shutoff_time_epoch_sec', 0),
         0
       );
 
@@ -416,7 +416,7 @@ class DeviceResolver extends Resolver<Device> {
 
   public async updatePartial(id: string, deviceUpdate: DeviceUpdate): Promise<Device> {
     const deviceRecordData = DeviceRecord.fromPartialModel(deviceUpdate);
-    const patch = fromPartialRecord<DeviceRecordData>(deviceRecordData);
+    const patch = fromPartialRecord<DeviceRecordData>(deviceRecordData, ['puck_configured_at']);
     const updatedDeviceRecordData = await this.deviceTable.update({ id }, patch);
 
     return this.toModel(updatedDeviceRecordData);
@@ -426,14 +426,14 @@ class DeviceResolver extends Resolver<Device> {
     return this.deviceTable.remove({ id });
   }
 
-  public async createDevice(deviceCreate: DeviceCreate, isPaired: boolean = false): Promise<Device> {
+  public async createDevice(deviceCreate: DeviceCreate & { id?: string }, isPaired: boolean = false): Promise<Device> {
     const device = {
       deviceType: DeviceType.FLO_DEVICE_V2,
       deviceModel: DeviceModelType.FLO_0_75,
+      id: uuid.v4(),
       ...deviceCreate,
       additionalProps: null,
       isPaired,
-      id: uuid.v4(),
       systemMode: {
         isLocked: false,
         shouldInherit: true
@@ -448,7 +448,29 @@ class DeviceResolver extends Resolver<Device> {
     return this.toModel(createdDeviceRecordData);
   }
 
-  private async toModel(deviceRecordData: DeviceRecordData, expandProps?: PropExpand): Promise<Device> {
+  protected async resolveProp<K extends keyof Device>(model: Device, prop: K, shouldExpand: boolean = false, expandProps?: PropExpand): Promise<{ [prop: string]: Device[K] }> {
+    // Don't resolve these properties for the Puck
+    const puckExcludedProps = [
+      'valve',
+      'irrigationSchedule',
+      'installStatus',
+      'learning',
+      'healthTest',
+      'hardwareThresholds',
+      'pairingData',
+      'irrigationType',
+      'irrigationSchedule',
+      'systemMode'
+    ];
+
+    if (model.deviceType === DeviceType.PUCK && puckExcludedProps.indexOf(prop) >= 0) {
+      return {};
+    } else {
+      return super.resolveProp<K>(model, prop, shouldExpand, expandProps);
+    }
+  }
+
+private async toModel(deviceRecordData: DeviceRecordData, expandProps?: PropExpand): Promise<Device> {
     const device = new DeviceRecord(deviceRecordData).toModel();
     const expandedProps = await this.resolveProps(device, expandProps);
 
@@ -460,4 +482,3 @@ class DeviceResolver extends Resolver<Device> {
 }
 
 export { DeviceResolver };
-

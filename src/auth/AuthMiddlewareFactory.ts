@@ -1,4 +1,4 @@
-import axios from 'axios';
+import { AxiosInstance } from 'axios';
 import express from 'express';
 import { inject, injectable } from 'inversify';
 import _ from 'lodash';
@@ -14,6 +14,7 @@ import * as TaskEither from 'fp-ts/lib/TaskEither';
 import { TokenMetadata, OAuth2TokenCodec, LegacyAuthTokenCodec } from './Token';
 import Logger from 'bunyan';
 import crypto from 'crypto';
+import config from '../config/config';
 
 type Params = { [param: string]: any };
 type GetParams = (req: Request) => Promise<Params>;
@@ -23,6 +24,7 @@ type GetParams = (req: Request) => Promise<Params>;
 class AuthMiddlewareFactory {
   @inject('AuthUrl') private authUrl: string;
   @inject('RedisClient') private redisClient: Redis.Redis;
+  @inject('HttpClient') private httpClient: AxiosInstance;
 
   public create(getParams?: GetParams, overrideMethodId?: string): express.Handler {
     return async (req: Request, res: express.Response, next: express.NextFunction): Promise<void> => {
@@ -106,7 +108,7 @@ class AuthMiddlewareFactory {
 
   private async callAuthService(methodId: string, token: string, params?: Params): Promise<Either.Either<Error, TokenMetadata>> {
       try {
-        const authResponse = await axios({
+        const authResponse = await this.httpClient.request({
           method: 'post',
           url: this.authUrl,
           headers: {
@@ -116,7 +118,8 @@ class AuthMiddlewareFactory {
           data: {
             method_id: methodId,
             params
-          }
+          },
+          timeout: config.authTimeoutMS
         });
 
         if (authResponse.status === 200) {

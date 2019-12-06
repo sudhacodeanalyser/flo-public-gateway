@@ -3,26 +3,33 @@
 {{- $servicePort := .Values.service.port -}}
 {{- $ingressPath := .Values.internalIngress.path -}}
 {{- $ingressName := include "flo-public-gateway.name" . -}}
+{{- $ingressHostMap := .Values.internalIngress.host -}}
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
   name: internal-{{ $ingressName }}
   labels:
     app.kubernetes.io/name: {{ include "flo-public-gateway.name" . }}
-    helm.sh/chart: {{ include "flo-public-gateway.chart" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
+    helm.sh/chart: {{ include "flo-public-gateway.chart" . }}
   {{- with .Values.internalIngress.annotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
   {{- end }}
 spec:
   rules:
-    - host: {{ .Values.internalIngress.host }}
-      http:
-        paths:
-          - path: {{ $ingressPath }} 
-            backend:
-              serviceName: {{ $fullName }} 
-              servicePort: http
+    {{- if eq .Values.environment "production" }}
+      - host: {{ .Values.internalIngressHosts.production }}
+    {{- else if eq .Values.environment "rc" }}
+      - host: {{ .Values.internalIngressHosts.rc }}
+    {{- else  }}
+      - host: {{ .Values.internalIngressHosts.development }}
+    {{- end }}
+        http:
+          paths:
+            - backend:
+                serviceName: {{ $fullName }}
+                servicePort: http
+              path: {{ $ingressPath }}
 {{- end }}

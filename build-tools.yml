@@ -1,8 +1,9 @@
+---
 version: '3.7'
 
 services:
   build: &build
-    image: "${CI_REGISTRY_IMAGE:-registry.gitlab.com/flotechnologies/app}:build"
+    image: "${CI_REGISTRY_IMAGE:-registry.gitlab.com/flotechnologies/flo-public-gateway}:build"
     build:
       context: .
       dockerfile: Dockerfile.build

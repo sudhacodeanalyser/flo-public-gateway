@@ -2,6 +2,8 @@ import { injectable, unmanaged } from 'inversify';
 import DatabaseClient, { KeyMap } from './DatabaseClient';
 import { Patch } from './Patch';
 import { DatabaseReadTable } from './DatabaseReadTable';
+import _ from 'lodash';
+import ResourceDoesNotExistError from '../core/api/error/ResourceDoesNotExistError';
 
 @injectable()
 class DatabaseTable<T> extends DatabaseReadTable<T> {
@@ -17,6 +19,20 @@ class DatabaseTable<T> extends DatabaseReadTable<T> {
   }
 
   public async update(key: KeyMap, patch: Patch): Promise<T> {
+
+    if (
+      _.isEmpty(patch) || 
+      (_.isEmpty(patch.setOps) && _.isEmpty(patch.appendOps) && _.isEmpty(patch.removeOps))
+    ) {
+      const item = await this.get(key);
+
+      if (item === null) {
+        throw new ResourceDoesNotExistError();
+      }
+
+      return item;
+    }
+
     return this.dbClient.update<T>(this.tableName, key, patch);
   }
 

@@ -7,11 +7,17 @@ metadata:
     kubernetes.io/ingress.class: "nginx"
 spec:
   ports:
-    - protocol: TCP
-      port: 443
-      targetPort: 443 
+    - port: 443
+      protocol: TCP
+      targetPort: 443
   type: ExternalName
-  externalName: {{ .Values.v1ProxyService.floApiV1Hostname }}
+{{- if eq .Values.environment "production" }}
+  externalName: {{ .Values.v1ProxyService.production }}
+{{- else if eq .Values.environment "rc" }}
+  externalName: {{ .Values.v1ProxyService.rc }}
+{{- else  }}
+  externalName: {{ .Values.v1ProxyService.development }}
+{{- end }}
 
 ---
 kind: Service
@@ -22,8 +28,14 @@ metadata:
     kubernetes.io/ingress.class: "nginx"
 spec:
   ports:
-  - protocol: TCP
-    port: 443
+  - port: 443
+    protocol: TCP
     targetPort: 443
   type: ExternalName
-  externalName: {{ .Values.internalIngress.host }}
+{{- if eq .Values.environment "production" }}
+  externalName: {{ .Values.internalIngressHosts.production }}
+{{- else if eq .Values.environment "rc" }}
+  externalName: {{ .Values.internalIngressHosts.rc }}
+{{- else  }}
+  externalName: {{ .Values.internalIngressHosts.development }}
+{{- end }}

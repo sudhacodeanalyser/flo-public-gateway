@@ -4,18 +4,25 @@ APP ?= flo-public-gateway
 ENV ?= dev
 AWS_REGION ?= us-west-2
 EB_DEPLOY_TIMEOUT ?= 15
+HELM_CHART ?= $(APP)
 HELM_DEPLOY_TIMEOUT ?= 180
+HELM_HISTORY_MAX ?= 3
+HELM_HISTORY_MAX ?= 3
+HELM_RELEASE_NAME ?= $(APP)
+K8S_NAMESPACE ?= $(APP)
 DOCKER_IMAGE ?= ${CI_REGISTRY_IMAGE}
 DOCKER_REGISTRY ?= registry.gitlab.com/flotechnologies
 DOCKER_TAG ?= latest
 DOCKER  ?= $(shell which docker)
 COMPOSE ?= $(shell which docker-compose)
+CURL ?= $(shell which curl)
 NODE_ENV ?= development
 NPM ?= $(COMPOSE) -f build-tools.yml run --rm npm --node-env=$(NODE_ENV)
 GRADLE ?= $(COMPOSE) -f build-tools.yml run --rm gradle
 GIT ?= $(COMPOSE) -f build-tools.yml run --rm git
 RUN ?= $(COMPOSE) -f build-tools.yml run --rm --service-ports run --node-env=$(NODE_ENV) run
 HELM ?= $(shell which helm)
+RUNSCOPE_IMAGE ?= $(DOCKER_REGISTRY)/devops/runscope-python-trigger:latest
 
 .PHONY: help auth
 help: ## Display this help screen (default)
@@ -67,23 +74,28 @@ push: docker
 	$(COMPOSE) $(@)
 	$(COMPOSE) -f build-tools.yml $(@) || true
 
-debug-helm: environment-dev
-	$(HELM) ls
-	$(HELM) template ./k8s/$(APP) -f k8s/pipeline.yaml --namespace=$(APP)
+debug-helm:
+	$(HELM) template \
+		./k8s/$(HELM_CHART) \
+		--name $(HELM_RELEASE_NAME) \
+		--values k8s/pipeline.yaml \
+		--set environment=$(ENV) \
+		--namespace=$(K8S_NAMESPACE)
 
 deploy:
-	$(HELM) init --upgrade --wait --force-upgrade
+	$(HELM) init --upgrade --wait --force-upgrade --debug
 	$(HELM) upgrade \
-		--install $(APP) \
-		./k8s/$(APP) \
+		$(HELM_RELEASE_NAME) \
+		./k8s/$(HELM_CHART) \
+		--install \
 		--values ./k8s/pipeline.yaml \
 		--set environment=$(ENV) \
-		--namespace=$(APP) \
-		--wait --timeout $(HELM_DEPLOY_TIMEOUT)
+		--namespace=$(K8S_NAMESPACE) \
+		--wait --timeout $(HELM_DEPLOY_TIMEOUT) --debug
 
 deploy-status:
-	$(HELM) status $(APP)
-	$(HELM) history $(APP)
+	$(HELM) history --max $(HELM_HISTORY_MAX) $(HELM_RELEASE_NAME)
+	$(HELM) status $(HELM_RELEASE_NAME)
 
 environment-dev:
 	chmod +x ./k8s/env-dev.sh
@@ -92,6 +104,13 @@ environment-dev:
 environment-prod:
 	chmod +x ./k8s/env-prod.sh
 	./k8s/env-prod.sh
+
+runscope:
+	$(DOCKER) \
+		run --rm --tty\
+		--env RUNSCOPE_ACCESS_TOKEN="$(RUNSCOPE_ACCESS_TOKEN)" \
+		--env RUNSCOPE_TRIGGER_URL="$(RUNSCOPE_TRIGGER_URL)" \
+		$(RUNSCOPE_IMAGE)
 
 clean: down ## Remove build arifacts & related images
 	rm -rf node_modules

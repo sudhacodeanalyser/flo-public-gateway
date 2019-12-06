@@ -1,14 +1,19 @@
 import { inject, injectable } from 'inversify';
-import DatabaseClient from '../../database/DatabaseClient';
-import DatabaseTable from '../../database/DatabaseTable';
+import DynamoDbClient from '../../database/dynamo/DynamoDbClient';
+import BatchedDatabaseTable from '../../database/BatchedDatabaseTable';
 import { AlertFeedbackRecordData } from './AlertFeedbackRecord';
-import { DynamoDbQuery } from '../../database/dynamo/DynamoDbClient';
-import * as Option from 'fp-ts/lib/Option';
+import { KeyMap } from '../../database/DatabaseClient'; 
+import Dataloader from 'dataloader';
+import _ from 'lodash';
+import NotFoundError from '../api/error/NotFoundError';
 
 @injectable()
-class AlertFeedbackTable extends DatabaseTable<AlertFeedbackRecordData> {
-  constructor(@inject('DatabaseClient') dbClient: DatabaseClient) {
+class AlertFeedbackTable extends BatchedDatabaseTable<AlertFeedbackRecordData> {
+
+  constructor(@inject('DatabaseClient') dbClient: DynamoDbClient) {
     super(dbClient, 'AlertFeedback');
+
+    this.defaultBatchSize = 50;
   }
 }
 

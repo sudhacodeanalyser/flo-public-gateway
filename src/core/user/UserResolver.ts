@@ -3,7 +3,7 @@ import { inject, injectable } from 'inversify';
 import { injectHttpContext, interfaces } from 'inversify-express-utils';
 import _ from 'lodash';
 import { fromPartialRecord } from '../../database/Patch';
-import { DependencyFactoryFactory, PropExpand, UpdateDeviceAlarmSettings, User } from '../api';
+import { DependencyFactoryFactory, PropExpand, UpdateDeviceAlarmSettings, User, UnitSystem } from '../api';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import { NotificationService, NotificationServiceFactory } from '../notification/NotificationService';
 import { AccountResolver, LocationResolver, PropertyResolverMap, Resolver } from '../resolver';
@@ -89,12 +89,19 @@ class UserResolver extends Resolver<User> {
                 })
         ));
 
+        if (_.isEmpty(devices)) {
+          return null;
+        }
+
         return (await this.notificationServiceFactory().getAlarmSettingsInBulk(model.id, devices.map(device => device.id)));
       } catch (err) {
         this.logger.error({ err });
 
         return null;
       }
+    },
+    unitSystem: async (model: User, shouldExpand = false) => {
+      return model.unitSystem || UnitSystem.IMPERIAL_US;
     }
   };
 
@@ -197,4 +204,3 @@ class UserResolver extends Resolver<User> {
 }
 
 export { UserResolver };
-
