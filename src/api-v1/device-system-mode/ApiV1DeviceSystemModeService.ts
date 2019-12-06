@@ -1,6 +1,6 @@
 import { injectable } from 'inversify';
 import { HttpService } from '../../http/HttpService';
-import { DeviceSystemModeServiceFactory, DeviceSystemModeService } from '../../core/device/DeviceSystemModeService';
+import { DeviceSystemModeService } from '../../core/device/DeviceSystemModeService';
 import { SystemMode, DeviceSystemModeNumeric } from '../../core/api';
 import { translateStringToNumericEnum } from '../../core/api/enumUtils';
 
@@ -8,12 +8,14 @@ import { translateStringToNumericEnum } from '../../core/api/enumUtils';
 class ApiV1DeviceSystemModeService extends HttpService implements DeviceSystemModeService {
   public apiV1Url: string;
   public authToken: string;
+  public customHeaders: any;
 
   public async setSystemMode(id: string, systemMode: SystemMode): Promise<void> {
     const request = {
       method: 'POST',
       url: `${ this.formatUrl(id) }/setsystemmode`,
       authToken: this.authToken,
+      customHeaders: this.customHeaders,
       body: {
         system_mode: translateStringToNumericEnum(DeviceSystemModeNumeric, SystemMode, systemMode)
       }
@@ -27,6 +29,7 @@ class ApiV1DeviceSystemModeService extends HttpService implements DeviceSystemMo
       method: 'POST',
       url: `${ this.formatUrl(id) }/sleep`,
       authToken: this.authToken,
+      customHeaders: this.customHeaders,
       body: {
         sleep_minutes: sleepMinutes,
         wake_up_system_mode: translateStringToNumericEnum(DeviceSystemModeNumeric, SystemMode, wakeUpSystemMode)
@@ -40,7 +43,8 @@ class ApiV1DeviceSystemModeService extends HttpService implements DeviceSystemMo
     const request = {
       method: 'POST',
       url: `${ this.formatUrl(id) }/forcedsleep/enable`,
-      authToken: this.authToken
+      authToken: this.authToken,
+      customHeaders: this.customHeaders
     };
 
     await this.sendRequest(request);
@@ -50,7 +54,8 @@ class ApiV1DeviceSystemModeService extends HttpService implements DeviceSystemMo
     const request = {
       method: 'POST',
       url: `${ this.formatUrl(id) }/forcedsleep/disable`,
-      authToken: this.authToken
+      authToken: this.authToken,
+      customHeaders: this.customHeaders
     };
 
     await this.sendRequest(request);
