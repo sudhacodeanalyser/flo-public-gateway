@@ -1,4 +1,4 @@
-import { HttpService } from '../../http/HttpService';
+import {HttpRequest, HttpService} from '../../http/HttpService';
 import { DeviceSystemModeServiceFactory, DeviceSystemModeService } from '../../core/device/DeviceSystemModeService';
 import { SystemMode, DeviceSystemModeNumeric } from '../../core/api';
 import { translateStringToNumericEnum } from '../../core/api/enumUtils';
@@ -7,9 +7,10 @@ class ApiV1DeviceSystemModeService extends HttpService implements DeviceSystemMo
 
   constructor(
     private readonly apiV1Url: string,
-    private readonly authToken: string
+    private readonly authToken: string,
+    private readonly customHeaders: any
   ) {
-    super();
+    super(customHeaders);
   }
 
   public async setSystemMode(id: string, systemMode: SystemMode): Promise<void> {

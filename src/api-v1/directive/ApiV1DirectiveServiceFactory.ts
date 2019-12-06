@@ -13,12 +13,16 @@ class ApiV1DirectiveServiceFactory implements DirectiveServiceFactory  {
 
   public create(req: Request): DirectiveService {
     const authToken = req.get('Authorization');
+    const customHeaders = {
+      'user-agent': req.get('user-agent'),
+      'origin': req.get('origin')
+    };
 
     if (authToken === undefined)  {
       throw new UnauthorizedError();
     }
 
-    return new ApiV1DirectiveService(this.apiV1Url, authToken);
+    return new ApiV1DirectiveService(this.apiV1Url, authToken, customHeaders);
   }
 }
 

@@ -14,6 +14,8 @@ export interface HttpRequest {
 
 @injectable()
 class HttpService {
+  constructor(private readonly headers?: any) {}
+
   protected async sendRequest(request: HttpRequest): Promise<any> {
     try {
       const response = await axios({
@@ -21,6 +23,7 @@ class HttpService {
         url: request.url,
         headers: {
           'Content-Type': 'application/json',
+          ...(this.headers),
           ...(request.authToken && { Authorization: request.authToken }),
           ...(request.customHeaders)
         },

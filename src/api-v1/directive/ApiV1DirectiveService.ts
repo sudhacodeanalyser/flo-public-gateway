@@ -1,12 +1,13 @@
 import { DirectiveService } from '../../core/device/DirectiveService';
-import { HttpService } from '../../http/HttpService';
+import {HttpRequest, HttpService} from '../../http/HttpService';
 
 export class ApiV1DirectiveService extends HttpService implements DirectiveService {
     constructor(
     private readonly apiV1Url: string,
-    private readonly authToken: string
+    private readonly authToken: string,
+    private readonly customHeaders: any
   ) {
-    super();
+    super(customHeaders);
   }
 
   public async openValve(id: string): Promise<void> {
@@ -34,7 +35,7 @@ export class ApiV1DirectiveService extends HttpService implements DirectiveServi
       method: 'POST',
       url: `${ this.apiV1Url }/directives/icd/${ id }/powerreset`,
       authToken: this.authToken
-    }
+    };
 
     await this.sendRequest(request);
   }
