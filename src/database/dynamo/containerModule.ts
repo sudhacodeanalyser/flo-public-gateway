@@ -20,7 +20,8 @@ export default new ContainerModule((bind: interfaces.Bind) => {
     dynamoDbDocClient = new AWS.DynamoDB.DocumentClient({
       region: 'us-west-2',
       httpOptions: {
-        agent: httpsAgent
+        agent: httpsAgent,
+        timeout: config.dynamoDBTimeoutMS
       }
     });
 
