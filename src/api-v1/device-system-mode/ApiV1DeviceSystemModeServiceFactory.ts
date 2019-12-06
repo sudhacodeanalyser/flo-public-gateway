@@ -13,9 +13,11 @@ class ApiV1DeviceSystemModeServiceFactory implements DeviceSystemModeServiceFact
 
   public create(req: Request): DeviceSystemModeService {
     const authToken = req.get('Authorization');
+    const origin = req.get('origin');
+    const userAgent = req.get('user-agent');
     const customHeaders = {
-      'user-agent': req.get('user-agent'),
-      'origin': req.get('origin')
+      ...(origin && { origin }),
+      ...(userAgent && { 'user-agent': userAgent })
     };
 
     if (authToken === undefined)  {
