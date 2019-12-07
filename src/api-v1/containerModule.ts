@@ -36,26 +36,24 @@ export default new ContainerModule((bind: interfaces.Bind) => {
     };
   })
  bind<(apiV1Url: string, authToken: string) => DeviceSystemModeService>('Factory<DeviceSystemModeService>').toFactory((context: interfaces.Context) => {
-   return (apiV1Url: string, authToken: string, customHeaders: any) => {
+   return (apiV1Url: string, authToken: string) => {
       const deviceSystemModeService = context.container.get<ApiV1DeviceSystemModeService>('ApiV1DeviceSystemModeService');
 
       deviceSystemModeService.apiV1Url = apiV1Url;
       deviceSystemModeService.authToken = authToken;
-      deviceSystemModeService.customHeaders = customHeaders;
 
       return deviceSystemModeService;
    }
  });
  bind<ApiV1DirectiveService>('ApiV1DirectiveService').to(ApiV1DirectiveService);
  bind<(apiV1Url: string, authToken: string) => DirectiveService>('Factory<DirectiveService>').toFactory((context: interfaces.Context) => {
-   return (apiV1Url: string, authToken: string, customHeaders: any) => {
+   return (apiV1Url: string, authToken: string) => {
       const directiveService = context.container.get<ApiV1DirectiveService>('ApiV1DirectiveService');
 
       directiveService.apiV1Url = apiV1Url;
       directiveService.authToken = authToken;
-      directiveService.customHeaders = customHeaders;
 
       return directiveService;
-   }
+   }  
  });
 });
