@@ -3,7 +3,7 @@ import { inject, injectable } from 'inversify';
 import { injectHttpContext, interfaces } from 'inversify-express-utils';
 import _ from 'lodash';
 import uuid from 'uuid';
-import { fromPartialRecord, isPatchEmpty } from '../../database/Patch';
+import { fromPartialRecord } from '../../database/Patch';
 import { InternalDeviceService } from "../../internal-device-service/InternalDeviceService";
 import { DependencyFactoryFactory, Device, DeviceCreate, DeviceModelType, DeviceSystemModeNumeric, DeviceType, DeviceUpdate, PropExpand, SystemMode, ValveState, ValveStateNumeric, AdditionalDevicePropsCodec, PairingDataCodec } from '../api';
 import { translateNumericToStringEnum } from '../api/enumUtils';
@@ -424,9 +424,7 @@ class DeviceResolver extends Resolver<Device> {
     const deviceRecordData = DeviceRecord.fromPartialModel(deviceUpdate);
     const patch = fromPartialRecord<DeviceRecordData>(deviceRecordData, ['puck_configured_at']);
 
-    const updatedDeviceRecordData = isPatchEmpty(patch) ?
-      await this.deviceTable.get({ id }) :
-      await this.deviceTable.update({ id }, patch);
+    const updatedDeviceRecordData = await this.deviceTable.update({ id }, patch);
 
     if (updatedDeviceRecordData === null) {
       throw new ResourceDoesNotExistError();

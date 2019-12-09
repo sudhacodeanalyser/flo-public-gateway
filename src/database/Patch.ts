@@ -21,10 +21,6 @@ export interface Patch {
   appendOps?: AppendOp[];
 }
 
-export function isPatchEmpty(patch: Patch): boolean {
-  return _.isEmpty(patch.setOps) && _.isEmpty(patch.removeOps) && _.isEmpty(patch.appendOps);
-}
-
 export function fromPartialRecord<T>(partialRecord: Partial<T>, ifNotExistsProps: string[] = []): Patch {
   const setOps: SetOp[] = _.map(
     _.pickBy(partialRecord, value => !_.isUndefined(value)),
