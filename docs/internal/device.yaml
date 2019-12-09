@@ -586,6 +586,18 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ActionRule'
+      example:
+        actionRules:
+          - targetDeviceId: ae045418-c8d6-4737-91d7-83991a327289
+            event: waterDetected
+            action: shutOff
+            order: 1
+            enabled: true
+          - targetDeviceId: 03724bbe-4637-4af6-8f1b-1451baec9c39
+            event: waterDetected
+            action: shutOff
+            order: 2
+            enabled: true
 
     ActionRule:
       allOf:
