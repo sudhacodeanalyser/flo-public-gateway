@@ -642,6 +642,8 @@ components:
           properties:
             isConfigured:
               type: boolean
+        hardwareThresholds:
+          $ref: '#/components/schemas/HardwareThresholds'
 
     IrrigationType:
       type: string
@@ -800,9 +802,9 @@ components:
                 scheduledAt:
                   type: string
                   format: date-time
-            puckConfig: 
+            puckConfig:
               type: object
-              properties: 
+              properties:
                 isConfigured:
                   type: boolean
                 configuredAt:
@@ -824,7 +826,7 @@ components:
         - away
         - sleep
 
-    HardwareThresholds:
+    ThresholdDefinition:
       type: object
       properties:
         okMin:
@@ -835,6 +837,26 @@ components:
           type: number
         maxValue:
           type: number
+
+    HardwareThresholds:
+      type: object
+      properties:
+        gpm:
+          $ref: '#/components/schemas/ThresholdDefinition'
+        lpm:
+          $ref: '#/components/schemas/ThresholdDefinition'
+        psi:
+          $ref: '#/components/schemas/ThresholdDefinition'
+        kpa:
+          $ref: '#/components/schemas/ThresholdDefinition'
+        tempF:
+          $ref: '#/components/schemas/ThresholdDefinition'
+        tempC:
+          $ref: '#/components/schemas/ThresholdDefinition'
+        humidity:
+          $ref: '#/components/schemas/ThresholdDefinition'
+        battery:
+          $ref: '#/components/schemas/ThresholdDefinition'
 
     HealthTest:
       type: object
