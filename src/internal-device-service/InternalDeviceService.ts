@@ -41,6 +41,8 @@ class InternalDeviceService extends MemoizeMixin(HttpService) implements Firesto
     };
 
     await this.sendRequest(request);
+
+    this.clearMethodLoader('getDevice', macAddress);
   }
 
   @memoized()
@@ -84,20 +86,6 @@ class InternalDeviceService extends MemoizeMixin(HttpService) implements Firesto
     };
 
     await this.sendRequest(request);
-  }
-
-  public async createDeviceStub(macAddress: string): Promise<void> {
-    try {
-      const request = {
-        method: 'post',
-        url: `${this.internalDeviceServiceBaseUrl}/devices/${macAddress}/stub`
-      };
-
-      await this.sendRequest(request);
-    } catch (err) {
-      // Error should not break pairing
-      this.logger.error({ err }, `Error creating device stub for MAC Address ${macAddress}`);
-    }
   }
 
   public async issueToken(assets: FirestoreAssests): Promise<FirestoreTokenResponse> {
