@@ -530,33 +530,6 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     private async removeActionRule(@requestParam('id') id: string, @requestParam('actionRuleId') actionRuleId: string): Promise<void> {
       return this.internalDeviceService.removeActionRule(id, actionRuleId);
     }
-
-    @httpPost('/:id/actionRules',
-      authWithId,
-      reqValidator.create(t.type({
-        params: t.type({
-          id: t.string
-        }),
-        body: DeviceActionRulesCreateCodec
-      }))
-    )
-    private async upsertActionRules(@requestParam('id') id: string, @requestBody() actionRules: DeviceActionRulesCreate): Promise<DeviceActionRules> {
-      return this.internalDeviceService.upsertActionRules(id, actionRules);
-    }
-
-    @httpPut('/:id/hardwareThresholds',
-      authWithId,
-      reqValidator.create(t.type({
-        params: t.type({
-          id: t.string
-        }),
-        body: HardwareThresholdsCodec
-      }))
-    )
-    private async setHardwareThresholds(@requestParam('id') id: string, @requestBody() hardwareThresholds: HardwareThresholds): Promise<void> {
-      const macAddress = await this.mapIcdToMacAddress(id);
-      return this.internalDeviceService.setHardwareThresholds(macAddress, hardwareThresholds);
-    }
   }
 
   return DeviceController;

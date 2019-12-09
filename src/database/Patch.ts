@@ -1,29 +1,33 @@
 import _ from 'lodash';
 
 export interface SetOp {
-  key: string,
-  value: any,
-  ifNotExists?: boolean
+  key: string;
+  value: any;
+  ifNotExists?: boolean;
 }
 
 export interface RemoveOp {
-  key: string
+  key: string;
 }
 
 export interface AppendOp {
-  key: string,
-  value: any
+  key: string;
+  value: any;
 }
 
 export interface Patch {
-  setOps?: SetOp[],
-  removeOps?: RemoveOp[],
-  appendOps?: AppendOp[]
+  setOps?: SetOp[];
+  removeOps?: RemoveOp[];
+  appendOps?: AppendOp[];
+}
+
+export function isPatchEmpty(patch: Patch): boolean {
+  return _.isEmpty(patch.setOps) && _.isEmpty(patch.removeOps) && _.isEmpty(patch.appendOps);
 }
 
 export function fromPartialRecord<T>(partialRecord: Partial<T>, ifNotExistsProps: string[] = []): Patch {
   const setOps: SetOp[] = _.map(
-    _.pickBy(partialRecord, value => !_.isUndefined(value)), 
+    _.pickBy(partialRecord, value => !_.isUndefined(value)),
     (value: any, key: string): SetOp => ({
       key,
       value,

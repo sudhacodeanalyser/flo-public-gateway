@@ -3,7 +3,7 @@ import { inject, injectable } from 'inversify';
 import { injectHttpContext, interfaces } from 'inversify-express-utils';
 import _ from 'lodash';
 import uuid from 'uuid';
-import { fromPartialRecord } from '../../database/Patch';
+import { fromPartialRecord, isPatchEmpty } from '../../database/Patch';
 import { InternalDeviceService } from "../../internal-device-service/InternalDeviceService";
 import { DependencyFactoryFactory, Device, DeviceCreate, DeviceModelType, DeviceSystemModeNumeric, DeviceType, DeviceUpdate, PropExpand, SystemMode, ValveState, ValveStateNumeric, AdditionalDevicePropsCodec, PairingDataCodec } from '../api';
 import { translateNumericToStringEnum } from '../api/enumUtils';
@@ -21,7 +21,77 @@ import * as t from 'io-ts';
 import * as Either from 'fp-ts/lib/Either';
 import { HealthTestServiceFactory, HealthTestService } from './HealthTestService';
 import LocationTable from '../location/LocationTable';
-import { NonEmptyString, NonEmptyStringFactory } from '../api/validator/NonEmptyString';
+import { NonEmptyStringFactory } from '../api/validator/NonEmptyString';
+import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
+
+const defaultHwThresholds = (deviceModel: string) => {
+  const minZero = {
+    okMin: 0,
+    minValue: 0
+  };
+
+  const gpm = deviceModel !== 'flo_device_075_v2' ?
+    {
+      ...minZero,
+      okMax: 29,
+      maxValue: 35
+    } :
+    {
+      ...minZero,
+      okMax: 100,
+      maxValue: 125
+    };
+
+  const lpm = deviceModel !== 'flo_device_075_v2' ?
+    {
+      ...minZero,
+      okMax: 110,
+      maxValue: 130
+    } :
+    {
+      ...minZero,
+      okMax: 378,
+      maxValue: 470
+    };
+
+  const psi = {
+    okMin: 30,
+    okMax: 80,
+    minValue: 0,
+    maxValue: 100
+  };
+
+  const kPa = {
+    okMin: 210,
+    okMax: 550,
+    minValue: 0,
+    maxValue: 700
+  };
+
+  const tempF = {
+    okMin: 50,
+    okMax: 80,
+    minValue: 0,
+    maxValue: 100
+  };
+
+  const tempC = {
+    okMin: 10,
+    okMax: 30,
+    minValue: 0,
+    maxValue: 40
+  };
+
+  return {
+    gpm,
+    lpm,
+    psi,
+    kPa,
+    temp: tempF,
+    tempF,
+    tempC
+  };
+}
 
 @injectable()
 class DeviceResolver extends Resolver<Device> {
@@ -43,7 +113,7 @@ class DeviceResolver extends Resolver<Device> {
             t.exact(AdditionalDevicePropsCodec).decode(additionalProps),
             Either.fold(() => null, result => result)
           );
-        } 
+        }
 
         return null;
 
@@ -168,7 +238,7 @@ class DeviceResolver extends Resolver<Device> {
 
       return {
         isInstalled: pipe(
-          maybeOnboardingLog, 
+          maybeOnboardingLog,
           Option.fold(() => false, () => true)
         ),
         installDate: pipe(
@@ -206,72 +276,8 @@ class DeviceResolver extends Resolver<Device> {
       return (!latest) ? null : { latest };
     },
     hardwareThresholds: async (device: Device, shouldExpand = false) => {
-      const minZero = {
-        okMin: 0,
-        minValue: 0
-      };
-
-      const gpm = device.deviceModel !== 'flo_device_075_v2' ?
-        {
-          ...minZero,
-          okMax: 29,
-          maxValue: 35
-        } :
-        {
-          ...minZero,
-          okMax: 100,
-          maxValue: 125
-        };
-
-      const lpm = device.deviceModel !== 'flo_device_075_v2' ?
-        {
-          ...minZero,
-          okMax: 110,
-          maxValue: 130
-        } :
-        {
-          ...minZero,
-          okMax: 378,
-          maxValue: 470
-        };
-
-      const psi = {
-        okMin: 30,
-        okMax: 80,
-        minValue: 0,
-        maxValue: 100
-      };
-
-      const kPa = {
-        okMin: 210,
-        okMax: 550,
-        minValue: 0,
-        maxValue: 700
-      };
-
-      const tempF = {
-        okMin: 50,
-        okMax: 80,
-        minValue: 0,
-        maxValue: 100
-      };
-
-      const tempC = {
-        okMin: 10,
-        okMax: 30,
-        minValue: 0,
-        maxValue: 40
-      };
-
-      return {
-        gpm,
-        lpm,
-        psi,
-        kPa,
-        temp: tempF,
-        tempF,
-        tempC
-      };
+      const additionalProperties = await this.internalDeviceService.getDevice(device.macAddress);
+      return (additionalProperties && additionalProperties.hwThresholds) || defaultHwThresholds(device.deviceModel);
     },
     pairingData: async (device: Device, shouldExpand = false) => {
       try {
@@ -307,13 +313,13 @@ class DeviceResolver extends Resolver<Device> {
       } catch (err) {
         this.logger.error({ err });
         return null;
-      }      
+      }
     },
     irrigationType: async (device: Device, shouldExpand = false) => {
-      
+
       if (device.irrigationType) {
         return device.irrigationType;
-      } 
+      }
 
       const otherDevices = (await this.deviceTable.getAllByLocationId(device.location.id))
         .filter(deviceRecord => deviceRecord.id !== device.id)
@@ -321,8 +327,8 @@ class DeviceResolver extends Resolver<Device> {
 
       // If there's at least one other device with irrigation or an undecided status, then it's undecidable
       if (
-        otherDevices.length && 
-        otherDevices.some(otherDevice => 
+        otherDevices.length &&
+        otherDevices.some(otherDevice =>
           otherDevice.irrigationType !== 'none' || otherDevice.irrigationType !== 'not_plumbed'
         )
       ) {
@@ -347,7 +353,7 @@ class DeviceResolver extends Resolver<Device> {
     shutoff: async (device: Device, shouldExpand = false) => {
       const additionalProperties = await this.internalDeviceService.getDevice(device.macAddress);
       const shutoffTimeSeconds = Math.max(
-        _.get(additionalProperties, 'fwProperties.alarm_shutoff_time_epoch_sec', 0), 
+        _.get(additionalProperties, 'fwProperties.alarm_shutoff_time_epoch_sec', 0),
         0
       );
 
@@ -417,7 +423,14 @@ class DeviceResolver extends Resolver<Device> {
   public async updatePartial(id: string, deviceUpdate: DeviceUpdate): Promise<Device> {
     const deviceRecordData = DeviceRecord.fromPartialModel(deviceUpdate);
     const patch = fromPartialRecord<DeviceRecordData>(deviceRecordData, ['puck_configured_at']);
-    const updatedDeviceRecordData = await this.deviceTable.update({ id }, patch);
+
+    const updatedDeviceRecordData = isPatchEmpty(patch) ?
+      await this.deviceTable.get({ id }) :
+      await this.deviceTable.update({ id }, patch);
+
+    if (updatedDeviceRecordData === null) {
+      throw new ResourceDoesNotExistError();
+    }
 
     return this.toModel(updatedDeviceRecordData);
   }
@@ -482,4 +495,3 @@ private async toModel(deviceRecordData: DeviceRecordData, expandProps?: PropExpa
 }
 
 export { DeviceResolver };
-
