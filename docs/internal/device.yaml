@@ -586,6 +586,18 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ActionRule'
+      example:
+        actionRules:
+          - targetDeviceId: ae045418-c8d6-4737-91d7-83991a327289
+            event: waterDetected
+            action: shutOff
+            order: 1
+            enabled: true
+          - targetDeviceId: 03724bbe-4637-4af6-8f1b-1451baec9c39
+            event: waterDetected
+            action: shutOff
+            order: 2
+            enabled: true
 
     ActionRule:
       allOf:
@@ -642,6 +654,8 @@ components:
           properties:
             isConfigured:
               type: boolean
+        hardwareThresholds:
+          $ref: '#/components/schemas/HardwareThresholds'
 
     IrrigationType:
       type: string
@@ -800,9 +814,9 @@ components:
                 scheduledAt:
                   type: string
                   format: date-time
-            puckConfig: 
+            puckConfig:
               type: object
-              properties: 
+              properties:
                 isConfigured:
                   type: boolean
                 configuredAt:
@@ -824,7 +838,7 @@ components:
         - away
         - sleep
 
-    HardwareThresholds:
+    ThresholdDefinition:
       type: object
       properties:
         okMin:
@@ -835,6 +849,26 @@ components:
           type: number
         maxValue:
           type: number
+
+    HardwareThresholds:
+      type: object
+      properties:
+        gpm:
+          $ref: '#/components/schemas/ThresholdDefinition'
+        lpm:
+          $ref: '#/components/schemas/ThresholdDefinition'
+        psi:
+          $ref: '#/components/schemas/ThresholdDefinition'
+        kpa:
+          $ref: '#/components/schemas/ThresholdDefinition'
+        tempF:
+          $ref: '#/components/schemas/ThresholdDefinition'
+        tempC:
+          $ref: '#/components/schemas/ThresholdDefinition'
+        humidity:
+          $ref: '#/components/schemas/ThresholdDefinition'
+        battery:
+          $ref: '#/components/schemas/ThresholdDefinition'
 
     HealthTest:
       type: object
