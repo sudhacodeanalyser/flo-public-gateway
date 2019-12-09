@@ -20,8 +20,16 @@ class SessionService {
   public async issueFirestoreToken(userId: string, additionalAssets?: FirestoreAssests): Promise<FirestoreTokenResponse> {
     const user = await this.userServiceFactory().getUserById(userId, {
       $select: {
+        id: true,
         locations: {
-          $expand: true
+          $select: {
+            id: true,
+            devices: {
+              $select: {
+                macAddress: true
+              }
+            }
+          }
         }
       }
     });

@@ -33,25 +33,25 @@ const defaultHwThresholds = (deviceModel: string) => {
   const gpm = deviceModel !== 'flo_device_075_v2' ?
     {
       ...minZero,
-      okMax: 29,
-      maxValue: 35
+      okMax: 100,
+      maxValue: 125
     } :
     {
       ...minZero,
-      okMax: 100,
-      maxValue: 125
+      okMax: 29,
+      maxValue: 35
     };
 
   const lpm = deviceModel !== 'flo_device_075_v2' ?
     {
       ...minZero,
-      okMax: 110,
-      maxValue: 130
+      okMax: 378,
+      maxValue: 470
     } :
     {
       ...minZero,
-      okMax: 378,
-      maxValue: 470
+      okMax: 110,
+      maxValue: 130
     };
 
   const psi = {
@@ -197,7 +197,7 @@ class DeviceResolver extends Resolver<Device> {
 
         return {
           ...device.valve,
-          lastKnown: _.get(additionalProperties, 'valveState.lastKnown') || translateNumericToStringEnum(
+          lastKnown: _.get(additionalProperties, 'valve.lastKnown') || translateNumericToStringEnum(
             ValveState,
             ValveStateNumeric,
             _.get(additionalProperties, 'fwProperties.valve_state')

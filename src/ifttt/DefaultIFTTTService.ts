@@ -164,6 +164,10 @@ class DefaultIFTTTService extends HttpService implements IFTTTService {
       }))
       .value();
 
+    if (!triggerIdentities.length) {
+      return;
+    }
+
     const request = {
       method: 'POST',
       url: this.iftttRealtimeNotificationsUrl,
@@ -209,14 +213,14 @@ class DefaultIFTTTService extends HttpService implements IFTTTService {
       throw new NotFoundError('User has no locations');
     }
     const location = userData.value.locations.find(loc => loc.residenceType === ResidenceType.PRIMARY) || userData.value.locations[0];
-    if (!location.devices) {
+    if (!location.devices || _.isEmpty(location.devices)) {
       throw new NotFoundError('User has no devices');
     }
     return location.devices[0].id;
   }
 
   private async getEventsByFilter(locationId: string, severity: AlarmSeverity, alertsFilter: number[]): Promise<AlarmEvent[]> {
-    const filters = { isInternalAlarm: false, locationId, status: 'triggered', severity, page: 1, size: 100 };
+    const filters = { isInternalAlarm: false, locationId, severity, page: 1, size: 100 };
     const query = _.map(filters, (val: any, key: string) => `${key}=${val}`).join('&');
     const result: PaginatedResult<AlarmEvent> = await this.alertService.getAlarmEventsByFilter(query);
     // TODO: At this time getAlarmEventsByFilter does not provide a way to filter by alarm id.
