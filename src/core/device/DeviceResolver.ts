@@ -426,10 +426,6 @@ class DeviceResolver extends Resolver<Device> {
 
     const updatedDeviceRecordData = await this.deviceTable.update({ id }, patch);
 
-    if (updatedDeviceRecordData === null) {
-      throw new ResourceDoesNotExistError();
-    }
-
     return this.toModel(updatedDeviceRecordData);
   }
 
