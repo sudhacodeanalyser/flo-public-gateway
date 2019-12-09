@@ -11,7 +11,7 @@ import ValidationError from '../api/error/ValidationError';
 import { DeviceSystemModeService } from '../device/DeviceSystemModeService';
 import { IrrigationScheduleService, IrrigationScheduleServiceFactory } from '../device/IrrigationScheduleService';
 import { LocationResolver } from '../resolver';
-import { AccountService, DeviceService } from '../service';
+import { AccountService, DeviceService, SubscriptionService } from '../service';
 import moment from 'moment';
 
 @injectable()
@@ -19,6 +19,7 @@ class LocationService {
   private deviceServiceFactory: () => DeviceService;
   private accountServiceFactory: () => AccountService;
   private irrigationScheduleService: IrrigationScheduleService;
+  private subscriptionServiceFactory: () => SubscriptionService;
 
   constructor(
     @inject('LocationResolver') private locationResolver: LocationResolver,
@@ -29,6 +30,7 @@ class LocationService {
   ) {
     this.deviceServiceFactory = depFactoryFactory<DeviceService>('DeviceService');
     this.accountServiceFactory = depFactoryFactory<AccountService>('AccountService');
+    this.subscriptionServiceFactory = depFactoryFactory<SubscriptionService>('SubscriptionService');
 
     if (!_.isEmpty(this.httpContext) && this.httpContext.request.get('Authorization')) {
       this.irrigationScheduleService = irrigationScheduleServiceFactory.create(this.httpContext.request);
@@ -106,6 +108,13 @@ class LocationService {
   }
 
   public async removeLocation(id: string): Promise<void> {
+    const subscriptionService = this.subscriptionServiceFactory();
+    const subscription = await subscriptionService.getSubscriptionByRelatedEntityId(id);
+
+    if (!isNone(subscription)) {
+      await this.subscriptionServiceFactory().cancelSubscription(subscription.value.id, true, `FLO INTERNAL: location ${ id } removed`);
+    }
+
     return this.locationResolver.removeLocation(id);
   }
 
