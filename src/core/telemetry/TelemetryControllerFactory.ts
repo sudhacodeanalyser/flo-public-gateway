@@ -57,7 +57,7 @@ export function TelemetryControllerFactory(container: Container, apiVersion: num
 
             return this.telemetryService.publishTelemetry({
               ...puckTelemetry,
-              deviceId: tokenMetadata.macAddress,
+              deviceId: tokenMetadata.puckId,
               data: {
                 ...puckTelemetry.data,
                 device_id: tokenMetadata.macAddress
