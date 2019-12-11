@@ -59,3 +59,4 @@ export default new ContainerModule((bind: interfaces.Bind) => {
    }
  });
 });
+

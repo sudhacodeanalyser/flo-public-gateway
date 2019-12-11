@@ -23,7 +23,6 @@ class ApiV1DeviceSystemModeServiceFactory implements DeviceSystemModeServiceFact
     if (authToken === undefined)  {
       throw new UnauthorizedError();
     }
-
     return this.deviceSystemModeServiceFactory(this.apiV1Url, authToken, customHeaders);
   }
 }
