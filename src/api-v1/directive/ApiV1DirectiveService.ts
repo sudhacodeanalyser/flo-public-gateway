@@ -1,17 +1,19 @@
 import { injectable } from 'inversify';
 import { DirectiveService } from '../../core/device/DirectiveService';
-import { HttpService } from '../../http/HttpService';
+import {HttpRequest, HttpService} from '../../http/HttpService';
 
 @injectable()
 class ApiV1DirectiveService extends HttpService implements DirectiveService {
   public apiV1Url: string;
   public authToken: string;
+  public customHeaders: any;
 
   public async openValve(id: string): Promise<void> {
     const request = {
       method: 'POST',
       url: `${ this.apiV1Url }/directives/icd/${ id }/openvalve`,
-      authToken: this.authToken
+      authToken: this.authToken,
+      customHeaders: this.customHeaders
     };
 
     await this.sendRequest(request);
@@ -21,7 +23,8 @@ class ApiV1DirectiveService extends HttpService implements DirectiveService {
     const request = {
       method: 'POST',
       url: `${ this.apiV1Url }/directives/icd/${ id }/closevalve`,
-      authToken: this.authToken
+      authToken: this.authToken,
+      customHeaders: this.customHeaders
     };
 
     await this.sendRequest(request);
@@ -31,8 +34,9 @@ class ApiV1DirectiveService extends HttpService implements DirectiveService {
     const request = {
       method: 'POST',
       url: `${ this.apiV1Url }/directives/icd/${ id }/powerreset`,
-      authToken: this.authToken
-    }
+      authToken: this.authToken,
+      customHeaders: this.customHeaders
+    };
 
     await this.sendRequest(request);
   }
