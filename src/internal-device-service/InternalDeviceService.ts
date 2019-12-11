@@ -3,7 +3,7 @@ import { isLeft } from 'fp-ts/lib/Either';
 import { inject, injectable } from 'inversify';
 import { HttpService, HttpError } from '../http/HttpService'
 import { FirestoreAssests, FirestoreAuthService, FirestoreTokenResponse } from '../core/session/FirestoreAuthService';
-import { DeviceActionRules, DeviceActionRulesCreate } from '../core/api';
+import { DeviceActionRules, DeviceActionRulesCreate, DeviceCreate, HardwareThresholds, DeviceUpdate } from '../core/api';
 import { memoized, MemoizeMixin } from '../memoize/MemoizeMixin';
 import { InternalDevice, InternalDeviceCodec } from './models';
 import ResourceDoesNotExistError from '../core/api/error/ResourceDoesNotExistError';
@@ -14,6 +14,36 @@ const InternalDeviceServiceError = HttpError;
 class InternalDeviceService extends MemoizeMixin(HttpService) implements FirestoreAuthService {
   @inject('InternalDeviceServiceBaseUrl') private internalDeviceServiceBaseUrl: string;
   @inject('Logger') private readonly logger: Logger;
+
+  public async upsertDevice(macAddress: string, device: DeviceCreate | DeviceUpdate): Promise<void> {
+    const hasLocationId = (obj: any): obj is { location: { id: string } } => {
+      return obj.location !== undefined && obj.location.id !== undefined;
+    };
+
+    const hasDeviceType = (obj: any): obj is { deviceType: string} => {
+      return obj.deviceType !== undefined;
+    }
+
+    const hasDeviceModel = (obj: any): obj is { deviceType: string} => {
+      return obj.deviceModel !== undefined;
+    }
+
+    const request = {
+      method: 'post',
+      url: `${this.internalDeviceServiceBaseUrl}/devices/${macAddress}`,
+      body: {
+        ...(device.nickname && { nickname: device.nickname }),
+        ...(hasLocationId(device) && { locationId: device.location.id }),
+        ...(hasDeviceType(device) && { make: device.deviceType}),
+        ...(hasDeviceModel(device) && { model: device.deviceModel}),
+        ...(device.hardwareThresholds && { hwThresholds: device.hardwareThresholds })
+      }
+    };
+
+    await this.sendRequest(request);
+
+    this.clearMethodLoader('getDevice', macAddress);
+  }
 
   @memoized()
   public async getDevice(macAddress: string): Promise<InternalDevice | null> {
@@ -61,56 +91,34 @@ class InternalDeviceService extends MemoizeMixin(HttpService) implements Firesto
   public async issueToken(assets: FirestoreAssests): Promise<FirestoreTokenResponse> {
     const request = {
       method: 'post',
-      url: `${ this.internalDeviceServiceBaseUrl }/firestore/auth`,
+      url: `${this.internalDeviceServiceBaseUrl}/firestore/auth`,
       body: assets
     };
 
     return this.sendRequest(request);
   }
 
-  public async cleanup(macAddress: string): Promise<void> {
+  public async removeDevice(macAddress: string): Promise<void> {
     try {
       const request = {
         method: 'delete',
-        url: `${this.internalDeviceServiceBaseUrl}/firestore/devices/${macAddress}`
+        url: `${this.internalDeviceServiceBaseUrl}/devices/${macAddress}`
       };
-      // TODO: do the same ^^ for locations
       await this.sendRequest(request);
     } catch (err) {
       if (err instanceof InternalDeviceServiceError) {
-        // Failure to complete the deletion of the firestore document should not cause the unpairing to completely fail.
-        const errMsg = `failed to delete ${macAddress} document from devices collection in the Firestore`;
-        this.logger.error( errMsg, err );
-        return;
+        const errMsg = `Failed to delete Device with MAC Address ${macAddress} from Device Service`;
+        this.logger.error({ err }, errMsg);
       } else {
         throw err;
       }
     }
   }
 
-  public async createFirestoreStubDevice(macAddress: string): Promise<void> {
-    try {
-      const request = {
-        method: 'post',
-        url: `${ this.internalDeviceServiceBaseUrl }/firestore/devices/${macAddress}`,
-        body: {
-          value: {
-            deviceId: macAddress
-          }
-        }
-      };
-
-      await this.sendRequest(request);
-    } catch (err) {
-      // Error should not break pairing
-      this.logger.error({ err });
-    }
-  }
-
   public async getActionRules(deviceId: string): Promise<DeviceActionRules> {
     const request = {
       method: 'get',
-      url: `${ this.internalDeviceServiceBaseUrl }/devices/${deviceId}/actionRules`
+      url: `${this.internalDeviceServiceBaseUrl}/devices/${deviceId}/actionRules`
     };
 
     return this.sendRequest(request);
@@ -119,7 +127,7 @@ class InternalDeviceService extends MemoizeMixin(HttpService) implements Firesto
   public async upsertActionRules(deviceId: string, actionRules: DeviceActionRulesCreate): Promise<DeviceActionRules> {
     const request = {
       method: 'post',
-      url: `${ this.internalDeviceServiceBaseUrl }/devices/${deviceId}/actionRules`,
+      url: `${this.internalDeviceServiceBaseUrl}/devices/${deviceId}/actionRules`,
       body: actionRules
     };
 
@@ -130,7 +138,7 @@ class InternalDeviceService extends MemoizeMixin(HttpService) implements Firesto
     try {
       const request = {
         method: 'delete',
-        url: `${ this.internalDeviceServiceBaseUrl }/devices/${deviceId}/actionRules/${actionRuleId}`
+        url: `${ this.internalDeviceServiceBaseUrl}/devices/${deviceId}/actionRules/${actionRuleId}`
       };
 
       await this.sendRequest(request);

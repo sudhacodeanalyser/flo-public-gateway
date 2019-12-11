@@ -38,6 +38,7 @@ const InternalDeviceCodec = t.type({
   telemetry: t.union([InternalTelemetryCodec, t.null, t.undefined]),
   updatedTime: t.string,
   valveState: t.union([InternalValveStateCodec, t.null, t.undefined]),
+  hwThresholds: t.union([t.record(t.string, t.any), t.null, t.undefined])
 });
 
 type InternalDevice = t.TypeOf<typeof InternalDeviceCodec>;
@@ -51,4 +52,3 @@ export {
   InternalValveState, InternalValveStateCodec, InternalTelemetry, InternalTelemetryCodec,
   InternalConnectivity, InternalConnectivityCodec
 };
-

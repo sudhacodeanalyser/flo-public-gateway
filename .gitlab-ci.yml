@@ -118,7 +118,6 @@ Dev:
     - make deploy-status
   tags:
     - dev
-    - dev-prod
 
 ReleaseCandidate:
   variables:
