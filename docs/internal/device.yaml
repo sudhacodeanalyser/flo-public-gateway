@@ -822,6 +822,9 @@ components:
                 configuredAt:
                   type: string
                   format: date-time
+            actionRules:
+              $ref: '#/components/schemas/ActionRules'
+
     DeviceExpandable:
       oneOf:
         - type: object

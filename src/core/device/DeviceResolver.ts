@@ -360,6 +360,10 @@ class DeviceResolver extends Resolver<Device> {
       return {
         scheduledAt: new Date(shutoffTimeSeconds * 1000).toISOString()
       };
+    },
+    actionRules: async (device: Device, shouldExpand = false) => {
+      const actionRulesResponse = await this.internalDeviceService.getActionRules(device.id);
+      return (actionRulesResponse && actionRulesResponse.actionRules) || null;
     }
   };
   private locationResolverFactory: () => LocationResolver;
