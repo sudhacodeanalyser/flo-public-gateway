@@ -93,6 +93,14 @@ export function MemoizeMixin<C extends Newable>(baseClass: C) {
         loader.prime(key, result);
       }
     }
+
+    protected clearMethodLoader(methodName: string, key: any): void {
+      const loader = this.ensureMethodLoader(methodName);
+
+      if (loader) {
+        loader.clear(key);
+      }
+    }
   }
 
   return MemoizedClass;

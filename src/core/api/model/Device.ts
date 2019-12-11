@@ -67,12 +67,32 @@ const SystemModeCodec = t.intersection([
 
 type SystemModeData = t.TypeOf<typeof SystemModeCodec>;
 
+const ThresholdDefinitionCodec = t.type({
+
+  okMin: t.number,
+  okMax: t.number,
+  maxValue: t.number,
+  minValue: t.number
+});
+
+export const HardwareThresholdsCodec = t.type({
+  gpm: t.partial(ThresholdDefinitionCodec.props),
+  psi: t.partial(ThresholdDefinitionCodec.props),
+  lpm: t.partial(ThresholdDefinitionCodec.props),
+  kPa: t.partial(ThresholdDefinitionCodec.props),
+  tempF: t.partial(ThresholdDefinitionCodec.props),
+  tempC: t.partial(ThresholdDefinitionCodec.props)
+});
+
+export type HardwareThresholds = t.TypeOf<typeof HardwareThresholdsCodec>;
+
 const DeviceCreateCodec = t.type({
   macAddress: NonEmptyString,
   nickname: t.string,
   location: t.strict({ id: NonEmptyString }),
   deviceType: NonEmptyString,
-  deviceModel: NonEmptyString
+  deviceModel: NonEmptyString,
+  hardwareThresholds: t.union([t.undefined, t.partial(HardwareThresholdsCodec.props)])
 });
 export const DeviceCreateValidator = t.exact(DeviceCreateCodec);
 export type DeviceCreate = t.TypeOf<typeof DeviceCreateValidator>;
@@ -88,26 +108,17 @@ export const DeviceUpdateValidator = t.exact(t.intersection([
     puckConfig: t.type({
       isConfigured: t.literal(true)
     })
+  }),
+  t.partial({
+    hardwareThresholds: t.partial(HardwareThresholdsCodec.props)
   })
 ]));
+
 export interface DeviceUpdate extends t.TypeOf<typeof DeviceUpdateValidator> {
   systemMode?: Partial<SystemModeData>;
   area?: {
     id: string;
-  }
-}
-
-interface ThresholdDefinition {
-  okMin: number;
-  okMax: number;
-  maxValue: number;
-  minValue: number;
-}
-
-interface HardwareThresholds {
-  gpm: ThresholdDefinition;
-  psi: ThresholdDefinition;
-  temp: ThresholdDefinition;
+  };
 }
 
 export const PairingDataCodec = t.type({
@@ -150,7 +161,6 @@ export interface Device extends Omit<DeviceUpdate, 'valve' | 'puckConfig'>, Time
     updatedAt?: string
   };
   notifications?: NotificationStatistics;
-  hardwareThresholds?: HardwareThresholds;
   pairingData?: PairingData;
   serialNumber?: string;
   healthTest?: {
@@ -163,6 +173,7 @@ export interface Device extends Omit<DeviceUpdate, 'valve' | 'puckConfig'>, Time
   shutoff?: {
     scheduledAt: string;
   };
+  actionRules?: DeviceActionRule[];
 }
 
 interface FwProperties {

@@ -3,7 +3,7 @@ import { isLeft } from 'fp-ts/lib/Either';
 import { inject, injectable } from 'inversify';
 import { HttpService, HttpError } from '../http/HttpService'
 import { FirestoreAssests, FirestoreAuthService, FirestoreTokenResponse } from '../core/session/FirestoreAuthService';
-import { DeviceActionRules, DeviceActionRulesCreate, DeviceCreate } from '../core/api';
+import { DeviceActionRules, DeviceActionRulesCreate, DeviceCreate, HardwareThresholds, DeviceUpdate } from '../core/api';
 import { memoized, MemoizeMixin } from '../memoize/MemoizeMixin';
 import { InternalDevice, InternalDeviceCodec } from './models';
 import ResourceDoesNotExistError from '../core/api/error/ResourceDoesNotExistError';
@@ -15,19 +15,34 @@ class InternalDeviceService extends MemoizeMixin(HttpService) implements Firesto
   @inject('InternalDeviceServiceBaseUrl') private internalDeviceServiceBaseUrl: string;
   @inject('Logger') private readonly logger: Logger;
 
-  public async createDevice(device: DeviceCreate): Promise<void> {
+  public async upsertDevice(macAddress: string, device: DeviceCreate | DeviceUpdate): Promise<void> {
+    const hasLocationId = (obj: any): obj is { location: { id: string } } => {
+      return obj.location !== undefined && obj.location.id !== undefined;
+    };
+
+    const hasDeviceType = (obj: any): obj is { deviceType: string} => {
+      return obj.deviceType !== undefined;
+    }
+
+    const hasDeviceModel = (obj: any): obj is { deviceType: string} => {
+      return obj.deviceModel !== undefined;
+    }
+
     const request = {
       method: 'post',
-      url: `${this.internalDeviceServiceBaseUrl}/devices/${device.macAddress}`,
+      url: `${this.internalDeviceServiceBaseUrl}/devices/${macAddress}`,
       body: {
-        nickname: device.nickname,
-        locationId: device.location.id,
-        make: device.deviceType,
-        model: device.deviceModel
+        ...(device.nickname && { nickname: device.nickname }),
+        ...(hasLocationId(device) && { locationId: device.location.id }),
+        ...(hasDeviceType(device) && { make: device.deviceType}),
+        ...(hasDeviceModel(device) && { model: device.deviceModel}),
+        ...(device.hardwareThresholds && { hwThresholds: device.hardwareThresholds })
       }
     };
 
     await this.sendRequest(request);
+
+    this.clearMethodLoader('getDevice', macAddress);
   }
 
   @memoized()
@@ -71,20 +86,6 @@ class InternalDeviceService extends MemoizeMixin(HttpService) implements Firesto
     };
 
     await this.sendRequest(request);
-  }
-
-  public async createDeviceStub(macAddress: string): Promise<void> {
-    try {
-      const request = {
-        method: 'post',
-        url: `${this.internalDeviceServiceBaseUrl}/devices/${macAddress}/stub`
-      };
-
-      await this.sendRequest(request);
-    } catch (err) {
-      // Error should not break pairing
-      this.logger.error({ err }, `Error creating device stub for MAC Address ${macAddress}`);
-    }
   }
 
   public async issueToken(assets: FirestoreAssests): Promise<FirestoreTokenResponse> {

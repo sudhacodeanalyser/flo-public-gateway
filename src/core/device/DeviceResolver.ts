@@ -21,7 +21,77 @@ import * as t from 'io-ts';
 import * as Either from 'fp-ts/lib/Either';
 import { HealthTestServiceFactory, HealthTestService } from './HealthTestService';
 import LocationTable from '../location/LocationTable';
-import { NonEmptyString, NonEmptyStringFactory } from '../api/validator/NonEmptyString';
+import { NonEmptyStringFactory } from '../api/validator/NonEmptyString';
+import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
+
+const defaultHwThresholds = (deviceModel: string) => {
+  const minZero = {
+    okMin: 0,
+    minValue: 0
+  };
+
+  const gpm = deviceModel !== 'flo_device_075_v2' ?
+    {
+      ...minZero,
+      okMax: 100,
+      maxValue: 125
+    } :
+    {
+      ...minZero,
+      okMax: 29,
+      maxValue: 35
+    };
+
+  const lpm = deviceModel !== 'flo_device_075_v2' ?
+    {
+      ...minZero,
+      okMax: 378,
+      maxValue: 470
+    } :
+    {
+      ...minZero,
+      okMax: 110,
+      maxValue: 130
+    };
+
+  const psi = {
+    okMin: 30,
+    okMax: 80,
+    minValue: 0,
+    maxValue: 100
+  };
+
+  const kPa = {
+    okMin: 210,
+    okMax: 550,
+    minValue: 0,
+    maxValue: 700
+  };
+
+  const tempF = {
+    okMin: 50,
+    okMax: 80,
+    minValue: 0,
+    maxValue: 100
+  };
+
+  const tempC = {
+    okMin: 10,
+    okMax: 30,
+    minValue: 0,
+    maxValue: 40
+  };
+
+  return {
+    gpm,
+    lpm,
+    psi,
+    kPa,
+    temp: tempF,
+    tempF,
+    tempC
+  };
+}
 
 @injectable()
 class DeviceResolver extends Resolver<Device> {
@@ -206,72 +276,8 @@ class DeviceResolver extends Resolver<Device> {
       return (!latest) ? null : { latest };
     },
     hardwareThresholds: async (device: Device, shouldExpand = false) => {
-      const minZero = {
-        okMin: 0,
-        minValue: 0
-      };
-
-      const gpm = device.deviceModel !== 'flo_device_075_v2' ?
-        {
-          ...minZero,
-          okMax: 100,
-          maxValue: 125
-        } :
-        {
-          ...minZero,
-          okMax: 29,
-          maxValue: 35
-        };
-
-      const lpm = device.deviceModel !== 'flo_device_075_v2' ?
-        {
-          ...minZero,
-          okMax: 378,
-          maxValue: 470
-        } :
-        {
-          ...minZero,
-          okMax: 110,
-          maxValue: 130
-        };
-
-      const psi = {
-        okMin: 30,
-        okMax: 80,
-        minValue: 0,
-        maxValue: 100
-      };
-
-      const kPa = {
-        okMin: 210,
-        okMax: 550,
-        minValue: 0,
-        maxValue: 700
-      };
-
-      const tempF = {
-        okMin: 50,
-        okMax: 80,
-        minValue: 0,
-        maxValue: 100
-      };
-
-      const tempC = {
-        okMin: 10,
-        okMax: 30,
-        minValue: 0,
-        maxValue: 40
-      };
-
-      return {
-        gpm,
-        lpm,
-        psi,
-        kPa,
-        temp: tempF,
-        tempF,
-        tempC
-      };
+      const additionalProperties = await this.internalDeviceService.getDevice(device.macAddress);
+      return (additionalProperties && additionalProperties.hwThresholds) || defaultHwThresholds(device.deviceModel);
     },
     pairingData: async (device: Device, shouldExpand = false) => {
       try {
@@ -354,6 +360,10 @@ class DeviceResolver extends Resolver<Device> {
       return {
         scheduledAt: new Date(shutoffTimeSeconds * 1000).toISOString()
       };
+    },
+    actionRules: async (device: Device, shouldExpand = false) => {
+      const actionRulesResponse = await this.internalDeviceService.getActionRules(device.id);
+      return (actionRulesResponse && actionRulesResponse.actionRules) || null;
     }
   };
   private locationResolverFactory: () => LocationResolver;
@@ -417,6 +427,7 @@ class DeviceResolver extends Resolver<Device> {
   public async updatePartial(id: string, deviceUpdate: DeviceUpdate): Promise<Device> {
     const deviceRecordData = DeviceRecord.fromPartialModel(deviceUpdate);
     const patch = fromPartialRecord<DeviceRecordData>(deviceRecordData, ['puck_configured_at']);
+
     const updatedDeviceRecordData = await this.deviceTable.update({ id }, patch);
 
     return this.toModel(updatedDeviceRecordData);

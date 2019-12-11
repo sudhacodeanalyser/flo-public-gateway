@@ -10,7 +10,7 @@ export type PostgresQuery = { query?: squel.PostgresSelect }
 class PostgresDbClient implements DatabaseReadClient {
 
   constructor(
-    @inject('PostgresPoolClientProvider') private postgresPoolClientProvider: () => Promise<postgres.PoolClient>
+    @inject('PostgresPool') private postgresPool: postgres.Pool
   ) {}
 
   public async get<T>(tableName: string, key: KeyMap, projection: string[] = []): Promise<T | null> {
@@ -52,9 +52,8 @@ class PostgresDbClient implements DatabaseReadClient {
   }
 
   private async _executeQuery(query: string, values: any[]): Promise<postgres.QueryResult> {
-    const postgresPoolClient = await this.postgresPoolClientProvider();
 
-    return postgresPoolClient.query(query, values);
+    return this.postgresPool.query(query, values);
   }
 }
 

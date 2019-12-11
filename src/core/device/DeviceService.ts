@@ -47,6 +47,13 @@ class DeviceService {
   }
 
   public async updatePartialDevice(id: string, deviceUpdate: DeviceUpdate, directiveService?: DirectiveService): Promise<Device> {
+    const device: Device | null = await this.deviceResolver.get(id);
+
+    if (device == null) {
+      throw new ResourceDoesNotExistError('Device does not exist');
+    }
+
+    await this.internalDeviceService.upsertDevice(device.macAddress, deviceUpdate);
     const updatedDevice = await this.deviceResolver.updatePartial(id, deviceUpdate);
 
     if (directiveService && deviceUpdate.valve) {
@@ -84,7 +91,7 @@ class DeviceService {
     const pairingData = await this.apiV1PairingService.initPairing(authToken, qrData);
     const { deviceId } = pairingData;
 
-    await this.internalDeviceService.createDeviceStub(deviceId);
+    await this.internalDeviceService.upsertDevice(deviceId, {});
 
     const { token } = await this.sessionServiceFactory().issueFirestoreToken(userId, { devices: [deviceId] });
 
@@ -125,7 +132,7 @@ class DeviceService {
       }
     }
 
-    await this.internalDeviceService.createDevice(deviceCreate);
+    await this.internalDeviceService.upsertDevice(createdDevice.macAddress, deviceCreate);
 
     return createdDevice;
   }
