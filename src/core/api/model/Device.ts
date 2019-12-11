@@ -92,7 +92,7 @@ const DeviceCreateCodec = t.type({
   location: t.strict({ id: NonEmptyString }),
   deviceType: NonEmptyString,
   deviceModel: NonEmptyString,
-  hardwareThresholds: t.partial(HardwareThresholdsCodec.props)
+  hardwareThresholds: t.union([t.undefined, t.partial(HardwareThresholdsCodec.props)])
 });
 export const DeviceCreateValidator = t.exact(DeviceCreateCodec);
 export type DeviceCreate = t.TypeOf<typeof DeviceCreateValidator>;
