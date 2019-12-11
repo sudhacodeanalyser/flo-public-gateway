@@ -655,7 +655,19 @@ components:
             isConfigured:
               type: boolean
         hardwareThresholds:
-          $ref: '#/components/schemas/HardwareThresholds'
+          allOf:
+            - $ref: '#/components/schemas/HardwareThresholds'
+            - type: object
+              properties:
+                humidityEnabled:
+                  type: boolean
+                  description: PUCK ONLY - Set whether to enable the humidity alert when its value is outside ranges.
+                temperatureEnabled:
+                  type: boolean
+                  description: PUCK ONLY - Set whether to enable the temperature alert when its value is outside ranges.
+                batteryEnabled:
+                  type: boolean
+                  description: PUCK ONLY - Set whether to enable the battery alert when its value is outside ranges.
 
     IrrigationType:
       type: string
