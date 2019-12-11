@@ -85,7 +85,8 @@ const RecordToModelSchema: StrictSchema<Device, DeviceRecordData>  = {
       isConfigured: !!input.puck_configured_at,
       configuredAt: input.puck_configured_at
     };
-  }
+  },
+  actionRules: []
 };
 
 const ModelToRecordSchema: StrictSchema<DeviceRecordData, Device> = {
@@ -134,7 +135,7 @@ const PartialModelToRecordSchema: StrictSchema<Partial<DeviceRecordData>, Partia
   device_model: 'deviceModel',
   prv_installation: 'prvInstallation',
   irrigation_type: 'irrigationType',
-  area_id: (input: Partial<Device>) => _.get(input, 'area.id', undefined),  
+  area_id: (input: Partial<Device>) => _.get(input, 'area.id', undefined),
   puck_configured_at: (input: Partial<Device>) => {
     return input.puckConfig ?
       input.puckConfig.configuredAt || (input.puckConfig.isConfigured ? new Date().toISOString() : undefined) :

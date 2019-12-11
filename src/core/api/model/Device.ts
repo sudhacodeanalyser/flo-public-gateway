@@ -173,6 +173,7 @@ export interface Device extends Omit<DeviceUpdate, 'valve' | 'puckConfig'>, Time
   shutoff?: {
     scheduledAt: string;
   };
+  actionRules?: DeviceActionRule[];
 }
 
 interface FwProperties {
