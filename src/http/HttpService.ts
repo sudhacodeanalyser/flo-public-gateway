@@ -18,7 +18,7 @@ class HttpService {
   public baseUrl?: string;
   public authToken?: string;
   @inject('HttpClient') protected readonly httpClient: AxiosInstance;
-  @injectHttpContext private readonly httpContext: interfaces.HttpContext 
+  @injectHttpContext private readonly httpContext: interfaces.HttpContext
 
   public async sendRequest(request: HttpRequest): Promise<any> {
     try {
@@ -51,6 +51,6 @@ class HttpService {
   }
 }
 
-export type HttpServiceFactory = (baseUrl?: string, authToken?: string) => HttpService;
+export type HttpServiceFactory = (baseUrl?: string, authToken?: string, headers?: any) => HttpService;
 
 export { HttpService, HttpError };
