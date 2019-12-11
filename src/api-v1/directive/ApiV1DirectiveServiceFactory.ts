@@ -2,24 +2,29 @@ import { inject, injectable } from 'inversify';
 import { DirectiveServiceFactory, DirectiveService } from '../../core/device/DirectiveService';
 import Request from '../../core/api/Request';
 import UnauthorizedError from '../../auth/UnauthorizedError';
-import { ApiV1DirectiveService } from './ApiV1DirectiveService';
 
 @injectable()
 class ApiV1DirectiveServiceFactory implements DirectiveServiceFactory  {
 
   constructor(
     @inject('ApiV1Url') private readonly apiV1Url: string,
-    @inject('Factory<DirectiveService>') private directiveServiceFactory: (apiV1Url: string, authToken: string) => DirectiveService
+    @inject('Factory<DirectiveService>') private directiveServiceFactory: (apiV1Url: string, authToken: string, customHeaders: any) => DirectiveService
   ) {}
 
   public create(req: Request): DirectiveService {
     const authToken = req.get('Authorization');
+    const origin = req.get('origin');
+    const userAgent = req.get('user-agent');
+    const customHeaders = {
+      ...(origin && { origin }),
+      ...(userAgent && { 'user-agent': userAgent })
+    };
 
     if (authToken === undefined)  {
       throw new UnauthorizedError();
     }
 
-    return this.directiveServiceFactory(this.apiV1Url, authToken);
+    return this.directiveServiceFactory(this.apiV1Url, authToken, customHeaders);
   }
 }
 
