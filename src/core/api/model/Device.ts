@@ -81,7 +81,10 @@ export const HardwareThresholdsCodec = t.type({
   lpm: t.partial(ThresholdDefinitionCodec.props),
   kPa: t.partial(ThresholdDefinitionCodec.props),
   tempF: t.partial(ThresholdDefinitionCodec.props),
-  tempC: t.partial(ThresholdDefinitionCodec.props)
+  tempC: t.partial(ThresholdDefinitionCodec.props),
+  tempEnabled: t.union([t.undefined, t.boolean]),
+  humidityEnabled: t.union([t.undefined, t.boolean]),
+  batteryEnabled: t.union([t.undefined, t.boolean])
 });
 
 export type HardwareThresholds = t.TypeOf<typeof HardwareThresholdsCodec>;
