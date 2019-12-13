@@ -3,7 +3,6 @@ import DeviceTable from './DeviceTable';
 import { DeviceRecordData } from './DeviceRecord';
 import { MemoizeMixin, memoized } from '../../memoize/MemoizeMixin';
 import { KeyMap } from '../../database/DatabaseClient';
-import { Patch } from '../../database/Patch';
 
 @injectable()
 class MemoizedDeviceTable extends MemoizeMixin(DeviceTable) {
@@ -38,16 +37,6 @@ class MemoizedDeviceTable extends MemoizeMixin(DeviceTable) {
     if (result) {
       this.primeMethodLoader('get', { id: result.id }, result);
     }
-
-    return result;
-  }
-
-  public async update(key: KeyMap, patch: Patch): Promise<DeviceRecordData> {
-    const result = await super.update(key, patch);
-
-    this.clearMethodLoader('get', key);
-    this.clearMethodLoader('getAllByLocationId', result.location_id);
-    this.clearMethodLoader('getByMacAddress', result.device_id);
 
     return result;
   }

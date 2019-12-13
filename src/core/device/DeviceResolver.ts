@@ -467,6 +467,7 @@ class DeviceResolver extends Resolver<Device> {
       'installStatus',
       'learning',
       'healthTest',
+      'hardwareThresholds',
       'pairingData',
       'irrigationType',
       'irrigationSchedule',
