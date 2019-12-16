@@ -22,7 +22,12 @@ class MemoizedLocationTable extends MemoizeMixin(CacheMixin(LocationTable)) {
 
   @updateCache('Location')
   public async update(@cacheKey(({ location_id }) => location_id) key: KeyMap, patch: Patch): Promise<LocationRecordData> {
-    return super.update(key, patch);
+    const result = await super.update(key, patch);
+
+    this.clearMethodLoader('getByLocationId', result.location_id);
+    this.clearMethodLoader('getAllByAccountId', result.account_id);
+
+    return result;
   }
 
   @dropCache('Location')
