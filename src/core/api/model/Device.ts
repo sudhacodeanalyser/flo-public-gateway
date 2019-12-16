@@ -137,8 +137,13 @@ export const PairingDataCodec = t.type({
 
 export type PairingData = t.TypeOf<typeof PairingDataCodec>;
 
+interface Battery {
+  level: number;
+  updated?: string;
+}
+
 export interface Device extends Omit<DeviceUpdate, 'valve' | 'puckConfig'>, TimestampedModel {
-  id: string,
+  id: string;
   macAddress: string;
   location: Expandable<Location>;
   deviceType: string;
@@ -177,6 +182,7 @@ export interface Device extends Omit<DeviceUpdate, 'valve' | 'puckConfig'>, Time
     scheduledAt: string;
   };
   actionRules?: DeviceActionRule[];
+  battery?: Battery;
 }
 
 interface FwProperties {
