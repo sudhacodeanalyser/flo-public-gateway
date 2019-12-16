@@ -90,8 +90,8 @@ export function FloDetectControllerFactory(container: Container, apiVersion: num
       @request() req: Request, 
       @response() res: express.Response, 
       @requestParam('id') id: string, 
-      @queryParam('start') startDate?: string, 
-      @queryParam('size') pageSize?: string, 
+      @queryParam('start') startDate?: Date, 
+      @queryParam('size') pageSize?: number, 
       @queryParam('order') order: string = 'asc'
     ): Promise<FloDetectEventPage> {
 
@@ -103,12 +103,11 @@ export function FloDetectControllerFactory(container: Container, apiVersion: num
 
       await this.authorizeByMacAddress(req, res, computation.macAddress);
 
-      const parsedPageSize = pageSize && parseInt(pageSize, 10);
       const page = await this.floDetectService.getEventChronologyPage(
         computation.macAddress, 
         id, 
-        startDate, 
-        !parsedPageSize || parsedPageSize < 0 ? undefined : parsedPageSize, 
+        startDate && startDate.toISOString(), 
+        !pageSize || pageSize < 0 ? undefined : pageSize, 
         order === 'desc'
       );
    
@@ -131,7 +130,7 @@ export function FloDetectControllerFactory(container: Container, apiVersion: num
       @request() req: Request,
       @response() res: express.Response,
       @requestParam('id') id: string,
-      @requestParam('startDate') startDate: string,
+      @requestParam('startDate') startDate: Date,
       @requestBody() { feedback }: { feedback: FloDetectEventFeedback }
     ): Promise<FloDetectEvent> {
 
@@ -143,7 +142,7 @@ export function FloDetectControllerFactory(container: Container, apiVersion: num
 
       await this.authorizeByMacAddress(req, res, computation.macAddress);
 
-      return this.floDetectService.submitEventFeedback(computation.macAddress, id, startDate, feedback);
+      return this.floDetectService.submitEventFeedback(computation.macAddress, id, startDate.toISOString(), feedback);
     }  
 
     private async getComputationById(id: string): Promise<FloDetectComputation> {
