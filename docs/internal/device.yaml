@@ -836,6 +836,15 @@ components:
                   format: date-time
             actionRules:
               $ref: '#/components/schemas/ActionRules'
+            battery:
+              type: object
+              description: Battery information - Puck only
+              properties:
+                level:
+                  type: number
+                updated:
+                  type: string
+                  format: date-time
 
     DeviceExpandable:
       oneOf:

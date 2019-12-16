@@ -309,7 +309,25 @@ class DeviceResolver extends Resolver<Device> {
       try {
         const additionalProperties = await this.internalDeviceService.getDevice(device.macAddress);
 
-        return (additionalProperties && additionalProperties.fwProperties && additionalProperties.fwProperties.serial_number) || null
+        return (additionalProperties && additionalProperties.fwProperties && additionalProperties.fwProperties.serial_number) || null;
+      } catch (err) {
+        this.logger.error({ err });
+        return null;
+      }
+    },
+    battery: async (device: Device, shouldExpand = false) => {
+      if (device.deviceType !== DeviceType.PUCK) {
+        return null;
+      }
+
+      try {
+        const additionalProperties = await this.internalDeviceService.getDevice(device.macAddress);
+        const batteryLevel = (additionalProperties && additionalProperties.fwProperties && additionalProperties.fwProperties.telemetry_battery_percent) || 69.69; // Temporary hard-coded value.
+        const updatedTime = (additionalProperties && additionalProperties.lastHeardFromTime) || undefined;
+        return {
+          level: batteryLevel,
+          updated: updatedTime
+        };
       } catch (err) {
         this.logger.error({ err });
         return null;
