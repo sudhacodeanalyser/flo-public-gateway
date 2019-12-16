@@ -81,7 +81,10 @@ export const HardwareThresholdsCodec = t.type({
   lpm: t.partial(ThresholdDefinitionCodec.props),
   kPa: t.partial(ThresholdDefinitionCodec.props),
   tempF: t.partial(ThresholdDefinitionCodec.props),
-  tempC: t.partial(ThresholdDefinitionCodec.props)
+  tempC: t.partial(ThresholdDefinitionCodec.props),
+  tempEnabled: t.union([t.undefined, t.boolean]),
+  humidityEnabled: t.union([t.undefined, t.boolean]),
+  batteryEnabled: t.union([t.undefined, t.boolean])
 });
 
 export type HardwareThresholds = t.TypeOf<typeof HardwareThresholdsCodec>;
@@ -92,7 +95,7 @@ const DeviceCreateCodec = t.type({
   location: t.strict({ id: NonEmptyString }),
   deviceType: NonEmptyString,
   deviceModel: NonEmptyString,
-  hardwareThresholds: t.union([t.undefined, t.partial(HardwareThresholdsCodec.props)])
+  hardwareThresholds: t.union([t.undefined, t.exact(t.partial(HardwareThresholdsCodec.props))])
 });
 export const DeviceCreateValidator = t.exact(DeviceCreateCodec);
 export type DeviceCreate = t.TypeOf<typeof DeviceCreateValidator>;
@@ -110,7 +113,7 @@ export const DeviceUpdateValidator = t.exact(t.intersection([
     })
   }),
   t.partial({
-    hardwareThresholds: t.partial(HardwareThresholdsCodec.props)
+    hardwareThresholds: t.exact(t.partial(HardwareThresholdsCodec.props))
   })
 ]));
 

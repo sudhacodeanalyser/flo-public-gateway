@@ -81,6 +81,11 @@ class ReqValidationMiddlewareFactory {
       const result = reqType.decode(req);
 
       if (isRight(result)) {
+        _.chain(result.right)
+          .pick(['body', 'query', 'params'])
+          .forEach((value, key) => (req as any)[key] = value)
+          .value();
+
         next();
       } else {
         const message = PathReporter.report(result).join(', ');
