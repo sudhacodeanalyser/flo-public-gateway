@@ -316,7 +316,7 @@ class DeviceResolver extends Resolver<Device> {
       }
     },
     battery: async (device: Device, shouldExpand = false) => {
-      if (device.deviceType !== 'puck_oem') {
+      if (device.deviceType !== DeviceType.PUCK) {
         return null;
       }
 
