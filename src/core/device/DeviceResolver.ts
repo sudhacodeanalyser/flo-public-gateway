@@ -23,6 +23,7 @@ import { HealthTestServiceFactory, HealthTestService } from './HealthTestService
 import LocationTable from '../location/LocationTable';
 import { NonEmptyStringFactory } from '../api/validator/NonEmptyString';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
+import { MachineLearningService } from '../../machine-learning/MachineLearningService';
 
 const defaultHwThresholds = (deviceModel: string) => {
   const minZero = {
@@ -382,6 +383,34 @@ class DeviceResolver extends Resolver<Device> {
     actionRules: async (device: Device, shouldExpand = false) => {
       const actionRulesResponse = await this.internalDeviceService.getActionRules(device.id);
       return (actionRulesResponse && actionRulesResponse.actionRules) || null;
+    },
+    pes: async (device: Device, shouldExpand = false) => {
+      try {
+        const mlData = await this.mlService.get(device.macAddress);
+
+        return mlData.pes;
+      } catch (err) {
+
+        if (this.logger) {
+          this.logger.error({ err });
+        }
+
+        return null;
+      }
+    },
+    floSense: async (device: Device, shouldExpand = false) => {
+      try {
+        const mlData = await this.mlService.get(device.macAddress);
+
+        return mlData.floSense;
+      } catch (err) {
+
+       if (this.logger) {
+          this.logger.error({ err });
+        }
+
+        return null;
+      }
     }
   };
   private locationResolverFactory: () => LocationResolver;
@@ -401,6 +430,7 @@ class DeviceResolver extends Resolver<Device> {
    @inject('PairingService') private pairingService: PairingService,
    @inject('HealthTestServiceFactory') healthTestServiceFactory: HealthTestServiceFactory,
    @inject('LocationTable') private locationTable: LocationTable,
+   @inject('MachineLearningService') private mlService: MachineLearningService,
    @injectHttpContext private readonly httpContext: interfaces.HttpContext
   ) {
     super();

@@ -22,6 +22,7 @@ import presenceContainerModule from '../presence/containerModule';
 import subscriptionProviderModule from '../subscription/containerModule';
 import validationContainerModule from '../validation/containerModule';
 import telemetryTagsContainerModule from '../telemetry/containerModule';
+import machineLearningContainerModule from '../machine-learning/containerModule';
 
 export default function ContainerFactory(container: Container = new Container()): Container {
 
@@ -47,6 +48,7 @@ export default function ContainerFactory(container: Container = new Container())
     presenceContainerModule,
     telemetryTagsContainerModule,
     iftttContainerModule,
+    machineLearningContainerModule,
     ...coreContainerModules
   );
 

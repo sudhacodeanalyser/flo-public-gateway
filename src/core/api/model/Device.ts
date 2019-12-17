@@ -46,7 +46,9 @@ const DeviceMutableCodec = t.type({
   }),
   area: t.type({
     id: t.string
-  })
+  }),
+  pes: t.record(t.string, t.any),
+  floSense: t.record(t.string, t.any)
 });
 
 const MutableSystemModeCodec = t.type({
