@@ -1,7 +1,7 @@
 import { AdditionalDeviceProps, Device as DeviceModel, Omit, Expandable } from '../../api';
 import { Response, Location, LocationResponse } from './index';
 
-export interface DeviceResponse extends Omit<Expandable<DeviceModel>, 'additionalProps' | 'location'>, Partial<AdditionalDeviceProps> {
+export interface DeviceResponse extends Omit<Expandable<DeviceModel>, 'additionalProps' | 'location'>, Omit<Partial<AdditionalDeviceProps>, 'floSense'> {
   location?: LocationResponse
 }
 
