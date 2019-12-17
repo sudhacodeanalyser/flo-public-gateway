@@ -30,17 +30,17 @@ export function WaterControllerFactory(container: Container, apiVersion: number)
       reqValidator.create(ReqValidator.getConsumption)
     )
     private async getConsumption(
-      @queryParam('startDate') startDate: Date, 
-      @queryParam('endDate') endDate?: Date, 
+      @queryParam('startDate') startDate: ReqValidator.ISODateString, 
+      @queryParam('endDate') endDate?: ReqValidator.ISODateString, 
       @queryParam('macAddress') macAddress?: string,
       @queryParam('locationId') locationId?: string,
       @queryParam('interval') interval?: WaterConsumptionInterval,
       @queryParam('tz') timezone?: string
     ): Promise<WaterConsumptionReport | void> {
       if (locationId) {
-        return this.waterService.getLocationConsumption(locationId, startDate.toISOString(), endDate && endDate.toISOString(), interval, timezone);        
+        return this.waterService.getLocationConsumption(locationId, startDate, endDate, interval, timezone);        
       } else if (macAddress) {
-        return this.waterService.getDeviceConsumption(macAddress, startDate.toISOString(), endDate && endDate.toISOString(), interval, timezone);
+        return this.waterService.getDeviceConsumption(macAddress, startDate, endDate, interval, timezone);
       }
     }
 
@@ -70,12 +70,12 @@ export function WaterControllerFactory(container: Container, apiVersion: number)
     )
     private async getMetrics(
       @queryParam('macAddress') macAddress: string,
-      @queryParam('startDate') startDate: Date, 
-      @queryParam('endDate') endDate?: Date, 
+      @queryParam('startDate') startDate: ReqValidator.ISODateString, 
+      @queryParam('endDate') endDate?: ReqValidator.ISODateString, 
       @queryParam('interval') interval?: WaterConsumptionInterval,
       @queryParam('tz') timezone?: string 
     ): Promise<WaterMetricsReport> {
-      return this.waterService.getMetricsAveragesByDevice(macAddress, startDate.toISOString(), endDate && endDate.toISOString(), interval, timezone);
+      return this.waterService.getMetricsAveragesByDevice(macAddress, startDate, endDate, interval, timezone);
     }
   }
   return WaterController;

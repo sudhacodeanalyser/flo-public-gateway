@@ -1,23 +1,36 @@
 import * as t from 'io-ts';
 import moment from 'moment';
-import { either } from 'fp-ts/lib/Either';
+import * as E from 'fp-ts/lib/Either';
+import { pipe } from 'fp-ts/lib/pipeable';
 
-const DateFromURIEncodedISOString = new t.Type<Date, string, unknown>(
-  'DateFromISOString',
-  (u): u is Date => u instanceof Date,
-  (u, c) => {
-    return either.chain(t.string.validate(u, c), str => {
-      const decoded = decodeURIComponent(str);
-      const date = new Date(decoded);
-      return isNaN(date.getTime()) ? t.failure(str, c) : t.success(date);
-    });
+export interface ISODateStringBrand {
+  readonly ISODateString: unique symbol
+}
+
+export type ISODateString = t.Branded<string, ISODateStringBrand>
+
+interface ISODateStringCodec extends t.Type<ISODateString, string, unknown> {}
+
+export const ISODateString: ISODateStringCodec = t.brand(
+  t.string,
+  (s): s is ISODateString => {
+    return pipe(
+      t.string.decode(s),
+      E.chain(str => {
+        const decoded = decodeURIComponent(str);
+        const date = new Date(decoded);
+
+        return isNaN(date.getTime()) ? E.left([]) : E.right(str)
+      }),
+      E.fold(() => false, () => true)
+    );
   },
-  a => a.toISOString()
+  'ISODateString'
 );
 
 const DateRangeCodec = t.type({
-  startDate: DateFromURIEncodedISOString,
-  endDate: t.union([t.undefined, DateFromURIEncodedISOString]),
+  startDate: ISODateString,
+  endDate: t.union([t.undefined, ISODateString]),
   interval: t.union([t.undefined, t.literal('1h'), t.literal('1d'), t.literal('1m')])
 });
 type DateRange = t.TypeOf<typeof DateRangeCodec>;
