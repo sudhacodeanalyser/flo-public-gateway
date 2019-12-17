@@ -1,7 +1,7 @@
 import express from 'express';
 import { isNone, Option, some } from 'fp-ts/lib/Option';
 import { Container, inject } from 'inversify';
-import { BaseHttpController, httpDelete, httpGet, httpPost, interfaces, queryParam, request, requestBody, requestParam, httpPut } from 'inversify-express-utils';
+import { BaseHttpController, httpDelete, httpGet, httpPost, interfaces, queryParam, request, requestBody, requestParam, httpPut, all } from 'inversify-express-utils';
 import * as t from 'io-ts';
 import uuid from 'uuid';
 import { QrData, QrDataValidator } from '../../api-v1/pairing/PairingService';
@@ -26,6 +26,7 @@ import { PairingResponse, PuckPairingResponse } from './PairingService';
 import moment from 'moment';
 import { authUnion } from '../../auth/authUnion';
 import { PuckAuthMiddleware } from '../../auth/PuckAuthMiddleware';
+import { MachineLearningService } from '../../machine-learning/MachineLearningService';
 
 enum HealthTestActions {
   RUN = 'run'
@@ -94,7 +95,8 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       @inject('DeviceSystemModeServiceFactory') private deviceSystemModeServiceFactory: DeviceSystemModeServiceFactory,
       @inject('DirectiveServiceFactory') private directiveServiceFactory: DirectiveServiceFactory,
       @inject('HealthTestServiceFactory') private healthTestServiceFactory: HealthTestServiceFactory,
-      @inject('PuckPairingTokenTTL') private readonly puckPairingTokenTTL: number
+      @inject('PuckPairingTokenTTL') private readonly puckPairingTokenTTL: number,
+      @inject('MachineLearningService') private mlService: MachineLearningService
     ) {
       super();
     }
@@ -529,6 +531,46 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     @deleteMethod
     private async removeActionRule(@requestParam('id') id: string, @requestParam('actionRuleId') actionRuleId: string): Promise<void> {
       return this.internalDeviceService.removeActionRule(id, actionRuleId);
+    }
+
+    @all('/:id/pes/*',
+      authWithId
+    )
+    private async forwardToPES(@request() req: Request, @requestBody() body: any, @requestParam('id') id: string): Promise<any> {
+      const device = await this.deviceService.getDeviceById(id, {
+        $select: {
+          macAddress: true
+        }
+      });
+
+      if (isNone(device)) {
+        throw new NotFoundError('Device not found.');
+      }
+      
+      const subPath = req.url.toLowerCase().split('pes/')[1];
+      const path = `${ device.value.macAddress }/pes/${ subPath }`;
+
+      return this.mlService.forward(req.method, path, body);
+    }
+
+    @all('/:id/floSense/*',
+      authWithId
+    )
+    private async forwardToFloSense(@request() req: Request, @requestBody() body: any, @requestParam('id') id: string): Promise<any> {
+      const device = await this.deviceService.getDeviceById(id, {
+        $select: {
+          macAddress: true
+        }
+      });
+
+      if (isNone(device)) {
+        throw new NotFoundError('Device not found.');
+      }
+
+      const subPath = req.url.toLowerCase().split('flosense/')[1];
+      const path = `${ device.value.macAddress }/floSense/${ subPath }`;
+      
+      return this.mlService.forward(req.method, path, body);
     }
   }
 

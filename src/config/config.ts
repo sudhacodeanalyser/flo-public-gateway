@@ -104,7 +104,8 @@ const config = {
   postgresIdleTimeoutMS: process.env.POSTGRES_IDLE_TIMEOUT_MS,
   numWorkers: process.env.NUM_WORKERS,
   dynamoDBTimeoutMS: process.env.DYNAMODB_TIMEOUT_MS,
-  authTimeoutMS: process.env.AUTH_TIMEOUT_MS
+  authTimeoutMS: process.env.AUTH_TIMEOUT_MS,
+  mlServiceURL: process.env.SCIENCE_LAB_URL
 };
 
 export default {
