@@ -87,6 +87,7 @@ const RecordToModelSchema: StrictSchema<Device, DeviceRecordData>  = {
     };
   },
   actionRules: [],
+  battery: () => undefined,
   pes: () => undefined,
   floSense: () => undefined
 };

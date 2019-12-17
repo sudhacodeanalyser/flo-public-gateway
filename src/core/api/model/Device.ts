@@ -84,6 +84,8 @@ export const HardwareThresholdsCodec = t.type({
   kPa: t.partial(ThresholdDefinitionCodec.props),
   tempF: t.partial(ThresholdDefinitionCodec.props),
   tempC: t.partial(ThresholdDefinitionCodec.props),
+  battery: t.partial(ThresholdDefinitionCodec.props),
+  humidity: t.partial(ThresholdDefinitionCodec.props),
   tempEnabled: t.union([t.undefined, t.boolean]),
   humidityEnabled: t.union([t.undefined, t.boolean]),
   batteryEnabled: t.union([t.undefined, t.boolean])
@@ -139,8 +141,13 @@ export const PairingDataCodec = t.type({
 
 export type PairingData = t.TypeOf<typeof PairingDataCodec>;
 
+interface Battery {
+  level: number;
+  updated?: string;
+}
+
 export interface Device extends Omit<DeviceUpdate, 'valve' | 'puckConfig'>, TimestampedModel {
-  id: string,
+  id: string;
   macAddress: string;
   location: Expandable<Location>;
   deviceType: string;
@@ -179,6 +186,7 @@ export interface Device extends Omit<DeviceUpdate, 'valve' | 'puckConfig'>, Time
     scheduledAt: string;
   };
   actionRules?: DeviceActionRule[];
+  battery?: Battery;
 }
 
 interface FwProperties {
