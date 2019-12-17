@@ -83,6 +83,7 @@ export const HardwareThresholdsCodec = t.type({
   tempF: t.partial(ThresholdDefinitionCodec.props),
   tempC: t.partial(ThresholdDefinitionCodec.props),
   battery: t.partial(ThresholdDefinitionCodec.props),
+  humidity: t.partial(ThresholdDefinitionCodec.props),
   tempEnabled: t.union([t.undefined, t.boolean]),
   humidityEnabled: t.union([t.undefined, t.boolean]),
   batteryEnabled: t.union([t.undefined, t.boolean])
