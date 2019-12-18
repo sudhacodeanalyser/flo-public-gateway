@@ -386,6 +386,11 @@ class DeviceResolver extends Resolver<Device> {
     },
     pes: async (device: Device, shouldExpand = false) => {
       try {
+
+        if (!shouldExpand) {
+          return null;
+        }
+
         const mlData = await this.mlService.get(device.macAddress);
 
         return mlData.pes;
@@ -400,6 +405,11 @@ class DeviceResolver extends Resolver<Device> {
     },
     floSense: async (device: Device, shouldExpand = false) => {
       try {
+
+        if (!shouldExpand) {
+          return null;
+        }
+
         const mlData = await this.mlService.get(device.macAddress);
 
         return mlData.floSense;
