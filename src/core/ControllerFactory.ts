@@ -12,6 +12,7 @@ import { PresenceControllerFactory } from './presence/PresenceControllerFactory'
 import { SubscriptionControllerFactory } from './subscription/SubscriptionControllerFactory';
 import { UserControllerFactory } from './user/UserControllerFactory';
 import { WaterControllerFactory } from './water/WaterControllerFactory';
+import { SensorControllerFactory } from './sensors/SensorControllerFactory';
 import { SessionControllerFactory } from './session/SessionControllerFactory';
 import { IncidentControllerFactory } from './incident/IncidentControllerFactory';
 import { FloDetectControllerFactory } from './flo-detect/FloDetectControllerFactory';
@@ -31,6 +32,7 @@ export default function ControllerFactory(container: Container, apiVersion: numb
     LookupControllerFactory,
     LocalizationControllerFactory,
     WaterControllerFactory,
+    SensorControllerFactory,
     SessionControllerFactory,
     AlarmControllerFactory,
     IncidentControllerFactory,
@@ -41,4 +43,3 @@ export default function ControllerFactory(container: Container, apiVersion: numb
   ]
   .map(controllerFactory => controllerFactory(container, apiVersion));
 }
-
