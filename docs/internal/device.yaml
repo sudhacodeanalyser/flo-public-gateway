@@ -722,6 +722,8 @@ components:
                       type: number
                     tempF:
                       type: number
+                    humidity:
+                      type: number
                     updated:
                       type: string
                       format: date-time

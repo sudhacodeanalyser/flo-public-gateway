@@ -12,10 +12,11 @@ const InternalConnectivityCodec = t.partial({
   rssi: t.number,
 });
 
-const InternalCurrentTelemetryCodec = t.type({
+const InternalCurrentTelemetryCodec = t.partial({
   gpm: t.number,
   psi: t.number,
   tempF: t.number,
+  humidity: t.number,
   updated: t.string,
 });
 
