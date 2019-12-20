@@ -138,7 +138,7 @@ class DeviceResolver extends Resolver<Device> {
       try {
         const additionalProperties = await this.internalDeviceService.getDevice(device.macAddress);
 
-        if (device.deviceType === DeviceType.FLO_DEVICE_V2) {
+        if (device.deviceType !== DeviceType.PUCK) {
           return additionalProperties && (additionalProperties.telemetry || null);
         }
 
