@@ -138,22 +138,7 @@ class DeviceResolver extends Resolver<Device> {
       try {
         const additionalProperties = await this.internalDeviceService.getDevice(device.macAddress);
 
-        if (device.deviceType !== DeviceType.PUCK) {
-          return additionalProperties && (additionalProperties.telemetry || null);
-        }
-
-        const fwProperties = (additionalProperties && additionalProperties.fwProperties) || null;
-        if (fwProperties) {
-          return {
-            current: {
-              ...(fwProperties.telemetry_humidity && { humidity: fwProperties.telemetry_humidity }),
-              ...(fwProperties.telemetry_temperature && { tempF: fwProperties.telemetry_temperature }),
-              ...(additionalProperties && additionalProperties.lastHeardFromTime && { updated: additionalProperties.lastHeardFromTime })
-            }
-          }
-        }
-
-        return null;
+        return additionalProperties && (additionalProperties.telemetry || null);
       } catch (err) {
         this.logger.error({ err });
         return null;
