@@ -25,7 +25,6 @@ class SensorService {
     const device = await this.deviceServiceFactory().getByMacAddress(macAddress, {
       $select: {
         location: {
-          $expand: true,
           $select: {
             timezone: true
           }
