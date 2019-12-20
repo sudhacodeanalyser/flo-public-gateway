@@ -12,6 +12,7 @@ export * from './model/Subscription';
 export * from './model/Lookup';
 export * from './model/Notification';
 export * from './model/Water';
+export * from './model/Sensor';
 export * from './model/AlertFeedbackFlow';
 export * from './model/AlertFeedback';
 export * from './model/FloDetect';
@@ -38,4 +39,3 @@ export interface PropExpand {
   '$expand'?: boolean;
   '$select'?: true | PropSelectRestIntersection
 }
-
