@@ -12,13 +12,23 @@ const InternalConnectivityCodec = t.partial({
   rssi: t.number,
 });
 
-const InternalCurrentTelemetryCodec = t.partial({
+const InternalDeviceCurrentTelemetryCodec = t.type({
   gpm: t.number,
   psi: t.number,
   tempF: t.number,
-  humidity: t.number,
   updated: t.string,
 });
+
+const InternalPuckCurrentTelemetryCodec = t.type({
+  tempF: t.union([t.null, t.undefined, t.number]),
+  humidity: t.union([t.null, t.undefined, t.number]),
+  updated: t.string,
+});
+
+const InternalCurrentTelemetryCodec = t.union([
+  InternalDeviceCurrentTelemetryCodec,
+  InternalPuckCurrentTelemetryCodec
+]);
 
 const InternalTelemetryCodec = t.partial({
   current: InternalCurrentTelemetryCodec,
