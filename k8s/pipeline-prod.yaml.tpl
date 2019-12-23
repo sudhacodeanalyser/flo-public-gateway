@@ -46,6 +46,7 @@ secrets:
     AUTH_TIMEOUT_MS: "${AUTH_TIMEOUT_MS_PROD}"
     SCIENCE_LAB_URL: "${SCIENCE_LAB_URL_PROD}"
     SENSOR_METER_URL_PROD: "${SENSOR_METER_URL_PROD}"
+    PUCK_TOKEN_SECRET: "${PUCK_TOKEN_SECRET_PROD}"
 internalIngress:
   host: internal-ingress.flosecurecloud.com
 routingIngress:
