@@ -191,22 +191,26 @@ class DefaultIFTTTService extends HttpService implements IFTTTService {
     return this.triggerIdentityTable.remove({ user_id: userId, trigger_identity: triggerIdentity });
   }
 
-  private async getDefaultLocation(userId: string): Promise<Location> {
+  private async getDefaultLocation(userId: string, withDevices: boolean = false): Promise<Location> {
     // TODO: Implement multi entity targeting the action to the correspoinding device.
     const userData = await this.userService.getUserById(userId, {
       $select: {
         locations: {
           $select: {
-            devices: {
-              $select: {
-                id: true
+            id: true,
+            residenceType: true,
+            ...(withDevices && {
+              devices: {
+                $select: {
+                  id: true
+                }
               }
-            },
-            residenceType: true
+            })
           }
         }
       }
     });
+
     if (isNone(userData)) {
       throw new NotFoundError('User not found.');
     }
@@ -218,7 +222,7 @@ class DefaultIFTTTService extends HttpService implements IFTTTService {
   }
 
   private async getDefaultDeviceId(userId: string): Promise<string> {
-    const location = await this.getDefaultLocation(userId);
+    const location = await this.getDefaultLocation(userId, true);
     if (!location.devices || _.isEmpty(location.devices)) {
       throw new NotFoundError('User has no devices');
     }
