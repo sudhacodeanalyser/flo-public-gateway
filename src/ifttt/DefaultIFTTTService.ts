@@ -1,4 +1,4 @@
-import { IFTTTService, UserService, AlertService, DeviceService } from '../core/service';
+import { IFTTTService, UserService, AlertService, DeviceService, LocationService } from '../core/service';
 import { inject, injectable } from 'inversify';
 import _ from 'lodash';
 import uuid from 'uuid';
@@ -6,7 +6,7 @@ import { TestSetupResponse, UserInfoResponse, AlertTriggerResponse, ActionRespon
 import { TriggerData, TriggerId } from '../core/ifttt/model/Trigger';
 import { isNone } from 'fp-ts/lib/Option';
 import NotFoundError from '../core/api/error/NotFoundError';
-import { ResidenceType, AlarmSeverity, PaginatedResult, AlarmEvent, SystemMode } from '../core/api';
+import { ResidenceType, AlarmSeverity, PaginatedResult, AlarmEvent, SystemMode, Location } from '../core/api';
 import moment from 'moment';
 import TriggerIdentityLogTable from '../core/ifttt/TriggerIdentityLogTable';
 import { DirectiveService } from '../core/device/DirectiveService';
@@ -27,6 +27,7 @@ class DefaultIFTTTService extends HttpService implements IFTTTService {
     @inject('DeviceService') private readonly deviceService: DeviceService,
     @inject('IFTTTServiceKey') private readonly iftttServiceKey: string,
     @inject('IftttRealtimeNotificationsUrl') private readonly iftttRealtimeNotificationsUrl: string,
+    @inject('LocationService') private readonly locationService: LocationService,
   ) {
     super();
   }
@@ -116,13 +117,13 @@ class DefaultIFTTTService extends HttpService implements IFTTTService {
   }
 
   public async changeSystemModeAction(userId: string, userAction: ActionData, systemModeService: DeviceSystemModeService): Promise<ActionResponse> {
-    const deviceId = await this.getDefaultDeviceId(userId);
+    const location = await this.getDefaultLocation(userId);
     if (!userAction.actionFields || !userAction.actionFields.device_mode) {
       throw new ActionFieldsError('Missing system mode field');
     }
     try {
       const systemMode = $enum(SystemMode).asValueOrThrow(userAction.actionFields.device_mode);
-      await systemModeService.setSystemMode(deviceId, systemMode);
+      await this.locationService.setSystemMode(location.id, systemModeService, { target: systemMode });
 
       return {
         data: [{
@@ -190,7 +191,7 @@ class DefaultIFTTTService extends HttpService implements IFTTTService {
     return this.triggerIdentityTable.remove({ user_id: userId, trigger_identity: triggerIdentity });
   }
 
-  private async getDefaultDeviceId(userId: string): Promise<string> {
+  private async getDefaultLocation(userId: string): Promise<Location> {
     // TODO: Implement multi entity targeting the action to the correspoinding device.
     const userData = await this.userService.getUserById(userId, {
       $select: {
@@ -213,6 +214,11 @@ class DefaultIFTTTService extends HttpService implements IFTTTService {
       throw new NotFoundError('User has no locations');
     }
     const location = userData.value.locations.find(loc => loc.residenceType === ResidenceType.PRIMARY) || userData.value.locations[0];
+    return location as Location;
+  }
+
+  private async getDefaultDeviceId(userId: string): Promise<string> {
+    const location = await this.getDefaultLocation(userId);
     if (!location.devices || _.isEmpty(location.devices)) {
       throw new NotFoundError('User has no devices');
     }
