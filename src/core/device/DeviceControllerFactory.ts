@@ -546,7 +546,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       if (isNone(device)) {
         throw new NotFoundError('Device not found.');
       }
-      
+
       const subPath = req.url.toLowerCase().split('pes/')[1];
       const path = `${ device.value.macAddress }/pes/${ subPath }`;
 
@@ -569,7 +569,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
 
       const subPath = req.url.toLowerCase().split('flosense/')[1];
       const path = `${ device.value.macAddress }/floSense/${ subPath }`;
-      
+
       return this.mlService.forward(req.method, path, body);
     }
   }

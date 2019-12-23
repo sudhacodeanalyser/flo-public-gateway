@@ -139,7 +139,6 @@ class DeviceResolver extends Resolver<Device> {
         const additionalProperties = await this.internalDeviceService.getDevice(device.macAddress);
 
         return additionalProperties && (additionalProperties.telemetry || null);
-
       } catch (err) {
         this.logger.error({ err });
         return null;
