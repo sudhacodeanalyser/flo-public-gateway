@@ -193,3 +193,14 @@ export enum IncidentStatusReason {
 }
 
 export const IncidentStatusReasonCodec = convertEnumtoCodec(IncidentStatusReason);
+
+export const ReceiptCodec = t.type({
+  receiptId: t.string
+});
+
+export interface Receipt extends t.TypeOf<typeof ReceiptCodec> {}
+
+export const ServiceEventParamsCodec = t.type({
+  incidentId: t.string,
+  userId: t.string
+});
