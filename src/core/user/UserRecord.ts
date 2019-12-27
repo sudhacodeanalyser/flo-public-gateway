@@ -38,7 +38,16 @@ const RecordToModelSchema: StrictSchema<User, UserRecordData & UserDetailRecordD
   }
 }
 
+const PartialModelToRecordSchema: StrictSchema<Partial<UserRecordData>, Partial<User>> = {
+  email: (input: Partial<User>) => input.email && input.email.toLowerCase().trim()
+}
+
+
 export class UserRecord {
+
+  public static fromModel(user: Partial<User>): Partial<UserRecordData> {
+    return morphism(PartialModelToRecordSchema, user);
+  }
 
   constructor(
     public data: UserRecordData & UserDetailRecordData

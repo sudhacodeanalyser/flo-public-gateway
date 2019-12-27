@@ -62,7 +62,8 @@
     "swagger-jsdoc": "^3.2.9",
     "swagger-ui-express": "^4.0.2",
     "ts-enum-util": "^4.0.1",
-    "uuid": "^3.3.2"
+    "uuid": "^3.3.2",
+    "validator": "^12.1.0"
   },
   "devDependencies": {
     "@types/aws-sdk": "^2.7.0",
@@ -86,6 +87,7 @@
     "@types/swagger-jsdoc": "0.0.2",
     "@types/swagger-ui-express": "^3.0.0",
     "@types/uuid": "^3.4.4",
+    "@types/validator": "^12.0.1",
     "copyfiles": "^2.1.0",
     "ioredis-mock": "^4.16.3",
     "jest": "^24.7.1",
