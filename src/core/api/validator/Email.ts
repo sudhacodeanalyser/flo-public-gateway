@@ -21,7 +21,7 @@ export const Email: EmailCodec = t.brand(
     } 
 
     try {
-      return validator.isEmail(s);
+      return validator.isEmail(s.trim());
     } catch (err) {
       return false;
     }
