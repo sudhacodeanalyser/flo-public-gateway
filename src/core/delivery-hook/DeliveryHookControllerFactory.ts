@@ -64,7 +64,7 @@ export function DeliveryHookControllerFactory(container: Container, apiVersion: 
         .registerEmailServiceEvent(incidentId, userId, receipt);
     }
 
-    @httpPost('/sms/events/:incidentId/:userId',
+    @httpPost('/status/sms/events/:incidentId/:userId',
       twilioAuth,
       twilioStatusEventValidator
     )

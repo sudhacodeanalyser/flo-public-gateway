@@ -1,7 +1,18 @@
 import { fold, fromNullable, Option } from 'fp-ts/lib/Option';
 import { pipe } from 'fp-ts/lib/pipeable';
 import _ from 'lodash';
-import { Alarm, AlarmEvent, AlarmListResult, ClearAlertResponse, Device, DeviceAlarmSettings, NotificationStatistics, PaginatedResult, UpdateDeviceAlarmSettings } from '../core/api';
+import {
+  Alarm,
+  AlarmEvent,
+  AlarmListResult,
+  ClearAlertResponse,
+  Device,
+  DeviceAlarmSettings,
+  NotificationStatistics,
+  PaginatedResult,
+  TwilioStatusEvent,
+  UpdateDeviceAlarmSettings
+} from '../core/api';
 import { DeviceService } from '../core/device/DeviceService';
 import { HttpService } from '../http/HttpService';
 
@@ -118,6 +129,14 @@ class ApiNotificationService {
     return this.notificationApi.sendRequest({
       method: 'get',
       url: `/statistics?${filters}`
+    });
+  }
+
+  public async registerSmsServiceEvent(incidentId: string, userId: string, event: TwilioStatusEvent): Promise<void> {
+    return this.notificationApi.sendRequest({
+      method: 'post',
+      url: `/status/sms/events/${incidentId}/${userId}`,
+      body: event
     });
   }
 
