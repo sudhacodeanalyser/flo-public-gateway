@@ -18,6 +18,7 @@ import { FloDetectControllerFactory } from './flo-detect/FloDetectControllerFact
 import { AlertControllerFactory } from './alert/AlertControllerFactory';
 import { TelemetryControllerFactory } from './telemetry/TelemetryControllerFactory';
 import { IFTTTControllerFactory } from './ifttt/IFTTTControllerFactory';
+import { DeliveryHookControllerFactory } from './delivery-hook/DeliveryHookControllerFactory';
 
 export default function ControllerFactory(container: Container, apiVersion: number = 2): interfaces.Controller[] {
   return [
@@ -37,7 +38,8 @@ export default function ControllerFactory(container: Container, apiVersion: numb
     FloDetectControllerFactory,
     AlertControllerFactory,
     TelemetryControllerFactory,
-    IFTTTControllerFactory
+    IFTTTControllerFactory,
+    DeliveryHookControllerFactory
   ]
   .map(controllerFactory => controllerFactory(container, apiVersion));
 }

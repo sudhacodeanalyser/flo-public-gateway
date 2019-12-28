@@ -1,43 +1,35 @@
-import * as Either from 'fp-ts/lib/Either';
-import { pipe } from 'fp-ts/lib/pipeable';
 import { Container, inject } from 'inversify';
 import {
   BaseHttpController,
-  httpDelete,
-  httpGet,
   httpPost,
   interfaces,
   queryParam,
   request,
-  requestBody,
-  requestParam
+  requestBody
 } from 'inversify-express-utils';
 import * as t from 'io-ts';
-import _ from 'lodash';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
-import ReqValidationError from '../../validation/ReqValidationError';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
 import {
-  AlarmEvent,
-  AlertFeedback, ClearAlertBodyCodec,
-  NotificationStatistics,
-  PaginatedResult,
-  Receipt, ReceiptCodec, ServiceEventParamsCodec,
-  UserFeedback,
-  UserFeedbackCodec
+  Receipt, ReceiptCodec, ServiceEventParamsCodec, TwilioStatusEvent, TwilioStatusEventCodec
 } from '../api';
 import { createMethod, httpController } from '../api/controllerUtils';
 import Request from '../api/Request';
 import { NotificationServiceFactory } from '../notification/NotificationService';
-import { AlertService } from '../service';
+import TwilioAuthMiddlewareFactory from "./TwilioAuthMiddlewareFactory";
 
 export function DeliveryHookControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
   const authMiddlewareFactory = container.get<AuthMiddlewareFactory>('AuthMiddlewareFactory');
   const auth = authMiddlewareFactory.create();
+  const twilioAuthMiddlewareFactory = container.get<TwilioAuthMiddlewareFactory>('TwilioAuthMiddlewareFactory');
+  const twilioAuth = twilioAuthMiddlewareFactory.create();
   const serviceEventValidator = reqValidator.create(t.type({
     params: ServiceEventParamsCodec,
     body: ReceiptCodec
+  }));
+  const twilioStatusEventValidator = reqValidator.create(t.type({
+    body: TwilioStatusEventCodec
   }));
 
   @httpController({ version: apiVersion }, '/delivery/hooks')
@@ -56,14 +48,6 @@ export function DeliveryHookControllerFactory(container: Container, apiVersion: 
         .registerSendgridEmailEvent(eventInfo);
     }
 
-    @httpPost('/sms/twilio/events', auth)
-    private async registerTwilioSmsEvent(@request() req: Request, @requestBody() eventInfo: any): Promise<void> {
-      return this
-        .notificationServiceFactory
-        .create(req)
-        .registerTwilioSmsEvent(eventInfo);
-    }
-
     @httpPost('/email/service/events/:incidentId/:userId',
       auth,
       serviceEventValidator
@@ -80,20 +64,20 @@ export function DeliveryHookControllerFactory(container: Container, apiVersion: 
         .registerEmailServiceEvent(incidentId, userId, receipt);
     }
 
-    @httpPost('/sms/service/events/:incidentId/:userId',
-      auth,
-      serviceEventValidator
+    @httpPost('/sms/events/:incidentId/:userId',
+      twilioAuth,
+      twilioStatusEventValidator
     )
     private async registerSmsServiceEvent(
       @request() req: Request,
       @queryParam('incidentId') incidentId: string,
       @queryParam('userId') userId: string,
-      @requestBody() receipt: Receipt
+      @requestBody() event: TwilioStatusEvent
     ): Promise<void> {
       return this
         .notificationServiceFactory
         .create(req)
-        .registerSmsServiceEvent(incidentId, userId, receipt);
+        .registerSmsServiceEvent(incidentId, userId, event);
     }
   }
 

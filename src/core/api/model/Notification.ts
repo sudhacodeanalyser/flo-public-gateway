@@ -204,3 +204,17 @@ export const ServiceEventParamsCodec = t.type({
   incidentId: t.string,
   userId: t.string
 });
+
+
+export const TwilioStatusEventCodec = t.type({
+  From: t.string,
+  MessageSid: t.string,
+  SmsStatus: t.string,
+  SmsSid: t.string,
+  ApiVersion: t.string,
+  AccountSid: t.string,
+  MessageStatus: t.string,
+  To: t.string
+});
+
+export interface TwilioStatusEvent extends t.TypeOf<typeof TwilioStatusEventCodec> {}
