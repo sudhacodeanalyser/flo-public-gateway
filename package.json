@@ -26,6 +26,7 @@
     "@instana/core": "1.72.0",
     "@types/glob": "^7.1.1",
     "@types/js-yaml": "^3.12.1",
+    "@types/twilio": "^2.11.0",
     "agentkeepalive": "^4.1.0",
     "aws-sdk": "^2.437.0",
     "axios": "^0.18.0",

@@ -195,7 +195,7 @@ export enum IncidentStatusReason {
 export const IncidentStatusReasonCodec = convertEnumtoCodec(IncidentStatusReason);
 
 export const ReceiptCodec = t.type({
-  receiptId: t.string
+  receipt_id: t.string // TODO: We need to use snake case because the client uses it
 });
 
 export interface Receipt extends t.TypeOf<typeof ReceiptCodec> {}

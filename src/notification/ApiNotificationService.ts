@@ -9,7 +9,7 @@ import {
   Device,
   DeviceAlarmSettings,
   NotificationStatistics,
-  PaginatedResult,
+  PaginatedResult, Receipt,
   TwilioStatusEvent,
   UpdateDeviceAlarmSettings
 } from '../core/api';
@@ -129,6 +129,24 @@ class ApiNotificationService {
     return this.notificationApi.sendRequest({
       method: 'get',
       url: `/statistics?${filters}`
+    });
+  }
+
+  public async registerEmailServiceEvent(incidentId: string, userId: string, receipt: Receipt): Promise<void> {
+    return this.notificationApi.sendRequest({
+      method: 'post',
+      url: `/status/email/events/${incidentId}/${userId}`,
+      body: receipt
+    });
+  }
+
+  public async registerSendgridEmailEvent(events: any[]): Promise<void> {
+    return this.notificationApi.sendRequest({
+      method: 'post',
+      url: `/status/email/sendgrid/events`,
+      body: {
+        events
+      }
     });
   }
 
