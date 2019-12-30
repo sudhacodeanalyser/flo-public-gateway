@@ -38,7 +38,7 @@ class FloDetectService {
         if (
           !device.installStatus.isInstalled || 
           !device.installStatus.installDate ||
-          device.installStatus.installDate > moment().subtract(28, 'days').toISOString()
+          device.installStatus.installDate > moment().subtract(21, 'days').toISOString()
         ) {
           return TaskEitherOption.left({ 
             macAddress, 
