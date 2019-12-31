@@ -192,7 +192,7 @@ export interface Device extends Omit<DeviceUpdate, 'valve' | 'puckConfig' | 'aud
   battery?: Battery;
   audio?: {
     snoozeTo: string;
-    snoozeSeconds: number;
+    snoozeSeconds?: number;
   };
 }
 

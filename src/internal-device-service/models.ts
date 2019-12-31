@@ -51,7 +51,7 @@ const InternalDeviceCodec = t.type({
   valveState: t.union([InternalValveStateCodec, t.null, t.undefined]),
   hwThresholds: t.union([t.record(t.string, t.any), t.null, t.undefined]),
   audio: t.union([t.undefined, t.null, t.type({
-    snoozeAt: t.string,
+    snoozeTo: t.string,
     snoozeSeconds: t.number
   })])
 });
