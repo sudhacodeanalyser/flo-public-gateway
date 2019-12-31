@@ -48,7 +48,10 @@ const DeviceMutableCodec = t.type({
     id: t.string
   }),
   pes: t.record(t.string, t.any),
-  floSense: t.record(t.string, t.any)
+  floSense: t.record(t.string, t.any),
+  audio: t.type({
+    snoozeTo: t.string
+  })
 });
 
 const MutableSystemModeCodec = t.type({
@@ -146,7 +149,7 @@ interface Battery {
   updated?: string;
 }
 
-export interface Device extends Omit<DeviceUpdate, 'valve' | 'puckConfig'>, TimestampedModel {
+export interface Device extends Omit<DeviceUpdate, 'valve' | 'puckConfig' | 'audio'>, TimestampedModel {
   id: string;
   macAddress: string;
   location: Expandable<Location>;
@@ -187,6 +190,10 @@ export interface Device extends Omit<DeviceUpdate, 'valve' | 'puckConfig'>, Time
   };
   actionRules?: DeviceActionRule[];
   battery?: Battery;
+  audio?: {
+    snoozeTo: string;
+    snoozeSeconds: number;
+  };
 }
 
 interface FwProperties {

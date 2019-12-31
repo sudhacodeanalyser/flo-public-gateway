@@ -49,7 +49,11 @@ const InternalDeviceCodec = t.type({
   telemetry: t.union([InternalTelemetryCodec, t.null, t.undefined]),
   updatedTime: t.string,
   valveState: t.union([InternalValveStateCodec, t.null, t.undefined]),
-  hwThresholds: t.union([t.record(t.string, t.any), t.null, t.undefined])
+  hwThresholds: t.union([t.record(t.string, t.any), t.null, t.undefined]),
+  audio: t.union([t.undefined, t.null, t.type({
+    snoozeAt: t.string,
+    snoozeSeconds: t.number
+  })])
 });
 
 type InternalDevice = t.TypeOf<typeof InternalDeviceCodec>;
