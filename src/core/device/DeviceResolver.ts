@@ -420,6 +420,24 @@ class DeviceResolver extends Resolver<Device> {
 
         return null;
       }
+    },
+    audio: async (device: Device, shouldExpand = false) => {
+      
+      if (device.deviceType !== DeviceType.PUCK) {
+        return null;
+      }
+
+      try {
+        const additionalProperties = await this.internalDeviceService.getDevice(device.macAddress);
+
+        return additionalProperties && additionalProperties.audio;
+      } catch (err) {
+        if (this.logger) {
+          this.logger.error({ err });
+        }
+
+        return null;
+      }
     }
   };
   private locationResolverFactory: () => LocationResolver;
