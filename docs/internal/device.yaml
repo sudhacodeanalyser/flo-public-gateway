@@ -847,6 +847,15 @@ components:
                 updated:
                   type: string
                   format: date-time
+            audio:
+              type: object
+              description: Audio information - Puck only
+              properties:
+                snoozeSeconds:
+                  type: number
+                snoozeTo:
+                  type: string
+                  format: date-time
 
     DeviceExpandable:
       oneOf:
