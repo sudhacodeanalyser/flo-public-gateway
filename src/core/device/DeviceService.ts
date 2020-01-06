@@ -5,7 +5,7 @@ import { inject, injectable } from 'inversify';
 import _ from 'lodash';
 import { PairingService, QrData } from '../../api-v1/pairing/PairingService';
 import { InternalDeviceService } from '../../internal-device-service/InternalDeviceService';
-import { DependencyFactoryFactory, Device, DeviceCreate, DeviceType, DeviceUpdate, PropExpand, ValveState } from '../api';
+import { DependencyFactoryFactory, Device, DeviceCreate, DeviceType, DeviceUpdate, PropExpand, ValveState, FirmwareInfo } from '../api';
 import ConflictError from '../api/error/ConflictError';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import { DeviceResolver } from '../resolver';
@@ -68,7 +68,7 @@ class DeviceService {
     }
 
     if (deviceUpdate.pes || deviceUpdate.floSense) {
-      const updatedMLProps = await this.mlService.update(device.macAddress, { 
+      const updatedMLProps = await this.mlService.update(device.macAddress, {
         ...(deviceUpdate.pes && { pes: deviceUpdate.pes }),
         ...(deviceUpdate.floSense && { floSense: deviceUpdate.floSense })
       });
@@ -154,6 +154,27 @@ class DeviceService {
 
   public async getAllByLocationId(locationId: string, expand?: PropExpand): Promise<Device[]> {
     return this.deviceResolver.getAllByLocationId(locationId, expand);
+  }
+
+  public async getFirmwareInfo(deviceId: string): Promise<FirmwareInfo> {
+    const device: Device | null = await this.deviceResolver.get(deviceId);
+
+    if (device == null) {
+      throw new ResourceDoesNotExistError('Device does not exist');
+    }
+
+    const internalDevice = await this.internalDeviceService.getDevice(device.macAddress);
+
+    if (internalDevice == null) {
+      throw new ResourceDoesNotExistError('Device does not exist');
+    }
+
+    return {
+      current: {
+        version: internalDevice.fwVersion
+      },
+      latest: internalDevice.latestFwInfo
+    }
   }
 }
 

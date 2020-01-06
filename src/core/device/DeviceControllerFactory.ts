@@ -1,14 +1,13 @@
-import express from 'express';
 import { isNone, Option, some } from 'fp-ts/lib/Option';
 import { Container, inject } from 'inversify';
-import { BaseHttpController, httpDelete, httpGet, httpPost, interfaces, queryParam, request, requestBody, requestParam, httpPut, all } from 'inversify-express-utils';
+import { BaseHttpController, httpDelete, httpGet, httpPost, interfaces, queryParam, request, requestBody, requestParam, all } from 'inversify-express-utils';
 import * as t from 'io-ts';
 import uuid from 'uuid';
 import { QrData, QrDataValidator } from '../../api-v1/pairing/PairingService';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import { InternalDeviceService } from '../../internal-device-service/InternalDeviceService';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
-import { Device, DeviceActionRule, DeviceActionRules, DeviceActionRulesCreate, DeviceActionRulesCreateCodec, DeviceActionRuleTypeUpsert, DeviceActionRuleTypeUpsertCodec, DeviceCreate, DeviceCreateValidator, DeviceType, DeviceUpdate, DeviceUpdateValidator, SystemMode as DeviceSystemMode, SystemModeCodec as DeviceSystemModeCodec, HardwareThresholdsCodec, HardwareThresholds } from '../api';
+import { Device, DeviceActionRules, DeviceActionRulesCreate, DeviceActionRulesCreateCodec, DeviceCreate, DeviceCreateValidator, DeviceType, DeviceUpdate, DeviceUpdateValidator, SystemMode as DeviceSystemMode, SystemModeCodec as DeviceSystemModeCodec, HardwareThresholdsCodec, HardwareThresholds, FirmwareInfo } from '../api';
 import { asyncMethod, authorizationHeader, createMethod, deleteMethod, httpController, parseExpand, withResponseType } from '../api/controllerUtils';
 import { convertEnumtoCodec } from '../api/enumUtils';
 import ForbiddenError from '../api/error/ForbiddenError';
@@ -531,6 +530,18 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     @deleteMethod
     private async removeActionRule(@requestParam('id') id: string, @requestParam('actionRuleId') actionRuleId: string): Promise<void> {
       return this.internalDeviceService.removeActionRule(id, actionRuleId);
+    }
+
+    @httpGet('/:id/firmware',
+      authWithId,
+      reqValidator.create(t.type({
+        params: t.type({
+          id: t.string
+        })
+      }))
+    )
+    private async getFirmwareInfo(@requestParam('id') id: string): Promise<FirmwareInfo> {
+      return this.deviceService.getFirmwareInfo(id);
     }
 
     @all('/:id/pes/*',

@@ -73,7 +73,6 @@ const SystemModeCodec = t.intersection([
 type SystemModeData = t.TypeOf<typeof SystemModeCodec>;
 
 const ThresholdDefinitionCodec = t.type({
-
   okMin: t.number,
   okMax: t.number,
   maxValue: t.number,
@@ -193,6 +192,17 @@ export interface Device extends Omit<DeviceUpdate, 'valve' | 'puckConfig' | 'aud
   audio?: {
     snoozeTo: string;
     snoozeSeconds?: number;
+  };
+}
+
+export interface FirmwareInfo {
+  current: {
+    version: string;
+  };
+  latest: {
+    version: string;
+    sourceType: string;
+    sourceLocation: string;
   };
 }
 
