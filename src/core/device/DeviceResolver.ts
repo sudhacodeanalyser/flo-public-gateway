@@ -322,7 +322,7 @@ class DeviceResolver extends Resolver<Device> {
 
       try {
         const additionalProperties = await this.internalDeviceService.getDevice(device.macAddress);
-        const batteryLevel = (additionalProperties && additionalProperties.fwProperties && additionalProperties.fwProperties.telemetry_battery_percent) || 69.69; // Temporary hard-coded value.
+        const batteryLevel = (additionalProperties && additionalProperties.fwProperties && additionalProperties.fwProperties.telemetry_battery_percent) || 0;
         const updatedTime = (additionalProperties && additionalProperties.lastHeardFromTime) || undefined;
         return {
           level: batteryLevel,
@@ -422,7 +422,7 @@ class DeviceResolver extends Resolver<Device> {
       }
     },
     audio: async (device: Device, shouldExpand = false) => {
-      
+
       if (device.deviceType !== DeviceType.PUCK) {
         return null;
       }
