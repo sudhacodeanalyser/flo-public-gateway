@@ -53,7 +53,12 @@ const InternalDeviceCodec = t.type({
   audio: t.union([t.undefined, t.null, t.type({
     snoozeTo: t.string,
     snoozeSeconds: t.number
-  })])
+  })]),
+  latestFwInfo: t.type({
+    version: t.string,
+    sourceType: t.string,
+    sourceLocation: t.string
+  })
 });
 
 type InternalDevice = t.TypeOf<typeof InternalDeviceCodec>;
