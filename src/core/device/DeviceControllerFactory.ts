@@ -534,7 +534,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     }
 
     @all('/:id/pes/*',
-      authWithId
+      authMiddlewareFactory.create(undefined, 'ALL/api/v2/devices/$/pes/*')
     )
     private async forwardToPES(@request() req: Request, @requestBody() body: any, @requestParam('id') id: string): Promise<any> {
       const device = await this.deviceService.getDeviceById(id, {
@@ -554,7 +554,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     }
 
     @all('/:id/floSense/*',
-      authWithId
+      authMiddlewareFactory.create(undefined, 'ALL/api/v2/devices/$/floSense/*')
     )
     private async forwardToFloSense(@request() req: Request, @requestBody() body: any, @requestParam('id') id: string): Promise<any> {
       const device = await this.deviceService.getDeviceById(id, {
