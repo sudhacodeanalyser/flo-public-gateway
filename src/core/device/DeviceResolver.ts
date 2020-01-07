@@ -438,6 +438,28 @@ class DeviceResolver extends Resolver<Device> {
 
         return null;
       }
+    },
+    firmware: async (device: Device, shouldExpand = false) => {
+      if (!shouldExpand) {
+        return null;
+      }
+
+      try {
+        const additionProperties = await this.internalDeviceService.getDevice(device.id);
+
+        return additionProperties && {
+          current: {
+            version: additionProperties.fwVersion
+          },
+          latest: additionProperties.latestFwInfo
+        };
+      } catch (err) {
+        if (this.logger) {
+          this.logger.error({ err });
+
+          return null;
+        }
+      }
     }
   };
   private locationResolverFactory: () => LocationResolver;

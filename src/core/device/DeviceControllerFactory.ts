@@ -532,18 +532,6 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       return this.internalDeviceService.removeActionRule(id, actionRuleId);
     }
 
-    @httpGet('/:id/firmware',
-      authWithId,
-      reqValidator.create(t.type({
-        params: t.type({
-          id: t.string
-        })
-      }))
-    )
-    private async getFirmwareInfo(@requestParam('id') id: string): Promise<FirmwareInfo> {
-      return this.deviceService.getFirmwareInfo(id);
-    }
-
     @all('/:id/pes/*',
       authMiddlewareFactory.create(undefined, 'ALL/api/v2/devices/$/pes/*')
     )

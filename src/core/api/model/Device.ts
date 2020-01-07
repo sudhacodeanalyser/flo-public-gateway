@@ -193,6 +193,7 @@ export interface Device extends Omit<DeviceUpdate, 'valve' | 'puckConfig' | 'aud
     snoozeTo: string;
     snoozeSeconds?: number;
   };
+  firmware?: FirmwareInfo;
 }
 
 export interface FirmwareInfo {
