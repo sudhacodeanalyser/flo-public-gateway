@@ -156,26 +156,6 @@ class DeviceService {
     return this.deviceResolver.getAllByLocationId(locationId, expand);
   }
 
-  public async getFirmwareInfo(deviceId: string): Promise<FirmwareInfo> {
-    const device: Device | null = await this.deviceResolver.get(deviceId);
-
-    if (device == null) {
-      throw new ResourceDoesNotExistError('Device does not exist');
-    }
-
-    const internalDevice = await this.internalDeviceService.getDevice(device.macAddress);
-
-    if (internalDevice == null) {
-      throw new ResourceDoesNotExistError('Device does not exist');
-    }
-
-    return {
-      current: {
-        version: internalDevice.fwVersion
-      },
-      latest: internalDevice.latestFwInfo
-    }
-  }
 }
 
 export { DeviceService };
