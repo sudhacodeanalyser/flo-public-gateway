@@ -445,7 +445,7 @@ class DeviceResolver extends Resolver<Device> {
       }
 
       try {
-        const additionProperties = await this.internalDeviceService.getDevice(device.id);
+        const additionProperties = await this.internalDeviceService.getDevice(device.macAddress);
 
         return additionProperties && {
           current: {
