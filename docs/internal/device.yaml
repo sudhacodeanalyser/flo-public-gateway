@@ -577,34 +577,6 @@ paths:
         403:
           $ref: '#/components/responses/ForbiddenError'
 
-  /api/v2/devices/{id}/firmware:
-    parameters:
-      - in: path
-        name: id
-        required: true
-        schema:
-          type: string
-          format: uuid
-        description: Device ID
-    get:
-      summary: Retrieves Firmware information for the given Device ID.
-      tags:
-        - Devices
-        - Firmware
-      produces:
-        - application/json
-      responses:
-        200:
-          description: Firmware information for the given Device ID
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/FirmwareInfo'
-        401:
-          $ref: '#/components/responses/UnauthorizedError'
-        403:
-          $ref: '#/components/responses/ForbiddenError'
-
 components:
   schemas:
     FirmwareInfo:
@@ -902,6 +874,8 @@ components:
                 snoozeTo:
                   type: string
                   format: date-time
+            firmware:
+              $ref: '#/components/schemas/FirmwareInfo'
 
     DeviceExpandable:
       oneOf:
