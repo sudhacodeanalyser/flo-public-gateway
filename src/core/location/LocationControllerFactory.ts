@@ -45,7 +45,8 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
       if (
         (revertMinutes !== undefined && revertMode === undefined) ||
         (revertMode !== undefined && revertMinutes === undefined) ||
-        (revertMinutes !== undefined && revertMode !== undefined && target !== SystemMode.SLEEP)
+        (revertMinutes !== undefined && revertMode !== undefined && target !== SystemMode.SLEEP) ||
+        revertMode === SystemMode.SLEEP
       ) {
         return false;
       } else {
