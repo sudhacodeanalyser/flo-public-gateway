@@ -74,7 +74,8 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       } else if (
         (revertMinutes !== undefined && revertMode === undefined) ||
         (revertMode !== undefined && revertMinutes === undefined) ||
-        (revertMinutes !== undefined && revertMode !== undefined && target !== DeviceSystemMode.SLEEP)
+        (revertMinutes !== undefined && revertMode !== undefined && target !== DeviceSystemMode.SLEEP) || 
+        revertMode === DeviceSystemMode.SLEEP
       ) {
         return false;
       } else {
