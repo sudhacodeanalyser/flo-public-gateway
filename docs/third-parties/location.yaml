@@ -334,7 +334,12 @@ components:
                 id:
                   type: string
                   format: uuid
-        - $ref: '#/components/schemas/LocationMutable'
+            nickname:
+              type: string
+        - $ref: '#/components/schemas/Address'
+        - $ref: '#/components/schemas/LocationProfile'
+        - $ref: '#/components/schemas/LocationProfileLegacy'
+
     Location:
       allOf:
         - $ref: '#/components/schemas/LocationUpdate'
