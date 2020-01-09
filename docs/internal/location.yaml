@@ -343,11 +343,10 @@ components:
               type: string
               format: uuid
         - $ref: '#/components/schemas/Roles'
-    LocationMutable:
+
+    Address:
       type: object
       properties:
-        nickname:
-          type: string
         address:
           type: string
         address2:
@@ -362,6 +361,36 @@ components:
           type: string
         timezone:
           type: string
+
+    LocationProfile:
+      type: object
+      properties:
+        locationType:
+          type: string
+        residenceType:
+          type: string
+        waterSource:
+          type: string
+        locationSize:
+          type: string
+        showerBathCount:
+          type: number
+        toiletCount:
+          type: number
+        plumbingType:
+          type: string
+        homeownersInsurance:
+          type: string
+        waterUtility:
+          type: string
+        hasPastWaterDamage:
+            type: boolean
+        pastWaterDamageClaimAmount:
+            type: string
+
+    LocationProfileLegacy:
+      type: object
+      properties:
         gallonsPerDayGoal:
           type: number
         occupants:
@@ -384,33 +413,25 @@ components:
           type: array
           items:
             type: string
-        locationType:
-          type: string
-        residenceType:
-          type: string
-        waterSource:
-          type: string
-        locationSize:
-          type: string
-        showerBathCount:
-          type: number
-        toiletCount:
-          type: number
-        plumbingType:
-          type: string
-        waterUtility:
-          type: string
-        homeownersInsurance:
-          type: string
-        hasPastWaterDamage:
-          type: boolean
-        pastWaterDamageClaimAmount:
+
+    LocationAdditionalProps:
+      type: object
+      properties:
+        nickname:
           type: string
         irrigationSchedule:
           type: object
           properties:
             isEnabled:
               type: boolean
+
+    LocationMutable:
+      allOf:
+        - $ref: '#/components/schemas/Address'
+        - $ref: '#/components/schemas/LocationProfile'
+        - $ref: '#/components/schemas/LocationProfileLegacy'
+        - $ref: '#/components/schemas/LocationAdditionalProps'
+
     LocationUpdate:
       $ref: '#/components/schemas/LocationMutable'
 
@@ -435,7 +456,12 @@ components:
                 id:
                   type: string
                   format: uuid
-        - $ref: '#/components/schemas/LocationMutable'
+            nickname:
+              type: string
+        - $ref: '#/components/schemas/Address'
+        - $ref: '#/components/schemas/LocationProfile'
+        - $ref: '#/components/schemas/LocationProfileLegacy'
+
     Location:
       allOf:
         - $ref: '#/components/schemas/LocationUpdate'

@@ -222,74 +222,94 @@ components:
               format: uuid
         - $ref: '#/components/schemas/Roles'
 
-    LocationMutable:
-      type: object
-      properties:
-        nickname:
-          type: string
-        address:
-          type: string
-        address2:
-          type: string
-        city:
-          type: string
-        state:
-          type: string
-        country:
-          type: string
-        postalCode:
-          type: string
-        timezone:
-          type: string
-        gallonsPerDayGoal:
-          type: number
-        occupants:
-          type: integer
-        stories:
-          type: integer
-        isProfileComplete:
-          type: boolean
-        waterShutoffKnown:
-          $ref: '#/components/schemas/NoYesUnsure'
-        indoorAmenities:
-          type: array
-          items:
-            type: string
-        outdoorAmenities:
-          type: array
-          items:
-            type: string
-        plumbingAppliances:
-          type: array
-          items:
-            type: string
-        locationType:
-          type: string
-        residenceType:
-          type: string
-        waterSource:
-          type: string
-        locationSize:
-          type: string
-        showerBathCount:
-          type: number
-        toiletCount:
-          type: number
-        plumbingType:
-          type: string
-        waterUtility:
-          type: string
-        homeownersInsurance:
-          type: string
-        hasPastWaterDamage:
-          type: boolean
-        pastWaterDamageClaimAmount:
-          type: string
-        irrigationSchedule:
+        Address:
           type: object
           properties:
-            isEnabled:
+            address:
+              type: string
+            address2:
+              type: string
+            city:
+              type: string
+            state:
+              type: string
+            country:
+              type: string
+            postalCode:
+              type: string
+            timezone:
+              type: string
+
+        LocationProfile:
+          type: object
+          properties:
+            locationType:
+              type: string
+            residenceType:
+              type: string
+            waterSource:
+              type: string
+            locationSize:
+              type: string
+            showerBathCount:
+              type: number
+            toiletCount:
+              type: number
+            plumbingType:
+              type: string
+            homeownersInsurance:
+              type: string
+            waterUtility:
+              type: string
+            hasPastWaterDamage:
+                type: boolean
+            pastWaterDamageClaimAmount:
+                type: string
+
+        LocationProfileLegacy:
+          type: object
+          properties:
+            gallonsPerDayGoal:
+              type: number
+            occupants:
+              type: integer
+            stories:
+              type: integer
+            isProfileComplete:
               type: boolean
+            waterShutoffKnown:
+              $ref: '#/components/schemas/NoYesUnsure'
+            indoorAmenities:
+              type: array
+              items:
+                type: string
+            outdoorAmenities:
+              type: array
+              items:
+                type: string
+            plumbingAppliances:
+              type: array
+              items:
+                type: string
+
+        LocationAdditionalProps:
+          type: object
+          properties:
+            nickname:
+              type: string
+            irrigationSchedule:
+              type: object
+              properties:
+                isEnabled:
+                  type: boolean
+
+        LocationMutable:
+          allOf:
+            - $ref: '#/components/schemas/Address'
+            - $ref: '#/components/schemas/LocationProfile'
+            - $ref: '#/components/schemas/LocationProfileLegacy'
+            - $ref: '#/components/schemas/LocationAdditionalProps'
+
     LocationUpdate:
       $ref: '#/components/schemas/LocationMutable'
 
