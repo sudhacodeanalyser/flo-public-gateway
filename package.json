@@ -24,6 +24,7 @@
   "dependencies": {
     "@instana/collector": "1.72.0",
     "@instana/core": "1.72.0",
+    "@types/express-serve-static-core": "^4.17.0",
     "@types/glob": "^7.1.1",
     "@types/js-yaml": "^3.12.1",
     "@types/twilio": "^2.11.0",

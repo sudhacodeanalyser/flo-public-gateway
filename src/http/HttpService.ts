@@ -22,6 +22,10 @@ class HttpService {
 
   public async sendRequest(request: HttpRequest): Promise<any> {
     try {
+      // tslint:disable-next-line:no-console
+      console.log(this.baseUrl ? `${this.baseUrl}${request.url}` : request.url);
+
+
       const httpContextReq = this.httpContext && this.httpContext.request;
       const response = await this.httpClient.request({
         method: request.method,

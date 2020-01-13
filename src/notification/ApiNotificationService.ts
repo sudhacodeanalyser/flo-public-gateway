@@ -9,7 +9,7 @@ import {
   Device,
   DeviceAlarmSettings,
   NotificationStatistics,
-  PaginatedResult, Receipt,
+  PaginatedResult, Receipt, SendWithUsEvent,
   TwilioStatusEvent,
   UpdateDeviceAlarmSettings
 } from '../core/api';
@@ -133,27 +133,90 @@ class ApiNotificationService {
   }
 
   public async registerEmailServiceEvent(incidentId: string, userId: string, receipt: Receipt): Promise<void> {
+
+    const request = {
+      method: 'post',
+      url: `/email/events/${incidentId}/${userId}`,
+      body: receipt
+    };
+
+    // tslint:disable-next-line:no-console
+    console.log();
+    // tslint:disable-next-line:no-console
+    console.log('####### registerEmailServiceEvent');
+    // tslint:disable-next-line:no-console
+    console.log(request);
+
     return this.notificationApi.sendRequest({
       method: 'post',
-      url: `/status/email/events/${incidentId}/${userId}`,
-      body: receipt
+      url: `/email/events/${incidentId}/${userId}`,
+      body: {
+        receiptId: receipt.receipt_id
+      }
     });
   }
 
-  public async registerSendgridEmailEvent(events: any[]): Promise<void> {
+  public async registerSendgridEmailEvent(events: SendWithUsEvent[]): Promise<void> {
+    const formattedEvents = events
+      .map(event => _.mapKeys(event, (v, k) => _.camelCase(k)))
+      .map(event => ({
+        ...event,
+        category: JSON.stringify(event.category)
+      }));
+
+    // tslint:disable-next-line:no-console
+    console.log('');
+    // tslint:disable-next-line:no-console
+    console.log('registerSendgridEmailEvent');
+    // tslint:disable-next-line:no-console
+    console.log({
+      events: formattedEvents
+    });
+    // tslint:disable-next-line:no-console
+    console.log('');
+
+    const request = {
+      method: 'post',
+      url: `/email/events`,
+      body: {
+        events: formattedEvents
+      }
+    };
+
+    // tslint:disable-next-line:no-console
+    console.log();
+    // tslint:disable-next-line:no-console
+    console.log('####### registerSendgridEmailEvent');
+    // tslint:disable-next-line:no-console
+    console.log(request);
+
+
     return this.notificationApi.sendRequest({
       method: 'post',
-      url: `/status/email/sendgrid/events`,
+      url: `/email/events`,
       body: {
-        events
+        events: formattedEvents
       }
     });
   }
 
   public async registerSmsServiceEvent(incidentId: string, userId: string, event: TwilioStatusEvent): Promise<void> {
+    const request = {
+      method: 'post',
+      url: `/sms/events/${incidentId}/${userId}`,
+      body: event
+    };
+
+    // tslint:disable-next-line:no-console
+    console.log();
+    // tslint:disable-next-line:no-console
+    console.log('####### registerSmsServiceEvent');
+    // tslint:disable-next-line:no-console
+    console.log(request);
+
     return this.notificationApi.sendRequest({
       method: 'post',
-      url: `/status/sms/events/${incidentId}/${userId}`,
+      url: `/sms/events/${incidentId}/${userId}`,
       body: event
     });
   }

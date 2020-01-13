@@ -5,13 +5,18 @@ import {
   interfaces,
   queryParam,
   request,
-  requestBody
+  requestBody, requestParam
 } from 'inversify-express-utils';
 import * as t from 'io-ts';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
 import {
-  Receipt, ReceiptCodec, ServiceEventParamsCodec, TwilioStatusEvent, TwilioStatusEventCodec
+  Receipt,
+  ReceiptCodec,
+  SendWithUsEvent,
+  ServiceEventParamsCodec,
+  TwilioStatusEvent,
+  TwilioStatusEventCodec
 } from '../api';
 import { createMethod, httpController } from '../api/controllerUtils';
 import Request from '../api/Request';
@@ -40,40 +45,51 @@ export function DeliveryHookControllerFactory(container: Container, apiVersion: 
       super();
     }
 
-    @httpPost('/email/sendgrid/events', auth)
-    private async registerSendgridEmailEvent(@request() req: Request, @requestBody() eventInfo: any): Promise<void> {
+    @httpPost('/email/events',
+      // auth  // Ask helmut and See this: https://stackoverflow.com/questions/20865673/sendgrid-incoming-mail-webhook-how-do-i-secure-my-endpoint
+    )
+    private async registerSendgridEmailEvent(@request() req: Request, @requestBody() events: SendWithUsEvent[]): Promise<void> {
+      // tslint:disable-next-line:no-console
+      console.log('@@@@@@@@@@ SUCCESS');
+
       return this
         .notificationServiceFactory
         .create(req)
-        .registerSendgridEmailEvent(eventInfo);
+        .registerSendgridEmailEvent(events);
     }
 
-    @httpPost('/email/service/events/:incidentId/:userId',
+    @httpPost('/email/events/:incidentId/:userId',
       auth,
       serviceEventValidator
     )
     private async registerEmailServiceEvent(
       @request() req: Request,
-      @queryParam('incidentId') incidentId: string,
-      @queryParam('userId') userId: string,
+      @requestParam('incidentId') incidentId: string,
+      @requestParam('userId') userId: string,
       @requestBody() receipt: Receipt
     ): Promise<void> {
+      // tslint:disable-next-line:no-console
+      console.log('@@@@@@@@@@ SUCCESS');
+
       return this
         .notificationServiceFactory
         .create(req)
         .registerEmailServiceEvent(incidentId, userId, receipt);
     }
 
-    @httpPost('/status/sms/events/:incidentId/:userId',
-      twilioAuth,
+    @httpPost('/sms/events/:incidentId/:userId',
+      // twilioAuth,
       twilioStatusEventValidator
     )
     private async registerSmsServiceEvent(
       @request() req: Request,
-      @queryParam('incidentId') incidentId: string,
-      @queryParam('userId') userId: string,
+      @requestParam('incidentId') incidentId: string,
+      @requestParam('userId') userId: string,
       @requestBody() event: TwilioStatusEvent
     ): Promise<void> {
+      // tslint:disable-next-line:no-console
+      console.log('@@@@@@@@@@ SUCCESS');
+
       return this
         .notificationServiceFactory
         .create(req)
