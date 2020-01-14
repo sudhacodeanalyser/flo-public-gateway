@@ -51,18 +51,18 @@ export function TelemetryControllerFactory(container: Container, apiVersion: num
         E.fold(
           async () => this.telemetryService.publishTelemetry(telemetry),
           async puckTelemetry => {
-            if (!tokenMetadata.puckId || !tokenMetadata.macAddress) {
-              throw new ForbiddenError();
-            }
+            const telemetry = tokenMetadata.puckId ?
+              {
+                ...puckTelemetry,
+                deviceId: tokenMetadata.puckId,
+                data: {
+                  ...puckTelemetry.data,
+                  device_id: tokenMetadata.macAddress
+                }
+              } :
+              puckTelemetry;
 
-            return this.telemetryService.publishTelemetry({
-              ...puckTelemetry,
-              deviceId: tokenMetadata.puckId,
-              data: {
-                ...puckTelemetry.data,
-                device_id: tokenMetadata.macAddress
-              }
-            });
+            return this.telemetryService.publishTelemetry(puckTelemetry);
           }
         )
       );
