@@ -62,7 +62,7 @@ export function TelemetryControllerFactory(container: Container, apiVersion: num
               } :
               puckTelemetry;
 
-            return this.telemetryService.publishTelemetry(puckTelemetry);
+            return this.telemetryService.publishTelemetry(telemetry);
           }
         )
       );
