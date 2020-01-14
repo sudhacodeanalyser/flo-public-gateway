@@ -126,7 +126,7 @@ class UserResolver extends Resolver<User> {
     this.accountResolverFactory = depFactoryFactory<AccountResolver>('AccountResolver');
 
     if (!_.isEmpty(this.httpContext)) {
-      this.notificationServiceFactory = () => notificationServiceFactory.create(this.httpContext.request);
+      this.notificationServiceFactory = () => notificationServiceFactory.create(this.httpContext.request, true);
     }
   }
 

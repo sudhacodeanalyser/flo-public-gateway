@@ -18,7 +18,7 @@ import {
   TwilioStatusEvent,
   TwilioStatusEventCodec
 } from '../api';
-import { createMethod, httpController } from '../api/controllerUtils';
+import { httpController } from '../api/controllerUtils';
 import Request from '../api/Request';
 import { NotificationServiceFactory } from '../notification/NotificationService';
 import TwilioAuthMiddlewareFactory from "./TwilioAuthMiddlewareFactory";
@@ -34,6 +34,7 @@ export function DeliveryHookControllerFactory(container: Container, apiVersion: 
     body: ReceiptCodec
   }));
   const twilioStatusEventValidator = reqValidator.create(t.type({
+    params: ServiceEventParamsCodec,
     body: TwilioStatusEventCodec
   }));
 
@@ -49,12 +50,9 @@ export function DeliveryHookControllerFactory(container: Container, apiVersion: 
       // auth  // Ask helmut and See this: https://stackoverflow.com/questions/20865673/sendgrid-incoming-mail-webhook-how-do-i-secure-my-endpoint
     )
     private async registerSendgridEmailEvent(@request() req: Request, @requestBody() events: SendWithUsEvent[]): Promise<void> {
-      // tslint:disable-next-line:no-console
-      console.log('@@@@@@@@@@ SUCCESS');
-
       return this
         .notificationServiceFactory
-        .create(req)
+        .create(req, false)
         .registerSendgridEmailEvent(events);
     }
 
@@ -68,17 +66,14 @@ export function DeliveryHookControllerFactory(container: Container, apiVersion: 
       @requestParam('userId') userId: string,
       @requestBody() receipt: Receipt
     ): Promise<void> {
-      // tslint:disable-next-line:no-console
-      console.log('@@@@@@@@@@ SUCCESS');
-
       return this
         .notificationServiceFactory
-        .create(req)
+        .create(req, true)
         .registerEmailServiceEvent(incidentId, userId, receipt);
     }
 
     @httpPost('/sms/events/:incidentId/:userId',
-      // twilioAuth,
+      twilioAuth,
       twilioStatusEventValidator
     )
     private async registerSmsServiceEvent(
@@ -87,12 +82,9 @@ export function DeliveryHookControllerFactory(container: Container, apiVersion: 
       @requestParam('userId') userId: string,
       @requestBody() event: TwilioStatusEvent
     ): Promise<void> {
-      // tslint:disable-next-line:no-console
-      console.log('@@@@@@@@@@ SUCCESS');
-
       return this
         .notificationServiceFactory
-        .create(req)
+        .create(req, false)
         .registerSmsServiceEvent(incidentId, userId, event);
     }
   }

@@ -25,8 +25,8 @@ class AlertService {
       if (_.isEmpty(this.httpContext)) {
         throw new Error('HTTP context unavailable.');
       }
-      
-      return notificationServiceFactory.create(this.httpContext.request)
+
+      return notificationServiceFactory.create(this.httpContext.request, true)
     };
   }
 
@@ -81,11 +81,11 @@ class AlertService {
       await this.getFeedback(alarmEvent.deviceId, alarmEvent.id),
       Option.fold(
         () => Either.left([]),
-        alertFeedback => 
-          t.exact(UserFeedbackCodec).decode({ 
-            userId: alertFeedback.userId, 
+        alertFeedback =>
+          t.exact(UserFeedbackCodec).decode({
+            userId: alertFeedback.userId,
             createdAt: alertFeedback.createdAt,
-            feedback: alertFeedback.userFeedback 
+            feedback: alertFeedback.userFeedback
           })
       ),
       Either.fold(

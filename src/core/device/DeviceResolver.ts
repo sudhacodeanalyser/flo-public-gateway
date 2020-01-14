@@ -391,7 +391,7 @@ class DeviceResolver extends Resolver<Device> {
 
     if (!_.isEmpty(this.httpContext) && this.httpContext.request.get('Authorization')) {
       this.irrigationScheduleService = irrigationScheduleServiceFactory.create(this.httpContext.request);
-      this.notificationService = notificationServiceFactory.create(this.httpContext.request);
+      this.notificationService = notificationServiceFactory.create(this.httpContext.request, true);
       this.healthTestService = healthTestServiceFactory.create(this.httpContext.request);
     }
   }

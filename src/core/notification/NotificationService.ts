@@ -15,7 +15,7 @@ import Request from '../api/Request';
 import {Option} from 'fp-ts/lib/Option';
 
 export interface NotificationServiceFactory {
-  create(req: Request): NotificationService;
+  create(req: Request, withAuth: boolean): NotificationService;
 }
 
 export interface NotificationService {

@@ -20,10 +20,10 @@ class ApiNotificationServiceFactory implements NotificationServiceFactory  {
     this.deviceServiceFactory = depFactoryFactory<DeviceService>('DeviceService');
   }
 
-  public create(req: Request): NotificationService {
+  public create(req: Request, withAuth: boolean = true): NotificationService {
     const authToken = req.get('Authorization');
 
-    if (authToken === undefined)  {
+    if (withAuth && authToken === undefined)  {
       throw new UnauthorizedError();
     }
 
