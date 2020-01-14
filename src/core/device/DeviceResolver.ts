@@ -23,6 +23,7 @@ import { HealthTestServiceFactory, HealthTestService } from './HealthTestService
 import LocationTable from '../location/LocationTable';
 import { NonEmptyStringFactory } from '../api/validator/NonEmptyString';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
+import { MachineLearningService } from '../../machine-learning/MachineLearningService';
 
 const defaultHwThresholds = (deviceModel: string) => {
   const minZero = {
@@ -138,7 +139,6 @@ class DeviceResolver extends Resolver<Device> {
         const additionalProperties = await this.internalDeviceService.getDevice(device.macAddress);
 
         return additionalProperties && (additionalProperties.telemetry || null);
-
       } catch (err) {
         this.logger.error({ err });
         return null;
@@ -309,7 +309,25 @@ class DeviceResolver extends Resolver<Device> {
       try {
         const additionalProperties = await this.internalDeviceService.getDevice(device.macAddress);
 
-        return (additionalProperties && additionalProperties.fwProperties && additionalProperties.fwProperties.serial_number) || null
+        return (additionalProperties && additionalProperties.fwProperties && additionalProperties.fwProperties.serial_number) || null;
+      } catch (err) {
+        this.logger.error({ err });
+        return null;
+      }
+    },
+    battery: async (device: Device, shouldExpand = false) => {
+      if (device.deviceType !== DeviceType.PUCK) {
+        return null;
+      }
+
+      try {
+        const additionalProperties = await this.internalDeviceService.getDevice(device.macAddress);
+        const batteryLevel = (additionalProperties && additionalProperties.fwProperties && additionalProperties.fwProperties.telemetry_battery_percent) || 0;
+        const updatedTime = (additionalProperties && additionalProperties.lastHeardFromTime) || undefined;
+        return {
+          level: batteryLevel,
+          updated: updatedTime
+        };
       } catch (err) {
         this.logger.error({ err });
         return null;
@@ -364,6 +382,84 @@ class DeviceResolver extends Resolver<Device> {
     actionRules: async (device: Device, shouldExpand = false) => {
       const actionRulesResponse = await this.internalDeviceService.getActionRules(device.id);
       return (actionRulesResponse && actionRulesResponse.actionRules) || null;
+    },
+    pes: async (device: Device, shouldExpand = false) => {
+      try {
+
+        if (!shouldExpand) {
+          return null;
+        }
+
+        const mlData = await this.mlService.get(device.macAddress);
+
+        return mlData.pes;
+      } catch (err) {
+
+        if (this.logger) {
+          this.logger.error({ err });
+        }
+
+        return null;
+      }
+    },
+    floSense: async (device: Device, shouldExpand = false) => {
+      try {
+
+        if (!shouldExpand) {
+          return null;
+        }
+
+        const mlData = await this.mlService.get(device.macAddress);
+
+        return mlData.floSense;
+      } catch (err) {
+
+       if (this.logger) {
+          this.logger.error({ err });
+        }
+
+        return null;
+      }
+    },
+    audio: async (device: Device, shouldExpand = false) => {
+
+      if (device.deviceType !== DeviceType.PUCK) {
+        return null;
+      }
+
+      try {
+        const additionalProperties = await this.internalDeviceService.getDevice(device.macAddress);
+
+        return additionalProperties && additionalProperties.audio;
+      } catch (err) {
+        if (this.logger) {
+          this.logger.error({ err });
+        }
+
+        return null;
+      }
+    },
+    firmware: async (device: Device, shouldExpand = false) => {
+      if (!shouldExpand) {
+        return null;
+      }
+
+      try {
+        const additionProperties = await this.internalDeviceService.getDevice(device.macAddress);
+
+        return additionProperties && {
+          current: {
+            version: additionProperties.fwVersion
+          },
+          latest: additionProperties.latestFwInfo
+        };
+      } catch (err) {
+        if (this.logger) {
+          this.logger.error({ err });
+
+          return null;
+        }
+      }
     }
   };
   private locationResolverFactory: () => LocationResolver;
@@ -383,6 +479,7 @@ class DeviceResolver extends Resolver<Device> {
    @inject('PairingService') private pairingService: PairingService,
    @inject('HealthTestServiceFactory') healthTestServiceFactory: HealthTestServiceFactory,
    @inject('LocationTable') private locationTable: LocationTable,
+   @inject('MachineLearningService') private mlService: MachineLearningService,
    @injectHttpContext private readonly httpContext: interfaces.HttpContext
   ) {
     super();
@@ -467,7 +564,6 @@ class DeviceResolver extends Resolver<Device> {
       'installStatus',
       'learning',
       'healthTest',
-      'hardwareThresholds',
       'pairingData',
       'irrigationType',
       'irrigationSchedule',

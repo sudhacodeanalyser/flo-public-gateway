@@ -86,7 +86,12 @@ const RecordToModelSchema: StrictSchema<Device, DeviceRecordData>  = {
       configuredAt: input.puck_configured_at
     };
   },
-  actionRules: []
+  actionRules: [],
+  battery: () => undefined,
+  pes: () => undefined,
+  floSense: () => undefined,
+  audio: () => undefined,
+  firmware: () => undefined
 };
 
 const ModelToRecordSchema: StrictSchema<DeviceRecordData, Device> = {

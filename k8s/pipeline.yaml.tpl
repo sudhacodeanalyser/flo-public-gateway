@@ -44,6 +44,9 @@ secrets:
     NUM_WORKERS: "${NUM_WORKERS}"
     DYNAMODB_TIMEOUT_MS: "${DYNAMODB_TIMEOUT_MS}"
     AUTH_TIMEOUT_MS: "${AUTH_TIMEOUT_MS}"
+    SCIENCE_LAB_URL: "${SCIENCE_LAB_URL}"
+    SENSOR_METER_URL: "${SENSOR_METER_URL}"
+    PUCK_TOKEN_SECRET: "${PUCK_TOKEN_SECRET}"
 internalIngress:
   host: internal-ingress.flocloud.co
 routingIngress:

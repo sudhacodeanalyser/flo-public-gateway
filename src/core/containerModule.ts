@@ -9,6 +9,7 @@ import subscriptionContainerModule from './subscription/containerModule';
 import userContainerModule from './user/containerModule';
 import notificationContainerModule from './notification/containerModule';
 import waterContainerModule from './water/containerModule';
+import sensorsContainerModule from './sensors/containerModule';
 import sessionContainerModule from './session/containerModule';
 import alarmContainerModule from './alarm/containerModule';
 import alertContainerModule from './alert/containerModule';
@@ -30,6 +31,7 @@ export default [
   lookupContainerModule,
   notificationContainerModule,
   waterContainerModule,
+  sensorsContainerModule,
   sessionContainerModule,
   alarmContainerModule,
   alertContainerModule,

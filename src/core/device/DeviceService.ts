@@ -5,7 +5,7 @@ import { inject, injectable } from 'inversify';
 import _ from 'lodash';
 import { PairingService, QrData } from '../../api-v1/pairing/PairingService';
 import { InternalDeviceService } from '../../internal-device-service/InternalDeviceService';
-import { DependencyFactoryFactory, Device, DeviceCreate, DeviceType, DeviceUpdate, PropExpand, ValveState } from '../api';
+import { DependencyFactoryFactory, Device, DeviceCreate, DeviceType, DeviceUpdate, PropExpand, ValveState, FirmwareInfo } from '../api';
 import ConflictError from '../api/error/ConflictError';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import { DeviceResolver } from '../resolver';
@@ -13,6 +13,7 @@ import { EntityActivityAction, EntityActivityService, EntityActivityType, Locati
 import { SessionService } from '../session/SessionService';
 import { DirectiveService } from './DirectiveService';
 import { PairingResponse } from './PairingService';
+import { MachineLearningService } from '../../machine-learning/MachineLearningService';
 
 const { isNone, fromNullable } = O;
 type Option<T> = O.Option<T>;
@@ -29,6 +30,7 @@ class DeviceService {
     @inject('DependencyFactoryFactory') depFactoryFactory: DependencyFactoryFactory,
     @inject('InternalDeviceService') private internalDeviceService: InternalDeviceService,
     @inject('EntityActivityService') private entityActivityService: EntityActivityService,
+    @inject('MachineLearningService') private mlService: MachineLearningService
   ) {
     this.locationServiceFactory = depFactoryFactory<LocationService>('LocationService');
     this.sessionServiceFactory = depFactoryFactory<SessionService>('SessionService');
@@ -53,6 +55,7 @@ class DeviceService {
       throw new ResourceDoesNotExistError('Device does not exist');
     }
 
+    // TODO: Make all these operations parallel
     await this.internalDeviceService.upsertDevice(device.macAddress, deviceUpdate);
     const updatedDevice = await this.deviceResolver.updatePartial(id, deviceUpdate);
 
@@ -62,6 +65,18 @@ class DeviceService {
       } else if (deviceUpdate.valve.target === ValveState.CLOSED) {
         await directiveService.closeValve(id);
       }
+    }
+
+    if (deviceUpdate.pes || deviceUpdate.floSense) {
+      const updatedMLProps = await this.mlService.update(device.macAddress, {
+        ...(deviceUpdate.pes && { pes: deviceUpdate.pes }),
+        ...(deviceUpdate.floSense && { floSense: deviceUpdate.floSense })
+      });
+
+      return {
+        ...updatedDevice,
+        ...updatedMLProps
+      };
     }
 
     return updatedDevice;
@@ -140,6 +155,7 @@ class DeviceService {
   public async getAllByLocationId(locationId: string, expand?: PropExpand): Promise<Device[]> {
     return this.deviceResolver.getAllByLocationId(locationId, expand);
   }
+
 }
 
 export { DeviceService };

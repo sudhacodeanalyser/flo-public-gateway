@@ -45,7 +45,8 @@ function getDefaults(): { [key: string]: any } {
         postgresConnectionTimeoutMS: 10000,
         postgresIdleTimeoutMS: 60000,
         dynamoDBTimeout: 4000,
-        authTimeoutMS: 4000
+        authTimeoutMS: 4000,
+        sensorMeterUrl: 'https://flo-device-service.flocloud.co/v1',
       };
   }
 }
@@ -105,7 +106,9 @@ const config = {
   numWorkers: process.env.NUM_WORKERS,
   dynamoDBTimeoutMS: process.env.DYNAMODB_TIMEOUT_MS,
   authTimeoutMS: process.env.AUTH_TIMEOUT_MS,
-  twilioAuthToken: process.env.TWILIO_AUTH_TOKEN
+  twilioAuthToken: process.env.TWILIO_AUTH_TOKEN,
+  mlServiceURL: process.env.SCIENCE_LAB_URL,
+  sensorMeterUrl: process.env.SENSOR_METER_URL
 };
 
 export default {

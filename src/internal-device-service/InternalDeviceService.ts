@@ -22,11 +22,15 @@ class InternalDeviceService extends MemoizeMixin(HttpService) implements Firesto
 
     const hasDeviceType = (obj: any): obj is { deviceType: string} => {
       return obj.deviceType !== undefined;
-    }
+    };
 
-    const hasDeviceModel = (obj: any): obj is { deviceType: string} => {
+    const hasDeviceModel = (obj: any): obj is { deviceModel: string} => {
       return obj.deviceModel !== undefined;
-    }
+    };
+
+    const hasAudioSnooze = (obj: any): obj is { audio: { snoozeTo: string } } => {
+      return obj.audio && obj.audio.snoozeTo;
+    };
 
     const request = {
       method: 'post',
@@ -36,7 +40,8 @@ class InternalDeviceService extends MemoizeMixin(HttpService) implements Firesto
         ...(hasLocationId(device) && { locationId: device.location.id }),
         ...(hasDeviceType(device) && { make: device.deviceType}),
         ...(hasDeviceModel(device) && { model: device.deviceModel}),
-        ...(device.hardwareThresholds && { hwThresholds: device.hardwareThresholds })
+        ...(device.hardwareThresholds && { hwThresholds: device.hardwareThresholds }),
+        ...(hasAudioSnooze(device) && { audio: device.audio })
       }
     };
 

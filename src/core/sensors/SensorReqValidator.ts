@@ -29,7 +29,7 @@ export const ISODateString: ISODateStringCodec = t.brand(
 );
 
 const DateRangeCodec = t.type({
-  startDate: ISODateString,
+  startDate: t.union([t.undefined, ISODateString]),
   endDate: t.union([t.undefined, ISODateString]),
   interval: t.union([t.undefined, t.literal('1h'), t.literal('1d'), t.literal('1m')])
 });
@@ -42,6 +42,10 @@ interface RestrictedDateRangeBrand {
 const RestrictedDateRangeCodec = t.brand(
   DateRangeCodec,
   (dateRange): dateRange is t.Branded<DateRange, RestrictedDateRangeBrand> => {
+
+    if (!dateRange.startDate) {
+      return true;
+    }
 
     // Start date must be after NOW
     if (moment().isBefore(dateRange.startDate)) {
@@ -60,39 +64,6 @@ const RestrictedDateRangeCodec = t.brand(
   },
   'RestrictedDateRange'
 );
-
-export const getConsumption = t.type({
-  query: t.intersection([
-    RestrictedDateRangeCodec,
-    t.partial({
-      tz: t.string
-    }),
-    t.union([
-      t.type({
-        macAddress: t.string
-      }),
-      t.type({
-        locationId: t.string
-      })
-    ])
-  ])
-});
-
-export const getAverages = t.type({
-  query: t.intersection([
-    t.partial({
-      tz: t.string
-    }),
-    t.union([
-      t.type({
-        macAddress: t.string
-      }),
-      t.type({
-        locationId: t.string
-      })
-    ])
-  ])
-});
 
 export const getMetrics = t.type({
   query: t.intersection([

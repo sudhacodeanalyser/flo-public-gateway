@@ -12,12 +12,23 @@ const InternalConnectivityCodec = t.partial({
   rssi: t.number,
 });
 
-const InternalCurrentTelemetryCodec = t.type({
+const InternalDeviceCurrentTelemetryCodec = t.type({
   gpm: t.number,
   psi: t.number,
   tempF: t.number,
   updated: t.string,
 });
+
+const InternalPuckCurrentTelemetryCodec = t.type({
+  tempF: t.union([t.null, t.undefined, t.number]),
+  humidity: t.union([t.null, t.undefined, t.number]),
+  updated: t.string,
+});
+
+const InternalCurrentTelemetryCodec = t.union([
+  InternalDeviceCurrentTelemetryCodec,
+  InternalPuckCurrentTelemetryCodec
+]);
 
 const InternalTelemetryCodec = t.partial({
   current: InternalCurrentTelemetryCodec,
@@ -38,7 +49,16 @@ const InternalDeviceCodec = t.type({
   telemetry: t.union([InternalTelemetryCodec, t.null, t.undefined]),
   updatedTime: t.string,
   valveState: t.union([InternalValveStateCodec, t.null, t.undefined]),
-  hwThresholds: t.union([t.record(t.string, t.any), t.null, t.undefined])
+  hwThresholds: t.union([t.record(t.string, t.any), t.null, t.undefined]),
+  audio: t.union([t.undefined, t.null, t.type({
+    snoozeTo: t.string,
+    snoozeSeconds: t.number
+  })]),
+  latestFwInfo: t.type({
+    version: t.string,
+    sourceType: t.string,
+    sourceLocation: t.string
+  })
 });
 
 type InternalDevice = t.TypeOf<typeof InternalDeviceCodec>;

@@ -46,6 +46,11 @@ const DeviceMutableCodec = t.type({
   }),
   area: t.type({
     id: t.string
+  }),
+  pes: t.record(t.string, t.any),
+  floSense: t.record(t.string, t.any),
+  audio: t.type({
+    snoozeTo: t.string
   })
 });
 
@@ -68,7 +73,6 @@ const SystemModeCodec = t.intersection([
 type SystemModeData = t.TypeOf<typeof SystemModeCodec>;
 
 const ThresholdDefinitionCodec = t.type({
-
   okMin: t.number,
   okMax: t.number,
   maxValue: t.number,
@@ -81,7 +85,12 @@ export const HardwareThresholdsCodec = t.type({
   lpm: t.partial(ThresholdDefinitionCodec.props),
   kPa: t.partial(ThresholdDefinitionCodec.props),
   tempF: t.partial(ThresholdDefinitionCodec.props),
-  tempC: t.partial(ThresholdDefinitionCodec.props)
+  tempC: t.partial(ThresholdDefinitionCodec.props),
+  battery: t.partial(ThresholdDefinitionCodec.props),
+  humidity: t.partial(ThresholdDefinitionCodec.props),
+  tempEnabled: t.union([t.undefined, t.boolean]),
+  humidityEnabled: t.union([t.undefined, t.boolean]),
+  batteryEnabled: t.union([t.undefined, t.boolean])
 });
 
 export type HardwareThresholds = t.TypeOf<typeof HardwareThresholdsCodec>;
@@ -92,7 +101,7 @@ const DeviceCreateCodec = t.type({
   location: t.strict({ id: NonEmptyString }),
   deviceType: NonEmptyString,
   deviceModel: NonEmptyString,
-  hardwareThresholds: t.union([t.undefined, t.partial(HardwareThresholdsCodec.props)])
+  hardwareThresholds: t.union([t.undefined, t.exact(t.partial(HardwareThresholdsCodec.props))])
 });
 export const DeviceCreateValidator = t.exact(DeviceCreateCodec);
 export type DeviceCreate = t.TypeOf<typeof DeviceCreateValidator>;
@@ -110,7 +119,7 @@ export const DeviceUpdateValidator = t.exact(t.intersection([
     })
   }),
   t.partial({
-    hardwareThresholds: t.partial(HardwareThresholdsCodec.props)
+    hardwareThresholds: t.exact(t.partial(HardwareThresholdsCodec.props))
   })
 ]));
 
@@ -134,8 +143,13 @@ export const PairingDataCodec = t.type({
 
 export type PairingData = t.TypeOf<typeof PairingDataCodec>;
 
-export interface Device extends Omit<DeviceUpdate, 'valve' | 'puckConfig'>, TimestampedModel {
-  id: string,
+interface Battery {
+  level: number;
+  updated?: string;
+}
+
+export interface Device extends Omit<DeviceUpdate, 'valve' | 'puckConfig' | 'audio'>, TimestampedModel {
+  id: string;
   macAddress: string;
   location: Expandable<Location>;
   deviceType: string;
@@ -174,6 +188,23 @@ export interface Device extends Omit<DeviceUpdate, 'valve' | 'puckConfig'>, Time
     scheduledAt: string;
   };
   actionRules?: DeviceActionRule[];
+  battery?: Battery;
+  audio?: {
+    snoozeTo: string;
+    snoozeSeconds?: number;
+  };
+  firmware?: FirmwareInfo;
+}
+
+export interface FirmwareInfo {
+  current: {
+    version: string;
+  };
+  latest: {
+    version: string;
+    sourceType: string;
+    sourceLocation: string;
+  };
 }
 
 interface FwProperties {

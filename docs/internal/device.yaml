@@ -579,6 +579,24 @@ paths:
 
 components:
   schemas:
+    FirmwareInfo:
+      type: object
+      properties:
+        current:
+          type: object
+          properties:
+            version:
+              type: string
+        latest:
+          type: object
+          properties:
+            version:
+              type: string
+            sourceType:
+              type: string
+            sourceLocation:
+              type: string
+
     ActionRules:
       type: object
       properties:
@@ -722,6 +740,8 @@ components:
                       type: number
                     tempF:
                       type: number
+                    humidity:
+                      type: number
                     updated:
                       type: string
                       format: date-time
@@ -836,6 +856,26 @@ components:
                   format: date-time
             actionRules:
               $ref: '#/components/schemas/ActionRules'
+            battery:
+              type: object
+              description: Battery information - Puck only
+              properties:
+                level:
+                  type: number
+                updated:
+                  type: string
+                  format: date-time
+            audio:
+              type: object
+              description: Audio information - Puck only
+              properties:
+                snoozeSeconds:
+                  type: number
+                snoozeTo:
+                  type: string
+                  format: date-time
+            firmware:
+              $ref: '#/components/schemas/FirmwareInfo'
 
     DeviceExpandable:
       oneOf:

@@ -30,8 +30,8 @@ export function WaterControllerFactory(container: Container, apiVersion: number)
       reqValidator.create(ReqValidator.getConsumption)
     )
     private async getConsumption(
-      @queryParam('startDate') startDate: string, 
-      @queryParam('endDate') endDate?: string, 
+      @queryParam('startDate') startDate: ReqValidator.ISODateString, 
+      @queryParam('endDate') endDate?: ReqValidator.ISODateString, 
       @queryParam('macAddress') macAddress?: string,
       @queryParam('locationId') locationId?: string,
       @queryParam('interval') interval?: WaterConsumptionInterval,
@@ -70,8 +70,8 @@ export function WaterControllerFactory(container: Container, apiVersion: number)
     )
     private async getMetrics(
       @queryParam('macAddress') macAddress: string,
-      @queryParam('startDate') startDate: string, 
-      @queryParam('endDate') endDate?: string, 
+      @queryParam('startDate') startDate: ReqValidator.ISODateString, 
+      @queryParam('endDate') endDate?: ReqValidator.ISODateString, 
       @queryParam('interval') interval?: WaterConsumptionInterval,
       @queryParam('tz') timezone?: string 
     ): Promise<WaterMetricsReport> {
