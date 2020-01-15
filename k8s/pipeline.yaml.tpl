@@ -47,6 +47,7 @@ secrets:
     SCIENCE_LAB_URL: "${SCIENCE_LAB_URL}"
     SENSOR_METER_URL: "${SENSOR_METER_URL}"
     PUCK_TOKEN_SECRET: "${PUCK_TOKEN_SECRET}"
+    TWILIO_AUTH_TOKEN: "${TWILIO_AUTH_TOKEN}"
 internalIngress:
   host: internal-ingress.flocloud.co
 routingIngress:
