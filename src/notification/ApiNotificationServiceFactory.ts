@@ -27,7 +27,7 @@ class ApiNotificationServiceFactory implements NotificationServiceFactory  {
   public create(req: Request): NotificationService {
     const authToken = req.get('Authorization');
 
-    if (withAuth && authToken === undefined)  {
+    if (authToken === undefined)  {
       throw new UnauthorizedError();
     }
 
