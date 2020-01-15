@@ -26,7 +26,7 @@ class AlertService {
         throw new Error('HTTP context unavailable.');
       }
 
-      return notificationServiceFactory.create(this.httpContext.request, true)
+      return notificationServiceFactory.create(this.httpContext.request)
     };
   }
 

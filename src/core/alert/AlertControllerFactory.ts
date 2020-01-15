@@ -65,7 +65,7 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
 
       return this
         .notificationServiceFactory
-        .create(req, true)
+        .create(req)
         .retrieveStatistics(filters);
     }
 
@@ -141,7 +141,7 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
         return obj.locationId !== undefined;
       };
 
-      const service = this.notificationServiceFactory.create(req, true);
+      const service = this.notificationServiceFactory.create(req);
 
       const clearResponses = await Promise.all(data.alarmIds.map(alarmId => service.clearAlarm(alarmId, {
         ...(hasDeviceId(data) && { deviceId: data.deviceId }),
@@ -166,7 +166,7 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
       }))
     )
     private async submitIncidentFeedback(@request() req: Request, @response() res: express.Response, @requestParam('id') incidentId: string, @requestBody() userFeedback: UserFeedback & { deviceId: string, alarmId: number | undefined, systemMode: string | undefined }): Promise<UserFeedback> {
-      const alarmEvent = await this.notificationServiceFactory.create(req, true).getAlarmEvent(incidentId);
+      const alarmEvent = await this.notificationServiceFactory.create(req).getAlarmEvent(incidentId);
 
       await authMiddlewareFactory.create(async () => ({ icd_id: alarmEvent.deviceId }))(req, res, err => {
         if (err) {

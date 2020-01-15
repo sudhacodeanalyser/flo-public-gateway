@@ -32,7 +32,7 @@ export function IncidentControllerFactory(container: Container, apiVersion: numb
     private async createIncidentRaw(@request() req: Request, @requestBody() incidentInfo: any): Promise<string> {
       return this
         .notificationServiceFactory
-        .create(req, true)
+        .create(req)
         .sendAlarm(incidentInfo);
     }
 

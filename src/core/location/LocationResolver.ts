@@ -214,7 +214,7 @@ class LocationResolver extends Resolver<Location> {
     this.lookupServiceFactory = depFactoryFactory<LookupService>('LookupService');
 
     if (!_.isEmpty(this.httpContext) && this.httpContext.request.get('Authorization')) {
-      this.notificationService = notificationServiceFactory.create(this.httpContext.request, true);
+      this.notificationService = notificationServiceFactory.create(this.httpContext.request);
     }
   }
 

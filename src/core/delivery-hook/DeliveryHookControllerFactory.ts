@@ -52,7 +52,7 @@ export function DeliveryHookControllerFactory(container: Container, apiVersion: 
     private async registerSendgridEmailEvent(@request() req: Request, @requestBody() events: SendWithUsEvent[]): Promise<void> {
       return this
         .notificationServiceFactory
-        .create(req, false)
+        .createNoAuth(req)
         .registerSendgridEmailEvent(events);
     }
 
@@ -68,7 +68,7 @@ export function DeliveryHookControllerFactory(container: Container, apiVersion: 
     ): Promise<void> {
       return this
         .notificationServiceFactory
-        .create(req, true)
+        .createNoAuth(req)
         .registerEmailServiceEvent(incidentId, userId, receipt);
     }
 
@@ -84,7 +84,7 @@ export function DeliveryHookControllerFactory(container: Container, apiVersion: 
     ): Promise<void> {
       return this
         .notificationServiceFactory
-        .create(req, false)
+        .createNoAuth(req)
         .registerSmsServiceEvent(incidentId, userId, event);
     }
   }

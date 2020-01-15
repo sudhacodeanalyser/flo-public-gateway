@@ -15,7 +15,14 @@ import Request from '../api/Request';
 import {Option} from 'fp-ts/lib/Option';
 
 export interface NotificationServiceFactory {
-  create(req: Request, withAuth: boolean): NotificationService;
+  create(req: Request): NotificationService;
+  createNoAuth(req: Request): UnAuthNotificationService;
+}
+
+export interface UnAuthNotificationService {
+  registerSendgridEmailEvent(events: SendWithUsEvent[]): Promise<void>;
+  registerEmailServiceEvent(incidentId: string, userId: string, receipt: Receipt): Promise<void>;
+  registerSmsServiceEvent(incidentId: string, userId: string, event: TwilioStatusEvent): Promise<void>;
 }
 
 export interface NotificationService {
@@ -31,7 +38,4 @@ export interface NotificationService {
   updateAlarmSettings(userId: string, settings: UpdateDeviceAlarmSettings): Promise<void>;
   generateEventsSample(data: any): Promise<void>;
   retrieveStatistics(filters: string): Promise<NotificationStatistics>;
-  registerSendgridEmailEvent(events: SendWithUsEvent[]): Promise<void>;
-  registerEmailServiceEvent(incidentId: string, userId: string, receipt: Receipt): Promise<void>;
-  registerSmsServiceEvent(incidentId: string, userId: string, event: TwilioStatusEvent): Promise<void>;
 }
