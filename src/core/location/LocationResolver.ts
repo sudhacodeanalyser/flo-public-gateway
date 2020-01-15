@@ -99,7 +99,7 @@ class LocationResolver extends Resolver<Location> {
         };
 
         // TODO: Computed target is a hack to work around the fact that system mode reconciliation does not operate at
-        // the system mode level. Once that is implemented at the reconcilation service level, remove this code. 
+        // the system mode level. Once that is implemented at the reconcilation service level, remove this code.
         const computedTarget = target === SystemMode.SLEEP && revertScheduledAt && moment().isAfter(revertScheduledAt) ?
           revertMode || SystemMode.HOME :
           target;
@@ -158,12 +158,12 @@ class LocationResolver extends Resolver<Location> {
         return location.irrigationSchedule;
       }
 
-      const devices = (await this.deviceResolverFactory().getAllByLocationId(location.id, { 
-        $select: { 
-          irrigationSchedule: { 
-            $expand: true 
-          } 
-        } 
+      const devices = (await this.deviceResolverFactory().getAllByLocationId(location.id, {
+        $select: {
+          irrigationSchedule: {
+            $expand: true
+          }
+        }
       }))
       .filter(device => device.irrigationSchedule !== undefined);
 
@@ -172,7 +172,7 @@ class LocationResolver extends Resolver<Location> {
       };
     },
     notifications: async (location: Location, shouldExpand = false) => {
-      
+
       if (!this.notificationService) {
         return null;
       }

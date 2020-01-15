@@ -106,6 +106,7 @@ const config = {
   numWorkers: process.env.NUM_WORKERS,
   dynamoDBTimeoutMS: process.env.DYNAMODB_TIMEOUT_MS,
   authTimeoutMS: process.env.AUTH_TIMEOUT_MS,
+  twilioAuthToken: process.env.TWILIO_AUTH_TOKEN,
   mlServiceURL: process.env.SCIENCE_LAB_URL,
   sensorMeterUrl: process.env.SENSOR_METER_URL
 };

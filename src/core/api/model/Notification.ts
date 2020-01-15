@@ -193,3 +193,45 @@ export enum IncidentStatusReason {
 }
 
 export const IncidentStatusReasonCodec = convertEnumtoCodec(IncidentStatusReason);
+
+export const SendWithUsEventCodec = t.type({
+  category: t.unknown,
+  email: t.string,
+  event: t.string,
+  receipt_id: t.string,
+  send_at: t.number,
+  sg_event_id:t.string,
+  sg_message_id: t.string,
+  'smtp-id': t.string,
+  swu_template_id: t.string,
+  swu_template_version_id: t.string,
+  timestamp: t.number
+});
+
+export interface SendWithUsEvent extends t.TypeOf<typeof SendWithUsEventCodec> {}
+
+export const ReceiptCodec = t.type({
+  receipt_id: t.string, // TODO: We need to use snake case because the client uses it
+  email: t.unknown
+});
+
+export interface Receipt extends t.TypeOf<typeof ReceiptCodec> {}
+
+export const ServiceEventParamsCodec = t.type({
+  incidentId: t.string,
+  userId: t.string
+});
+
+
+export const TwilioStatusEventCodec = t.type({
+  From: t.string,
+  MessageSid: t.string,
+  SmsStatus: t.string,
+  SmsSid: t.string,
+  ApiVersion: t.string,
+  AccountSid: t.string,
+  MessageStatus: t.string,
+  To: t.string
+});
+
+export interface TwilioStatusEvent extends t.TypeOf<typeof TwilioStatusEventCodec> {}

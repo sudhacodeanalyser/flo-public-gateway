@@ -20,7 +20,7 @@ class AlarmService {
       if (_.isEmpty(this.httpContext)) {
         throw new Error('HTTP context unavailable.');
       }
-      
+
       return notificationServiceFactory.create(this.httpContext.request)
     };
   }

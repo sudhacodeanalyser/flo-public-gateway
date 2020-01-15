@@ -24,8 +24,10 @@
   "dependencies": {
     "@instana/collector": "1.72.0",
     "@instana/core": "1.72.0",
+    "@types/express-serve-static-core": "^4.17.0",
     "@types/glob": "^7.1.1",
     "@types/js-yaml": "^3.12.1",
+    "@types/twilio": "^2.11.0",
     "agentkeepalive": "^4.1.0",
     "aws-sdk": "^2.437.0",
     "axios": "^0.18.0",
@@ -62,6 +64,7 @@
     "swagger-jsdoc": "^3.2.9",
     "swagger-ui-express": "^4.0.2",
     "ts-enum-util": "^4.0.1",
+    "twilio": "^3.39.1",
     "uuid": "^3.3.2"
   },
   "devDependencies": {
