@@ -51,7 +51,7 @@ export function TelemetryControllerFactory(container: Container, apiVersion: num
         E.fold(
           async () => this.telemetryService.publishTelemetry(telemetry),
           async puckTelemetry => {
-            const telemetry = tokenMetadata.puckId ?
+            const telemetryData = tokenMetadata.puckId ?
               {
                 ...puckTelemetry,
                 deviceId: tokenMetadata.puckId,
@@ -62,7 +62,7 @@ export function TelemetryControllerFactory(container: Container, apiVersion: num
               } :
               puckTelemetry;
 
-            return this.telemetryService.publishTelemetry(telemetry);
+            return this.telemetryService.publishTelemetry(telemetryData);
           }
         )
       );
