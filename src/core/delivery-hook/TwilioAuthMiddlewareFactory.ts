@@ -14,6 +14,21 @@ class TwilioAuthMiddlewareFactory {
         const url = 'https://' + req.get('host') + req.originalUrl;
         const twilioSignature = req.get('x-twilio-signature') || '';
 
+        // tslint:disable-next-line:no-console
+        console.log('####################');
+        // tslint:disable-next-line:no-console
+        console.log('####################');
+        // tslint:disable-next-line:no-console
+        console.log('TwilioAuthMiddlewareFactory');
+        // tslint:disable-next-line:no-console
+        console.log(url);
+        // tslint:disable-next-line:no-console
+        console.log(twilioSignature);
+        // tslint:disable-next-line:no-console
+        console.log(req.body);
+        // tslint:disable-next-line:no-console
+        console.log(this.twilioAuthToken);
+
         if (client.validateRequest(this.twilioAuthToken, twilioSignature, url, req.body)) {
           return next();
         } else {

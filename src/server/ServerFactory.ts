@@ -48,6 +48,7 @@ function ServerConfigurationFactory(container: Container): (app: express.Applica
     });
 
     app.use(bodyParser.json());
+    app.use(bodyParser.urlencoded({ extended: true }));
 
     // if (config.enforceSSL) {
     //   app.use(enforce.HTTPS({ trustProtoHeader: true }));
@@ -207,7 +208,7 @@ function serializeReq(req?: Request | null): any {
         const isSensitive = sensitiveKeys
           .some(sensitiveKey => normalizedKey.includes(sensitiveKey));
 
-        return isSensitive ? 
+        return isSensitive ?
           '[REDACTED]' :
           value;
       })
