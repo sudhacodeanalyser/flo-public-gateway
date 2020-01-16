@@ -1,5 +1,5 @@
 import * as t from 'io-ts';
-import { PairingDataCodec as DevicePairingDataCodec } from '../../core/api';
+import { DevicePairingDataCodec } from '../../core/api';
 import { pipe } from 'fp-ts/lib/pipeable';
 import * as Either from 'fp-ts/lib/Either';
 
@@ -51,7 +51,7 @@ export type PairingData = t.TypeOf<typeof PairingDataCodec>;
 export const PairingDataFromResponse = new t.Type<PairingData, t.TypeOf<typeof PairingDataResponseCodec>, unknown>(
   'PairingDataFromResponse',
   (u: unknown): u is PairingData => PairingDataCodec.is(u),
-  (u: unknown, context: t.Context) => 
+  (u: unknown, context: t.Context) =>
     pipe(
       PairingDataResponseCodec.validate(u, context),
       Either.map(res => ({

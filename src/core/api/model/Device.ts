@@ -130,7 +130,7 @@ export interface DeviceUpdate extends t.TypeOf<typeof DeviceUpdateValidator> {
   };
 }
 
-export const PairingDataCodec = t.type({
+export const DevicePairingDataCodec = t.type({
   apName: t.string,
   loginToken: t.string,
   clientCert: t.string,
@@ -140,6 +140,17 @@ export const PairingDataCodec = t.type({
   websocketCertDer: t.union([t.undefined, t.string]),
   websocketKey: t.string
 });
+
+export const PuckPairingDataCodec = t.type({
+  accessToken: t.string
+});
+
+export type PuckPairingData = t.TypeOf<typeof PuckPairingDataCodec>;
+
+export const PairingDataCodec = t.union([
+  DevicePairingDataCodec,
+  PuckPairingDataCodec
+]);
 
 export type PairingData = t.TypeOf<typeof PairingDataCodec>;
 
