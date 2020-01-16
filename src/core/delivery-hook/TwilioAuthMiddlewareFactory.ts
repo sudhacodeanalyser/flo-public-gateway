@@ -4,6 +4,9 @@ import Request from "../api/Request";
 import * as express from 'express';
 import {inject, injectable} from "inversify";
 
+// tslint:disable-next-line:no-var-requires
+import webhooks from 'twilio/lib/webhooks/webhooks';
+
 @injectable()
 class TwilioAuthMiddlewareFactory {
   @inject('TwilioAuthToken') private twilioAuthToken: string;
@@ -13,21 +16,6 @@ class TwilioAuthMiddlewareFactory {
       try {
         const url = 'https://' + req.get('host') + req.originalUrl;
         const twilioSignature = req.get('x-twilio-signature') || '';
-
-        // tslint:disable-next-line:no-console
-        console.log('####################');
-        // tslint:disable-next-line:no-console
-        console.log('####################');
-        // tslint:disable-next-line:no-console
-        console.log('TwilioAuthMiddlewareFactory');
-        // tslint:disable-next-line:no-console
-        console.log(url);
-        // tslint:disable-next-line:no-console
-        console.log(twilioSignature);
-        // tslint:disable-next-line:no-console
-        console.log(req.body);
-        // tslint:disable-next-line:no-console
-        console.log(this.twilioAuthToken);
 
         if (client.validateRequest(this.twilioAuthToken, twilioSignature, url, req.body)) {
           return next();
