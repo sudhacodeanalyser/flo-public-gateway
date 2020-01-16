@@ -4,9 +4,6 @@ import Request from "../api/Request";
 import * as express from 'express';
 import {inject, injectable} from "inversify";
 
-// tslint:disable-next-line:no-var-requires
-import webhooks from 'twilio/lib/webhooks/webhooks';
-
 @injectable()
 class TwilioAuthMiddlewareFactory {
   @inject('TwilioAuthToken') private twilioAuthToken: string;
