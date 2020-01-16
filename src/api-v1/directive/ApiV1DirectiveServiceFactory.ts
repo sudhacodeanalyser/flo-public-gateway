@@ -23,7 +23,6 @@ class ApiV1DirectiveServiceFactory implements DirectiveServiceFactory  {
     if (authToken === undefined)  {
       throw new UnauthorizedError();
     }
-
     return this.directiveServiceFactory(this.apiV1Url, authToken, customHeaders);
   }
 }

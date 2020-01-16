@@ -1,9 +1,21 @@
 import { fold, fromNullable, Option } from 'fp-ts/lib/Option';
 import { pipe } from 'fp-ts/lib/pipeable';
 import _ from 'lodash';
-import { Alarm, AlarmEvent, AlarmListResult, ClearAlertResponse, Device, DeviceAlarmSettings, NotificationStatistics, PaginatedResult, UpdateDeviceAlarmSettings } from '../core/api';
+import {
+  Alarm,
+  AlarmEvent,
+  AlarmListResult,
+  ClearAlertResponse,
+  Device,
+  DeviceAlarmSettings,
+  NotificationStatistics,
+  PaginatedResult, Receipt, SendWithUsEvent,
+  TwilioStatusEvent,
+  UpdateDeviceAlarmSettings
+} from '../core/api';
 import { DeviceService } from '../core/device/DeviceService';
 import { HttpService } from '../http/HttpService';
+import * as t from "io-ts";
 
 class ApiNotificationService {
   constructor(
@@ -119,6 +131,49 @@ class ApiNotificationService {
       method: 'get',
       url: `/statistics?${filters}`
     });
+  }
+
+  public async registerEmailServiceEvent(incidentId: string, userId: string, receipt: Receipt): Promise<void> {
+    return this.notificationApi.sendRequest({
+      method: 'post',
+      url: `/email/events/${incidentId}/${userId}`,
+      body: {
+        receiptId: receipt.receipt_id
+      }
+    });
+  }
+
+  public async registerSendgridEmailEvent(events: SendWithUsEvent[]): Promise<void> {
+    const formattedEvents = this
+      .toLowerCamelCaseObject(events)
+      .map((event: SendWithUsEvent) => ({
+        ...event,
+        category: JSON.stringify(event.category)
+      }));
+
+    return this.notificationApi.sendRequest({
+      method: 'post',
+      url: `/email/events`,
+      body: {
+        events: formattedEvents
+      }
+    });
+  }
+
+  public async registerSmsServiceEvent(incidentId: string, userId: string, event: TwilioStatusEvent): Promise<void> {
+    return this.notificationApi.sendRequest({
+      method: 'post',
+      url: `/sms/events/${incidentId}/${userId}`,
+      body: this.toLowerCamelCaseObject(event)
+    });
+  }
+
+  private toLowerCamelCaseObject(obj: any): any {
+    if(_.isArray(obj)) {
+      return obj.map(x => this.toLowerCamelCaseObject(x))
+    } else {
+      return _.mapKeys(obj, (v, k) => _.camelCase(k))
+    }
   }
 
   private async getDevicesInfo(data: any): Promise<Array<Pick<Device, 'macAddress' | 'id'>>> {
