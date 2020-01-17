@@ -464,6 +464,16 @@ class DeviceResolver extends Resolver<Device> {
           return null;
         }
       }
+    },
+    nickname: async (device: Device, shouldExpand = false) => {
+      
+      if (device.nickname) {
+        return device.nickname;
+      } else if (device.deviceType === DeviceType.PUCK) {
+        return 'Smart Water Detector';
+      } else {
+        return 'Smart Water Shutoff';
+      }
     }
   };
   private locationResolverFactory: () => LocationResolver;
