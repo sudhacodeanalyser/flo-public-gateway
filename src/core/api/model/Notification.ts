@@ -118,7 +118,8 @@ export const AlarmSettingsCodec = t.type({
   smsEnabled: t.union([t.boolean, t.undefined]),
   emailEnabled: t.union([t.boolean, t.undefined]),
   pushEnabled: t.union([t.boolean, t.undefined]),
-  callEnabled: t.union([t.boolean, t.undefined])
+  callEnabled: t.union([t.boolean, t.undefined]),
+  isMuted: t.union([t.boolean, t.undefined])
 });
 
 export const DeviceAlarmSettingsCodec = t.type({
