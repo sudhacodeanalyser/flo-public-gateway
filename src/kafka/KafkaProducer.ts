@@ -32,7 +32,7 @@ class KafkaProducer {
     return this;
   }
 
-  public async send(topic: string, message: any): Promise<void> {
+  public async send(topic: string, message: any, key?: string): Promise<void> {
 
     if (topic === '') {
       throw new Error('Topic cannot be empty.');
@@ -45,6 +45,7 @@ class KafkaProducer {
     await self.kafkaProducer.send({
       topic,
       messages: [{
+        ...(key && { key }),
         value: Buffer.from(JSON.stringify(message)),
         timestamp: `${ Date.now() }`
       }]
