@@ -23,7 +23,7 @@ class KafkaProducer {
   }
 
   public async connect(): Promise<KafkaProducer> {
-    
+
     if (!this.isConnected) {
       await this.kafkaProducer.connect();
       this.isConnected = true;
@@ -44,7 +44,6 @@ class KafkaProducer {
 
     await self.kafkaProducer.send({
       topic,
-      acks: 1,
       messages: [{
         value: Buffer.from(JSON.stringify(message)),
         timestamp: `${ Date.now() }`
