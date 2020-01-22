@@ -50,7 +50,8 @@ class TelemetryService {
     const promises = telemetryMessages.map(telemetryMessage =>
       this.kafkaProducer.send(
         this.telemetryKafkaTopic,
-        telemetryMessage
+        telemetryMessage,
+        telemetryMessage.did
       )
     );
 
@@ -75,4 +76,3 @@ class TelemetryService {
 }
 
 export { TelemetryService };
-
