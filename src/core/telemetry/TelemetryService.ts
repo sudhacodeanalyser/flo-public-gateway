@@ -59,7 +59,7 @@ class TelemetryService {
   }
 
   private async publishPuckTelemetry(telemetry: any): Promise<void> {
-    return this.kafkaProducer.send(this.puckTelemetryKafkaTopic, telemetry);
+    return this.kafkaProducer.send(this.puckTelemetryKafkaTopic, telemetry, telemetry.device_id);
   }
 
   private isPuck(device: Device): boolean {
