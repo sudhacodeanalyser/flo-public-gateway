@@ -4,7 +4,7 @@ import { Location, PartialBy, Subscription, SubscriptionCreate, SubscriptionProv
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import ValidationError from '../api/error/ValidationError';
 import NotFoundError from '../api/error/NotFoundError';
-import { LocationService, UserService } from '../service';
+import { LocationService, UserService, EntityActivityService, EntityActivityType, EntityActivityAction } from '../service';
 import { SubscriptionResolver } from '../resolver';
 import { isNone, fromNullable, Option } from 'fp-ts/lib/Option';
 
@@ -14,6 +14,7 @@ class SubscriptionService {
     @inject('SubscriptionResolver') private subscriptionResolver: SubscriptionResolver,
     @inject('UserService') private userService: UserService,
     @inject('LocationService') private locationService: LocationService,
+    @inject('EntityActivityService') private entityActivityService: EntityActivityService,
     @multiInject('SubscriptionProvider') private subscriptionProviders: SubscriptionProvider[]
   ) {}
 
@@ -104,13 +105,16 @@ class SubscriptionService {
     };
     const allowTrial = !maybeExistingSubscription || !!(await subscriptionProvider.getCanceledSubscriptions(user.value)).length;
     const providerInfo = await subscriptionProvider.createSubscription(user.value, providerSubscription, allowTrial);
-    
-    return {
+    const subscription = {
       ...subscriptionData,
       plan,
       id: subscriptionId,
       provider: providerInfo
     };
+
+    await this.entityActivityService.publishEntityActivity(EntityActivityType.SUBSCRIPTION, EntityActivityAction.CREATED, subscription);
+    
+    return subscription;
   }
 
   public async createLocalSubscription(subscription: PartialBy<Subscription, 'id'>): Promise<Subscription> {
@@ -169,7 +173,11 @@ class SubscriptionService {
       await this.validateLocationExists(subscription.location.id);
     }
 
-    return this.subscriptionResolver.updatePartial(id, subscription);
+    const updatedSubscription = await this.subscriptionResolver.updatePartial(id, subscription);
+
+    await this.entityActivityService.publishEntityActivity(EntityActivityType.SUBSCRIPTION, EntityActivityAction.CREATED, updatedSubscription);
+
+    return updatedSubscription;
   }
 
   public async removeSubscription(id: string): Promise<void> {

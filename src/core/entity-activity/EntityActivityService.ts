@@ -14,7 +14,8 @@ export enum EntityActivityType {
   DEVICE = 'device',
   LOCATION = 'location',
   ACCOUNT = 'account',
-  USER = 'user'
+  USER = 'user',
+  SUBSCRIPTION = 'subscription'
 }
 
 interface EntityActivityMessage<T> {
