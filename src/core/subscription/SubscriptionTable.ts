@@ -1,13 +1,22 @@
 import { inject, injectable } from 'inversify';
 import DatabaseClient from '../../database/DatabaseClient';
 import DatabaseTable from '../../database/DatabaseTable';
-import { DynamoDbQuery } from '../../database/dynamo/DynamoDbClient';
+import DynamoDbClient, { DynamoDbQuery } from '../../database/dynamo/DynamoDbClient';
 import { SubscriptionRecordData } from './SubscriptionRecord';
 
 @injectable()
 class SubscriptionTable extends DatabaseTable<SubscriptionRecordData> {
-  constructor(@inject('DatabaseClient') dbClient: DatabaseClient) {
+  constructor(@inject('DatabaseClient') public dbClient: DynamoDbClient) {
     super(dbClient, 'Subscription');
+  }
+
+  public async scan(limit?: number, nextIterator?: any): Promise<{ items: SubscriptionRecordData[], nextIterator?: any }> {
+    const { items, lastEvaluatedKey } = await this.dbClient.scan<SubscriptionRecordData>(this.tableName, limit, nextIterator);
+
+    return {
+      items,
+      nextIterator: lastEvaluatedKey
+    };
   }
 
   public async getByRelatedEntityId(relatedEntityId: string): Promise<SubscriptionRecordData | null> {

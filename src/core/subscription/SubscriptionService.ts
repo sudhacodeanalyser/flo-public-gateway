@@ -208,6 +208,10 @@ class SubscriptionService {
     return subscriptionProvider.updatePaymentSource(user.value, token);
   }
 
+  public async scan(limit?: number, expand?: PropExpand, next?: any): Promise<{ items: Subscription[], nextIterator?: any }> {
+    return this.subscriptionResolver.scan(limit, expand, next); 
+  }
+
   private async validateLocationExists(locationId: string): Promise<Location> {
     const location = await this.locationService.getLocation(locationId);
     if (isNone(location)) {
