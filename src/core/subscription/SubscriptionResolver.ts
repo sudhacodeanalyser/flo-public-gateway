@@ -159,6 +159,18 @@ class SubscriptionResolver extends Resolver<Subscription> {
     return this.subscriptionPlanTable.get({ plan_id: planId });
   }
 
+  public async scan(limit?: number, expandProps?: PropExpand, next?: any): Promise<{ items: Subscription[], nextIterator?: any }> {
+    const { items, nextIterator } = await this.subscriptionTable.scan(limit, next);
+    const subscriptions = await Promise.all(
+      items.map(item => this.toModel(item, expandProps))
+    );
+
+    return {
+      items: subscriptions,
+      nextIterator
+    };
+  }
+
   private async toModel(subscriptionRecordData: SubscriptionRecordData | OldSubscriptionRecordData, expandProps?: PropExpand): Promise<Subscription> {
     const subscription = OldSubscriptionRecord.isOldSubscriptionRecord(subscriptionRecordData) ?
       OldSubscriptionRecord.toModel(subscriptionRecordData) :
