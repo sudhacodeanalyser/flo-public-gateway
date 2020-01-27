@@ -7,12 +7,16 @@ import {inject, injectable} from "inversify";
 @injectable()
 class TwilioAuthMiddlewareFactory {
   @inject('TwilioAuthToken') private twilioAuthToken: string;
+  @inject('PublicGatewayHost') private host: string;
 
   public create(): express.Handler {
     return async (req: Request, res: express.Response, next: express.NextFunction): Promise<void> => {
       try {
-        const url = 'https://' + req.get('host') + req.originalUrl;
+        const url = 'https://' + (this.host || req.get('host')) + req.originalUrl;
         const twilioSignature = req.get('x-twilio-signature') || '';
+
+        console.log(url);
+        console.log(twilioSignature);
 
         if (client.validateRequest(this.twilioAuthToken, twilioSignature, url, req.body)) {
           return next();

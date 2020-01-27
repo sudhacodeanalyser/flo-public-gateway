@@ -108,7 +108,8 @@ const config = {
   authTimeoutMS: process.env.AUTH_TIMEOUT_MS,
   twilioAuthToken: process.env.TWILIO_AUTH_TOKEN,
   mlServiceURL: process.env.SCIENCE_LAB_URL,
-  sensorMeterUrl: process.env.SENSOR_METER_URL
+  sensorMeterUrl: process.env.SENSOR_METER_URL,
+  publicGatewayHost: process.env.PUBLIC_GATEWAY_HOST
 };
 
 export default {

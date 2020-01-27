@@ -41,7 +41,7 @@ variables:
   REDIS_HOST: "redis-dev-cluster.9alsts.clustercfg.usw2.cache.amazonaws.com"
   TELEMETRY_TAGS_SERVICE_URL: "https://flo-telemetry-tags.flocloud.co"
   SENSOR_METER_URL: "https://flo-device-service.flocloud.co/v1"
-
+  PUBLIC_GATEWAY_HOST: "api-gw-dev.flocloud.co"
 stages:
   - build
   - test
@@ -204,6 +204,7 @@ K8sProd:
     REDIS_HOST_PROD: "flo-api.k5ahfc.clustercfg.usw2.cache.amazonaws.com"
     TELEMETRY_TAGS_SERVICE_URL_PROD: "https://flo-telemetry-tags.flosecurecloud.com"
     SENSOR_METER_URL_PROD: "https://flo-device-service.flosecurecloud.com/v1"
+    PUBLIC_GATEWAY_HOST_PROD: "api-gw.meetflo.com"
   image: kloiadocker/kloiahelm:0.0.1
   stage: deploy
   dependencies:
