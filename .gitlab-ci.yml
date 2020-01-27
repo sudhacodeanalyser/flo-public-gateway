@@ -42,6 +42,7 @@ variables:
   TELEMETRY_TAGS_SERVICE_URL: "https://flo-telemetry-tags.flocloud.co"
   SENSOR_METER_URL: "https://flo-device-service.flocloud.co/v1"
   PUBLIC_GATEWAY_HOST: "api-gw-dev.flocloud.co"
+  
 stages:
   - build
   - test
