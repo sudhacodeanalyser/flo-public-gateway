@@ -48,6 +48,7 @@ secrets:
     SENSOR_METER_URL: "${SENSOR_METER_URL_PROD}"
     PUCK_TOKEN_SECRET: "${PUCK_TOKEN_SECRET_PROD}"
     TWILIO_AUTH_TOKEN: "${TWILIO_AUTH_TOKEN_PROD}"
+    PUBLIC_GATEWAY_HOST: "${PUBLIC_GATEWAY_HOST_PROD}"
 internalIngress:
   host: internal-ingress.flosecurecloud.com
 routingIngress:
