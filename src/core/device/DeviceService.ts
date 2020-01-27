@@ -5,7 +5,7 @@ import { inject, injectable } from 'inversify';
 import _ from 'lodash';
 import { PairingService, QrData } from '../../api-v1/pairing/PairingService';
 import { InternalDeviceService } from '../../internal-device-service/InternalDeviceService';
-import { DependencyFactoryFactory, Device, DeviceCreate, DeviceType, DeviceUpdate, PropExpand, ValveState } from '../api';
+import { DependencyFactoryFactory, Device, DeviceCreate, DeviceType, DeviceUpdate, PropExpand, ValveState, FirmwareInfo } from '../api';
 import ConflictError from '../api/error/ConflictError';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import { DeviceResolver } from '../resolver';
@@ -68,7 +68,7 @@ class DeviceService {
     }
 
     if (deviceUpdate.pes || deviceUpdate.floSense) {
-      const updatedMLProps = await this.mlService.update(device.macAddress, { 
+      const updatedMLProps = await this.mlService.update(device.macAddress, {
         ...(deviceUpdate.pes && { pes: deviceUpdate.pes }),
         ...(deviceUpdate.floSense && { floSense: deviceUpdate.floSense })
       });
@@ -155,6 +155,7 @@ class DeviceService {
   public async getAllByLocationId(locationId: string, expand?: PropExpand): Promise<Device[]> {
     return this.deviceResolver.getAllByLocationId(locationId, expand);
   }
+
 }
 
 export { DeviceService };

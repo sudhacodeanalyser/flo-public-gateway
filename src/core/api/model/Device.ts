@@ -48,7 +48,10 @@ const DeviceMutableCodec = t.type({
     id: t.string
   }),
   pes: t.record(t.string, t.any),
-  floSense: t.record(t.string, t.any)
+  floSense: t.record(t.string, t.any),
+  audio: t.type({
+    snoozeTo: t.string
+  })
 });
 
 const MutableSystemModeCodec = t.type({
@@ -70,7 +73,6 @@ const SystemModeCodec = t.intersection([
 type SystemModeData = t.TypeOf<typeof SystemModeCodec>;
 
 const ThresholdDefinitionCodec = t.type({
-
   okMin: t.number,
   okMax: t.number,
   maxValue: t.number,
@@ -128,7 +130,7 @@ export interface DeviceUpdate extends t.TypeOf<typeof DeviceUpdateValidator> {
   };
 }
 
-export const PairingDataCodec = t.type({
+export const DevicePairingDataCodec = t.type({
   apName: t.string,
   loginToken: t.string,
   clientCert: t.string,
@@ -139,6 +141,17 @@ export const PairingDataCodec = t.type({
   websocketKey: t.string
 });
 
+export const PuckPairingDataCodec = t.type({
+  accessToken: t.string
+});
+
+export type PuckPairingData = t.TypeOf<typeof PuckPairingDataCodec>;
+
+export const PairingDataCodec = t.union([
+  DevicePairingDataCodec,
+  PuckPairingDataCodec
+]);
+
 export type PairingData = t.TypeOf<typeof PairingDataCodec>;
 
 interface Battery {
@@ -146,7 +159,7 @@ interface Battery {
   updated?: string;
 }
 
-export interface Device extends Omit<DeviceUpdate, 'valve' | 'puckConfig'>, TimestampedModel {
+export interface Device extends Omit<DeviceUpdate, 'valve' | 'puckConfig' | 'audio'>, TimestampedModel {
   id: string;
   macAddress: string;
   location: Expandable<Location>;
@@ -187,6 +200,22 @@ export interface Device extends Omit<DeviceUpdate, 'valve' | 'puckConfig'>, Time
   };
   actionRules?: DeviceActionRule[];
   battery?: Battery;
+  audio?: {
+    snoozeTo: string;
+    snoozeSeconds?: number;
+  };
+  firmware?: FirmwareInfo;
+}
+
+export interface FirmwareInfo {
+  current: {
+    version: string;
+  };
+  latest: {
+    version: string;
+    sourceType: string;
+    sourceLocation: string;
+  };
 }
 
 interface FwProperties {

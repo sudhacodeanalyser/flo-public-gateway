@@ -43,3 +43,4 @@ class ApiV1DirectiveService extends HttpService implements DirectiveService {
 }
 
 export { ApiV1DirectiveService };
+

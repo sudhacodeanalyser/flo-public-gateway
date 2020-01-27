@@ -1,0 +1,177 @@
+paths:
+  /api/v2/telemetry:
+    post:
+      summary: Sends Device or Puck Telemetry.
+      tags:
+        - Telemetry
+        - Devices
+        - Puck
+      produces:
+        - application/json
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/DeviceTelemetry'
+                - $ref: '#/components/schemas/PuckTelemetry'
+      responses:
+        202:
+          description: Telemetry sent.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Empty'
+        400:
+          description: Invalid request body.
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        403:
+          $ref: '#/components/responses/ForbiddenError'
+
+components:
+  schemas:
+    DeviceTelemetry:
+      type: object
+      properties:
+        deviceId:
+          type: string
+          format: uuid
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              did:
+                type: string
+              wf:
+                type: number
+              f:
+                type: number
+              t:
+                type: number
+              p:
+                type: number
+              ts:
+                type: number
+              sw1:
+                type: number
+                minimum: 0
+                maximum: 1
+              sw2:
+                type: number
+                minimum: 0
+                maximum: 1
+              v:
+                type: number
+                minimum: -1
+                maximum: 1
+              rssi:
+                type: number
+
+    PuckTelemetry:
+      type: object
+      properties:
+        deviceId:
+          type: string
+          format: uuid
+        data:
+          type: object
+          properties:
+            telemetry_rssi:
+              type: number
+            device_id:
+              type: string
+            fw_name:
+              type: string
+            telemetry_water:
+              type: boolean
+            alert_water_count:
+              type: number
+            fw_version:
+              type: number
+            timer_wifi_ap_timeout:
+              type: number
+            wifi_sta_mac:
+              type: string
+            telemetry_battery_voltage:
+              type: number
+            telemetry_humidity:
+              type: number
+            serial_number:
+              type: string
+            wifi_sta_ssid:
+              type: string
+            telemetry_temperature:
+              type: number
+            timer_alarm_active:
+              type: number
+            reason:
+              type: string
+              enum:
+                - battery
+                - button_sleep
+                - button_alarm
+                - snoozed
+                - freeze
+                - get
+                - heartbeat
+                - humidity
+                - paired
+                - resolved
+                - water
+                - check_configured
+                - configured
+            button_click_count:
+              type: number
+            pairing_state:
+              type: string
+              enum:
+                - authenticating
+                - dhcp
+                - connecting
+                - pairing
+                - updating
+                - paired
+                - configured
+                - error_password
+                - error_ssid
+                - error_dhcp
+                - error_internet
+                - error_pair
+                - error_update
+            wifi_sta_enc:
+              type: string
+            wifi_ap_ssid:
+              type: string
+            led_pattern:
+              type: string
+              enum:
+                - led_off
+                - led_red_solid
+                - led_blue_solid
+                - led_purple_solid
+                - led_blue_blink_slow
+                - led_red_blink_fast
+                - led_red_blink_slow
+                - led_red_blink_slower
+                - led_purple_blink_slow
+                - led_blue_purple_blink_slow
+                - led_blue_red_alternate
+            alert_water_active:
+              type: boolean
+            alert_state:
+              type: string
+              enum:
+                - inactive
+                - triggered
+                - resolved
+                - snoozed
+            beep_pattern:
+              type: string
+              enum:
+                - off
+                - alarm_info
+                - alarm_warning
+                - alarm_critical

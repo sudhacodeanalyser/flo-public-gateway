@@ -2,12 +2,14 @@ import { inject, injectable } from 'inversify';
 import moment from 'moment';
 import jwt from 'jsonwebtoken';
 import uuid from 'uuid';
+import * as Option from 'fp-ts/lib/Option';
 import * as E from 'fp-ts/lib/Either';
 import { pipe } from 'fp-ts/lib/pipeable';
 import * as AsyncEither from 'fp-ts/lib/TaskEither';
-import Logger from 'bunyan';
 import PuckTokenMetadataTable from './PuckTokenMetadataTable';
 import _ from 'lodash';
+import { PuckPairingData } from '../api';
+import { PuckTokenMetadata } from './PuckTokenMetadata';
 
 @injectable()
 class PuckTokenService {
@@ -35,15 +37,15 @@ class PuckTokenService {
       puckId,
       clientId
     }, value => value === true || !_.isEmpty(value));
-    
+
     const encodedToken = await this.encodeToken(tokenId, tokenData, createdAt, ttl);
 
-    await this.puckTokenMetadataTable.put(tokenMetadata);
+    await this.puckTokenMetadataTable.put(tokenMetadata as PuckTokenMetadata);
 
     return encodedToken;
   }
 
-  public async verifyToken(token: string): Promise<E.Either<Error, any>> {
+  public async verifyToken(token: string): Promise<E.Either<Error, PuckTokenMetadata>> {
 
     return pipe(
       () => this.decodeToken(token),
@@ -53,10 +55,33 @@ class PuckTokenService {
     )();
   }
 
+  public async retrievePairingData(puckId: string): Promise<Option.Option<PuckPairingData>> {
+    const tokenMetadataArray = await this.puckTokenMetadataTable.getAllByPuckId(puckId);
+    const currentTokenMetadata = _.find(tokenMetadataArray, (m: PuckTokenMetadata) => !m.isInit && !m.isRevoked);
+
+    // Doesn't exist or is expired
+    if (!currentTokenMetadata) {
+      return Option.none;
+    } else if (currentTokenMetadata.expiresAt && moment().isAfter(currentTokenMetadata.expiresAt)) {
+      return Promise.reject(new Error('Token expired.'));
+    }
+
+    const tokenData = {
+      ...currentTokenMetadata,
+      id: undefined,
+      iat: moment(currentTokenMetadata.createdAt).unix(),
+    }
+
+    const encodedToken = await this.encodeToken(currentTokenMetadata.id, tokenData, currentTokenMetadata.createdAt);
+    return Option.some({
+      accessToken: encodedToken
+    });
+  }
+
   private async encodeToken(tokenId: string, tokenData: any, createdAt: string, ttl?: number): Promise<string> {
     return new Promise((resolve, reject) => {
       jwt.sign(
-        tokenData, 
+        tokenData,
         this.puckTokenSecret,
         {
           jwtid: tokenId,
@@ -86,10 +111,10 @@ class PuckTokenService {
           }
         }
       );
-    });   
+    });
   }
 
-  private async lookupToken(tokenId: string): Promise<E.Either<Error, any>> {
+  private async lookupToken(tokenId: string): Promise<E.Either<Error, PuckTokenMetadata>> {
     try {
       const tokenMetadata = await this.puckTokenMetadataTable.get({ id: tokenId });
 

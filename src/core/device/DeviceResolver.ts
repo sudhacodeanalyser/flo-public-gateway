@@ -5,7 +5,7 @@ import _ from 'lodash';
 import uuid from 'uuid';
 import { fromPartialRecord } from '../../database/Patch';
 import { InternalDeviceService } from "../../internal-device-service/InternalDeviceService";
-import { DependencyFactoryFactory, Device, DeviceCreate, DeviceModelType, DeviceSystemModeNumeric, DeviceType, DeviceUpdate, PropExpand, SystemMode, ValveState, ValveStateNumeric, AdditionalDevicePropsCodec, PairingDataCodec } from '../api';
+import { DependencyFactoryFactory, Device, DeviceCreate, DeviceModelType, DevicePairingDataCodec, DeviceSystemModeNumeric, DeviceType, DeviceUpdate, PropExpand, SystemMode, ValveState, ValveStateNumeric, AdditionalDevicePropsCodec, PuckPairingDataCodec, PairingData } from '../api';
 import { translateNumericToStringEnum } from '../api/enumUtils';
 import DeviceTable from '../device/DeviceTable';
 import { NotificationService, NotificationServiceFactory } from '../notification/NotificationService';
@@ -24,6 +24,7 @@ import LocationTable from '../location/LocationTable';
 import { NonEmptyStringFactory } from '../api/validator/NonEmptyString';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import { MachineLearningService } from '../../machine-learning/MachineLearningService';
+import { PuckTokenService } from './PuckTokenService';
 
 const defaultHwThresholds = (deviceModel: string) => {
   const minZero = {
@@ -287,12 +288,15 @@ class DeviceResolver extends Resolver<Device> {
           return null;
         }
 
-        const pairingData = await this.pairingService.retrievePairingData(authToken, device.id);
+        const isPuck = device.deviceType === DeviceType.PUCK;
+        const pairingData: Option.Option<PairingData> = isPuck ?
+          await this.puckTokenService.retrievePairingData(device.id) :
+          await this.pairingService.retrievePairingData(authToken, device.id);
 
         return pipe(
           pairingData,
           Option.chain(result => pipe(
-            t.exact(PairingDataCodec).decode(result),
+            t.exact(isPuck ? PuckPairingDataCodec : DevicePairingDataCodec).decode(result),
             Either.fold(
               () => Option.none,
               data => Option.some(data)
@@ -322,7 +326,7 @@ class DeviceResolver extends Resolver<Device> {
 
       try {
         const additionalProperties = await this.internalDeviceService.getDevice(device.macAddress);
-        const batteryLevel = (additionalProperties && additionalProperties.fwProperties && additionalProperties.fwProperties.telemetry_battery_percent) || 69.69; // Temporary hard-coded value.
+        const batteryLevel = (additionalProperties && additionalProperties.fwProperties && additionalProperties.fwProperties.telemetry_battery_percent) || 0;
         const updatedTime = (additionalProperties && additionalProperties.lastHeardFromTime) || undefined;
         return {
           level: batteryLevel,
@@ -420,6 +424,56 @@ class DeviceResolver extends Resolver<Device> {
 
         return null;
       }
+    },
+    audio: async (device: Device, shouldExpand = false) => {
+
+      if (device.deviceType !== DeviceType.PUCK) {
+        return null;
+      }
+
+      try {
+        const additionalProperties = await this.internalDeviceService.getDevice(device.macAddress);
+
+        return additionalProperties && additionalProperties.audio;
+      } catch (err) {
+        if (this.logger) {
+          this.logger.error({ err });
+        }
+
+        return null;
+      }
+    },
+    firmware: async (device: Device, shouldExpand = false) => {
+      if (!shouldExpand) {
+        return null;
+      }
+
+      try {
+        const additionProperties = await this.internalDeviceService.getDevice(device.macAddress);
+
+        return additionProperties && {
+          current: {
+            version: additionProperties.fwVersion
+          },
+          latest: additionProperties.latestFwInfo
+        };
+      } catch (err) {
+        if (this.logger) {
+          this.logger.error({ err });
+
+          return null;
+        }
+      }
+    },
+    nickname: async (device: Device, shouldExpand = false) => {
+      
+      if (device.nickname) {
+        return device.nickname;
+      } else if (device.deviceType === DeviceType.PUCK) {
+        return 'Smart Water Detector';
+      } else {
+        return 'Smart Water Shutoff';
+      }
     }
   };
   private locationResolverFactory: () => LocationResolver;
@@ -440,6 +494,7 @@ class DeviceResolver extends Resolver<Device> {
    @inject('HealthTestServiceFactory') healthTestServiceFactory: HealthTestServiceFactory,
    @inject('LocationTable') private locationTable: LocationTable,
    @inject('MachineLearningService') private mlService: MachineLearningService,
+   @inject('PuckTokenService') private puckTokenService: PuckTokenService,
    @injectHttpContext private readonly httpContext: interfaces.HttpContext
   ) {
     super();
@@ -524,7 +579,6 @@ class DeviceResolver extends Resolver<Device> {
       'installStatus',
       'learning',
       'healthTest',
-      'pairingData',
       'irrigationType',
       'irrigationSchedule',
       'systemMode'

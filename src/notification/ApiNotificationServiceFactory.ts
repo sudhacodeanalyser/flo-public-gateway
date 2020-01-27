@@ -1,7 +1,11 @@
 import { inject, injectable } from 'inversify';
 import UnauthorizedError from '../auth/UnauthorizedError';
 import Request from '../core/api/Request';
-import { NotificationService, NotificationServiceFactory } from '../core/notification/NotificationService';
+import {
+  NotificationService,
+  NotificationServiceFactory,
+  UnAuthNotificationService
+} from '../core/notification/NotificationService';
 import { ApiNotificationService } from './ApiNotificationService';
 import { DeviceService } from '../core/device/DeviceService';
 import { DependencyFactoryFactory } from '../core/api';
@@ -28,6 +32,10 @@ class ApiNotificationServiceFactory implements NotificationServiceFactory  {
     }
 
     return new ApiNotificationService(this.deviceServiceFactory, this.httpServiceFactory(this.notificationApiUrl, authToken));
+  }
+
+  public createNoAuth(req: Request): UnAuthNotificationService {
+    return new ApiNotificationService(this.deviceServiceFactory, this.httpServiceFactory(this.notificationApiUrl));
   }
 }
 

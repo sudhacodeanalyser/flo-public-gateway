@@ -579,6 +579,24 @@ paths:
 
 components:
   schemas:
+    FirmwareInfo:
+      type: object
+      properties:
+        current:
+          type: object
+          properties:
+            version:
+              type: string
+        latest:
+          type: object
+          properties:
+            version:
+              type: string
+            sourceType:
+              type: string
+            sourceLocation:
+              type: string
+
     ActionRules:
       type: object
       properties:
@@ -797,24 +815,9 @@ components:
                   type: string
                   format: date-time
             pairingData:
-              type: object
-              properties:
-                apName:
-                  type: string
-                loginToken:
-                  type: string
-                clientCert:
-                  type: string
-                clientKey:
-                  type: string
-                serverCert:
-                  type: string
-                websocketCert:
-                  type: string
-                websocketCertDer:
-                  type: string
-                websocketKey:
-                  type: string
+              oneOf:
+                - $ref: '#/components/schemas/DevicePairingData'
+                - $ref: '#/components/schemas/PuckPairingData'
             serialNumber:
               type: string
             healthTest:
@@ -847,6 +850,17 @@ components:
                 updated:
                   type: string
                   format: date-time
+            audio:
+              type: object
+              description: Audio information - Puck only
+              properties:
+                snoozeSeconds:
+                  type: number
+                snoozeTo:
+                  type: string
+                  format: date-time
+            firmware:
+              $ref: '#/components/schemas/FirmwareInfo'
 
     DeviceExpandable:
       oneOf:
@@ -955,3 +969,29 @@ components:
         endDate:
           type: string
           format: date-time
+
+    DevicePairingData:
+      type: object
+      properties:
+        apName:
+          type: string
+        loginToken:
+          type: string
+        clientCert:
+          type: string
+        clientKey:
+          type: string
+        serverCert:
+          type: string
+        websocketCert:
+          type: string
+        websocketCertDer:
+          type: string
+        websocketKey:
+          type: string
+
+    PuckPairingData:
+      type: object
+      properties:
+        accessToken:
+          type: string

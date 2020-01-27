@@ -1,14 +1,13 @@
-import express from 'express';
 import { isNone, Option, some } from 'fp-ts/lib/Option';
 import { Container, inject } from 'inversify';
-import { BaseHttpController, httpDelete, httpGet, httpPost, interfaces, queryParam, request, requestBody, requestParam, httpPut, all } from 'inversify-express-utils';
+import { BaseHttpController, httpDelete, httpGet, httpPost, interfaces, queryParam, request, requestBody, requestParam, all } from 'inversify-express-utils';
 import * as t from 'io-ts';
 import uuid from 'uuid';
 import { QrData, QrDataValidator } from '../../api-v1/pairing/PairingService';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import { InternalDeviceService } from '../../internal-device-service/InternalDeviceService';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
-import { Device, DeviceActionRule, DeviceActionRules, DeviceActionRulesCreate, DeviceActionRulesCreateCodec, DeviceActionRuleTypeUpsert, DeviceActionRuleTypeUpsertCodec, DeviceCreate, DeviceCreateValidator, DeviceType, DeviceUpdate, DeviceUpdateValidator, SystemMode as DeviceSystemMode, SystemModeCodec as DeviceSystemModeCodec, HardwareThresholdsCodec, HardwareThresholds } from '../api';
+import { Device, DeviceActionRules, DeviceActionRulesCreate, DeviceActionRulesCreateCodec, DeviceCreate, DeviceCreateValidator, DeviceType, DeviceUpdate, DeviceUpdateValidator, SystemMode as DeviceSystemMode, SystemModeCodec as DeviceSystemModeCodec, HardwareThresholdsCodec, HardwareThresholds, FirmwareInfo } from '../api';
 import { asyncMethod, authorizationHeader, createMethod, deleteMethod, httpController, parseExpand, withResponseType } from '../api/controllerUtils';
 import { convertEnumtoCodec } from '../api/enumUtils';
 import ForbiddenError from '../api/error/ForbiddenError';
@@ -75,7 +74,8 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       } else if (
         (revertMinutes !== undefined && revertMode === undefined) ||
         (revertMode !== undefined && revertMinutes === undefined) ||
-        (revertMinutes !== undefined && revertMode !== undefined && target !== DeviceSystemMode.SLEEP)
+        (revertMinutes !== undefined && revertMode !== undefined && target !== DeviceSystemMode.SLEEP) || 
+        revertMode === DeviceSystemMode.SLEEP
       ) {
         return false;
       } else {
@@ -534,7 +534,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     }
 
     @all('/:id/pes/*',
-      authWithId
+      authMiddlewareFactory.create(undefined, 'ALL/api/v2/devices/$/pes/*')
     )
     private async forwardToPES(@request() req: Request, @requestBody() body: any, @requestParam('id') id: string): Promise<any> {
       const device = await this.deviceService.getDeviceById(id, {
@@ -554,7 +554,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     }
 
     @all('/:id/floSense/*',
-      authWithId
+      authMiddlewareFactory.create(undefined, 'ALL/api/v2/devices/$/floSense/*')
     )
     private async forwardToFloSense(@request() req: Request, @requestBody() body: any, @requestParam('id') id: string): Promise<any> {
       const device = await this.deviceService.getDeviceById(id, {
