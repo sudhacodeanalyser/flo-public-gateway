@@ -29,9 +29,7 @@ export interface DeviceRecordData {
 const RecordToModelSchema: StrictSchema<Device, DeviceRecordData>  = {
   id: 'id',
   macAddress: 'device_id',
-  nickname: (input: DeviceRecordData) => {
-    return _.get(input, 'nickname', 'Flo by Moen Device');
-  },
+  nickname: 'nickname',
   installationPoint: 'installation_point',
   location: {
     id: 'location_id'

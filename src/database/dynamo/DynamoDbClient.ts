@@ -197,6 +197,23 @@ class DynamoDbClient implements DatabaseClient {
     return items;
   }
 
+  public _scan(tableName: string, limit?: number, exclusiveStartKey?: KeyMap): AWS.Request<AWS.DynamoDB.DocumentClient.ScanOutput, AWS.AWSError> {
+    return this.dynamoDb.scan({
+      TableName: this.tablePrefix + tableName,
+      Limit: limit,
+      ExclusiveStartKey: exclusiveStartKey
+    });
+  }
+
+  public async scan<T>(tableName: string, limit: number = 100, exclusiveStartKey?: KeyMap): Promise<{ items: T[], lastEvaluatedKey?: KeyMap }> {
+    const { Items = [], LastEvaluatedKey } = await this._scan(tableName, Math.min(limit, 100), exclusiveStartKey).promise();
+
+    return {
+      items: Items.map(item => this.sanitizeRead(item as T)) as T[],
+      lastEvaluatedKey: LastEvaluatedKey
+    };
+  }
+
   private createCondition(key: KeyMap): Partial<AWS.DynamoDB.DocumentClient.UpdateItemInput> {
     const condTuples = _.map(key, (value, name) => ({
       name,

@@ -475,3 +475,5 @@ components:
           type: boolean
         callEnabled:
           type: boolean
+        isMuted:
+          type: boolean

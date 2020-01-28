@@ -131,18 +131,28 @@ class UserResolver extends Resolver<User> {
   }
 
   public async updatePartialUser(id: string, partialUser: Partial<User>): Promise<User> {
+    const userRecord = UserRecord.fromModel(partialUser);
     const userDetailRecord = UserDetailRecord.fromModel(partialUser);
-    const patch = fromPartialRecord(userDetailRecord);
+    const userPatch = _.isEmpty(userRecord) ? undefined : fromPartialRecord(userRecord);
+    const userDetailPatch = _.isEmpty(userDetailRecord) ? undefined : fromPartialRecord(userDetailRecord);
 
-    const updatedUserDetailRecord = await this.userDetailTable.update({ user_id: id }, patch);
-    const userRecord = await this.userTable.get({ id });
+    const updatedUserRecord = await (
+      userPatch ?
+        this.userTable.update({ id }, userPatch) :
+        this.userTable.get({ id })
+    );
+    const updatedUserDetailRecord = updatedUserRecord && (await (
+      userDetailPatch ? 
+        this.userDetailTable.update({ user_id: id }, userDetailPatch) :
+        this.userDetailTable.get({ user_id: id })
+    ));
 
-    if (userRecord === null) {
+    if (updatedUserRecord === null || updatedUserDetailRecord === null) {
       // This should not happen, unless a user is deleted between the update and retrieval.
       throw new ResourceDoesNotExistError();
     }
 
-    return new UserRecord({ ...userRecord, ...updatedUserDetailRecord }).toModel();
+    return new UserRecord({ ...updatedUserRecord, ...updatedUserDetailRecord }).toModel();
   }
 
   public async getUserById(id: string, expandProps?: PropExpand): Promise<User | null> {

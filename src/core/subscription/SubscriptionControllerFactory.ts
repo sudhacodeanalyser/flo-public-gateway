@@ -11,6 +11,9 @@ import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import * as Responses from '../api/response';
 import { SubscriptionService } from '../service';
 import Request from '../api/Request';
+import { either } from 'fp-ts/lib/Either';
+import ValidationError from '../api/error/ValidationError';
+
 export function SubscriptionControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
   const authMiddlewareFactory = container.get<AuthMiddlewareFactory>('AuthMiddlewareFactory');
@@ -19,6 +22,21 @@ export function SubscriptionControllerFactory(container: Container, apiVersion: 
   // of which location or account for which you are creating the subscription.
   const auth = authMiddlewareFactory.create(undefined, 'ALL/api/v2/subscriptions');
 
+  type Integer = t.TypeOf<typeof t.Integer>;
+
+  const IntegerFromString = new t.Type<Integer, string, unknown>(
+    'IntegerFromString',
+    (u): u is Integer => t.Integer.is(u),
+    (u, c) => {
+      return either.chain(t.string.validate(u, c), str => {
+        const value = parseInt(str, 10);
+
+        return isNaN(value) ? t.failure(str, c) : t.success(value);
+      });
+    },
+    a => `${ a }`
+  ) 
+
   @httpController({ version: apiVersion }, '/subscriptions')
   class SubscriptionController extends BaseHttpController {
     constructor(
@@ -26,6 +44,34 @@ export function SubscriptionControllerFactory(container: Container, apiVersion: 
       @multiInject('SubscriptionProviderWebhookHandler') private webhookHandlers: SubscriptionProviderWebhookHandler[]
     ) {
       super();
+    }
+
+    @httpGet(
+      '/',
+      auth,
+      reqValidator.create(t.type({
+        query: t.partial({
+          next: t.any,
+          expand: t.string,
+          size: IntegerFromString
+        })
+      }))
+    )
+    private async scan(@queryParam('next') next?: any, @queryParam('expand') expand?: string, @queryParam('size') size?: number): Promise<{ items: Responses.SubscriptionResponse[], nextIterator?: any }> {
+      let nextIterator: any | undefined;
+      try {
+        nextIterator = next && JSON.parse(Buffer.from(next, 'base64').toString());
+      } catch {
+        throw new ValidationError('Invalid next iterator');
+      }
+
+      const expandProps = parseExpand(expand);
+      const result = await this.subscriptionService.scan(size, expandProps, nextIterator);
+
+      return {
+        items: result.items.map(item => Responses.Subscription.fromModel(item)),
+        nextIterator: result.nextIterator && Buffer.from(JSON.stringify(result.nextIterator)).toString('base64')
+      };
     }
 
     @httpPost(
