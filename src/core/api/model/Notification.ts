@@ -232,7 +232,8 @@ export const TwilioStatusEventCodec = t.type({
   ApiVersion: t.string,
   AccountSid: t.string,
   MessageStatus: t.string,
-  To: t.string
+  To: t.string,
+  ErrorCode: t.union([t.string, t.undefined])
 });
 
 export interface TwilioStatusEvent extends t.TypeOf<typeof TwilioStatusEventCodec> {}
