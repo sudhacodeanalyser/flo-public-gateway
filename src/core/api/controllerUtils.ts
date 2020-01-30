@@ -2,16 +2,17 @@ import _ from 'lodash';
 import { controller, interfaces, HttpResponseMessage, JsonContent, requestHeaders, queryParam, httpMethod as inversifyHttpMethod } from 'inversify-express-utils';
 import ResourceDoesNotExistError from './error/ResourceDoesNotExistError';
 import NotFoundError from './error/NotFoundError';
-import { PropExpand, Expandable } from './index';
+import ValidationError from './error/ValidationError';
+import { PropExpand, Expandable, PropSelectRestIntersection } from './index';
 import { Response } from './response';
 import { Option, isNone } from 'fp-ts/lib/Option';
 import express from 'express';
 
-export function parseExpand(expand?: string): PropExpand {
+export function parseExpand(expand?: string, fields?: string): PropExpand {
   
-  if (!expand) {
+  if (!expand && !fields) {
     return { $select: true }
-  } else if (expand.includes('_all')) {
+  } else if (expand && expand.includes('_all')) {
     return {
       $select: {
         $expandAll: true
@@ -19,22 +20,81 @@ export function parseExpand(expand?: string): PropExpand {
     };
   }
 
-  const select = (expand === undefined ? '' : expand).split(/,(?![^(]*\))/)
+  return {
+    $select: _parseExpand(expand, fields)
+  };
+}
+
+function lexify(str: string): string[] {
+  let nestCount = 0;
+  let token = '';
+  const tokens = [];
+
+  for (const c of str.trim()) {
+    if (c === '(') {
+      nestCount++;
+    } else if (c === ')') {
+      nestCount--;
+    } 
+
+    if (c === ',' && nestCount === 0) {
+      tokens.push(token);
+      token = '';
+    } else {
+      token += c.trim();
+    }
+  }
+
+  if (token !== '') {
+    tokens.push(token);
+  }
+
+  if (nestCount !== 0) {
+    throw new ValidationError('Unbalanced parentheses');
+  }
+
+  return tokens;
+}
+
+function _parseExpand(expand?: string, fields?: string): PropSelectRestIntersection {
+  const fieldSelect = lexify(fields === undefined ? '' : fields)
     .filter(prop => !_.isEmpty(prop))
     .reduce((acc, prop) => {
-      const match = prop.match(/([^()]+)\((.*)\)$/);
+      const match = prop.split('(');
+      const property = match[0];
+      const subProps = (
+        match.length > 1 ? 
+          lexify(match.slice(1).join('(').slice(0, -1)) : 
+          []
+      )
+      .map(subProp => _parseExpand(undefined, subProp))
+      .reduce((subAcc, parsedSubProp) => ({
+        ...subAcc,
+        ...parsedSubProp
+      }), {});
 
- 
-      const property = !match ? prop : match[1];
-      const subProps = (match ? match[2].split(',') : [])
-        .reduce((subAcc, subProp) => ({
-          ...subAcc,
-          [subProp]: {
-            $expand: true
-          }
-        }), {});
+      return {
+        ...acc,
+        [property]: _.isEmpty(subProps) ? true : { $select: subProps }
+      };
 
+    }, {})
 
+  const select = lexify(expand === undefined ? '' : expand)
+    .filter(prop => !_.isEmpty(prop))
+    .reduce((acc, prop) => {
+      const match = prop.split('(');
+      const property = match[0];
+      const subProps = (
+        match.length > 1 ? 
+          lexify(match.slice(1).join('(').slice(0, -1)) : 
+          []
+      )        
+      .map(subProp => _parseExpand(subProp, undefined))
+      .reduce((subAcc, parsedSubProp) => ({
+        ...subAcc,
+        ...parsedSubProp
+      }), {});
 
       return {
         ...acc,
@@ -44,15 +104,14 @@ export function parseExpand(expand?: string): PropExpand {
             ...subProps,
             $rest: true
           }
-        }
+        },
+        $rest: true
       }
     }, {});
 
   return {
-    $select: {
-      ...select,
-      $rest: true
-    }
+    ..._.merge(select, fieldSelect),
+    ...(_.isEmpty(fieldSelect) ? { $rest: true } : {})
   };
 }
 

@@ -26,12 +26,12 @@ class SubscriptionResolver extends Resolver<Subscription> {
       }
       return new SubscriptionPlanRecord(subscriptionPlanRecordData).toModel();
     },
-    location: async (subscription: Subscription, shouldExpand = false) => {
+    location: async (subscription: Subscription, shouldExpand = false, expandProps?: PropExpand) => {
       if (!shouldExpand) {
         return null;
       }
 
-      return this.locationResolverFactory().get(subscription.location.id);
+      return this.locationResolverFactory().get(subscription.location.id, expandProps);
     }
   };
   private locationResolverFactory: () => LocationResolver;

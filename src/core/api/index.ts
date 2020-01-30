@@ -33,7 +33,7 @@ interface PropSelectOptions {
   '$expandAll'?: true;
 }
 
-type PropSelectRestIntersection = PropSelect & PropSelectOptions;
+export type PropSelectRestIntersection = PropSelect & PropSelectOptions;
 
 export interface PropExpand {
   '$expand'?: boolean;
