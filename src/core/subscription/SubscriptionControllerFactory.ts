@@ -53,11 +53,12 @@ export function SubscriptionControllerFactory(container: Container, apiVersion: 
         query: t.partial({
           next: t.any,
           expand: t.string,
-          size: IntegerFromString
+          size: IntegerFromString,
+          fields: t.string
         })
       }))
     )
-    private async scan(@queryParam('next') next?: any, @queryParam('expand') expand?: string, @queryParam('size') size?: number): Promise<{ items: Responses.SubscriptionResponse[], nextIterator?: any }> {
+    private async scan(@queryParam('next') next?: any, @queryParam('expand') expand?: string, @queryParam('fields') fields?: string, @queryParam('size') size?: number): Promise<{ items: Responses.SubscriptionResponse[], nextIterator?: any }> {
       let nextIterator: any | undefined;
       try {
         nextIterator = next && JSON.parse(Buffer.from(next, 'base64').toString());
@@ -65,7 +66,7 @@ export function SubscriptionControllerFactory(container: Container, apiVersion: 
         throw new ValidationError('Invalid next iterator');
       }
 
-      const expandProps = parseExpand(expand);
+      const expandProps = parseExpand(expand, fields);
       const result = await this.subscriptionService.scan(size, expandProps, nextIterator);
 
       return {
