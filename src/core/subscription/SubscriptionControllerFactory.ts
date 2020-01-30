@@ -134,13 +134,14 @@ export function SubscriptionControllerFactory(container: Container, apiVersion: 
           id: t.string
         }),
         query: t.partial({
-          expand: t.string
+          expand: t.string,
+          fields: t.string
         })
       }))
     )
     @withResponseType<Subscription, Responses.SubscriptionResponse>(Responses.Subscription.fromModel)
-    private async getSubscription(@requestParam('id') id: string, @queryParam('expand') expand?: string): Promise<Option<Subscription>> {
-      const expandProps = parseExpand(expand);
+    private async getSubscription(@requestParam('id') id: string, @queryParam('expand') expand?: string, @queryParam('fields') fields?: string): Promise<Option<Subscription>> {
+      const expandProps = parseExpand(expand, fields);
       const subscription = await this.subscriptionService.getSubscriptionById(id, expandProps);
 
       if (_.isEmpty(subscription)) {
