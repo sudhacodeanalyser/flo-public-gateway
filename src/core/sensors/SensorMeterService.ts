@@ -37,7 +37,7 @@ class SensorMeterService extends HttpService {
     };
     const request = {
       method: 'GET',
-      url: `${ this.url }/devices/${macAddress}/telemetry/report`,
+      url: `${ this.url }/devices/${macAddress}/telemetry`,
       params
     };
 
