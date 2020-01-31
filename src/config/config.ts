@@ -46,7 +46,7 @@ function getDefaults(): { [key: string]: any } {
         postgresIdleTimeoutMS: 60000,
         dynamoDBTimeout: 4000,
         authTimeoutMS: 4000,
-        sensorMeterUrl: 'https://flo-device-service.flocloud.co/v1',
+        sensorMeterUrl: 'https://flo-puck-service.flocloud.co',
       };
   }
 }
