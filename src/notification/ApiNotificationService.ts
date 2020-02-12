@@ -15,7 +15,6 @@ import {
 } from '../core/api';
 import { DeviceService } from '../core/device/DeviceService';
 import { HttpService } from '../http/HttpService';
-import * as t from "io-ts";
 
 class ApiNotificationService {
   constructor(
@@ -23,17 +22,19 @@ class ApiNotificationService {
     private notificationApi: HttpService
   ) {}
 
-  public async getAlarmById(id: string): Promise<Alarm> {
+  public async getAlarmById(id: string, queryParams: any): Promise<Alarm> {
     return this.notificationApi.sendRequest({
       method: 'get',
-      url: `/alarms/${id}`
+      url: `/alarms/${id}`,
+      params: queryParams
     });
   }
 
-  public async getAlarms(filters: string): Promise<AlarmListResult> {
+  public async getAlarms(queryParams: any): Promise<AlarmListResult> {
     return this.notificationApi.sendRequest({
       method: 'get',
-      url: `/alarms?${filters}`
+      url: `/alarms`,
+      params: queryParams
     });
   }
 
@@ -212,4 +213,3 @@ class ApiNotificationService {
 }
 
 export { ApiNotificationService };
-
