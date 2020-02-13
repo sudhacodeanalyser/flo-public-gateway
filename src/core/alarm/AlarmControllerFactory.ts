@@ -1,5 +1,5 @@
 import { Container, inject } from 'inversify';
-import { BaseHttpController, httpGet, interfaces, request, requestParam } from 'inversify-express-utils';
+import { BaseHttpController, httpGet, interfaces, queryParam, request, requestParam } from 'inversify-express-utils';
 import * as t from 'io-ts';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
@@ -28,18 +28,17 @@ export function AlarmControllerFactory(container: Container, apiVersion: number)
       reqValidator.create(t.type({
         params: t.type({
           id: t.string
-        })
+        }),
+        query: t.record(t.string, t.any)
       }))
     )
     private async getAlarmById(@request() req: Request, @requestParam('id') id: string): Promise<Alarm> {
-      return this.alarmService.getAlarmById(id);
+      return this.alarmService.getAlarmById(id, req.query);
     }
 
     @httpGet('/', auth)
     private async getAlarms(@request() req: Request): Promise<AlarmListResult> {
-      const filters = req.url.split('?')[1] || '';
-
-      return this.alarmService.getAlarms(filters);
+      return this.alarmService.getAlarms(req.query);
     }
   }
 

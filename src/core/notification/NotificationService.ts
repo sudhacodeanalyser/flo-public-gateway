@@ -26,8 +26,8 @@ export interface UnAuthNotificationService {
 }
 
 export interface NotificationService {
-  getAlarmById(id: string): Promise<Alarm>;
-  getAlarms(filters: string): Promise<AlarmListResult>;
+  getAlarmById(id: string, queryParams: any): Promise<Alarm>;
+  getAlarms(queryParams: any): Promise<AlarmListResult>;
   sendAlarm(alertInfo: any): Promise<string>;
   getAlarmEvent(id: string): Promise<AlarmEvent>;
   deleteAlarmEvent(id: string): Promise<void>;
