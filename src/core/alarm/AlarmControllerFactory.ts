@@ -33,12 +33,20 @@ export function AlarmControllerFactory(container: Container, apiVersion: number)
       }))
     )
     private async getAlarmById(@request() req: Request, @requestParam('id') id: string): Promise<Alarm> {
-      return this.alarmService.getAlarmById(id, req.query);
+      const queryParams = {
+        userId: req.token && req.token.user_id,
+        ...req.query
+      };
+      return this.alarmService.getAlarmById(id, queryParams);
     }
 
     @httpGet('/', auth)
     private async getAlarms(@request() req: Request): Promise<AlarmListResult> {
-      return this.alarmService.getAlarms(req.query);
+      const queryParams = {
+        userId: req.token && req.token.user_id,
+        ...req.query
+      };
+      return this.alarmService.getAlarms(queryParams);
     }
   }
 
