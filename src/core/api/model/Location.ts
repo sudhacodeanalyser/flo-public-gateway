@@ -1,5 +1,5 @@
 import * as t from 'io-ts';
-import { NotificationStatistics, Omit, TimestampedModel } from '../../api';
+import { NotificationStatistics, Omit, TimestampedModel, Expandable } from '../../api';
 import { NonEmptyString } from '../../api/validator/NonEmptyString';
 import { convertEnumtoCodec } from '../enumUtils';
 import { NoYesUnsure } from '../NoYesUnsure';
@@ -132,10 +132,13 @@ export enum SystemMode {
 
 export const SystemModeCodec = convertEnumtoCodec(SystemMode);
 
-const AdditionalPropsCodec = t.type({
-  nickname: t.union([t.string, t.undefined]),
-  irrigationSchedule: t.union([t.undefined, t.type({
+const AdditionalPropsCodec = t.partial({
+  nickname: t.string,
+  irrigationSchedule: t.type({
     isEnabled: t.boolean
+  }),
+  parent: t.union([t.null, t.type({
+    id: t.string
   })])
 });
 
@@ -229,11 +232,14 @@ export const LocationCodec = t.intersection([
       userRoles: t.array(LocationUserRoleCodec),
       devices: t.array(t.intersection([ExpandableCodec, t.partial({ macAddress: t.string })])),
       subscription: t.union([ExpandableCodec, t.undefined]),
-      areas: AreasCodec
+      areas: AreasCodec,
+      children: t.array(t.type({ id: t.string }))
     })
   ])
 ]);
 
 export interface Location extends t.TypeOf<typeof LocationCodec>, TimestampedModel {
   notifications?: NotificationStatistics;
+  parent?: Expandable<Location> | null;
+  children: Array<Expandable<Location>> ;
 }

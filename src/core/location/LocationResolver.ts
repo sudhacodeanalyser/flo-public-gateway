@@ -1,4 +1,4 @@
-import { inject, injectable } from 'inversify';
+import { inject, injectable, targetName } from 'inversify';
 import { injectHttpContext, interfaces } from 'inversify-express-utils';
 import _ from 'lodash';
 import uuid from 'uuid';
@@ -13,6 +13,8 @@ import { UserLocationRoleRecord } from '../user/UserLocationRoleRecord';
 import UserLocationRoleTable from '../user/UserLocationRoleTable';
 import { LocationRecord, LocationRecordData } from './LocationRecord';
 import moment from 'moment';
+import LocationTreeTable from './LocationTreeTable';
+import ConflictError from '../api/error/ConflictError';
 
 const DEFAULT_LANG = 'en';
 const DEFAULT_AREAS_ID = 'areas.default';
@@ -188,6 +190,46 @@ class LocationResolver extends Resolver<Location> {
           name: area.shortDisplay
         }))
       };
+    },
+    parent: async (location: Location, shouldExpand = false, expandProps?: PropExpand) => {
+      
+      if (!location.parent) {
+        return location.parent;
+      }
+
+      if (shouldExpand) {
+        return this.get(location.parent.id, expandProps); 
+      }
+
+      const parent = await this.get(location.parent.id, {
+        $select: {
+          nickname: true
+        }
+      });
+
+      return parent && {
+        id: location.parent.id,
+        nickname: parent.nickname || parent.address
+      };
+    },
+    children: async (location: Location, shouldExpand = false, expandProps?: PropExpand) => {
+      const childIds = await this.locationTreeTable.getImmediateChildren(location.id);
+      const children = await Promise.all(
+         childIds.map(async ({ child_id }) => {
+           if (shouldExpand) {
+             return this.get(child_id, expandProps);
+           } 
+
+           const child = await this.get(child_id, { $select: { nickname: true } });
+
+           return child && {
+             id: child_id,
+             nickname: child.nickname
+           }
+         })
+       );
+
+      return children.filter(child => child) as Array<Location | { id: string, nickname: string }>;
     }
   };
 
@@ -203,7 +245,8 @@ class LocationResolver extends Resolver<Location> {
     @inject('UserLocationRoleTable') private userLocationRoleTable: UserLocationRoleTable,
     @inject('DependencyFactoryFactory') depFactoryFactory: DependencyFactoryFactory,
     @inject('NotificationServiceFactory') notificationServiceFactory: NotificationServiceFactory,
-    @injectHttpContext private readonly httpContext: interfaces.HttpContext
+    @injectHttpContext private readonly httpContext: interfaces.HttpContext,
+    @inject('LocationTreeTable') private locationTreeTable: LocationTreeTable
   ) {
     super();
 
@@ -261,6 +304,12 @@ class LocationResolver extends Resolver<Location> {
     const accountId: string | null = await this.getAccountId(id);
 
     if (accountId !== null) {
+      const location = await this.get(id, { $select: { children: true, devices: true } });
+
+      if (location && ((location.children && location.children.length > 0) || (location.devices && location.devices.length > 0))) {
+        throw new ConflictError('Cannot delete a location that has children or devices attached.');
+      }
+
       // TODO: Make this transactional.
       // https://aws.amazon.com/blogs/aws/new-amazon-dynamodb-transactions/
       await Promise.all([
@@ -268,8 +317,8 @@ class LocationResolver extends Resolver<Location> {
 
         this.removeLocationUsersAllByLocationId(id),
 
-        ...(await this.deviceResolverFactory().getAllByLocationId(id))
-          .map(async ({ id: icdId }) => this.deviceResolverFactory().remove(icdId)),
+        // ...(await this.deviceResolverFactory().getAllByLocationId(id))
+        //   .map(async ({ id: icdId }) => this.deviceResolverFactory().remove(icdId)),
 
         this.subscriptionResolverFactory().getByRelatedEntityId(id).then<false | void>(subscription =>
           subscription !== null && this.subscriptionResolverFactory().remove(subscription.id)

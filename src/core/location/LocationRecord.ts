@@ -175,10 +175,15 @@ export interface LocationRecordData extends Partial<LegacyLocationProfile>, Time
   revert_minutes?: number;
   is_irrigation_schedule_enabled?: boolean;
   areas: AreaRecord[];
+  parent_location_id?: string;
 }
 
 const RecordToModelSchema: StrictSchema<Location, LocationRecordData> = {
   id: 'location_id',
+  parent: (input: LocationRecordData) => {
+    return input.parent_location_id ? { id: input.parent_location_id, nickname: "" } : undefined;
+  },
+  children: () => [],
   account: {
     id: 'account_id'
   },
@@ -367,6 +372,9 @@ const RecordToModelSchema: StrictSchema<Location, LocationRecordData> = {
 
 const ModelToRecordSchema: StrictSchema<LocationRecordData, Location> = {
   location_id: 'id',
+  parent_location_id: (input: Location) => {
+    return input.parent ? input.parent.id : undefined;
+  },
   account_id: 'account.id',
   address: 'address',
   address2: 'address2',
@@ -418,6 +426,9 @@ export type PartialLocationRecordData = Omit<LocationRecordData, 'profile'> & Re
 
 const PartialModelToPartialRecordSchema: StrictSchema<PartialLocationRecordData, Partial<Location>> = {
   location_id: 'id',
+  parent_location_id: (input: Partial<Location>) => {
+    return input.parent ? input.parent.id : undefined;
+  },
   account_id: 'account.id',
   address: 'address',
   address2: 'address2',
