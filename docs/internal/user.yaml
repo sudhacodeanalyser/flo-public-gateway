@@ -366,6 +366,8 @@ components:
           type: string
         phone:
           type: string
+        locale:
+          type: string
     EmailAvailability:
       type: object
       properties:
