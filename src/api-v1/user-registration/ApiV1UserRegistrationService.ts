@@ -32,7 +32,8 @@ class ApiV1UserRegistrationService extends HttpService implements UserRegistrati
           firstname: data.firstName,
           lastname: data.lastName,
           password_conf: data.password,
-          phone_mobile: data.phone
+          phone_mobile: data.phone,
+          locale: data.locale
         }
       };
       

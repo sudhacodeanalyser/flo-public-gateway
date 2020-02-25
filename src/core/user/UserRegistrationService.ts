@@ -6,7 +6,8 @@ export const UserRegistrationDataCodec = t.type({
   firstName: t.string,
   lastName: t.string,
   country: t.string,
-  phone: t.string
+  phone: t.string,
+  locale: t.union([t.undefined, t.string])
 });
 
 export type UserRegistrationData = t.TypeOf<typeof UserRegistrationDataCodec>;
