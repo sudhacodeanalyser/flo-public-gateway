@@ -81,7 +81,17 @@ class LocationService {
       }
     }
 
-    const updatedLocation = await this.locationResolver.updatePartialLocation(id, locationUpdate);
+    const updatedLocation = await this.locationResolver.updatePartialLocation(id, {
+      ...locationUpdate,
+      ...(locationUpdate.parent === null ? 
+        {
+          parent: {
+            id: ""
+          }
+        } : 
+        locationUpdate.parent && { parent: locationUpdate.parent }
+      )
+    });
 
     if (!_.isEmpty(locationUpdate.irrigationSchedule) && !_.isEmpty(this.irrigationScheduleService)) {
       const deviceService = this.deviceServiceFactory();

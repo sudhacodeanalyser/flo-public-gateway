@@ -3,8 +3,10 @@ import squel from 'squel';
 import { PostgresDbClient } from '../../database/pg/PostgresDbClient';
 import { PostgresTable } from '../../database/pg/PostgresTable';
 
+export type LocationTreeRow = { parent_id: string, child_id: string, depth: number };
+
 @injectable()
-class LocationTreeTable extends PostgresTable<{ parent_id: string, child_id: string, depth: number }> {
+class LocationTreeTable extends PostgresTable<LocationTreeRow> {
   constructor(
     @inject('PostgresDbClient') @targetName('core') private pgDbClient: PostgresDbClient
   ) {
@@ -88,7 +90,7 @@ class LocationTreeTable extends PostgresTable<{ parent_id: string, child_id: str
     await this.pgDbClient.execute(query, [id]);
   }
 
-  public async getImmediateChildren(id: string): Promise<Array<{ parent_id: string, child_id: string, depth: number }>> {
+  public async getImmediateChildren(id: string): Promise<LocationTreeRow[]> {
     const query = squel.useFlavour('postgres')
       .select()
       .field('parent_id')
@@ -96,6 +98,42 @@ class LocationTreeTable extends PostgresTable<{ parent_id: string, child_id: str
       .field('depth')
       .where('parent_id = ?', id)
       .where('depth = 1');
+
+    return this.query({ query });
+  }
+
+  public async getAllChildren(id: string): Promise<LocationTreeRow[]> {
+    const query = squel.useFlavour('postgres')
+      .select()
+      .field('parent_id')
+      .field('child_id')
+      .field('depth')
+      .where('parent_id = ?', id)
+      .where('depth > 0');
+
+    return this.query({ query });
+  }
+
+  public async batchGetAllChildren(ids: string[]): Promise<LocationTreeRow[]> {
+    const query = squel.useFlavour('postgres')
+      .select()
+      .field('parent_id')
+      .field('child_id')
+      .field('depth')
+      .where('parent_id IN ?', ids)
+      .where('depth > 0');
+
+    return this.query({ query });
+  }
+
+  public async getAllParents(id: string): Promise<LocationTreeRow[]> {
+    const query = squel.useFlavour('postgres')
+      .select()
+      .field('parent_id')
+      .field('child_id')
+      .field('depth')
+      .where('child_id = ?', id)
+      .where('depth > 0');
 
     return this.query({ query });
   }

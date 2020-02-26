@@ -39,24 +39,62 @@ class LocationResolver extends Resolver<Location> {
     },
     users: async (location: Location, shouldExpand = false, expandProps?: PropExpand) => {
       const locationUserRoles = await this.getAllUserRolesByLocationId(location.id);
+      const parents = await this.locationTreeTable.getAllParents(location.id);
+      const parentUsers = _.flatten(await Promise.all(
+        parents.map(({ parent_id }) => 
+          this.getAllUserRolesByLocationId(parent_id)
+        )
+      ))
+      .map(({ userId }) => userId);
+      const userIds = _.uniq([
+        ...parentUsers,
+        ...locationUserRoles.map(({ userId }) => userId)
+      ]);
 
       if (shouldExpand) {
         return Promise.all(
-          locationUserRoles.map(async (locationUserRole) => {
-            const user = await this.userResolverFactory().getUserById(locationUserRole.userId, expandProps);
+          userIds.map(async userId => {
+            const user = await this.userResolverFactory().getUserById(userId, expandProps);
 
             return {
               ...user,
-              id: locationUserRole.userId
+              id: userId
             };
           })
         );
       } else {
-        return locationUserRoles.map(({ userId }) => ({ id: userId }));
+        return userIds.map(id => ({ id }));
       }
     },
     userRoles: async (location: Location, shouldExpand = false) => {
-      return this.getAllUserRolesByLocationId(location.id);
+      const explicitUserRoles = await this.getAllUserRolesByLocationId(location.id);
+      const parents = await this.locationTreeTable.getAllParents(location.id);
+      const parentUserRoles = _.flatten(await Promise.all(
+        parents.map(async ({ parent_id }) => {
+          const userRoles = await this.getAllUserRolesByLocationId(parent_id);
+
+          return userRoles.map(userRole => ({ ...userRole, locationId: parent_id }));
+        })
+      )) as Array<{ userId: string, locationId: string, roles: string[] }>;
+
+      return _.chain([...explicitUserRoles, ...parentUserRoles])
+        .groupBy('userId')
+        .map((userRoles, userId) => {
+           return {
+             userId,
+             roles: _.chain(userRoles)
+               .filter((userRole: any) => !userRole.locationId)
+               .flatMap(({ roles }) => roles)
+               .value(),
+             inherited: parentUserRoles.length ? 
+                 _.chain(parentUserRoles)
+                   .filter({ userId })
+                   .map(({ roles, locationId }) => ({ roles, locationId }))
+                   .value() :
+                 undefined
+           }
+        })
+        .value();
     },
     account: async (location: Location, shouldExpand = false, expandProps?: PropExpand) => {
 
@@ -192,13 +230,14 @@ class LocationResolver extends Resolver<Location> {
       };
     },
     parent: async (location: Location, shouldExpand = false, expandProps?: PropExpand) => {
-      
+
       if (!location.parent) {
         return location.parent;
       }
 
       if (shouldExpand) {
-        return this.get(location.parent.id, expandProps); 
+        const parent = await this.get(location.parent.id, expandProps); 
+        return parent;
       }
 
       const parent = await this.get(location.parent.id, {

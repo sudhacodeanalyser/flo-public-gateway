@@ -15,15 +15,22 @@ import { UserLocationRoleRecord, UserLocationRoleRecordData } from './UserLocati
 import UserLocationRoleTable from './UserLocationRoleTable';
 import { UserRecord } from './UserRecord';
 import UserTable from './UserTable';
+import LocationTreeTable from '../location/LocationTreeTable';
 
 @injectable()
 class UserResolver extends Resolver<User> {
   protected propertyResolverMap: PropertyResolverMap<User> = {
     locations: async (model: User, shouldExpand: boolean = false, expandProps?: PropExpand) => {
       const userLocationRoleRecordData: UserLocationRoleRecordData[] = await this.userLocationRoleTable.getAllByUserId(model.id);
-
+      const rootLocationIds = userLocationRoleRecordData.map(({ location_id }) => location_id);
+      const subTrees = await this.locationTreeTable.batchGetAllChildren(rootLocationIds);
+      const locationIds = _.uniq([
+        ...rootLocationIds,
+        ...subTrees.map(({ child_id }) => child_id)
+      ]);
+      
       if (!shouldExpand) {
-        return userLocationRoleRecordData.map(({ location_id }) => ({ id: location_id }));
+        return locationIds.map(id => ({ id }));
       }
 
       return Promise.all(userLocationRoleRecordData.map(
@@ -60,10 +67,39 @@ class UserResolver extends Resolver<User> {
     },
     locationRoles: async (model: User, shouldExpand = false) => {
       const userLocationRoleRecordData: UserLocationRoleRecordData[] = await this.userLocationRoleTable.getAllByUserId(model.id);
-
-      return userLocationRoleRecordData.map(userLocationRoleRecordDatum =>
+      const explictRoles = userLocationRoleRecordData.map(userLocationRoleRecordDatum =>
         new UserLocationRoleRecord(userLocationRoleRecordDatum).toUserLocationRole()
       );
+      const locationIds = explictRoles.map(({ locationId }) => locationId);
+      const subTrees = await this.locationTreeTable.batchGetAllChildren(locationIds);
+      const childRoles = _.chain(explictRoles)
+        .flatMap(({ locationId, roles }) => {
+          return _.chain(subTrees)
+            .filter({ parent_id: locationId })
+            .map(({ child_id }) => ({
+              locationId: child_id,
+              roles: [] as string[],
+              inherited: [{
+                roles,
+                locationId
+              }]
+            }))
+            .value();
+        })
+        .value();
+
+      return _.chain([...explictRoles, ...childRoles])
+        .groupBy('locationId')
+        .map((locationRoles, locationId) => 
+          locationRoles.reduce((acc, { roles, inherited }) => ({
+            locationId,
+            roles: [...roles, ...acc.roles],
+            inherited: !inherited && !acc.inherited ? 
+              undefined :
+              [...(inherited || []), ...(acc.inherited || [])]
+          }))
+        )
+        .value();
     },
     alarmSettings: async (model: User, shouldExpand = false) => {
       if (!shouldExpand || !this.notificationServiceFactory) {
@@ -118,7 +154,8 @@ class UserResolver extends Resolver<User> {
     @inject('DefaultUserLocale') private defaultUserLocale: string,
     @inject('NotificationServiceFactory') notificationServiceFactory: NotificationServiceFactory,
     @injectHttpContext private readonly httpContext: interfaces.HttpContext,
-    @inject('Logger') private readonly logger: Logger
+    @inject('Logger') private readonly logger: Logger,
+    @inject('LocationTreeTable') private locationTreeTable: LocationTreeTable
   ) {
     super();
 

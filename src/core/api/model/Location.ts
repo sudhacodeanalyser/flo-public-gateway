@@ -6,7 +6,8 @@ import { NoYesUnsure } from '../NoYesUnsure';
 
 export const LocationUserRoleCodec = t.type({
   userId: t.string,
-  roles: t.array(t.string)
+  roles: t.array(t.string),
+  inherited: t.union([t.undefined, t.array(t.type({ roles: t.array(t.string), locationId: t.string }))])
 });
 
 export type LocationUserRole = t.TypeOf<typeof LocationUserRoleCodec>;
