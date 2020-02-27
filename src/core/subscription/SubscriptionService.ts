@@ -37,14 +37,30 @@ class SubscriptionService {
     const maybeExistingSubscription = await this.subscriptionResolver.getByRelatedEntityId((location as Location).id);
 
 
-    // Reactivate a subscription that is set to be canceled at the end of the billing period
+    // Reactivate a subscription that is set to be canceled at the end of the billing period or is in a delinquent status
     if (
       !_.isEmpty(maybeExistingSubscription) && 
-      maybeExistingSubscription !== null && 
-      maybeExistingSubscription.provider.isActive &&
+      maybeExistingSubscription !== null &&
       maybeExistingSubscription.provider.data &&
-      maybeExistingSubscription.provider.data.cancelAtPeriodEnd
+      (
+        // Moribund subscription
+        (
+          maybeExistingSubscription.provider.isActive &&
+          maybeExistingSubscription.provider.data.cancelAtPeriodEnd
+        ) ||
+        // Delinquent subscription
+        (
+          !maybeExistingSubscription.provider.isActive &&
+          maybeExistingSubscription.provider.data.status &&
+          ['unpaid', 'past_due', 'incomplete'].indexOf(maybeExistingSubscription.provider.data.status) >= 0
+        )
+      )
     ) { 
+
+      if (subscriptionData.plan && maybeExistingSubscription.plan.id !== subscriptionData.plan.id) {
+        throw new ValidationError('Cannot change plan for existing subscription.');
+      }
+
       const subscriptionProvider = this.getProvider(subscriptionCreate.provider.name);
 
       if (subscriptionCreate.provider.token) {
