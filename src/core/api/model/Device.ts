@@ -51,7 +51,8 @@ const DeviceMutableCodec = t.type({
   floSense: t.record(t.string, t.any),
   audio: t.type({
     snoozeTo: t.string
-  })
+  }),
+  componentHealth: t.record(t.string, t.any)
 });
 
 const MutableSystemModeCodec = t.type({
