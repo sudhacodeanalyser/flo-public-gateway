@@ -58,7 +58,11 @@ const InternalDeviceCodec = t.type({
     version: t.string,
     sourceType: t.string,
     sourceLocation: t.string
-  })
+  }),
+  componentHealth: t.union([
+    t.undefined,
+    t.record(t.string, t.any)
+  ])
 });
 
 type InternalDevice = t.TypeOf<typeof InternalDeviceCodec>;
