@@ -2,7 +2,7 @@ import { fold, fromNullable, Option } from 'fp-ts/lib/Option';
 import { pipe } from 'fp-ts/lib/pipeable';
 import { inject, injectable } from 'inversify';
 import _ from 'lodash';
-import { PropExpand, UpdateDeviceAlarmSettings, User, UserUpdate } from '../api';
+import { PropExpand, UpdateDeviceAlarmSettings, User, UserUpdate, UserCreate, UserAccountRole } from '../api';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import ValidationError from '../api/error/ValidationError';
 import { UserResolver } from '../resolver';
@@ -23,6 +23,10 @@ class UserService {
     const user: User | null = await this.userResolver.getUserById(id, expand);
 
     return fromNullable(user);
+  }
+
+  public async getUserByEmail(email: string, expand?: PropExpand): Promise<User | null> {
+    return this.userResolver.getByEmail(email, expand);
   }
 
   public async removeUser(id: string): Promise<void> {
@@ -70,6 +74,10 @@ class UserService {
         }
       )
     );
+  }
+
+  public async createUser(userCreate: UserCreate): Promise<User> {
+    return this.userResolver.createUser(userCreate);
   }
 }
 

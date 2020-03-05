@@ -1,26 +1,44 @@
 import * as t from 'io-ts';
-import { interfaces, httpGet, httpPost, httpDelete, queryParam, requestParam, requestBody, BaseHttpController } from 'inversify-express-utils';
+import { interfaces, httpGet, httpPost, httpDelete, queryParam, requestParam, requestBody, request, BaseHttpController } from 'inversify-express-utils';
 import { inject, Container } from 'inversify';
-import { AccountService } from '../service';
+import { AccountService, UserService } from '../service';
 import { parseExpand, httpController, deleteMethod, withResponseType } from '../api/controllerUtils';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
-import { Account, AccountUserRole } from '../api';
+import { Account, AccountUserRole, UserInviteCodec, UserCreate, InviteAcceptValidator, InviteAcceptData, User } from '../api';
 import { NonEmptyArray } from '../api/validator/NonEmptyArray';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import Request from '../api/Request';
-import { Option, some, none } from 'fp-ts/lib/Option';
+import * as O from 'fp-ts/lib/Option';
 import * as Responses from '../api/response';
 import _ from 'lodash';
+import UnauthorizedError from '../api/error/UnauthorizedError';
+import ForbiddenError from '../api/error/ForbiddenError';
+import { pipe } from 'fp-ts/lib/pipeable';
+import * as TO from 'fp-ts-contrib/lib/TaskOption';
+
+const { some, none } = O;
+type Option<T> = O.Option<T>;
+const {
+  accountId: accountIdValidator, // ignore
+  email: emailValidator,
+  ...userInviteProps
+} = UserInviteCodec.props;
+
+const UserInviteValidator = t.strict({ ...userInviteProps, email: emailValidator });
+
+type UserInviteBody = t.TypeOf<typeof UserInviteValidator>;
 
 export function AccountControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
   const authMiddlewareFactory = container.get<AuthMiddlewareFactory>('AuthMiddlewareFactory');
   const authWithId = authMiddlewareFactory.create(async ({ params: { id } }: Request) => ({ account_id: id }));
+  const auth = authMiddlewareFactory.create();
 
   @httpController({ version: apiVersion }, '/accounts')
   class AccountController extends BaseHttpController {
     constructor(
-      @inject('AccountService') private accountService: AccountService
+      @inject('AccountService') private accountService: AccountService,
+      @inject('UserService') private userService: UserService
     ) {
       super();
     }
@@ -72,6 +90,91 @@ export function AccountControllerFactory(container: Container, apiVersion: numbe
     private async updateAccountUserRole(@requestParam('id') id: string, @requestParam('userId') userId: string, @requestBody() { roles }: Pick<AccountUserRole, 'roles'>): Promise<AccountUserRole> {
 
       return this.accountService.updateAccountUserRole(id, userId, roles);
+    }
+
+    @httpPost('/invite',
+      auth,
+      reqValidator.create(t.type({
+        body: UserInviteValidator
+      }))
+    )
+    private async inviteUserToAccount(@request() req: Request, @requestBody() body: UserInviteBody): Promise<void> {
+      const tokenMetadata = req.token;
+
+      if (!tokenMetadata || !tokenMetadata.user_id) {
+        throw new UnauthorizedError();
+      }
+      
+      await pipe(
+        await this.userService.getUserById(tokenMetadata.user_id, { $select: { account: true } }),
+        O.fold(
+          async () => { throw new Error('User does not exist.'); },
+          async ({ account: { id } }) => 
+            this.accountService.inviteUserToJoinAccount({
+              accountId: id,
+              ...body
+            })
+        )
+      );
+    }
+
+    @httpPost('/invite/resend',
+      // auth,
+      reqValidator.create(t.type({
+        body: t.type({
+          emailValidator
+        })
+      }))
+    )
+    private async resendInvitation(@requestBody() body: { email: string }): Promise<void> {
+      await this.accountService.resendInvitation(body.email);
+    }
+
+    @httpPost('/invite/accept',
+      reqValidator.create(t.type({
+        body: InviteAcceptValidator
+      }))
+    ) 
+    private async acceptInvite(@request() req: Request, @requestBody() body: InviteAcceptData): Promise<User> {
+      const token = req.get('Authorization');
+      const tokenStr = token && token.split(' ')[1];
+
+      if (!token || !tokenStr) {
+        throw new UnauthorizedError();
+      }
+
+      return this.accountService.acceptInvitation(tokenStr, body);
+    }
+
+    @httpGet('/invite/token',
+      auth,
+      reqValidator.create(t.type({
+        query: t.type({
+          email: emailValidator
+        })
+      }))
+    )
+    private async getInviteToken(@request() req: Request, @queryParam('email') email: string): Promise<{ token: string }> {
+      const tokenMetadata = req.token;
+
+      if (!tokenMetadata || !tokenMetadata.user_id) {
+        throw new UnauthorizedError();
+      }
+      
+      return pipe(
+        () => this.userService.getUserById(tokenMetadata.user_id, { $select: { account: true } }),
+        TO.fold(
+          () => { throw new Error('User not found.'); },
+          ({ account: { id: accountId } }) => async () => {
+            const tokenData = await this.accountService.getInvitationTokenByEmail(email);
+            
+            if (tokenData.metadata.userAccountRole.accountId !== accountId) {
+              throw new ForbiddenError();
+            }
+
+            return { token: tokenData.token };
+          })
+      )();
     }
   }
 
