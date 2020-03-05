@@ -5,6 +5,8 @@ import { UserAccountRole, UserLocationRole } from '../api';
 import uuid from 'uuid';
 import jwt from 'jsonwebtoken';
 import moment from 'moment';
+import UnauthorizedError from '../api/error/UnauthorizedError';
+import Logger from 'bunyan';
 
 export const UserRegistrationDataCodec = t.type({
   email: t.string,
@@ -69,8 +71,8 @@ export interface InviteTokenData {
 export class UserInviteService {
   constructor(
     @inject('UserRegistrationTokenMetadataTable') private userRegistrationTokenMetatadataTable: UserRegistrationTokenMetadataTable,
-    @inject('RegistrationTokenSecret') private tokenSecret: string
-
+    @inject('RegistrationTokenSecret') private tokenSecret: string,
+    @inject('Logger') private logger: Logger
   ) {}
 
   public async issueToken(email: string, userAccountRole: UserAccountRole, userLocationRoles: UserLocationRole[], locale?: string, ttl?: number): Promise<{ token:string, metadata: InviteTokenData }> {
@@ -165,9 +167,27 @@ export class UserInviteService {
     };
   }
 
-  public async verifyToken(token: string): Promise<InviteTokenData> {
-    return (new Promise<InviteTokenData>((resolve, reject) => 
-      jwt.verify(token, this.tokenSecret, (err, decodedToken) => {
+  public async verifyToken(token:string): Promise<InviteTokenData> {
+    try {
+      const {
+        isExpired,
+        ...tokenData
+      } = await this.decodeToken(token);
+
+      if (isExpired) {
+        throw new UnauthorizedError('Token expired.');
+      }
+
+      return tokenData;
+    } catch (err) {
+      this.logger.error({ err });
+      throw new UnauthorizedError('Invalid token.');
+    }
+  }
+
+  public async decodeToken(token: string): Promise<InviteTokenData & { isExpired: boolean }> {
+    return (new Promise<InviteTokenData & { isExpired: boolean }>((resolve, reject) => 
+      jwt.verify(token, this.tokenSecret, { ignoreExpiration: true }, (err, decodedToken) => {
         if (err) {
           reject(err);
         } else {
@@ -177,11 +197,14 @@ export class UserInviteService {
             email: data.email,
             userAccountRole: data.userAccountRole,
             userLocationRoles: data.userLocationRoles || [],
-            locale: data.locale
+            locale: data.locale,
+            isExpired: moment.unix(data.exp).isBefore(moment())
           });
         }
       })
     ));
+
+
   }
 
   public async reissueToken(email: string, ttl?: number): Promise<{ token:string, metadata: InviteTokenData } | null> {

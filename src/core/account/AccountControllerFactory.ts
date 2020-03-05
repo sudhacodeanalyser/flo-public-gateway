@@ -5,6 +5,7 @@ import { AccountService, UserService } from '../service';
 import { parseExpand, httpController, deleteMethod, withResponseType } from '../api/controllerUtils';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
 import { Account, AccountUserRole, UserInviteCodec, UserCreate, InviteAcceptValidator, InviteAcceptData, User } from '../api';
+import { InviteTokenData } from '../user/UserRegistrationService';
 import { NonEmptyArray } from '../api/validator/NonEmptyArray';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import Request from '../api/Request';
@@ -13,6 +14,7 @@ import * as Responses from '../api/response';
 import _ from 'lodash';
 import UnauthorizedError from '../api/error/UnauthorizedError';
 import ForbiddenError from '../api/error/ForbiddenError';
+import NotFoundError from '../api/error/NotFoundError';
 import { pipe } from 'fp-ts/lib/pipeable';
 import * as TO from 'fp-ts-contrib/lib/TaskOption';
 
@@ -149,12 +151,17 @@ export function AccountControllerFactory(container: Container, apiVersion: numbe
     @httpGet('/invite/token',
       auth,
       reqValidator.create(t.type({
-        query: t.type({
-          email: emailValidator
-        })
+        query: t.union([
+          t.type({
+            email: emailValidator
+          }),
+          t.type({
+            token: t.string
+          })
+        ])
       }))
     )
-    private async getInviteToken(@request() req: Request, @queryParam('email') email: string): Promise<{ token: string }> {
+    private async getInviteToken(@request() req: Request, @queryParam('email') email?: string,  @queryParam('token') token?: string): Promise<{ token: string, metadata: InviteTokenData }> {
       const tokenMetadata = req.token;
 
       if (!tokenMetadata || !tokenMetadata.user_id) {
@@ -166,13 +173,22 @@ export function AccountControllerFactory(container: Container, apiVersion: numbe
         TO.fold(
           () => { throw new Error('User not found.'); },
           ({ account: { id: accountId } }) => async () => {
-            const tokenData = await this.accountService.getInvitationTokenByEmail(email);
+            const tokenData = email !== undefined ? 
+              await this.accountService.getInvitationTokenByEmail(email) :
+              token && {
+                token,
+                metadata: (await this.accountService.validateInviteToken(token))
+              };
+
+            if (!tokenData) {
+              throw new NotFoundError();
+            }
             
             if (tokenData.metadata.userAccountRole.accountId !== accountId) {
               throw new ForbiddenError();
             }
 
-            return { token: tokenData.token };
+            return tokenData;
           })
       )();
     }

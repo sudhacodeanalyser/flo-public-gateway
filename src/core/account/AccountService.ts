@@ -1,6 +1,6 @@
 import { injectable, inject } from 'inversify';
 import { Account, AccountUserRole, UserInvite, UserCreate, PropExpand, DependencyFactoryFactory, User, InviteAcceptData } from '../api';
-import { UserInviteService, InviteTokenData } from '../user/UserRegistrationService'
+import { UserInviteService, InviteTokenData } from '../user/UserRegistrationService';
 import { AccountResolver } from '../resolver';
 import { Option, fromNullable } from 'fp-ts/lib/Option';
 import NotFoundError from '../api/error/NotFoundError';
@@ -97,17 +97,7 @@ class AccountService {
   }
 
   public async acceptInvitation(token: string, data: InviteAcceptData): Promise<User> {
-    let tokenData;
-
-    try {
-       tokenData = await this.userInviteService.verifyToken(token);
-    } catch (err) {
-
-      this.logger.error({ err });
-
-      throw new UnauthorizedError('Invalid token.');
-    }
-
+    const tokenData = await this.userInviteService.verifyToken(token);
     const user = await this.userServiceFactory().createUser({
       locale: tokenData.locale ? NonEmptyStringFactory.create(tokenData.locale) : undefined,
       account: { id: tokenData.userAccountRole.accountId },
@@ -124,6 +114,19 @@ class AccountService {
     ]);
 
     return user;
+  }
+
+  public async validateInviteToken(token: string): Promise<InviteTokenData> {
+    const {
+      isExpired,
+      ...tokenData
+    } = await this.userInviteService.decodeToken(token);
+
+    if (isExpired) {
+      throw new NotFoundError('Token metadata not found.');
+    }
+
+    return tokenData;
   }
 }
 
