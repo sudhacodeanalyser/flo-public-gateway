@@ -121,7 +121,7 @@ export function AccountControllerFactory(container: Container, apiVersion: numbe
     }
 
     @httpPost('/invite/resend',
-      // auth,
+      auth,
       reqValidator.create(t.type({
         body: t.type({
           emailValidator
@@ -169,10 +169,12 @@ export function AccountControllerFactory(container: Container, apiVersion: numbe
       }
       
       return pipe(
-        () => this.userService.getUserById(tokenMetadata.user_id, { $select: { account: true } }),
+        async () => _.find(tokenMetadata.roles, 'system.admin') ?
+          Promise.resolve(O.some(undefined)):
+          this.userService.getUserById(tokenMetadata.user_id, { $select: { account: true } }) as Promise<Option<User | undefined>>,
         TO.fold(
           () => { throw new Error('User not found.'); },
-          ({ account: { id: accountId } }) => async () => {
+          (result) => async () => {
             const tokenData = email !== undefined ? 
               await this.accountService.getInvitationTokenByEmail(email) :
               token && {
@@ -183,9 +185,13 @@ export function AccountControllerFactory(container: Container, apiVersion: numbe
             if (!tokenData) {
               throw new NotFoundError();
             }
-            
-            if (tokenData.metadata.userAccountRole.accountId !== accountId) {
-              throw new ForbiddenError();
+
+            if (result) {
+              const { account: { id: accountId } } = result;
+
+              if (tokenData.metadata.userAccountRole.accountId !== accountId) {
+                throw new ForbiddenError();
+              }
             }
 
             return tokenData;
