@@ -17,11 +17,14 @@ class UserTable extends DatabaseTable<UserRecordData> {
     const email = item.email;
     const existingUser = email && (await this.getByEmail(email));
 
-    if (existingUser) {
+    if (existingUser && item.id !== existingUser.id) {
       throw new ConflictError('Email already in use.');
     }
 
-    return super.put(item);
+    return super.put({
+      ...item,
+      password: this.hashPassword(item.password)
+    });
   }
 
   public async update(keys: KeyMap, patch: Patch): Promise<UserRecordData> {
@@ -30,7 +33,7 @@ class UserTable extends DatabaseTable<UserRecordData> {
     if (emailPatch) {
       const existingUser = await this.getByEmail(emailPatch.value);
 
-      if (existingUser) {
+      if (existingUser && keys.id !== existingUser.id) {
         throw new ConflictError('Email already in use.');
       }
     }
@@ -51,6 +54,11 @@ class UserTable extends DatabaseTable<UserRecordData> {
     });
 
     return result.length ? result[0] : null;
+  }
+
+  private hashPassword(password: string): string {
+    // TODO Implement bcrypt
+    return password;
   }
 }
 
