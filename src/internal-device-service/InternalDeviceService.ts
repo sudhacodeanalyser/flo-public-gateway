@@ -32,6 +32,10 @@ class InternalDeviceService extends MemoizeMixin(HttpService) implements Firesto
       return obj.audio && obj.audio.snoozeTo;
     };
 
+    const hasComponentHealth = (obj: any): obj is { componentHealth: { [component: string]: any } } => {
+      return obj.componentHealth;
+    }
+
     const request = {
       method: 'post',
       url: `${this.internalDeviceServiceBaseUrl}/devices/${macAddress}`,
@@ -41,7 +45,8 @@ class InternalDeviceService extends MemoizeMixin(HttpService) implements Firesto
         ...(hasDeviceType(device) && { make: device.deviceType}),
         ...(hasDeviceModel(device) && { model: device.deviceModel}),
         ...(device.hardwareThresholds && { hwThresholds: device.hardwareThresholds }),
-        ...(hasAudioSnooze(device) && { audio: device.audio })
+        ...(hasAudioSnooze(device) && { audio: device.audio }),
+        ...(hasComponentHealth(device) && { componentHealth: device.componentHealth })
       }
     };
 

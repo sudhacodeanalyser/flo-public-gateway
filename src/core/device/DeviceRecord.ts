@@ -89,7 +89,8 @@ const RecordToModelSchema: StrictSchema<Device, DeviceRecordData>  = {
   pes: () => undefined,
   floSense: () => undefined,
   audio: () => undefined,
-  firmware: () => undefined
+  firmware: () => undefined,
+  componentHealth: () => undefined
 };
 
 const ModelToRecordSchema: StrictSchema<DeviceRecordData, Device> = {
