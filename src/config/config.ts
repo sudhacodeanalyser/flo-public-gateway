@@ -47,6 +47,7 @@ function getDefaults(): { [key: string]: any } {
         dynamoDBTimeout: 4000,
         authTimeoutMS: 4000,
         sensorMeterUrl: 'https://flo-puck-service.flocloud.co',
+        registrationTokenSecret: 'Yt_f&2Y&GCtbxv??@=Rr=9=AhnvEQx$!'
       };
   }
 }

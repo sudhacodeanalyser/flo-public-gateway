@@ -39,6 +39,33 @@ const UserMutableCodec = t.type({
 export const UserUpdateValidator = t.exact(t.partial(UserMutableCodec.props));
 export type UserUpdate = t.TypeOf<typeof UserUpdateValidator>;
 
+const {
+  firstName,
+  lastName,
+  phoneMobile,
+  email,
+  ...optionalProps
+} = UserMutableCodec.props;
+
+export const UserCreateCodec = t.intersection([
+  t.type({
+    firstName,
+    lastName,
+    phoneMobile,
+    email,
+    account: t.type({
+      id: t.string
+    }),
+    password: t.string
+  }),
+  t.partial({
+    ...optionalProps,
+    source: t.string
+  })
+]);
+
+export type UserCreate = t.TypeOf<typeof UserCreateCodec>;
+
 export interface User extends UserUpdate, TimestampedModel {
   id: string;
   password?: string;
@@ -50,3 +77,33 @@ export interface User extends UserUpdate, TimestampedModel {
   accountRole: UserAccountRole;
   enabledFeatures: string[];
 }
+
+const {
+  account,
+  email: emailValidator,
+  ...userCreateRequireProps
+} = UserCreateCodec.types[0].props;
+
+export const InviteAcceptValidator = t.intersection([
+  t.strict({ 
+    ...userCreateRequireProps 
+  }),
+  t.exact(t.partial({
+    ...UserCreateCodec.types[1].props
+  }))
+]);
+
+export type InviteAcceptData = t.TypeOf<typeof InviteAcceptValidator>;
+
+export const UserInviteCodec = t.type({
+  email: Email,
+  accountId: t.string,
+  accountRoles: t.array(t.string),
+  locationRoles: t.array(t.type({
+    locationId: t.string,
+    roles: t.array(t.string)
+  })),
+  locale: t.union([t.undefined, t.string])
+});
+
+export interface UserInvite extends t.TypeOf<typeof UserInviteCodec> {}
