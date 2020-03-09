@@ -39,8 +39,8 @@ class SensorService {
       )
     );
 
-    const start = (startDate && this.formatDate(startDate, timezone)) || undefined;
-    const end = (endDate && this.formatDate(endDate, timezone)) || undefined;
+    const start = (startDate && this.formatDate(startDate, timezone, true)) || undefined;
+    const end = (endDate && this.formatDate(endDate, timezone, true)) || undefined;
 
     const results = await this.getSensorsMetricsReport(macAddress, start, end, interval, timezone);
     const items = (results.items.length && results.items) || [];
@@ -48,8 +48,8 @@ class SensorService {
     return {
       params: {
         tz: timezone,
-        ...(start && { startDate: start }),
-        ...(end && { endDate: end }),
+        ...(start && { startDate: this.formatDate(start, timezone) }),
+        ...(end && { endDate: this.formatDate(end, timezone) }),
         macAddress,
         interval
       },
@@ -62,8 +62,8 @@ class SensorService {
     };
   }
 
-  private formatDate(date: string, timezone: string): string {
-    return moment.tz(date, timezone).format('YYYY-MM-DDTHH:mm:ss');
+  private formatDate(date: string, timezone: string, noOffset: boolean = false): string {
+    return moment.tz(date, timezone).format(noOffset ? 'YYYY-MM-DDTHH:mm:ss' : undefined);
   }
 
   private async getSensorsMetricsReport(macAddress: string, startDate: string | undefined, endDate: string | undefined, interval: SensorInterval, timezone: string): Promise<SensorMeterReport> {
@@ -72,7 +72,7 @@ class SensorService {
     const formattedDateItems = results.items.map(item => {
       const zonedDate = moment.tz(item.date, timezone);
       const formattedDate = interval === SensorInterval.ONE_HOUR ?
-        zonedDate.format('YYYY-MM-DDTHH:00:00') :
+        zonedDate.format() :
           interval === SensorInterval.ONE_DAY ?
             zonedDate.format('YYYY-MM-DD') :
             zonedDate.format('YYYY-MM');
