@@ -100,7 +100,7 @@ export class UserInviteService {
       ]
     };
 
-    await this.kafkaProducer.send('email-v3', kafkaMessage);
+    await this.kafkaProducer.send('emails-v3', kafkaMessage);
   }
 
   public async issueToken(email: string, userAccountRole: UserAccountRole, userLocationRoles: UserLocationRole[], locale?: string, ttl?: number): Promise<{ token:string, metadata: InviteTokenData }> {
