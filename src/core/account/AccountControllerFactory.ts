@@ -26,7 +26,11 @@ const {
   ...userInviteProps
 } = UserInviteCodec.props;
 
-const UserInviteValidator = t.strict({ ...userInviteProps, email: emailValidator });
+const UserInviteValidator = t.type({
+  ...userInviteProps,
+  accountId: accountIdValidator, 
+  email: emailValidator 
+});
 
 type UserInviteBody = t.TypeOf<typeof UserInviteValidator>;
 
@@ -95,36 +99,21 @@ export function AccountControllerFactory(container: Container, apiVersion: numbe
     }
 
     @httpPost('/invite',
-      auth,
+      authWithId,
       reqValidator.create(t.type({
         body: UserInviteValidator
       }))
     )
     private async inviteUserToAccount(@request() req: Request, @requestBody() body: UserInviteBody): Promise<void> {
-      const tokenMetadata = req.token;
-
-      if (!tokenMetadata || !tokenMetadata.user_id) {
-        throw new UnauthorizedError();
-      }
-      
-      await pipe(
-        await this.userService.getUserById(tokenMetadata.user_id, { $select: { account: true } }),
-        O.fold(
-          async () => { throw new Error('User does not exist.'); },
-          async ({ account: { id } }) => 
-            this.accountService.inviteUserToJoinAccount({
-              accountId: id,
-              ...body
-            })
-        )
-      );
+      await this.accountService.inviteUserToJoinAccount(body);
     }
 
     @httpPost('/invite/resend',
-      auth,
+      authWithId,
       reqValidator.create(t.type({
         body: t.type({
-          emailValidator
+          emailValidator,
+          accountIdValidator
         })
       }))
     )
@@ -149,7 +138,14 @@ export function AccountControllerFactory(container: Container, apiVersion: numbe
     }
 
     @httpGet('/invite/token',
-      auth,
+      async (req, res, next) => {
+
+        if (req.query.token) {
+          next();
+        }
+
+        auth(req, res, next);
+      },
       reqValidator.create(t.type({
         query: t.union([
           t.type({
@@ -162,41 +158,18 @@ export function AccountControllerFactory(container: Container, apiVersion: numbe
       }))
     )
     private async getInviteToken(@request() req: Request, @queryParam('email') email?: string,  @queryParam('token') token?: string): Promise<{ token: string, metadata: InviteTokenData }> {
-      const tokenMetadata = req.token;
+      const tokenData = email !== undefined ? 
+        await this.accountService.getInvitationTokenByEmail(email) :
+        token && {
+          token,
+          metadata: (await this.accountService.validateInviteToken(token))
+        };
 
-      if (!tokenMetadata || !tokenMetadata.user_id) {
-        throw new UnauthorizedError();
+      if (!tokenData) {
+        throw new NotFoundError();
       }
-      
-      return pipe(
-        async () => _.find(tokenMetadata.roles, 'system.admin') ?
-          Promise.resolve(O.some(undefined)):
-          this.userService.getUserById(tokenMetadata.user_id, { $select: { account: true } }) as Promise<Option<User | undefined>>,
-        TO.fold(
-          () => { throw new Error('User not found.'); },
-          (result) => async () => {
-            const tokenData = email !== undefined ? 
-              await this.accountService.getInvitationTokenByEmail(email) :
-              token && {
-                token,
-                metadata: (await this.accountService.validateInviteToken(token))
-              };
 
-            if (!tokenData) {
-              throw new NotFoundError();
-            }
-
-            if (result) {
-              const { account: { id: accountId } } = result;
-
-              if (tokenData.metadata.userAccountRole.accountId !== accountId) {
-                throw new ForbiddenError();
-              }
-            }
-
-            return tokenData;
-          })
-      )();
+      return tokenData;
     }
   }
 
