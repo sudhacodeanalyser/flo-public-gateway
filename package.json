@@ -61,6 +61,7 @@
     "morphism": "^1.11.1",
     "pg": "^7.11.0",
     "reflect-metadata": "^0.1.13",
+    "sendwithus": "^4.3.0",
     "squel": "^5.12.2",
     "stripe": "^7.14.0",
     "swagger-jsdoc": "^3.2.9",

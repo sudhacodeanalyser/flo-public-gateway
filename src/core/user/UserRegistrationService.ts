@@ -9,6 +9,7 @@ import UnauthorizedError from '../api/error/UnauthorizedError';
 import Logger from 'bunyan';
 import { KafkaProducer } from '../../kafka/KafkaProducer';
 import { LocalizationService } from '../service';
+import EmailClient from '../../email/EmailClient';
 
 export const UserRegistrationDataCodec = t.type({
   email: t.string,
@@ -75,32 +76,14 @@ export class UserInviteService {
     @inject('UserRegistrationTokenMetadataTable') private userRegistrationTokenMetatadataTable: UserRegistrationTokenMetadataTable,
     @inject('RegistrationTokenSecret') private tokenSecret: string,
     @inject('Logger') private logger: Logger,
-    @inject('KafkaProducer') private kafkaProducer: KafkaProducer,
+    @inject('EmailClient') private emailClient: EmailClient,
     @inject('LocalizationService') private localizationService: LocalizationService
   ) {}
 
   public async sendInvite(email: string, token: string, locale?: string): Promise<void> {
     const { items: [{ value: templateId }]} = await this.localizationService.getAssets({ name: 'user.invite.template', type: 'email', locale });
-    const kafkaMessage = {
-      id: uuid.v4(),
-      client_app_name: 'Public Gateway',
-      time_stamp: new Date().toISOString(),
-      recipients: [
-        {
-          email_address: email,
-          send_with_us_data: {
-            template_id: templateId,
-            email_template_data: {
-              auth: {
-                token
-              }
-            }
-          }
-        }
-      ]
-    };
 
-    await this.kafkaProducer.send('emails-v3', kafkaMessage);
+    await this.emailClient.send(email, templateId, { auth: { token } });
   }
 
   public async issueToken(email: string, userAccountRole: UserAccountRole, userLocationRoles: UserLocationRole[], locale?: string, ttl?: number): Promise<{ token:string, metadata: InviteTokenData }> {

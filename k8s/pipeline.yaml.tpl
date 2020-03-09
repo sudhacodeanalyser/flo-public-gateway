@@ -49,6 +49,7 @@ secrets:
     PUCK_TOKEN_SECRET: "${PUCK_TOKEN_SECRET}"
     TWILIO_AUTH_TOKEN: "${TWILIO_AUTH_TOKEN}"
     PUBLIC_GATEWAY_HOST: "${PUBLIC_GATEWAY_HOST}"
+    SEND_WITH_US_KEY: "${SEND_WITH_US_KEY}"
 internalIngress:
   host: internal-ingress.flocloud.co
 routingIngress:
