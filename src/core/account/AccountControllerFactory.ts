@@ -143,9 +143,10 @@ export function AccountControllerFactory(container: Container, apiVersion: numbe
 
         if (req.query.token) {
           next();
+        } else {
+          auth(req, res, next);
         }
-
-        auth(req, res, next);
+        
       },
       reqValidator.create(t.type({
         query: t.union([
