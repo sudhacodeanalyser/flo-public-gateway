@@ -38,6 +38,7 @@ export function AccountControllerFactory(container: Container, apiVersion: numbe
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
   const authMiddlewareFactory = container.get<AuthMiddlewareFactory>('AuthMiddlewareFactory');
   const authWithId = authMiddlewareFactory.create(async ({ params: { id } }: Request) => ({ account_id: id }));
+  const authWithIdBody = authMiddlewareFactory.create(async ({ body: { accountId } }: Request) => ({ account_id: accountId }));
   const auth = authMiddlewareFactory.create();
 
   @httpController({ version: apiVersion }, '/accounts')
@@ -99,7 +100,7 @@ export function AccountControllerFactory(container: Container, apiVersion: numbe
     }
 
     @httpPost('/invite',
-      authWithId,
+      authWithIdBody,
       reqValidator.create(t.type({
         body: UserInviteValidator
       }))
@@ -109,7 +110,7 @@ export function AccountControllerFactory(container: Container, apiVersion: numbe
     }
 
     @httpPost('/invite/resend',
-      authWithId,
+      authWithIdBody,
       reqValidator.create(t.type({
         body: t.type({
           emailValidator,
