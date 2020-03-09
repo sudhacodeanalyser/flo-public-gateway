@@ -57,7 +57,7 @@ class AccountService {
       throw new ConflictError('User already exists.');
     }
 
-    return this.userInviteService.issueToken(
+    const tokenData = await this.userInviteService.issueToken(
       userInvite.email, 
       { accountId: userInvite.accountId, roles: userInvite.accountRoles }, 
       userInvite.locationRoles,
@@ -65,7 +65,9 @@ class AccountService {
       sevenDays
     );
 
-    // TODO: Send email
+    await this.userInviteService.sendInvite(userInvite.email, tokenData.token, userInvite.locale);
+
+    return tokenData;
   }
 
   public async resendInvitation(email: string): Promise<{ token: string, metadata: InviteTokenData }> {
@@ -81,9 +83,9 @@ class AccountService {
       throw new NotFoundError('Invitation not found.');
     }
 
-    return tokenData;
+    await this.userInviteService.sendInvite(tokenData.metadata.email, tokenData.token, tokenData.metadata.locale);
 
-    // TODO: Send email
+    return tokenData;
   }
 
   public async getInvitationTokenByEmail(email: string): Promise<{ token: string, metadata: InviteTokenData }> {
@@ -117,16 +119,21 @@ class AccountService {
   }
 
   public async validateInviteToken(token: string): Promise<InviteTokenData> {
-    const {
-      isExpired,
-      ...tokenData
-    } = await this.userInviteService.decodeToken(token);
+    try {
+      const {
+        isExpired,
+        ...tokenData
+      } = await this.userInviteService.decodeToken(token);
 
-    if (isExpired) {
-      throw new NotFoundError('Token metadata not found.');
+      if (isExpired) {
+        throw new UnauthorizedError('Token expired.');
+      }
+
+      return tokenData;
+    } catch (err) {
+      this.logger.error({ err });
+      throw new UnauthorizedError('Invalid token.');
     }
-
-    return tokenData;
   }
 }
 
