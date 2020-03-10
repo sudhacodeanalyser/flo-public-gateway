@@ -9,6 +9,8 @@ import UnauthorizedError from '../api/error/UnauthorizedError';
 import Logger from 'bunyan';
 import { KafkaProducer } from '../../kafka/KafkaProducer';
 import { LocalizationService } from '../service';
+import EmailClient from '../../email/EmailClient';
+import ConflictError from '../api/error/ConflictError';
 
 export const UserRegistrationDataCodec = t.type({
   email: t.string,
@@ -75,35 +77,23 @@ export class UserInviteService {
     @inject('UserRegistrationTokenMetadataTable') private userRegistrationTokenMetatadataTable: UserRegistrationTokenMetadataTable,
     @inject('RegistrationTokenSecret') private tokenSecret: string,
     @inject('Logger') private logger: Logger,
-    @inject('KafkaProducer') private kafkaProducer: KafkaProducer,
+    @inject('EmailClient') private emailClient: EmailClient,
     @inject('LocalizationService') private localizationService: LocalizationService
   ) {}
 
   public async sendInvite(email: string, token: string, locale?: string): Promise<void> {
     const { items: [{ value: templateId }]} = await this.localizationService.getAssets({ name: 'user.invite.template', type: 'email', locale });
-    const kafkaMessage = {
-      id: uuid.v4(),
-      client_app_name: 'Public Gateway',
-      time_stamp: new Date().toISOString(),
-      recipients: [
-        {
-          email_address: email,
-          send_with_us_data: {
-            template_id: templateId,
-            email_template_data: {
-              auth: {
-                token
-              }
-            }
-          }
-        }
-      ]
-    };
 
-    await this.kafkaProducer.send('emails-v3', kafkaMessage);
+    await this.emailClient.send(email, templateId, { auth: { token } });
   }
 
   public async issueToken(email: string, userAccountRole: UserAccountRole, userLocationRoles: UserLocationRole[], locale?: string, ttl?: number): Promise<{ token:string, metadata: InviteTokenData }> {
+    const existingToken = await this.getTokenByEmail(email);
+
+    if (existingToken) {
+      throw new ConflictError('Email already has pending registration.');
+    }
+    const tokenExpiresAt = !ttl ? undefined : moment().add(ttl, 'seconds').toISOString();
     const tokenId = uuid.v4();
     const tokenData = {
       token_id: tokenId,
@@ -113,7 +103,7 @@ export class UserInviteService {
         userLocationRoles,
         locale
       },
-      token_expires_at: ttl ? new Date(ttl * 1000).toISOString() : undefined,
+      token_expires_at: tokenExpiresAt,
       registration_data_expires_at: moment().add(30, 'days').toISOString()
     };
     const metadata =  await this.userRegistrationTokenMetatadataTable.put(tokenData);
@@ -213,6 +203,14 @@ export class UserInviteService {
     }
   }
 
+  public async redeemToken(token:string): Promise<InviteTokenData> {
+    const tokenData = await this.verifyToken(token);
+
+    await this.userRegistrationTokenMetatadataTable.remove({ token_id: tokenData.tokenId });
+
+    return tokenData;
+  }
+
   public async decodeToken(token: string): Promise<InviteTokenData & { isExpired: boolean }> {
     return (new Promise<InviteTokenData & { isExpired: boolean }>((resolve, reject) => 
       jwt.verify(token, this.tokenSecret, { ignoreExpiration: true }, (err, decodedToken) => {
@@ -242,6 +240,16 @@ export class UserInviteService {
       return null;
     }
 
+    await this.userRegistrationTokenMetatadataTable.remove({ token_id: data.token_id });
+
     return this.issueToken(email, data.registration_data.userAccountRole, data.registration_data.userLocationRoles, data.registration_data.locale, ttl);
+  }
+
+  public async revoke(email: string): Promise<void> {
+    const tokenData = await this.userRegistrationTokenMetatadataTable.getByEmail(email);
+
+    if (tokenData) {
+      await this.userRegistrationTokenMetatadataTable.remove({ token_id: tokenData.token_id });
+    }
   }
 }
