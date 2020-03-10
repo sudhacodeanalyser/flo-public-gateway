@@ -99,7 +99,7 @@ class AccountService {
   }
 
   public async acceptInvitation(token: string, data: InviteAcceptData): Promise<User> {
-    const tokenData = await this.userInviteService.verifyToken(token);
+    const tokenData = await this.userInviteService.redeemToken(token);
     const user = await this.userServiceFactory().createUser({
       locale: tokenData.locale ? NonEmptyStringFactory.create(tokenData.locale) : undefined,
       account: { id: tokenData.userAccountRole.accountId },
@@ -134,6 +134,10 @@ class AccountService {
       this.logger.error({ err });
       throw new UnauthorizedError('Invalid token.');
     }
+  }
+
+  public async revokeInvitation(email: string): Promise<void> {
+    return this.userInviteService.revoke(email);
   }
 }
 
