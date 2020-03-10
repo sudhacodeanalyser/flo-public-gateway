@@ -37,7 +37,7 @@ variables:
   POSTGRES_HOST: "dev-rds-cherry.dev.flocloud.co"
   POSTGRES_PORT: "5432"
   POSTGRES_USER: "flo-list-service"
-  PRESENCE_SERVICE_URL: "https://flo-core-service-dev.flocloud.co/presence"
+  PRESENCE_SERVICE_URL: "http://flo-core-service.flo-core-service.svc.cluster.local:8080/presence"
   REDIS_HOST: "redis-dev-cluster.9alsts.clustercfg.usw2.cache.amazonaws.com"
   TELEMETRY_TAGS_SERVICE_URL: "https://flo-telemetry-tags.flocloud.co"
   SENSOR_METER_URL: "https://flo-puck-service.flocloud.co"
