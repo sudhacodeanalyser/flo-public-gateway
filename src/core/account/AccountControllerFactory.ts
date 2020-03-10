@@ -109,6 +109,19 @@ export function AccountControllerFactory(container: Container, apiVersion: numbe
       await this.accountService.inviteUserToJoinAccount(body);
     }
 
+    @httpPost('/invite/revoke',
+      authWithIdBody,
+      reqValidator.create(t.type({
+        body: t.type({
+          accountId: accountIdValidator,
+          email: emailValidator
+        })
+      }))
+    )
+    private async revokeInvitation(@requestBody() { email }: { email: string }): Promise<void> {
+      await this.accountService.revokeInvitation(email);
+    }
+
     @httpPost('/invite/resend',
       authWithIdBody,
       reqValidator.create(t.type({
