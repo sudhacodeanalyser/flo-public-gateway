@@ -111,7 +111,7 @@ class AccountService {
     await Promise.all([
       this.updateAccountUserRole(tokenData.userAccountRole.accountId, user.id, tokenData.userAccountRole.roles),
       ...tokenData.userLocationRoles.map(({ locationId, roles }) => 
-        locationService.addLocationUserRole(locationId, user.id, roles)
+        locationService.addLocationUserRole(locationId, user.id, roles, false)
       )
     ]);
 
