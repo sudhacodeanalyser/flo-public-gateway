@@ -13,7 +13,7 @@ class LocationTreeTable extends PostgresTable<LocationTreeRow> {
     super(pgDbClient, 'location_tree');
   }
 
-  public async updateParent(id: string, parentId: string | null, hasPrevParent: boolean): Promise<void> {
+  public async updateParent(accountId: string, id: string, parentId: string | null, hasPrevParent: boolean): Promise<void> {
     const removeExistingSubTree = hasPrevParent && {
       text: `
         DELETE FROM "location_tree" AS "d"
@@ -79,7 +79,7 @@ class LocationTreeTable extends PostgresTable<LocationTreeRow> {
     );
   }
 
-  public async removeSubTree(id: string): Promise<void> {
+  public async removeSubTree(accountId: string, id: string): Promise<void> {
     const query = `
       DELETE FROM location_tree AS "d"
       USING location_tree AS "p"
@@ -90,7 +90,7 @@ class LocationTreeTable extends PostgresTable<LocationTreeRow> {
     await this.pgDbClient.execute(query, [id]);
   }
 
-  public async getImmediateChildren(id: string): Promise<LocationTreeRow[]> {
+  public async getImmediateChildren(accountId: string, id: string): Promise<LocationTreeRow[]> {
     const query = squel.useFlavour('postgres')
       .select()
       .field('parent_id')
@@ -102,7 +102,7 @@ class LocationTreeTable extends PostgresTable<LocationTreeRow> {
     return this.query({ query });
   }
 
-  public async getAllChildren(id: string): Promise<LocationTreeRow[]> {
+  public async getAllChildren(accountId: string, id: string): Promise<LocationTreeRow[]> {
     const query = squel.useFlavour('postgres')
       .select()
       .field('parent_id')
@@ -114,7 +114,7 @@ class LocationTreeTable extends PostgresTable<LocationTreeRow> {
     return this.query({ query });
   }
 
-  public async batchGetAllChildren(ids: string[]): Promise<LocationTreeRow[]> {
+  public async batchGetAllChildren(accountId: string, ids: string[]): Promise<LocationTreeRow[]> {
     const query = squel.useFlavour('postgres')
       .select()
       .field('parent_id')
@@ -126,7 +126,8 @@ class LocationTreeTable extends PostgresTable<LocationTreeRow> {
     return this.query({ query });
   }
 
-  public async getAllParents(id: string): Promise<LocationTreeRow[]> {
+  // Faster query than getAllParentsOfParents, but does not return the parent of each parent
+  public async getAllParents(accountId: string, id: string): Promise<LocationTreeRow[]> {
     const query = squel.useFlavour('postgres')
       .select()
       .field('parent_id')
@@ -136,6 +137,47 @@ class LocationTreeTable extends PostgresTable<LocationTreeRow> {
       .where('depth > 0');
 
     return this.query({ query });
+  }
+
+  // Slower query than getAllParents, but returns the parent of each parent
+  // Returns mapping of childId => parentId
+  public async getAllParentsWithParents(id: string): Promise<{ [childId: string]: string }> {
+    const query = `
+      SELECT "p"."parent_id", "p"."child_id", "p"."depth" FROM "location_tree" AS "c"
+      JOIN "location_tree" AS "p" ON "c"."parent_id" = "p".child_id"
+      WHERE "c"."child_id" = $1
+      AND "p"."depth" = 1
+    `;
+
+    const result = await this.pgDbClient.execute(query, [id]);
+
+    return result.rows.reduce((acc, { parent_id, child_id }: LocationTreeRow) => {
+      return {
+        [parent_id]: null,
+        ...acc,
+        [child_id]: parent_id
+      };
+    }, {});
+  }
+
+  // Slower query than getAllChildren, but returns parent of each child_id
+  // Returns mapping of parentId => childId
+  public async getAllChildrenWithParents(id: string): Promise<{ [parentId: string]: string }> {
+    const query = `
+      SELECT "c"."parent_id", "c"."child_id", "c"."depth" FROM "location_tree" AS "p"
+      JOIN "location_tree" AS "c" ON "p"."child_id" = "c"."child_id"
+      WHERE "p"."parent_id" = $1
+      AND "c"."depth" = 1
+    `;
+    const result = await this.pgDbClient.execute(query, [id]);
+
+    return result.rows.reduce((acc, { parent_id, child_id }: LocationTreeRow) => {
+      return {
+        [child_id]: null,
+        ...acc,
+        [parent_id]: child_id
+      };
+    }, {}); 
   }
 }
 

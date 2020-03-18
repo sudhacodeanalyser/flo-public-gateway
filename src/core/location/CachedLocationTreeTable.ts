@@ -1,0 +1,132 @@
+import { inject, injectable, targetName } from 'inversify';
+import LocationTreeTable, { LocationTreeRow } from './LocationTreeTable';
+import Redis from 'ioredis';
+import { CachePolicy } from '../../cache/CacheMiddleware';
+import _ from 'lodash';
+
+@injectable()
+class CachedLocationTreeTable extends LocationTreeTable {
+    @inject('RedisClient') protected redisClient: Redis.Redis;
+    @inject('CachePolicy') protected cachePolicy: CachePolicy;
+​
+    public async getAllChildren(accountId: string, id: string): Promise<LocationTreeRow[]> {
+
+      const key = this.formatChildrenKey(accountId, id);
+      const [children, isCached] = await this.redisClient
+        .multi()
+        .zrange(key, 1, -1, 'WITHSCORES')
+        .exists(key)
+        .exec();
+​
+      if (isCached) {
+        return (children || [])
+          .map((childDepth: any[]) => ({ 
+            child_id: childDepth[0] as string, 
+            parent_id: id, 
+            depth: childDepth[1] as number 
+          }));
+      } 
+​
+      // Cache miss
+      const data = await super.getAllChildren(accountId, id);
+​      const cacheData = _.flatMap(
+        [{ child_id: id, parent_id: id, depth: 0 }, ...data], 
+        row => [`${row.depth}`, row.child_id]
+      );
+
+      await this.redisClient.zadd(key, ...cacheData);
+​
+      return data;
+    }
+​
+    public async getImmediateChildren(accountId: string, id: string): Promise<LocationTreeRow[]> {
+
+      const key = this.formatChildrenKey(accountId, id);
+      const [children, isCached] = await this.redisClient
+        .multi()
+        .zrangebyscore(key, 1, 1)
+        .exists(key)
+        .exec();
+​
+      if (isCached) {
+        return (children || [])
+          .map((child: string) => ({ 
+            child_id: child, 
+            parent_id: id, 
+            depth: 1 
+          }));
+      }
+​
+      const allChildren = await this.getAllChildren(accountId, id);
+​
+      return allChildren.filter(({ depth }) => depth === 1);
+    }
+​
+    public async getAllParents(accountId: string, id: string): Promise<LocationTreeRow[]> {
+      const key = this.formatParentsKey(accountId, id);
+      const [parents, isCached] = await this.redisClient
+        .multi()
+        .zrange(key, 1, -1, 'WITHSCORES')
+        .exists(key)
+        .exec();
+​
+      if (isCached) {
+        return (parents || []).map((parentDepth: any[]) => ({
+          child_id: id,
+          parent_id: parentDepth[0] as string,
+          depth: parentDepth[1] as number
+        }));
+      } 
+​
+      // Cache miss
+      const data = await super.getAllParents(accountId, id);
+      const cacheData = _.flatMap(
+        [{ child_id: id, parent_id: id, depth: 0 }, ...data], 
+        row => [`${row.depth}`, row.parent_id]
+      );
+
+      await this.redisClient.zadd(key, ...cacheData);
+​
+      return data;
+    }
+​
+    public async removeSubTree(accountId: string, id: string): Promise<void> {
+      const allChildren = await super.getAllChildren(accountId, id);
+​
+      await super.removeSubTree(accountId, id);
+​
+      await allChildren.reduce(
+        (multi, { child_id }) => multi.del(child_id), 
+        this.redisClient.multi()
+      )
+      .exec();
+    }
+​
+    public async updateParent(accountId: string, id: string, parentId: string | null, hasPrevParent: boolean): Promise<void> {
+ 
+      const [allChildren, getAllParents] = await Promise.all([
+        super.getAllChildren(accountId, id),
+        super.getAllParents(accountId, id)
+      ]);
+​
+      await super.updateParent(accountId, id, parentId, hasPrevParent);
+​
+      const multi = this.redisClient.multi();
+
+      allChildren.forEach(({ child_id }) => multi.del(child_id));
+      getAllParents.forEach(({ parent_id }) => multi.del(parent_id));
+
+      await multi.exec();
+    }
+​
+    private formatParentsKey(accountId: string, id: string): string {
+      return `parents:{${accountId}}:${ id }`;
+    }
+​
+    private formatChildrenKey(accountId: string, id: string): string {
+      return `children:{${accountId}}:${ id }`; 
+    }
+
+}
+​
+export default CachedLocationTreeTable;

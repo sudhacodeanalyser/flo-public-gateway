@@ -39,7 +39,7 @@ class LocationResolver extends Resolver<Location> {
     },
     users: async (location: Location, shouldExpand = false, expandProps?: PropExpand) => {
       const locationUserRoles = await this.getAllUserRolesByLocationId(location.id);
-      const parents = await this.locationTreeTable.getAllParents(location.id);
+      const parents = await this.locationTreeTable.getAllParents(location.account.id, location.id);
       const parentUsers = _.flatten(await Promise.all(
         parents.map(({ parent_id }) => 
           this.getAllUserRolesByLocationId(parent_id)
@@ -68,7 +68,7 @@ class LocationResolver extends Resolver<Location> {
     },
     userRoles: async (location: Location, shouldExpand = false) => {
       const explicitUserRoles = await this.getAllUserRolesByLocationId(location.id);
-      const parents = await this.locationTreeTable.getAllParents(location.id);
+      const parents = await this.locationTreeTable.getAllParents(location.account.id, location.id);
       const parentUserRoles = _.flatten(await Promise.all(
         parents.map(async ({ parent_id }) => {
           const userRoles = await this.getAllUserRolesByLocationId(parent_id);
@@ -252,7 +252,7 @@ class LocationResolver extends Resolver<Location> {
       };
     },
     children: async (location: Location, shouldExpand = false, expandProps?: PropExpand) => {
-      const childIds = await this.locationTreeTable.getImmediateChildren(location.id);
+      const childIds = await this.locationTreeTable.getImmediateChildren(location.account.id, location.id);
       const children = await Promise.all(
          childIds.map(async ({ child_id }) => {
            if (shouldExpand) {
@@ -353,7 +353,7 @@ class LocationResolver extends Resolver<Location> {
       // https://aws.amazon.com/blogs/aws/new-amazon-dynamodb-transactions/
       await Promise.all([
         this.locationTable.remove({ account_id: accountId, location_id: id }),
-
+        this.locationTreeTable.removeSubTree(accountId, id),
         this.removeLocationUsersAllByLocationId(id),
 
         // ...(await this.deviceResolverFactory().getAllByLocationId(id))

@@ -1,28 +1,29 @@
 import { injectable } from 'inversify';
-import LocationTreeTable, { LocationTreeRow } from './LocationTreeTable';
+import { LocationTreeRow } from './LocationTreeTable';
+import CachedLocationTreeTable from './CachedLocationTreeTable';
 import { MemoizeMixin, memoized } from '../../memoize/MemoizeMixin';
 
 @injectable()
-class MemoizedLocationTreeTable extends MemoizeMixin(LocationTreeTable) {
+class MemoizedLocationTreeTable extends MemoizeMixin(CachedLocationTreeTable) {
 
-  @memoized()
-  public async getImmediateChildren(id: string): Promise<LocationTreeRow[]> {
-    return super.getImmediateChildren(id);
+  @memoized((args: any[]) => args[1])
+  public async getImmediateChildren(accountId: string, id: string): Promise<LocationTreeRow[]> {
+    return super.getImmediateChildren(accountId, id);
   }
 
-  @memoized()
-  public async getAllChildren(id: string): Promise<LocationTreeRow[]> {
-    return super.getImmediateChildren(id);
+  @memoized((args: any[]) => args[1])
+  public async getAllChildren(accountId: string, id: string): Promise<LocationTreeRow[]> {
+    return super.getImmediateChildren(accountId, id);
   }
 
-  @memoized((args: any[]) => (args[0] || []).sort())
-  public async batchGetAllChildren(ids: string[]): Promise<LocationTreeRow[]> {
-    return super.batchGetAllChildren(ids);
+  @memoized((args: any[]) => (args[1] || []).sort())
+  public async batchGetAllChildren(accountId: string, ids: string[]): Promise<LocationTreeRow[]> {
+    return super.batchGetAllChildren(accountId, ids);
   }
 
-  @memoized()
-  public async getAllParents(id: string): Promise<LocationTreeRow[]> {
-     return super.getAllParents(id); 
+  @memoized((args: any[]) => args[1])
+  public async getAllParents(accountId: string, id: string): Promise<LocationTreeRow[]> {
+     return super.getAllParents(accountId, id); 
   }
 }
 

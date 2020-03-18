@@ -21,9 +21,17 @@ import LocationTreeTable from '../location/LocationTreeTable';
 class UserResolver extends Resolver<User> {
   protected propertyResolverMap: PropertyResolverMap<User> = {
     locations: async (model: User, shouldExpand: boolean = false, expandProps?: PropExpand) => {
+      const userAccountRoleRecordData = await this.userAccountRoleTable.getByUserId(model.id);
+
+      if (userAccountRoleRecordData == null) {
+        return null;
+      }
+
       const userLocationRoleRecordData: UserLocationRoleRecordData[] = await this.userLocationRoleTable.getAllByUserId(model.id);
       const rootLocationIds = userLocationRoleRecordData.map(({ location_id }) => location_id);
-      const subTrees = await this.locationTreeTable.batchGetAllChildren(rootLocationIds);
+      const subTrees = _.flatten(await Promise.all(
+        rootLocationIds.map(parentId => this.locationTreeTable.getAllChildren(userAccountRoleRecordData.account_id, parentId))
+      ));
       const locationIds = _.uniq([
         ...rootLocationIds,
         ...subTrees.map(({ child_id }) => child_id)
@@ -66,12 +74,18 @@ class UserResolver extends Resolver<User> {
         new UserAccountRoleRecord(userAccountRoleRecordData).toUserAccountRole();
     },
     locationRoles: async (model: User, shouldExpand = false) => {
+      const userAccountRoleRecordData = await this.userAccountRoleTable.getByUserId(model.id);
+
+      if (userAccountRoleRecordData === null) {
+        return null;
+      }
+
       const userLocationRoleRecordData: UserLocationRoleRecordData[] = await this.userLocationRoleTable.getAllByUserId(model.id);
       const explictRoles = userLocationRoleRecordData.map(userLocationRoleRecordDatum =>
         new UserLocationRoleRecord(userLocationRoleRecordDatum).toUserLocationRole()
       );
       const locationIds = explictRoles.map(({ locationId }) => locationId);
-      const subTrees = await this.locationTreeTable.batchGetAllChildren(locationIds);
+      const subTrees = await this.locationTreeTable.batchGetAllChildren(userAccountRoleRecordData.account_id, locationIds);
       const childRoles = _.chain(explictRoles)
         .flatMap(({ locationId, roles }) => {
           return _.chain(subTrees)

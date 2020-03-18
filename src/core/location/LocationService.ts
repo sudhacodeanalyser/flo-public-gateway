@@ -65,6 +65,11 @@ class LocationService {
 
     if (locationUpdate.parent !== undefined && (locationUpdate.parent === null || locationUpdate.parent.id !== id)) {
       const location = await this.locationResolver.get(id, { $select: { parent: true, account: true } });
+
+      if (!location) {
+        throw new ConflictError('Location does not exist.');
+      }
+
       const hasNewParent = locationUpdate.parent !== null;
       const parentLocation = locationUpdate.parent !== null && await this.locationResolver.get(locationUpdate.parent.id, { $select: { account: true } });
 
@@ -76,8 +81,13 @@ class LocationService {
       }
 
       // Noop if parent is not changing to avoid expensive SQL queries
-      if (!location || (location.parent && location.parent.id) !== (locationUpdate.parent && locationUpdate.parent.id)) {
-        await this.locationTreeTable.updateParent(id, locationUpdate.parent && locationUpdate.parent.id, !!(location && location.parent && location.parent.id));
+      if ((location.parent && location.parent.id) !== (locationUpdate.parent && locationUpdate.parent.id)) {
+        await this.locationTreeTable.updateParent(
+          location.account.id, 
+          id, 
+          locationUpdate.parent && locationUpdate.parent.id, 
+          !!(location && location.parent && location.parent.id)
+        );
       }
     }
 
