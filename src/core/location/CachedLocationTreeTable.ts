@@ -12,11 +12,18 @@ class CachedLocationTreeTable extends LocationTreeTable {
     public async getAllChildren(accountId: string, id: string): Promise<LocationTreeRow[]> {
 
       const key = this.formatChildrenKey(accountId, id);
-      const [children, isCached] = await this.redisClient
+      const results = await this.redisClient
         .multi()
         .zrange(key, 1, -1, 'WITHSCORES')
         .exists(key)
         .exec();
+      const [children, isCached] = results.map(([err, result]: any[]) => {
+        if (err) {
+          throw err;
+        }
+
+        return result;
+      });
 ​
       if (isCached) {
         return (children || [])
@@ -42,12 +49,19 @@ class CachedLocationTreeTable extends LocationTreeTable {
     public async getImmediateChildren(accountId: string, id: string): Promise<LocationTreeRow[]> {
 
       const key = this.formatChildrenKey(accountId, id);
-      const [children, isCached] = await this.redisClient
+      const results = await this.redisClient
         .multi()
         .zrangebyscore(key, 1, 1)
         .exists(key)
         .exec();
-​
+​      const [children, isCached] = results.map(([err, result]: any[]) => {
+        if (err) {
+          throw err;
+        }
+
+        return result;
+      });
+
       if (isCached) {
         return (children || [])
           .map((child: string) => ({ 
@@ -64,11 +78,18 @@ class CachedLocationTreeTable extends LocationTreeTable {
 ​
     public async getAllParents(accountId: string, id: string): Promise<LocationTreeRow[]> {
       const key = this.formatParentsKey(accountId, id);
-      const [parents, isCached] = await this.redisClient
+      const results = await this.redisClient
         .multi()
         .zrange(key, 1, -1, 'WITHSCORES')
         .exists(key)
         .exec();
+      const [parents, isCached] = results.map(([err, result]: any[]) => {
+        if (err) {
+          throw err;
+        }
+
+        return result;
+      });
 ​
       if (isCached) {
         return (parents || []).map((parentDepth: any[]) => ({
@@ -95,11 +116,16 @@ class CachedLocationTreeTable extends LocationTreeTable {
 ​
       await super.removeSubTree(accountId, id);
 ​
-      await allChildren.reduce(
+      (await allChildren.reduce(
         (multi, { child_id }) => multi.del(child_id), 
         this.redisClient.multi()
       )
-      .exec();
+      .exec())
+      .forEach(([err]: any[]) => {
+        if (err) {
+          throw err;
+        }
+      });
     }
 ​
     public async updateParent(accountId: string, id: string, parentId: string | null, hasPrevParent: boolean): Promise<void> {
@@ -116,7 +142,17 @@ class CachedLocationTreeTable extends LocationTreeTable {
       allChildren.forEach(({ child_id }) => multi.del(child_id));
       getAllParents.forEach(({ parent_id }) => multi.del(parent_id));
 
-      await multi.exec();
+      (await multi.exec()).forEach(([err]: any[]) => { 
+        if (err) {
+          throw err;
+        }
+      });
+    }
+
+    public async batchGetAllChildren(accountId: string, ids: string[]): Promise<LocationTreeRow[]> {
+      return _.flatten(await Promise.all(
+        ids.map(id => this.getAllChildren(accountId, id))
+      ));
     }
 ​
     private formatParentsKey(accountId: string, id: string): string {

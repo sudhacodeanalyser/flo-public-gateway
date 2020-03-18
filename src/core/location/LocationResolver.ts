@@ -229,6 +229,29 @@ class LocationResolver extends Resolver<Location> {
         }))
       };
     },
+    class: async (location: Location, shouldExpand = false, expandProps?: PropExpand) => {
+      const lists = await this.lookupServiceFactory().getByIds(['location_class_types']);
+      const classTypes = lists.location_class_types;
+
+      if (!classTypes || !classTypes.length) {
+        return null;
+      }
+
+      const locationClass = (
+        _.find(classTypes, item => item.key === location.class.key) ||
+        _.find(classTypes, item => !!(item.data || {}).isDefault)
+      );
+
+      if (locationClass) {
+        return {
+          key: locationClass.key,
+          level: locationClass.data.level
+        };
+      } else {
+        return null;
+      }
+
+    },
     parent: async (location: Location, shouldExpand = false, expandProps?: PropExpand) => {
 
       if (!location.parent) {
