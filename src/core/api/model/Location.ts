@@ -242,5 +242,9 @@ export const LocationCodec = t.intersection([
 export interface Location extends t.TypeOf<typeof LocationCodec>, TimestampedModel {
   notifications?: NotificationStatistics;
   parent?: Expandable<Location> | null;
-  children: Array<Expandable<Location>> ;
+  children: Array<Expandable<Location>>;
+  class: {
+    key: string;
+    level: number;
+  };
 }
