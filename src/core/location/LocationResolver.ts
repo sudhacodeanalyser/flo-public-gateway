@@ -286,7 +286,7 @@ class LocationResolver extends Resolver<Location> {
 
            return child && {
              id: child_id,
-             nickname: child.nickname
+             nickname: child.nickname || child.address
            }
          })
        );

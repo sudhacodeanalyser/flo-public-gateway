@@ -182,7 +182,7 @@ export interface LocationRecordData extends Partial<LegacyLocationProfile>, Time
 const RecordToModelSchema: StrictSchema<Location, LocationRecordData> = {
   id: 'location_id',
   parent: (input: LocationRecordData) => {
-    return input.parent_location_id ? { id: input.parent_location_id, nickname: "" } : undefined;
+    return input.parent_location_id ? { id: input.parent_location_id, nickname: '' } : undefined;
   },
   children: () => [],
   account: {

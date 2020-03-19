@@ -81,12 +81,12 @@ class UserResolver extends Resolver<User> {
       }
 
       const userLocationRoleRecordData: UserLocationRoleRecordData[] = await this.userLocationRoleTable.getAllByUserId(model.id);
-      const explictRoles = userLocationRoleRecordData.map(userLocationRoleRecordDatum =>
+      const explicitRoles = userLocationRoleRecordData.map(userLocationRoleRecordDatum =>
         new UserLocationRoleRecord(userLocationRoleRecordDatum).toUserLocationRole()
       );
-      const locationIds = explictRoles.map(({ locationId }) => locationId);
+      const locationIds = explicitRoles.map(({ locationId }) => locationId);
       const subTrees = await this.locationTreeTable.batchGetAllChildren(userAccountRoleRecordData.account_id, locationIds);
-      const childRoles = _.chain(explictRoles)
+      const childRoles = _.chain(explicitRoles)
         .flatMap(({ locationId, roles }) => {
           return _.chain(subTrees)
             .filter({ parent_id: locationId })
@@ -102,7 +102,7 @@ class UserResolver extends Resolver<User> {
         })
         .value();
 
-      return _.chain([...explictRoles, ...childRoles])
+      return _.chain([...explicitRoles, ...childRoles])
         .groupBy('locationId')
         .map((locationRoles, locationId) => 
           locationRoles.reduce((acc, { roles, inherited }) => ({
