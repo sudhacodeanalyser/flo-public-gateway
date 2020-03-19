@@ -1,14 +1,15 @@
 import express from 'express';
 import * as Either from 'fp-ts/lib/Either';
+import {Option} from 'fp-ts/lib/Option';
 import { Container, inject } from 'inversify';
-import { BaseHttpController, httpGet, httpPost, interfaces, request, requestBody, requestParam, response } from 'inversify-express-utils';
+import { BaseHttpController, httpGet, httpPost, interfaces, request, requestBody, requestParam, response, httpDelete } from 'inversify-express-utils';
 import * as t from 'io-ts';
 import _ from 'lodash';
 import { $enum } from 'ts-enum-util';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
-import { AlarmEvent, AlarmSeverityCodec, AlertStatus, AlertStatusCodec, ClearAlertBody, ClearAlertBodyCodec, ClearAlertResponse, IncidentStatusReasonCodec, NotificationStatistics, PaginatedResult, UserFeedback, UserFeedbackCodec } from '../api';
-import { httpController } from '../api/controllerUtils';
+import { AlarmEvent, AlarmSeverityCodec, AlertStatus, AlertStatusCodec, ClearAlertBody, ClearAlertBodyCodec, ClearAlertResponse, IncidentStatusReasonCodec, NotificationStatistics, PaginatedResult, UserFeedback, UserFeedbackCodec, FilterState, FilterStateCodec } from '../api';
+import { httpController, deleteMethod } from '../api/controllerUtils';
 import Request from '../api/Request';
 import { NotificationServiceFactory } from '../notification/NotificationService';
 import { AlertService } from '../service';
@@ -67,17 +68,6 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
         .notificationServiceFactory
         .create(req)
         .retrieveStatistics(filters);
-    }
-
-    @httpGet('/:id',
-      reqValidator.create(t.type({
-        params: t.type({
-          id: t.string
-        })
-      }))
-    )
-    private async getAlarmEvent(@requestParam('id') id: string): Promise<AlarmEvent> {
-      return this.alertService.getAlarmEvent(id);
     }
 
     @httpGet('/',
@@ -177,6 +167,67 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
       const tokenMetadata = req.token;
 
       return this.alertService.submitFeedback(alarmEvent, userFeedback, tokenMetadata && tokenMetadata.user_id);
+    }
+
+    @httpGet('/filters/:id',
+      authMiddlewareFactory.create(),
+      reqValidator.create(t.type({
+        params: t.type({
+          id: t.string,
+        })
+      }))
+    )
+    private async getFilterStateById(@request() req: Request, @requestParam('id') filterStateId: string): Promise<Option<FilterState>> {
+      return this.notificationServiceFactory.create(req).getFilterStateById(filterStateId);
+    }
+
+    @httpGet('/filters',
+      authMiddlewareFactory.create(),
+      reqValidator.create(t.type({
+        query: t.type({
+          deviceId: t.string,
+        })
+      }))
+    )
+    private async getFilterState(@request() req: Request): Promise<FilterState[]> {
+      return this.notificationServiceFactory.create(req).getFilterState(req.query);
+    }
+
+    @httpDelete('/filters/:id',
+      authMiddlewareFactory.create(),
+      reqValidator.create(t.type({
+        params: t.type({
+          id: t.string,
+        })
+      }))
+    )
+    @deleteMethod
+    private async deleteFilterState(@request() req: Request, @requestParam('id') filterStateId: string): Promise<void> {
+      return this.notificationServiceFactory.create(req).deleteFilterState(filterStateId);
+    }
+
+    @httpPost('/filters',
+      authMiddlewareFactory.create(),
+      reqValidator.create(t.type({
+        params: t.type({
+          id: t.string,
+        }),
+        body: FilterStateCodec
+      }))
+    )
+    private async createFilterState(@request() req: Request, @requestBody() filterState: FilterState): Promise<FilterState> {
+      return this.notificationServiceFactory.create(req).createFilterState(filterState);
+    }
+
+    @httpGet('/:id',
+      reqValidator.create(t.type({
+        params: t.type({
+          id: t.string
+        })
+      }))
+    )
+    private async getAlarmEvent(@requestParam('id') id: string): Promise<AlarmEvent> {
+      return this.alertService.getAlarmEvent(id);
     }
   }
 

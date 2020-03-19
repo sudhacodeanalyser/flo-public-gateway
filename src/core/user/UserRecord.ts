@@ -1,14 +1,14 @@
 import { morphism, StrictSchema } from 'morphism';
-import { Timestamped, User } from '../api';
+import { Timestamped, User, UserCreate } from '../api';
 import { UserDetailRecordData } from './UserDetailRecord';
 
 export interface UserRecordData extends Timestamped {
   id: string,
   email: string,
-  email_hash: string,
   password: string,
   source?: string,
-  is_active?: boolean
+  is_active?: boolean,
+  account_id: string;
 }
 
 const RecordToModelSchema: StrictSchema<User, UserRecordData & UserDetailRecordData> = {
@@ -37,6 +37,7 @@ const RecordToModelSchema: StrictSchema<User, UserRecordData & UserDetailRecordD
     return input.enabled_features ? input.enabled_features : []
   }
 }
+
 
 const PartialModelToRecordSchema: StrictSchema<Partial<UserRecordData>, Partial<User>> = {
   email: (input: Partial<User>) => input.email && input.email.toLowerCase().trim()

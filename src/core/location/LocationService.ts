@@ -164,10 +164,12 @@ class LocationService {
    return this.locationResolver.getAllUserRolesByLocationId(locationId);
   }
 
-  public async addLocationUserRole(locationId: string, userId: string, roles: string[]): Promise<LocationUserRole> {
+  public async addLocationUserRole(locationId: string, userId: string, roles: string[], shouldRefreshAcl: boolean = true): Promise<LocationUserRole> {
     const locationUserRole = await this.locationResolver.addLocationUserRole(locationId, userId, roles);
 
-    await this.refreshUserACL(userId);
+    if (shouldRefreshAcl) {
+      await this.refreshUserACL(userId);
+    }
 
     return locationUserRole;
   }

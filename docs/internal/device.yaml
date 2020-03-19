@@ -686,6 +686,15 @@ components:
                 batteryEnabled:
                   type: boolean
                   description: PUCK ONLY - Set whether to enable the battery alert when its value is outside ranges.
+        componentHealth:
+          type: object
+          additionalProperties:
+            type: object
+            properties:
+              health:
+                type: string
+              updated:
+                type: date-time            
 
     IrrigationType:
       type: string

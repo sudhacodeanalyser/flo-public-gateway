@@ -474,6 +474,13 @@ class DeviceResolver extends Resolver<Device> {
       } else {
         return 'Smart Water Shutoff';
       }
+    },
+    componentHealth: async (device: Device, shouldExpand = false) => {
+      const additionalProps = await this.internalDeviceService.getDevice(device.macAddress);
+
+      return additionalProps && additionalProps.componentHealth ?
+        additionalProps.componentHealth :
+        null;
     }
   };
   private locationResolverFactory: () => LocationResolver;

@@ -4,6 +4,7 @@ import authContainerModule from '../auth/containerModule';
 import cacheContainerModule from '../cache/containerModule';
 import config from '../config/config';
 import httpContainerModule from '../http/containerModule';
+import emailContainerModule from '../email/containerModule';
 // Core container modules
 import coreContainerModules from '../core/containerModule';
 import dynamoDbContainerModule from '../database/dynamo/containerModule';
@@ -49,6 +50,7 @@ export default function ContainerFactory(container: Container = new Container())
     telemetryTagsContainerModule,
     iftttContainerModule,
     machineLearningContainerModule,
+    emailContainerModule,
     ...coreContainerModules
   );
 

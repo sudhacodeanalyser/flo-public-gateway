@@ -9,7 +9,8 @@ import {
   NotificationStatistics,
   Receipt,
   TwilioStatusEvent,
-  SendWithUsEvent
+  SendWithUsEvent,
+  FilterState
 } from '../api';
 import Request from '../api/Request';
 import {Option} from 'fp-ts/lib/Option';
@@ -38,4 +39,8 @@ export interface NotificationService {
   updateAlarmSettings(userId: string, settings: UpdateDeviceAlarmSettings): Promise<void>;
   generateEventsSample(data: any): Promise<void>;
   retrieveStatistics(filters: string): Promise<NotificationStatistics>;
+  getFilterStateById(id: string): Promise<Option<FilterState>>;
+  getFilterState(filters: any): Promise<FilterState[]>;
+  deleteFilterState(id: string): Promise<void>;
+  createFilterState(filterState: FilterState): Promise<FilterState>;
 }

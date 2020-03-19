@@ -3,7 +3,7 @@ import { inject, injectable } from 'inversify';
 import { injectHttpContext, interfaces } from 'inversify-express-utils';
 import _ from 'lodash';
 import { fromPartialRecord } from '../../database/Patch';
-import { DependencyFactoryFactory, PropExpand, UpdateDeviceAlarmSettings, User, UnitSystem } from '../api';
+import { DependencyFactoryFactory, PropExpand, UpdateDeviceAlarmSettings, User, UnitSystem, UserCreate } from '../api';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import { NotificationService, NotificationServiceFactory } from '../notification/NotificationService';
 import { AccountResolver, LocationResolver, PropertyResolverMap, Resolver } from '../resolver';
@@ -13,9 +13,10 @@ import { UserDetailRecord } from './UserDetailRecord';
 import UserDetailTable from './UserDetailTable';
 import { UserLocationRoleRecord, UserLocationRoleRecordData } from './UserLocationRoleRecord';
 import UserLocationRoleTable from './UserLocationRoleTable';
-import { UserRecord } from './UserRecord';
+import { UserRecord, UserRecordData } from './UserRecord';
 import UserTable from './UserTable';
 import LocationTreeTable from '../location/LocationTreeTable';
+import uuid from 'uuid';
 
 @injectable()
 class UserResolver extends Resolver<User> {
@@ -262,6 +263,65 @@ class UserResolver extends Resolver<User> {
 
     await this.userDetailTable.update({ user_id: id }, patch);
   }
+
+  public async createUser(userCreate: UserCreate): Promise<User> {
+    const id = uuid.v4();
+    const [
+      createdUserRecord,
+      createdUserDetailRecord
+    ] = await Promise.all([
+      this.userTable.put({
+        id,
+        account_id: userCreate.account.id,
+        email: userCreate.email,
+        password: userCreate.password,
+        source: userCreate.source,
+        is_active: true
+      }), 
+      this.userDetailTable.put({
+        user_id: id,
+        firstname: userCreate.firstName,
+        lastname: userCreate.lastName,
+        middlename: userCreate.middleName,
+        prefixname: userCreate.prefixName,
+        suffixname: userCreate.suffixName,
+        phone_mobile: userCreate.phoneMobile,
+        locale: userCreate.locale
+      })
+    ]);
+    const user = new UserRecord({
+      ...createdUserRecord,
+      ...createdUserDetailRecord
+    }).toModel();
+
+    return user;
+  }
+
+  public async getByEmail(email: string, expandProps?: PropExpand): Promise<User | null> {
+    const userRecord = await this.userTable.getByEmail(email);
+
+    if (!userRecord) {
+      return null;
+    }
+
+    const userDetailRecord = await this.userDetailTable.get({ user_id: userRecord.id });
+
+    if (!userDetailRecord) {
+      return null;
+    }
+
+    const user = new UserRecord({
+      ...userRecord,
+      ...userDetailRecord || {},
+      locale: userDetailRecord.locale || this.defaultUserLocale
+    }).toModel();
+    const expandedProps = await this.resolveProps(user, expandProps);
+
+    return {
+      ...user,
+      ...expandedProps
+    };
+  } 
 }
 
 export { UserResolver };

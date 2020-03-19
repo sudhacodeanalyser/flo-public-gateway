@@ -1,26 +1,51 @@
 import * as t from 'io-ts';
-import { interfaces, httpGet, httpPost, httpDelete, queryParam, requestParam, requestBody, BaseHttpController } from 'inversify-express-utils';
+import { interfaces, httpGet, httpPost, httpDelete, queryParam, requestParam, requestBody, request, BaseHttpController } from 'inversify-express-utils';
 import { inject, Container } from 'inversify';
-import { AccountService } from '../service';
+import { AccountService, UserService } from '../service';
 import { parseExpand, httpController, deleteMethod, withResponseType } from '../api/controllerUtils';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
-import { Account, AccountUserRole } from '../api';
+import { Account, AccountUserRole, UserInviteCodec, UserCreate, InviteAcceptValidator, InviteAcceptData, User } from '../api';
+import { InviteTokenData } from '../user/UserRegistrationService';
 import { NonEmptyArray } from '../api/validator/NonEmptyArray';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import Request from '../api/Request';
-import { Option, some, none } from 'fp-ts/lib/Option';
+import * as O from 'fp-ts/lib/Option';
 import * as Responses from '../api/response';
 import _ from 'lodash';
+import UnauthorizedError from '../api/error/UnauthorizedError';
+import ForbiddenError from '../api/error/ForbiddenError';
+import NotFoundError from '../api/error/NotFoundError';
+import { pipe } from 'fp-ts/lib/pipeable';
+import * as TO from 'fp-ts-contrib/lib/TaskOption';
+
+const { some, none } = O;
+type Option<T> = O.Option<T>;
+const {
+  accountId: accountIdValidator, // ignore
+  email: emailValidator,
+  ...userInviteProps
+} = UserInviteCodec.props;
+
+const UserInviteValidator = t.type({
+  ...userInviteProps,
+  accountId: accountIdValidator, 
+  email: emailValidator 
+});
+
+type UserInviteBody = t.TypeOf<typeof UserInviteValidator>;
 
 export function AccountControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
   const authMiddlewareFactory = container.get<AuthMiddlewareFactory>('AuthMiddlewareFactory');
   const authWithId = authMiddlewareFactory.create(async ({ params: { id } }: Request) => ({ account_id: id }));
+  const authWithIdBody = authMiddlewareFactory.create(async ({ body: { accountId } }: Request) => ({ account_id: accountId }));
+  const auth = authMiddlewareFactory.create();
 
   @httpController({ version: apiVersion }, '/accounts')
   class AccountController extends BaseHttpController {
     constructor(
-      @inject('AccountService') private accountService: AccountService
+      @inject('AccountService') private accountService: AccountService,
+      @inject('UserService') private userService: UserService
     ) {
       super();
     }
@@ -72,6 +97,94 @@ export function AccountControllerFactory(container: Container, apiVersion: numbe
     private async updateAccountUserRole(@requestParam('id') id: string, @requestParam('userId') userId: string, @requestBody() { roles }: Pick<AccountUserRole, 'roles'>): Promise<AccountUserRole> {
 
       return this.accountService.updateAccountUserRole(id, userId, roles);
+    }
+
+    @httpPost('/invite',
+      authWithIdBody,
+      reqValidator.create(t.type({
+        body: UserInviteValidator
+      }))
+    )
+    private async inviteUserToAccount(@request() req: Request, @requestBody() body: UserInviteBody): Promise<void> {
+      await this.accountService.inviteUserToJoinAccount(body);
+    }
+
+    @httpPost('/invite/revoke',
+      authWithIdBody,
+      reqValidator.create(t.type({
+        body: t.type({
+          accountId: accountIdValidator,
+          email: emailValidator
+        })
+      }))
+    )
+    private async revokeInvitation(@requestBody() { email }: { email: string }): Promise<void> {
+      await this.accountService.revokeInvitation(email);
+    }
+
+    @httpPost('/invite/resend',
+      authWithIdBody,
+      reqValidator.create(t.type({
+        body: t.type({
+          emailValidator,
+          accountIdValidator
+        })
+      }))
+    )
+    private async resendInvitation(@requestBody() body: { email: string }): Promise<void> {
+      await this.accountService.resendInvitation(body.email);
+    }
+
+    @httpPost('/invite/accept',
+      reqValidator.create(t.type({
+        body: InviteAcceptValidator
+      }))
+    ) 
+    private async acceptInvite(@request() req: Request, @requestBody() body: InviteAcceptData): Promise<User> {
+      const token = req.get('Authorization');
+      const tokenStr = token && token.split(' ')[1];
+
+      if (!token || !tokenStr) {
+        throw new UnauthorizedError();
+      }
+
+      return this.accountService.acceptInvitation(tokenStr, body);
+    }
+
+    @httpGet('/invite/token',
+      async (req, res, next) => {
+
+        if (req.query.token) {
+          next();
+        } else {
+          auth(req, res, next);
+        }
+        
+      },
+      reqValidator.create(t.type({
+        query: t.union([
+          t.type({
+            email: emailValidator
+          }),
+          t.type({
+            token: t.string
+          })
+        ])
+      }))
+    )
+    private async getInviteToken(@request() req: Request, @queryParam('email') email?: string,  @queryParam('token') token?: string): Promise<{ token: string, metadata: InviteTokenData }> {
+      const tokenData = email !== undefined ? 
+        await this.accountService.getInvitationTokenByEmail(email) :
+        token && {
+          token,
+          metadata: (await this.accountService.validateInviteToken(token))
+        };
+
+      if (!tokenData) {
+        throw new NotFoundError();
+      }
+
+      return tokenData;
     }
   }
 
