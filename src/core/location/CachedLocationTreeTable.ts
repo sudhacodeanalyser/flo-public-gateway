@@ -10,7 +10,6 @@ class CachedLocationTreeTable extends LocationTreeTable {
     @inject('CachePolicy') protected cachePolicy: CachePolicy;
 ​
     public async getAllChildren(accountId: string, id: string): Promise<LocationTreeRow[]> {
-
       const key = this.formatChildrenKey(accountId, id);
       const results = await this.redisClient
         .multi()
@@ -26,12 +25,14 @@ class CachedLocationTreeTable extends LocationTreeTable {
       });
 ​
       if (isCached) {
-        return (children || [])
+        return _.chain(children || [])
+          .chunk(2)
           .map((childDepth: any[]) => ({ 
             child_id: childDepth[0] as string, 
             parent_id: id, 
             depth: childDepth[1] as number 
-          }));
+          }))
+          .value();
       } 
 ​
       // Cache miss
@@ -47,7 +48,6 @@ class CachedLocationTreeTable extends LocationTreeTable {
     }
 ​
     public async getImmediateChildren(accountId: string, id: string): Promise<LocationTreeRow[]> {
-
       const key = this.formatChildrenKey(accountId, id);
       const results = await this.redisClient
         .multi()
