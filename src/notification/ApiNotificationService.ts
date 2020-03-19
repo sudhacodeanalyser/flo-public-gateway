@@ -11,7 +11,8 @@ import {
   NotificationStatistics,
   PaginatedResult, Receipt, SendWithUsEvent,
   TwilioStatusEvent,
-  UpdateDeviceAlarmSettings
+  UpdateDeviceAlarmSettings,
+  FilterState
 } from '../core/api';
 import { DeviceService } from '../core/device/DeviceService';
 import { HttpService } from '../http/HttpService';
@@ -131,6 +132,36 @@ class ApiNotificationService {
     return this.notificationApi.sendRequest({
       method: 'get',
       url: `/statistics?${filters}`
+    });
+  }
+
+  public async getFilterStateById(id: string): Promise<Option<FilterState>> {
+    return this.notificationApi.sendRequest({
+      method: 'get',
+      url: `/filters/${id}`
+    });
+  }
+
+  public async getFilterState(filters: any): Promise<FilterState[]> {
+    return this.notificationApi.sendRequest({
+      method: 'get',
+      url: `/filters`,
+      params: filters
+    });
+  }
+
+  public async deleteFilterState(id: string): Promise<void> {
+    return this.notificationApi.sendRequest({
+      method: 'delete',
+      url: `/filters/${id}`
+    });
+  }
+
+  public async createFilterState(filterState: FilterState): Promise<FilterState> {
+    return this.notificationApi.sendRequest({
+      method: 'post',
+      url: `/filters`,
+      body: filterState
     });
   }
 

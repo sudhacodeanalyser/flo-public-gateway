@@ -222,9 +222,136 @@ paths:
         404:
           description: Incident not found
 
+  /api/v2/alerts/filters/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Filter State ID
+
+    get:
+      summary: Retrieves a Filter State by ID.
+      tags:
+        - Alerts
+        - Filters
+      produces:
+        - application/json
+      responses:
+        200:
+          description: The Filter State with the given ID.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FilterState'
+        400:
+          description: Invalid request request body
+        403:
+          description: Unauthorized or device ID does not match incident
+        404:
+          description: Filter State not found
+
+    delete:
+      summary: Deletes a Filter State by ID.
+      tags:
+        - Alerts
+        - Filters
+      produces:
+        - application/json
+      responses:
+        204:
+          description: The Filter State was successfully deleted or not found.
+
+  /api/v2/alerts/filters:
+    get:
+      summary: Retrieves Filter States by query parameter filters.
+      tags:
+        - Alerts
+        - Filters
+      parameters:
+        - in: query
+          name: deviceId
+          schema:
+            type: string
+            format: uuid
+          description: Device ID
+      produces:
+        - application/json
+      responses:
+        200:
+          description: The Filter States associated to the given filters.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FilterStates'
+    post:
+      summary: Creates a Filter State
+      tags:
+        - Alerts
+        - Filters
+      produces:
+        - application/json
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FilterState'
+      responses:
+        200:
+          description: The newly created Filter States.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FilterState'
+        400:
+          description: Invalid request request body
+
 components:
   schemas:
+    FilterState:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        alarmId:
+          type: integer
+        type:
+          enum:
+            - snooze
+            - max-frequency-cap
+        deviceId:
+          type: string
+          format: uuid
+        locationId:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        incidentId:
+          type: string
+          format: uuid
+        expiration:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+
+    FilterStates:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/FilterState'
+
     AnyValue: {}
+
     Action:
       type: object
       properties:

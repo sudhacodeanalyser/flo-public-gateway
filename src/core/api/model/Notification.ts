@@ -237,3 +237,25 @@ export const TwilioStatusEventCodec = t.type({
 });
 
 export interface TwilioStatusEvent extends t.TypeOf<typeof TwilioStatusEventCodec> {}
+
+
+enum FilterStateType {
+  SNOOZE = "snooze",
+  MAX_FREQUENCY_CAP = "max-frequency-cap"
+}
+
+const FilterStateTypeCodec = convertEnumtoCodec(FilterStateType)
+
+export const FilterStateCodec = t.type({
+  id: t.union([t.string, t.undefined]),
+  alarmId: t.number,
+  type: FilterStateTypeCodec,
+  deviceId: t.union([t.string, t.undefined]),
+  locationId: t.union([t.string, t.undefined]),
+  userId: t.union([t.string, t.undefined]),
+  incidentId: t.union([t.string, t.undefined]),
+  expiration: t.string,
+  createdAt: t.union([t.string, t.undefined])
+});
+
+export interface FilterState extends t.TypeOf<typeof FilterStateCodec> {}
