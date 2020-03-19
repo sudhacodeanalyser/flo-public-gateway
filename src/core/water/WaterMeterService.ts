@@ -47,6 +47,56 @@ class WaterMeterService extends HttpService {
 
     return this.sendRequest(request);
   }
+
+  public async getAvailableMetrics(availableMetricsRequest: any): Promise<any> {
+    const request = {
+      method: 'POST',
+      url: `${ this.url }/grafana/search`,
+      body: availableMetricsRequest
+    };
+
+    return this.sendRequest(request);
+  }
+
+  public async queryMetrics(queryMetricsRequest: any): Promise<any> {
+    const request = {
+      method: 'POST',
+      url: `${ this.url }/grafana/query`,
+      body: queryMetricsRequest
+    };
+
+    return this.sendRequest(request);
+  }
+
+  public async annotations(annotationsRequest: any): Promise<any> {
+    const request = {
+      method: 'POST',
+      url: `${ this.url }/grafana/annotations`,
+      body: annotationsRequest
+    };
+
+    return this.sendRequest(request);
+  }
+
+  public async tagKeys(tagKeysRequest: any): Promise<any> {
+    const request = {
+      method: 'POST',
+      url: `${ this.url }/grafana/tag-keys`,
+      body: tagKeysRequest
+    };
+
+    return this.sendRequest(request);
+  }
+
+  public async tagValues(tagValuesRequest: any): Promise<any> {
+    const request = {
+      method: 'POST',
+      url: `${ this.url }/grafana/tag-values`,
+      body: tagValuesRequest
+    };
+
+    return this.sendRequest(request);
+  }
 }
 
 export { WaterMeterService };
