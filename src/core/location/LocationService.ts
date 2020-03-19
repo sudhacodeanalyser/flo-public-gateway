@@ -1,5 +1,5 @@
 import { fromNullable, isNone, Option } from 'fp-ts/lib/Option';
-import { inject, injectable } from 'inversify';
+import { inject, injectable, targetName } from 'inversify';
 import { injectHttpContext, interfaces } from 'inversify-express-utils';
 import _ from 'lodash';
 import uuid from 'uuid';
@@ -8,11 +8,13 @@ import { Areas, DependencyFactoryFactory, Location, LocationUpdate, LocationUser
 import ConflictError from '../api/error/ConflictError';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import ValidationError from '../api/error/ValidationError';
+import ForbiddenError from '../api/error/ForbiddenError';
 import { DeviceSystemModeService } from '../device/DeviceSystemModeService';
 import { IrrigationScheduleService, IrrigationScheduleServiceFactory } from '../device/IrrigationScheduleService';
 import { LocationResolver } from '../resolver';
 import { AccountService, DeviceService, SubscriptionService } from '../service';
 import moment from 'moment';
+import LocationTreeTable from './LocationTreeTable'
 
 @injectable()
 class LocationService {
@@ -26,7 +28,8 @@ class LocationService {
     @inject('DependencyFactoryFactory') depFactoryFactory: DependencyFactoryFactory,
     @inject('IrrigationScheduleServiceFactory') irrigationScheduleServiceFactory: IrrigationScheduleServiceFactory,
     @injectHttpContext private readonly httpContext: interfaces.HttpContext,
-    @inject('AccessControlService') private accessControlService: AccessControlService
+    @inject('AccessControlService') private accessControlService: AccessControlService,
+    @inject('LocationTreeTable') private locationTreeTable: LocationTreeTable
   ) {
     this.deviceServiceFactory = depFactoryFactory<DeviceService>('DeviceService');
     this.accountServiceFactory = depFactoryFactory<AccountService>('AccountService');
@@ -59,7 +62,46 @@ class LocationService {
   }
 
   public async updatePartialLocation(id: string, locationUpdate: LocationUpdate): Promise<Location> {
-    const updatedLocation = await this.locationResolver.updatePartialLocation(id, locationUpdate);
+
+    if (locationUpdate.parent !== undefined && (locationUpdate.parent === null || locationUpdate.parent.id !== id)) {
+      const location = await this.locationResolver.get(id, { $select: { parent: true, account: true } });
+
+      if (!location) {
+        throw new ConflictError('Location does not exist.');
+      }
+
+      const hasNewParent = locationUpdate.parent !== null;
+      const parentLocation = locationUpdate.parent !== null && await this.locationResolver.get(locationUpdate.parent.id, { $select: { account: true } });
+
+      if (locationUpdate.parent !== null && !parentLocation) {
+        throw new ValidationError('Parent does not exist.');
+      } else if (hasNewParent && location && parentLocation && parentLocation.account.id !== location.account.id) {
+        // Parent must be in same account
+        throw new ForbiddenError();
+      }
+
+      // Noop if parent is not changing to avoid expensive SQL queries
+      if ((location.parent && location.parent.id) !== (locationUpdate.parent && locationUpdate.parent.id)) {
+        await this.locationTreeTable.updateParent(
+          location.account.id, 
+          id, 
+          locationUpdate.parent && locationUpdate.parent.id, 
+          !!(location && location.parent && location.parent.id)
+        );
+      }
+    }
+
+    const updatedLocation = await this.locationResolver.updatePartialLocation(id, {
+      ...locationUpdate,
+      ...(locationUpdate.parent === null ? 
+        {
+          parent: {
+            id: ""
+          }
+        } : 
+        locationUpdate.parent && { parent: locationUpdate.parent }
+      )
+    });
 
     if (!_.isEmpty(locationUpdate.irrigationSchedule) && !_.isEmpty(this.irrigationScheduleService)) {
       const deviceService = this.deviceServiceFactory();

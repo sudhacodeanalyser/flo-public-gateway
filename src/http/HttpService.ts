@@ -3,6 +3,7 @@ import { injectable, inject } from 'inversify';
 import HttpError from './HttpError';
 import config from '../config/config';
 import { injectHttpContext, interfaces } from 'inversify-express-utils';
+import Logger from 'bunyan';
 
 export interface HttpRequest {
   method: string;
@@ -18,6 +19,7 @@ class HttpService {
   public baseUrl?: string;
   public authToken?: string;
   @inject('HttpClient') protected readonly httpClient: AxiosInstance;
+  @inject('Logger') private readonly httpLogger: Logger;
   @injectHttpContext private readonly httpContext: interfaces.HttpContext
 
   public async sendRequest(request: HttpRequest): Promise<any> {
@@ -40,6 +42,7 @@ class HttpService {
       return response.data;
 
     } catch (err) {
+      this.httpLogger.error({ err, request });
       if (!err.response) {
         throw err;
       } else if (err.response.status >= 400 && err.response.status < 500) {

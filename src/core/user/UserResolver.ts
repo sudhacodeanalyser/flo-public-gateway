@@ -15,16 +15,31 @@ import { UserLocationRoleRecord, UserLocationRoleRecordData } from './UserLocati
 import UserLocationRoleTable from './UserLocationRoleTable';
 import { UserRecord, UserRecordData } from './UserRecord';
 import UserTable from './UserTable';
+import LocationTreeTable from '../location/LocationTreeTable';
 import uuid from 'uuid';
 
 @injectable()
 class UserResolver extends Resolver<User> {
   protected propertyResolverMap: PropertyResolverMap<User> = {
     locations: async (model: User, shouldExpand: boolean = false, expandProps?: PropExpand) => {
-      const userLocationRoleRecordData: UserLocationRoleRecordData[] = await this.userLocationRoleTable.getAllByUserId(model.id);
+      const userAccountRoleRecordData = await this.userAccountRoleTable.getByUserId(model.id);
 
+      if (userAccountRoleRecordData == null) {
+        return null;
+      }
+
+      const userLocationRoleRecordData: UserLocationRoleRecordData[] = await this.userLocationRoleTable.getAllByUserId(model.id);
+      const rootLocationIds = userLocationRoleRecordData.map(({ location_id }) => location_id);
+      const subTrees = _.flatten(await Promise.all(
+        rootLocationIds.map(parentId => this.locationTreeTable.getAllChildren(userAccountRoleRecordData.account_id, parentId))
+      ));
+      const locationIds = _.uniq([
+        ...rootLocationIds,
+        ...subTrees.map(({ child_id }) => child_id)
+      ]);
+      
       if (!shouldExpand) {
-        return userLocationRoleRecordData.map(({ location_id }) => ({ id: location_id }));
+        return locationIds.map(id => ({ id }));
       }
 
       return Promise.all(userLocationRoleRecordData.map(
@@ -60,11 +75,46 @@ class UserResolver extends Resolver<User> {
         new UserAccountRoleRecord(userAccountRoleRecordData).toUserAccountRole();
     },
     locationRoles: async (model: User, shouldExpand = false) => {
-      const userLocationRoleRecordData: UserLocationRoleRecordData[] = await this.userLocationRoleTable.getAllByUserId(model.id);
+      const userAccountRoleRecordData = await this.userAccountRoleTable.getByUserId(model.id);
 
-      return userLocationRoleRecordData.map(userLocationRoleRecordDatum =>
+      if (userAccountRoleRecordData === null) {
+        return null;
+      }
+
+      const userLocationRoleRecordData: UserLocationRoleRecordData[] = await this.userLocationRoleTable.getAllByUserId(model.id);
+      const explicitRoles = userLocationRoleRecordData.map(userLocationRoleRecordDatum =>
         new UserLocationRoleRecord(userLocationRoleRecordDatum).toUserLocationRole()
       );
+      const locationIds = explicitRoles.map(({ locationId }) => locationId);
+      const subTrees = await this.locationTreeTable.batchGetAllChildren(userAccountRoleRecordData.account_id, locationIds);
+      const childRoles = _.chain(explicitRoles)
+        .flatMap(({ locationId, roles }) => {
+          return _.chain(subTrees)
+            .filter({ parent_id: locationId })
+            .map(({ child_id }) => ({
+              locationId: child_id,
+              roles: [] as string[],
+              inherited: [{
+                roles,
+                locationId
+              }]
+            }))
+            .value();
+        })
+        .value();
+
+      return _.chain([...explicitRoles, ...childRoles])
+        .groupBy('locationId')
+        .map((locationRoles, locationId) => 
+          locationRoles.reduce((acc, { roles, inherited }) => ({
+            locationId,
+            roles: [...roles, ...acc.roles],
+            inherited: !inherited && !acc.inherited ? 
+              undefined :
+              [...(inherited || []), ...(acc.inherited || [])]
+          }))
+        )
+        .value();
     },
     alarmSettings: async (model: User, shouldExpand = false) => {
       if (!shouldExpand || !this.notificationServiceFactory) {
@@ -119,7 +169,8 @@ class UserResolver extends Resolver<User> {
     @inject('DefaultUserLocale') private defaultUserLocale: string,
     @inject('NotificationServiceFactory') notificationServiceFactory: NotificationServiceFactory,
     @injectHttpContext private readonly httpContext: interfaces.HttpContext,
-    @inject('Logger') private readonly logger: Logger
+    @inject('Logger') private readonly logger: Logger,
+    @inject('LocationTreeTable') private locationTreeTable: LocationTreeTable
   ) {
     super();
 

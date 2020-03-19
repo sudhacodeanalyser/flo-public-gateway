@@ -7,6 +7,7 @@ import { Email } from '../../api/validator/Email';
 export interface UserLocationRole {
   locationId: string;
   roles: string[];
+  inherited?: Array<{ roles: string[], locationId: string }>
 }
 
 export interface UserAccountRole {

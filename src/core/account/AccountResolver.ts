@@ -18,7 +18,9 @@ class AccountResolver extends Resolver<Account> {
       }
     },
     locations: async (account: Account, shouldExpand: boolean = false, expandProps?: PropExpand) => {
-      return this.locationResolverFactory().getAllByAccountId(account.id, expandProps);
+      const locations = await this.locationResolverFactory().getAllByAccountId(account.id, expandProps);
+
+      return locations.filter(({ parent }) => !parent);
     },
     users: async (account: Account, shouldExpand: boolean = false, expandProps?: PropExpand) => {
       const accountUserRoles = await this.getAllAccountUserRolesByAccountId(account.id);

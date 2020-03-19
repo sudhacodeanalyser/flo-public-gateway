@@ -21,7 +21,8 @@ export class UserLocationRoleRecord {
   public toLocationUserRole(): LocationUserRole {
     return {
       userId: this.data.user_id,
-      roles: this.data.roles
+      roles: this.data.roles,
+      inherited: undefined
     };
   }
 }
