@@ -117,8 +117,12 @@ class CachedLocationTreeTable extends LocationTreeTable {
       await super.removeSubTree(accountId, id);
 ​
       (await allChildren.reduce(
-        (multi, { child_id }) => multi.del(child_id), 
+        (multi, { child_id }) => multi
+          .del(this.formatParentsKey(accountId, child_id))
+          .del(this.formatChildrenKey(accountId, child_id)), 
         this.redisClient.multi()
+          .del(this.formatParentsKey(accountId, id))
+          .del(this.formatChildrenKey(accountId, id))
       )
       .exec())
       .forEach(([err]: any[]) => {
@@ -130,17 +134,22 @@ class CachedLocationTreeTable extends LocationTreeTable {
 ​
     public async updateParent(accountId: string, id: string, parentId: string | null, hasPrevParent: boolean): Promise<void> {
  
-      const [allChildren, getAllParents] = await Promise.all([
+      const [allChildren, allParents] = await Promise.all([
         super.getAllChildren(accountId, id),
         super.getAllParents(accountId, id)
       ]);
 ​
       await super.updateParent(accountId, id, parentId, hasPrevParent);
 ​
-      const multi = this.redisClient.multi();
+      const multi = this.redisClient.multi()
+        .del(this.formatParentsKey(accountId, id));
 
-      allChildren.forEach(({ child_id }) => multi.del(child_id));
-      getAllParents.forEach(({ parent_id }) => multi.del(parent_id));
+      allChildren.forEach(({ child_id }) => multi.del(this.formatParentsKey(accountId, child_id)));
+      allParents.forEach(({ parent_id }) => multi.del(this.formatChildrenKey(accountId, parent_id)));
+
+      if (parentId) {
+        multi.del(this.formatChildrenKey(accountId, parentId));
+      }
 
       (await multi.exec()).forEach(([err]: any[]) => { 
         if (err) {
