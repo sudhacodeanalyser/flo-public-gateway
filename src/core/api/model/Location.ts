@@ -180,7 +180,7 @@ export const LocationCreateValidator = t.intersection([
   AccountId,
   t.partial({ 
     ...addressProps, 
-    // class: t.type({ key: t.string }) 
+    class: t.type({ key: t.string }) 
   }),
   t.type({
     nickname: AdditionalPropsCodec.props.nickname,
