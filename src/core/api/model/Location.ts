@@ -156,7 +156,12 @@ const LocationMutableCodec = t.intersection([
   LocationProfileWithLegacyCodec,
   LocationProfileCodec,
   AddressCodec,
-  AdditionalPropsCodec
+  AdditionalPropsCodec,
+  t.partial({
+    class: t.type({
+      key: t.string
+    })
+  })
 ]);
 
 const AccountId = t.strict({
@@ -171,16 +176,22 @@ const {
   ...profileProps
 } = LocationProfileCodec.props;
 
+const {
+  timezone,
+  ...addressProps
+} = AddressCodec.props
 
 export const LocationCreateValidator = t.intersection([
   AccountId,
-  AddressCodec,
-  t.type({
-    locationType,
-    residenceType,
-    nickname: AdditionalPropsCodec.props.nickname
+  t.partial({ 
+    ...addressProps, 
+    class: t.type({ key: t.string }) 
   }),
-  t.partial(profileProps as Omit<typeof LocationProfileCodec.props, 'locationType' | 'residenceType'>),
+  t.type({
+    nickname: AdditionalPropsCodec.props.nickname,
+    timezone,
+  }),
+  t.partial(LocationProfileCodec.props),
   t.partial(LocationProfileWithLegacyCodec.props)
 ]);
 export type LocationCreate = t.TypeOf<typeof LocationCreateValidator>;
@@ -191,7 +202,8 @@ const mutableProps = {
   ...LocationMutableCodec.types[0].props,
   ...LocationMutableCodec.types[1].props,
   ...LocationMutableCodec.types[2].props,
-  ...LocationMutableCodec.types[3].props
+  ...LocationMutableCodec.types[3].props,
+  ...LocationMutableCodec.types[4].props
 };
 export const LocationUpdateValidator = t.exact(t.partial(mutableProps));
 export type LocationUpdate = t.TypeOf<typeof LocationUpdateValidator>;
@@ -234,7 +246,15 @@ export const LocationCodec = t.intersection([
       devices: t.array(t.intersection([ExpandableCodec, t.partial({ macAddress: t.string })])),
       subscription: t.union([ExpandableCodec, t.undefined]),
       areas: AreasCodec,
-      children: t.array(t.type({ id: t.string }))
+      children: t.array(t.type({ id: t.string })),
+      class: t.intersection([
+        t.type({
+          key: t.string,
+        }),
+        t.partial({
+          level: t.number
+        })
+      ])
     })
   ])
 ]);
