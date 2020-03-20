@@ -208,6 +208,10 @@ class WaterService {
     };
   }
 
+  public async ping(): Promise<any> {
+    return this.waterMeterService.ping();
+  }
+
   public async getAvailableMetrics(availableMetricsRequest: any): Promise<any> {
     return this.waterMeterService.getAvailableMetrics(availableMetricsRequest);
   }
