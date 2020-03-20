@@ -263,4 +263,8 @@ export interface Location extends t.TypeOf<typeof LocationCodec>, TimestampedMod
   notifications?: NotificationStatistics;
   parent?: Expandable<Location> | null;
   children: Array<Expandable<Location>>;
+  class: {
+    key: string;
+    level: number;
+  };
 }
