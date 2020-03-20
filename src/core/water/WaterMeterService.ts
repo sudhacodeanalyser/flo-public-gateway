@@ -48,6 +48,15 @@ class WaterMeterService extends HttpService {
     return this.sendRequest(request);
   }
 
+  public async ping(): Promise<any> {
+    const request = {
+      method: 'GET',
+      url: `${ this.url }/grafana`,
+    };
+
+    return this.sendRequest(request);
+  }
+
   public async getAvailableMetrics(availableMetricsRequest: any): Promise<any> {
     const request = {
       method: 'POST',

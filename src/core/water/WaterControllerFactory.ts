@@ -80,7 +80,7 @@ export function WaterControllerFactory(container: Container, apiVersion: number)
 
     @httpGet('/grafana')
     private async ping(): Promise<void> {
-      return Promise.resolve();
+      return this.waterService.ping();
     }
 
     @httpPost('/grafana/search')
