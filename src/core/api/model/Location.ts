@@ -156,12 +156,7 @@ const LocationMutableCodec = t.intersection([
   LocationProfileWithLegacyCodec,
   LocationProfileCodec,
   AddressCodec,
-  AdditionalPropsCodec,
-  t.partial({
-    class: t.type({
-      key: t.string
-    })
-  })
+  AdditionalPropsCodec
 ]);
 
 const AccountId = t.strict({
@@ -185,7 +180,7 @@ export const LocationCreateValidator = t.intersection([
   AccountId,
   t.partial({ 
     ...addressProps, 
-    class: t.type({ key: t.string }) 
+    // class: t.type({ key: t.string }) 
   }),
   t.type({
     nickname: AdditionalPropsCodec.props.nickname,
@@ -202,8 +197,7 @@ const mutableProps = {
   ...LocationMutableCodec.types[0].props,
   ...LocationMutableCodec.types[1].props,
   ...LocationMutableCodec.types[2].props,
-  ...LocationMutableCodec.types[3].props,
-  ...LocationMutableCodec.types[4].props
+  ...LocationMutableCodec.types[3].props
 };
 export const LocationUpdateValidator = t.exact(t.partial(mutableProps));
 export type LocationUpdate = t.TypeOf<typeof LocationUpdateValidator>;
