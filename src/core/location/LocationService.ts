@@ -1,4 +1,4 @@
-import { fromNullable, isNone, Option } from 'fp-ts/lib/Option';
+import * as O from 'fp-ts/lib/Option';
 import { inject, injectable, targetName } from 'inversify';
 import { injectHttpContext, interfaces } from 'inversify-express-utils';
 import _ from 'lodash';
@@ -15,6 +15,9 @@ import { LocationResolver } from '../resolver';
 import { AccountService, DeviceService, SubscriptionService } from '../service';
 import moment from 'moment';
 import LocationTreeTable from './LocationTreeTable'
+
+const { fromNullable, isNone } = O;
+type Option<T> = O.Option<T>;
 
 @injectable()
 class LocationService {
@@ -45,11 +48,17 @@ class LocationService {
     const accountId = location.account.id;
     const account = await this.accountServiceFactory().getAccountById(accountId);
 
-    if (!isNone(account) && createdLocation !== null) {
-      const ownerUserId = account.value.owner.id;
-      await this.locationResolver.addLocationUserRole(createdLocation.id, ownerUserId, ['owner']);
+    if (createdLocation === null || isNone(account)) {
+      return O.none;
+    }
 
-      await this.refreshUserACL(ownerUserId);
+    const ownerUserId = account.value.owner.id;
+    
+    await this.locationResolver.addLocationUserRole(createdLocation.id, ownerUserId, ['owner']);
+    await this.refreshUserACL(ownerUserId);
+
+    if (createdLocation.parent && createdLocation.parent.id) {
+      await this.locationTreeTable.updateParent(account.value.id, createdLocation.id, createdLocation.parent.id, false);
     }
 
     return fromNullable(createdLocation);
