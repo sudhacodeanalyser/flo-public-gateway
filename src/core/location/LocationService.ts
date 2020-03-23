@@ -162,11 +162,11 @@ class LocationService {
     const subscriptionService = this.subscriptionServiceFactory();
     const subscription = await subscriptionService.getSubscriptionByRelatedEntityId(id);
 
+    await this.locationResolver.removeLocation(id);
+
     if (!isNone(subscription)) {
       await this.subscriptionServiceFactory().cancelSubscription(subscription.value.id, true, `FLO INTERNAL: location ${ id } removed`);
     }
-
-    return this.locationResolver.removeLocation(id);
   }
 
   public async getAllLocationUserRoles(locationId: string): Promise<LocationUserRole[]> {

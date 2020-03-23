@@ -84,7 +84,7 @@ class LocationTreeTable extends PostgresTable<LocationTreeRow> {
       DELETE FROM location_tree AS "d"
       USING location_tree AS "p"
       WHERE "d"."child_id" = "p"."child_id"
-      AND "p"."parent_id" = ?
+      AND "p"."parent_id" = $1
     `;
 
     await this.pgDbClient.execute(query, [id]);
