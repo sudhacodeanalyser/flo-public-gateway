@@ -1,12 +1,12 @@
 import { Container, inject } from 'inversify';
-import { BaseHttpController, httpGet, httpPost, interfaces, request, queryParam, requestParam, response, requestBody } from 'inversify-express-utils';
+import { BaseHttpController, httpPost, interfaces, request, queryParam, requestParam, response, requestBody } from 'inversify-express-utils';
 import * as t from 'io-ts';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
 import { FloDetectEventPage, FloDetectComputation, FloDetectLearning, FloDetectCompuationDuration, FloDetectComputationDurationCodec, FloDetectEventFeedbackCodec, FloDetectEvent, FloDetectEventFeedback } from '../api';
-import { httpController } from '../api/controllerUtils';
+import { httpController, httpGet, queryParamArray } from '../api/controllerUtils';
 import Request from '../api/Request';
-import { FloDetectService } from '../service';
+import { FloDetectService, FloDetectResponseEventPage, FloDetectResponseFixtures } from '../service';
 import NotFoundError from '../api/error/NotFoundError'
 import * as Option from 'fp-ts/lib/Option';
 import { pipe } from 'fp-ts/lib/pipeable';
@@ -18,6 +18,7 @@ import express from 'express';
 export function FloDetectControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
   const authMiddlewareFactory = container.get<AuthMiddlewareFactory>('AuthMiddlewareFactory');
+  const auth = authMiddlewareFactory.create();
 
   const DateFromURIEncodedISOString = new t.Type<Date, string, unknown>(
     'DateFromISOString',
@@ -30,6 +31,19 @@ export function FloDetectControllerFactory(container: Container, apiVersion: num
       });
     },
     a => a.toISOString()
+  );
+
+  const DateStringFromURIEncodedString = new t.Type<string, string, unknown>(
+    'DateFromISOString',
+    (u): u is string => typeof u === 'string',
+    (u, c) => {
+      return either.chain(t.string.validate(u, c), str => {
+        const decoded = decodeURIComponent(str);
+        const date = new Date(decoded);
+        return isNaN(date.getTime()) ? t.failure(str, c) : t.success(str);
+      });
+    },
+    a => a
   );
 
   type Integer = t.TypeOf<typeof t.Integer>;
@@ -161,6 +175,127 @@ export function FloDetectControllerFactory(container: Container, apiVersion: num
           throw err;
         }
       });
+    }
+
+    @httpGet('/fixtures',
+      authMiddlewareFactory.create(
+        async ({ query: { macAddress, locationId } }) => ({ device_id: macAddress, location_id: locationId })
+      ),
+      reqValidator.create(t.type({
+        query: t.intersection([
+          t.union([
+            t.type({
+              macAddress: t.string
+            }),
+            t.type({
+              locationId: t.string
+            })
+          ]),
+          t.partial({
+            from: DateStringFromURIEncodedString,
+            to: DateStringFromURIEncodedString,
+            lang: t.string,
+            tz: t.string
+          })
+        ])
+      }))
+    )
+    private async getFixtures(
+      @queryParam('macAddress') macAddress?: string,
+      @queryParam('locationId') locationId?: string,
+      @queryParam('from') from?: string,
+      @queryParam('to') to?: string,
+      @queryParam('lang') lang?: string,
+      @queryParam('tz') tz?: string
+    ): Promise<FloDetectResponseFixtures> {
+      return this.floDetectService.getFixtures(
+        macAddress ? { macAddress } : { locationId: locationId || '' },
+        { from, to, lang, tz }
+      );
+    }
+
+    @httpGet('/events',
+      authMiddlewareFactory.create(
+        async ({ query: { macAddress, locationId } }) => ({ device_id: macAddress, location_id: locationId })
+      ),
+      reqValidator.create(t.type({
+        query: t.intersection([
+          t.union([
+            t.type({
+              macAddress: t.string
+            }),
+            t.type({
+              locationId: t.string
+            })
+          ]),
+          t.partial({
+            from: DateStringFromURIEncodedString,
+            to: DateStringFromURIEncodedString,
+            offset: IntegerFromString,
+            limit: IntegerFromString,
+            lang: t.string,
+            tz: t.string
+          })
+        ])
+      }))
+    )
+    private async getEvents(
+      @queryParam('macAddress') macAddress?: string,
+      @queryParam('locationId') locationId?: string,
+      @queryParam('from') from?: string,
+      @queryParam('to') to?: string,
+      @queryParam('limit') limit?: number,
+      @queryParam('offset') offset?: number,
+      @queryParam('lang') lang?: string,
+      @queryParam('tz') tz?: string
+    ): Promise<FloDetectResponseEventPage> {
+
+      return this.floDetectService.getEvents( 
+        macAddress ? { macAddress } : { locationId: locationId || '' },
+        {
+          from,
+          to,
+          limit,
+          offset,
+          lang,
+          tz
+        }
+      );
+    }
+
+    @httpPost('/events/:id',
+      auth,
+      reqValidator.create(t.type({
+        params: t.type({
+          id: t.string
+        }),
+        body: t.type({
+          feedback: t.type({
+            id: t.number
+          })
+        })
+      }))
+    )
+    private async submitEventFeedbackV2(
+      @request() req: Request, 
+      @requestParam('id') eventId: string, 
+      @requestBody() { feedback: { id: feedbackId } }: { feedback: { id: number } }
+    ): Promise<any> {
+      // TODO better auth
+      const tokenMetadata = req.token;
+      const userId = tokenMetadata && tokenMetadata.user_id;
+
+      await this.floDetectService.submitEventFeedbackV2(eventId, feedbackId, userId);
+
+      return this.json(
+        { 
+          feedback: { 
+            id: feedbackId, 
+            ...(userId && { user: { id: userId } }) 
+          }
+        },
+        202
+      );
     }
   }
 
