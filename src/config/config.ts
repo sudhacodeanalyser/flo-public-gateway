@@ -112,8 +112,8 @@ const config = {
   twilioAuthToken: process.env.TWILIO_AUTH_TOKEN,
   mlServiceURL: process.env.SCIENCE_LAB_URL,
   sensorMeterUrl: process.env.SENSOR_METER_URL,
-  publicGatewayHost: process.env.PUBLIC_GATEWAY_HOST
-  sendWithUsKey: process.env.SEND_WITH_US_KEY
+  publicGatewayHost: process.env.PUBLIC_GATEWAY_HOST,
+  sendWithUsKey: process.env.SEND_WITH_US_KEY,
   floDetectApiUrl: process.env.FLO_DETECT_API_URL
 };
 
