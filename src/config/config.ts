@@ -47,6 +47,9 @@ function getDefaults(): { [key: string]: any } {
         dynamoDBTimeout: 4000,
         authTimeoutMS: 4000,
         sensorMeterUrl: 'https://flo-puck-service.flocloud.co',
+        registrationTokenSecret: 'Yt_f&2Y&GCtbxv??@=Rr=9=AhnvEQx$!',
+        sendWithUsKey: 'test_eca8b69ac6008b555286914771e9c6dad9632ded'
+        floDetectApiUrl: 'http://flo-detect-v2.flocloud.co'
       };
   }
 }
@@ -110,6 +113,8 @@ const config = {
   mlServiceURL: process.env.SCIENCE_LAB_URL,
   sensorMeterUrl: process.env.SENSOR_METER_URL,
   publicGatewayHost: process.env.PUBLIC_GATEWAY_HOST
+  sendWithUsKey: process.env.SEND_WITH_US_KEY
+  floDetectApiUrl: process.env.FLO_DETECT_API_URL
 };
 
 export default {
