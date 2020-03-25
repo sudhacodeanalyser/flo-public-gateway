@@ -50,6 +50,7 @@ secrets:
     TWILIO_AUTH_TOKEN: "${TWILIO_AUTH_TOKEN}"
     PUBLIC_GATEWAY_HOST: "${PUBLIC_GATEWAY_HOST}"
     SEND_WITH_US_KEY: "${SEND_WITH_US_KEY}"
+    FLO_DETECT_API_URL: "${FLO_DETECT_API_URL}"
 internalIngress:
   host: internal-ingress.flocloud.co
 routingIngress:
