@@ -354,7 +354,7 @@ class FloDetectService {
     };
   }
 
-  public async submitEventFeedbackV2(eventId: string, feedbackId: string, userId?: string): Promise<void> {
+  public async submitEventFeedbackV2(eventId: string, feedbackId: number, userId?: string): Promise<void> {
     return this.floDetectApi.submitFeedback(eventId, feedbackId, userId);
   }
 
