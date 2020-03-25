@@ -279,7 +279,7 @@ export function FloDetectControllerFactory(container: Container, apiVersion: num
     private async submitEventFeedbackV2(
       @request() req: Request, 
       @requestParam('id') eventId: string, 
-      @requestBody() { feedback: { id: feedbackId } }: { feedback: { id: string } }
+      @requestBody() { feedback: { id: feedbackId } }: { feedback: { id: number } }
     ): Promise<any> {
       // TODO better auth
       const tokenMetadata = req.token;

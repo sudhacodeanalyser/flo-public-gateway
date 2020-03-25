@@ -101,7 +101,7 @@ class FloDetectApi extends HttpService {
     });
   }
 
-  public async submitFeedback(eventId: string, feedbackId: string, userId?: string): Promise<void> {
+  public async submitFeedback(eventId: string, feedbackId: number, userId?: string): Promise<void> {
     await this.sendRequest({
       method: 'POST',
       url: `${ this.serviceUrl }/events/${ eventId }`,
