@@ -12,7 +12,7 @@ import { DeviceService, LocationService } from '../service';
 import * as TaskOption from 'fp-ts-contrib/lib/TaskOption';
 import { fromPartialRecord } from '../../database/Patch';
 import { morphism, StrictSchema } from 'morphism';
-import { FloDetectApi, FloDetectApiEventPage, FloDetectApiFlowEvent, FloDetectApiFixtures } from './FloDetectApi';
+import { FloDetectApi, FloDetectApiEventPage, FloDetectApiFlowEvent, FloDetectApiEventItem, FloDetectApiFixtures } from './FloDetectApi';
 import _ from 'lodash';
 import NotFoundError from '../api/error/NotFoundError';
 import ForbiddenError from '../api/error/ForbiddenError';
@@ -110,6 +110,19 @@ const ApiToResponseFlowEventSchema: StrictSchema<FloDetectResponseFlowEvent, Flo
   }
 }
 
+const ApiToResponseEventItem: StrictSchema<FloDetectResponseEventItem, FloDetectApiEventItem> = {
+  macAddress: 'deviceId',
+  error: 'error',
+  events: (input: FloDetectApiEventItem) => {
+    return (input.events || []).map(
+      apiEvent => morphism(
+        ApiToResponseFlowEventSchema, 
+        apiEvent
+      )
+    );
+  }
+}
+
 const ApiToResponsePageSchema: StrictSchema<FloDetectResponseEventPage, FloDetectApiEventPage> = {
   params: {
     macAddress: () => undefined,
@@ -120,13 +133,7 @@ const ApiToResponsePageSchema: StrictSchema<FloDetectResponseEventPage, FloDetec
     minGallons: 'params.minGallons'
   },
   items: (input: FloDetectApiEventPage) => {
-    return input.items.map(apiItem => ({
-      macAddress: apiItem.deviceId,
-      error: apiItem.error,
-      events: (apiItem.events || []).map(
-        apiEvent => morphism(ApiToResponseFlowEventSchema, apiEvent)
-      )
-    }))
+    return input.items.map(apiItem => morphism(ApiToResponseEventItem, apiItem));
   }
 }
 
@@ -356,6 +363,12 @@ class FloDetectService {
 
   public async submitEventFeedbackV2(eventId: string, feedbackId: number, userId?: string): Promise<void> {
     return this.floDetectApi.submitFeedback(eventId, feedbackId, userId);
+  }
+
+  public async getEventById(eventId: string): Promise<FloDetectResponseEventItem> {
+    const result = await this.floDetectApi.getEventById(eventId);
+
+    return morphism(ApiToResponseEventItem, result);
   }
 
   private async getLocationDataByMacAddress(macAddress: string): Promise<{ locationId: string, timezone: string, macAddresses: string[], hasActiveSubscription: boolean } | null> {

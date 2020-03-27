@@ -83,6 +83,13 @@ class FloDetectApi extends HttpService {
     });
   }
 
+  public async getEventById(eventId: string): Promise<FloDetectApiEventItem> {
+    return this.sendRequest({
+      method: 'GET',
+      url: `${ this.serviceUrl }/events/${ eventId }`
+    });
+  }
+
   public async getFixtures(
     macAddresses: string[],
     opts?: { from?: Date, to?: Date, lang?: string }
