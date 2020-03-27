@@ -42,13 +42,13 @@ class UserResolver extends Resolver<User> {
         return locationIds.map(id => ({ id }));
       }
 
-      return Promise.all(userLocationRoleRecordData.map(
-        async (userLocationRoleRecordDatum) => {
-          const location = await this.locationResolverFactory().get(userLocationRoleRecordDatum.location_id, expandProps);
+      return Promise.all(locationIds.map(
+        async (locationId) => {
+          const location = await this.locationResolverFactory().get(locationId, expandProps);
 
           return {
             ...location,
-            id: userLocationRoleRecordDatum.location_id
+            id: locationId
           };
         }
       ));

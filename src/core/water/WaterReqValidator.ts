@@ -49,14 +49,14 @@ const RestrictedDateRangeCodec = t.brand(
     }
 
     const endDate = dateRange.endDate || new Date().toISOString();
-    const diff = moment(endDate).diff(dateRange.startDate, 'days');
+    const diff = moment(endDate).diff(dateRange.startDate, 'months');
 
-    if (diff >= 93 && dateRange.interval !== '1m') {
+    if (diff > 3 && dateRange.interval !== '1m') {
       return false;
     }
 
     // 1 year max
-    return diff >= 0 && diff <= 397; // 365 days + 1 for leap year + 31 for an extra month
+    return diff >= 0 && diff <= 37;
   },
   'RestrictedDateRange'
 );
