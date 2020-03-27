@@ -263,6 +263,18 @@ export function FloDetectControllerFactory(container: Container, apiVersion: num
       );
     }
 
+    @httpGet('/events/:id',
+      auth,
+      reqValidator.create(t.type({
+        params: t.type({
+          id: t.string
+        })
+      }))
+    )
+    private async getEventById(@requestParam('id') eventId: string): Promise<any> {
+      return this.floDetectService.getEventById(eventId);
+    }
+
     @httpPost('/events/:id',
       auth,
       reqValidator.create(t.type({
