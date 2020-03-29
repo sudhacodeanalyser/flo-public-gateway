@@ -92,11 +92,14 @@ class CachedLocationTreeTable extends LocationTreeTable {
       });
 ​
       if (isCached) {
-        return (parents || []).map((parentDepth: any[]) => ({
-          child_id: id,
-          parent_id: parentDepth[0] as string,
-          depth: parentDepth[1] as number
-        }));
+        return _.chain(parents || [])
+          .chunk(2)
+          .map((parentDepth: any[]) => ({
+            child_id: id,
+            parent_id: parentDepth[0] as string,
+            depth: parentDepth[1] as number
+          }))
+          .value();
       } 
 ​
       // Cache miss
