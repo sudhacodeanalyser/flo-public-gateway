@@ -5,7 +5,7 @@ import * as t from 'io-ts';
 import _ from 'lodash';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
-import { AreaName, AreaNameCodec, Areas, Location, LocationCreateValidator, LocationUpdate, LocationUpdateValidator, LocationUserRole, SystemMode, SystemModeCodec } from '../api';
+import { DependencyFactoryFactory, AreaName, AreaNameCodec, Areas, Location, LocationCreateValidator, LocationUpdate, LocationUpdateValidator, LocationUserRole, SystemMode, SystemModeCodec } from '../api';
 import { createMethod, deleteMethod, httpController, parseExpand, withResponseType } from '../api/controllerUtils';
 import Request from '../api/Request';
 import * as Responses from '../api/response';
@@ -13,12 +13,21 @@ import { NonEmptyArray } from '../api/validator/NonEmptyArray';
 import { DeviceSystemModeServiceFactory } from '../device/DeviceSystemModeService';
 import { LocationService } from '../service';
 
-
 export function LocationControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
   const authMiddlewareFactory = container.get<AuthMiddlewareFactory>('AuthMiddlewareFactory');
   const authWithId = authMiddlewareFactory.create(async ({ params: { id } }: Request) => ({ location_id: id }));
   const authWithLocationId = authMiddlewareFactory.create(async ({ params: { locationId } }: Request) => ({ location_id: locationId }));
+
+  const authWithParents = authMiddlewareFactory.create(async ({ params: { id, locationId } }: Request, depFactoryFactory: DependencyFactoryFactory) => {
+    const locId = id || locationId;
+    const locationService = depFactoryFactory<LocationService>('LocationService')();
+    const parentIds = await locationService.getAllParentIds(locId);
+
+    return {
+      location_id: [locId, ...parentIds]
+    };
+  });
 
   interface SystemModeRequestBrand {
     readonly SystemModeRequest: unique symbol;
@@ -84,7 +93,7 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
 
     @httpGet(
       '/:id',
-      authWithId,
+      authWithParents,
       reqValidator.create(t.type({
         params: t.type({
           id: t.string
@@ -103,7 +112,7 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
 
     @httpPost(
       '/:id',
-      authWithId,
+      authWithParents,
       reqValidator.create(t.type({
         params: t.type({
           id: t.string
@@ -120,7 +129,7 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
 
     @httpDelete(
       '/:id',
-      authWithId,
+      authWithParents,
       reqValidator.create(t.type({
         params: t.type({
           id: t.string
@@ -134,7 +143,7 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
 
     @httpPut(
       '/:locationId/user-roles/:userId',
-      authWithLocationId,
+      authWithParents,
       reqValidator.create(t.type({
         params: t.type({
           locationId: t.string,
@@ -152,7 +161,7 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
 
     @httpDelete(
       '/:locationId/user-roles/:userId',
-      authWithLocationId,
+      authWithParents,
       reqValidator.create(t.type({
         params: t.type({
           locationId: t.string,
@@ -167,7 +176,7 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
 
     @httpPost(
       '/:id/systemMode',
-      authWithId,
+      authWithParents,
       reqValidator.create(t.type({
         params: t.type({
           id: t.string
@@ -183,7 +192,7 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
 
     @httpPost(
       '/:locationId/areas',
-      authWithLocationId,
+      authWithParents,
       reqValidator.create(t.type({
         params: t.type({
           locationId: t.string
@@ -198,7 +207,7 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
 
     @httpPost(
       '/:locationId/areas/:areaId',
-      authWithLocationId,
+      authWithParents,
       reqValidator.create(t.type({
         params: t.type({
           locationId: t.string,
@@ -213,7 +222,7 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
 
     @httpDelete(
       '/:locationId/areas/:areaId',
-      authWithLocationId,
+      authWithParents,
       reqValidator.create(t.type({
         params: t.type({
           locationId: t.string,
