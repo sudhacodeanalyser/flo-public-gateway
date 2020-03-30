@@ -335,6 +335,27 @@ class LocationService {
     };
   }
 
+  public async getAllParentIds(locationId: string): Promise<string[]> {
+    const location = await this.getLocation(locationId, { 
+      $select: {
+        id: true,
+        account: {
+          $select: {
+            id: true
+          }
+        }
+      }
+    });
+
+    if (O.isNone(location)) {
+      return [];
+    }
+
+    const parentIds = await this.locationTreeTable.getAllParents(location.value.account.id, locationId);
+
+    return parentIds.map(({ parent_id }) => parent_id);
+  }
+
   private validateAreaDoesNotExist(areas: Areas, newAreaName: string, oldAreaName?: string): void {
     const defaultAreas = areas.default.map(a => a.name.toLowerCase());
     const customAreas = areas.custom.map(a => a.name.toLowerCase());
