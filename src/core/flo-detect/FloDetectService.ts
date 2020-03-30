@@ -365,10 +365,10 @@ class FloDetectService {
     return this.floDetectApi.submitFeedback(eventId, feedbackId, userId);
   }
 
-  public async getEventById(eventId: string): Promise<FloDetectResponseEventItem> {
+  public async getEventById(eventId: string): Promise<FloDetectResponseFlowEvent> {
     const result = await this.floDetectApi.getEventById(eventId);
 
-    return morphism(ApiToResponseEventItem, result);
+    return morphism(ApiToResponseFlowEventSchema, result);
   }
 
   private async getLocationDataByMacAddress(macAddress: string): Promise<{ locationId: string, timezone: string, macAddresses: string[], hasActiveSubscription: boolean } | null> {
