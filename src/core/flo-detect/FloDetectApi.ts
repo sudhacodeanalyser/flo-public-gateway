@@ -83,7 +83,7 @@ class FloDetectApi extends HttpService {
     });
   }
 
-  public async getEventById(eventId: string): Promise<FloDetectApiEventItem> {
+  public async getEventById(eventId: string): Promise<FloDetectApiFlowEvent> {
     return this.sendRequest({
       method: 'GET',
       url: `${ this.serviceUrl }/events/${ eventId }`
