@@ -11,66 +11,86 @@ class CachedLocationTreeTable extends LocationTreeTable {
 ​
     public async getAllChildren(accountId: string, id: string): Promise<LocationTreeRow[]> {
       const key = this.formatChildrenKey(accountId, id);
-      const results = await this.redisClient
-        .multi()
-        .zrange(key, 1, -1, 'WITHSCORES')
-        .exists(key)
-        .exec();
-      const [children, isCached] = results.map(([err, result]: any[]) => {
-        if (err) {
-          throw err;
-        }
 
-        return result;
-      });
-​
-      if (isCached) {
-        return _.chain(children || [])
-          .chunk(2)
-          .map((childDepth: any[]) => ({ 
-            child_id: childDepth[0] as string, 
-            parent_id: id, 
-            depth: childDepth[1] as number 
-          }))
-          .value();
-      } 
+      if (
+        this.cachePolicy === CachePolicy.READ_WRITE ||
+        this.cachePolicy === CachePolicy.READ_ONLY
+      ) {
+        const results = await this.redisClient
+          .multi()
+          .zrange(key, 1, -1, 'WITHSCORES')
+          .exists(key)
+          .exec();
+        const [children, isCached] = results.map(([err, result]: any[]) => {
+          if (err) {
+            throw err;
+          }
+
+          return result;
+        });
+        
+        if (isCached) {
+          return _.chain(children || [])
+            .chunk(2)
+            .map((childDepth: any[]) => ({ 
+              child_id: childDepth[0] as string, 
+              parent_id: id, 
+              depth: childDepth[1] as number 
+            }))
+            .value();
+        }
+      }
 ​
       // Cache miss
-      const data = await super.getAllChildren(accountId, id);
-​      const cacheData = _.flatMap(
-        [{ child_id: id, parent_id: id, depth: 0 }, ...data], 
-        row => [`${row.depth}`, row.child_id]
-      );
+      const data = this.cachePolicy !== CachePolicy.READ_ONLY ?
+         await super.getAllChildren(accountId, id) :
+         [];
 
-      await this.redisClient.zadd(key, ...cacheData);
+      if (
+        this.cachePolicy === CachePolicy.READ_WRITE || 
+        this.cachePolicy === CachePolicy.WRITE_ONLY
+      ) {
+  ​      const cacheData = _.flatMap(
+          [{ child_id: id, parent_id: id, depth: 0 }, ...data], 
+          row => [`${row.depth}`, row.child_id]
+        );
+
+        await this.redisClient.zadd(key, ...cacheData);
+      }
 ​
       return data;
     }
 ​
     public async getImmediateChildren(accountId: string, id: string): Promise<LocationTreeRow[]> {
       const key = this.formatChildrenKey(accountId, id);
-      const results = await this.redisClient
-        .multi()
-        .zrangebyscore(key, 1, 1)
-        .exists(key)
-        .exec();
-​      const [children, isCached] = results.map(([err, result]: any[]) => {
-        if (err) {
-          throw err;
+
+      if (
+        this.cachePolicy === CachePolicy.READ_WRITE ||
+        this.cachePolicy === CachePolicy.READ_ONLY
+      ) {
+        const results = await this.redisClient
+          .multi()
+          .zrangebyscore(key, 1, 1)
+          .exists(key)
+          .exec();
+  ​      const [children, isCached] = results.map(([err, result]: any[]) => {
+          if (err) {
+            throw err;
+          }
+
+          return result;
+        });
+
+        if (isCached) {
+          return (children || [])
+            .map((child: string) => ({ 
+              child_id: child, 
+              parent_id: id, 
+              depth: 1 
+            }));
         }
-
-        return result;
-      });
-
-      if (isCached) {
-        return (children || [])
-          .map((child: string) => ({ 
-            child_id: child, 
-            parent_id: id, 
-            depth: 1 
-          }));
       }
-​
+​  
       const allChildren = await this.getAllChildren(accountId, id);
 ​
       return allChildren.filter(({ depth }) => depth === 1);
@@ -78,38 +98,51 @@ class CachedLocationTreeTable extends LocationTreeTable {
 ​
     public async getAllParents(accountId: string, id: string): Promise<LocationTreeRow[]> {
       const key = this.formatParentsKey(accountId, id);
-      const results = await this.redisClient
-        .multi()
-        .zrange(key, 1, -1, 'WITHSCORES')
-        .exists(key)
-        .exec();
-      const [parents, isCached] = results.map(([err, result]: any[]) => {
-        if (err) {
-          throw err;
-        }
+      if (
+        this.cachePolicy === CachePolicy.READ_WRITE ||
+        this.cachePolicy === CachePolicy.READ_ONLY
+      ) {
+        const results = await this.redisClient
+          .multi()
+          .zrange(key, 1, -1, 'WITHSCORES')
+          .exists(key)
+          .exec();
+        const [parents, isCached] = results.map(([err, result]: any[]) => {
+          if (err) {
+            throw err;
+          }
 
-        return result;
-      });
-​
-      if (isCached) {
-        return _.chain(parents || [])
-          .chunk(2)
-          .map((parentDepth: any[]) => ({
-            child_id: id,
-            parent_id: parentDepth[0] as string,
-            depth: parentDepth[1] as number
-          }))
-          .value();
-      } 
+          return result;
+        });
+  ​
+        if (isCached) {
+          return _.chain(parents || [])
+            .chunk(2)
+            .map((parentDepth: any[]) => ({
+              child_id: id,
+              parent_id: parentDepth[0] as string,
+              depth: parentDepth[1] as number
+            }))
+            .value();
+        } 
+      }
 ​
       // Cache miss
-      const data = await super.getAllParents(accountId, id);
-      const cacheData = _.flatMap(
-        [{ child_id: id, parent_id: id, depth: 0 }, ...data], 
-        row => [`${row.depth}`, row.parent_id]
-      );
+      const data = this.cachePolicy !== CachePolicy.READ_ONLY ? 
+        await super.getAllParents(accountId, id) :
+        [];
 
-      await this.redisClient.zadd(key, ...cacheData);
+      if (
+        this.cachePolicy === CachePolicy.READ_WRITE || 
+        this.cachePolicy === CachePolicy.WRITE_ONLY
+      ) { 
+        const cacheData = _.flatMap(
+          [{ child_id: id, parent_id: id, depth: 0 }, ...data], 
+          row => [`${row.depth}`, row.parent_id]
+        );
+
+        await this.redisClient.zadd(key, ...cacheData);
+      }
 ​
       return data;
     }
