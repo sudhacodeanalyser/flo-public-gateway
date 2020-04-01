@@ -116,23 +116,31 @@ class CachedLocationTreeTable extends LocationTreeTable {
 ​
     public async removeSubTree(accountId: string, id: string): Promise<void> {
       const allChildren = await super.getAllChildren(accountId, id);
+      const allParents = await super.getAllParents(accountId, id);
 ​
       await super.removeSubTree(accountId, id);
-​
-      (await allChildren.reduce(
-        (multi, { child_id }) => multi
-          .del(this.formatParentsKey(accountId, child_id))
-          .del(this.formatChildrenKey(accountId, child_id)), 
-        this.redisClient.multi()
+
+      const multi = this.redisClient.multi()
           .del(this.formatParentsKey(accountId, id))
-          .del(this.formatChildrenKey(accountId, id))
-      )
-      .exec())
-      .forEach(([err]: any[]) => {
-        if (err) {
-          throw err;
-        }
-      });
+          .del(this.formatChildrenKey(accountId, id));
+
+      allChildren.forEach(({ child_id }) => 
+        multi
+          .del(this.formatParentsKey(accountId, child_id))
+          .del(this.formatChildrenKey(accountId, child_id))      
+      );
+
+      allParents.forEach(({ parent_id }) =>
+        multi
+          .zrem(this.formatChildrenKey(accountId, parent_id), id)
+      );
+​
+      (await multi.exec())
+        .forEach(([err]: any[]) => {
+          if (err) {
+            throw err;
+          }
+        });
     }
 ​
     public async updateParent(accountId: string, id: string, parentId: string | null, hasPrevParent: boolean): Promise<void> {
