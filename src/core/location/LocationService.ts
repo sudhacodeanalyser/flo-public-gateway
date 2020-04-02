@@ -9,7 +9,7 @@ import ConflictError from '../api/error/ConflictError';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import ValidationError from '../api/error/ValidationError';
 import { DeviceSystemModeService } from '../device/DeviceSystemModeService';
-import { IrrigationScheduleService, IrrigationScheduleServiceFactory } from '../device/IrrigationScheduleService';
+import { IrrigationScheduleService } from '../device/IrrigationScheduleService';
 import { LocationResolver } from '../resolver';
 import { AccountService, DeviceService, SubscriptionService } from '../service';
 import moment from 'moment';
@@ -18,23 +18,18 @@ import moment from 'moment';
 class LocationService {
   private deviceServiceFactory: () => DeviceService;
   private accountServiceFactory: () => AccountService;
-  private irrigationScheduleService: IrrigationScheduleService;
   private subscriptionServiceFactory: () => SubscriptionService;
 
   constructor(
     @inject('LocationResolver') private locationResolver: LocationResolver,
     @inject('DependencyFactoryFactory') depFactoryFactory: DependencyFactoryFactory,
-    @inject('IrrigationScheduleServiceFactory') irrigationScheduleServiceFactory: IrrigationScheduleServiceFactory,
     @injectHttpContext private readonly httpContext: interfaces.HttpContext,
-    @inject('AccessControlService') private accessControlService: AccessControlService
+    @inject('AccessControlService') private accessControlService: AccessControlService,
+    @inject('IrrigationScheduleService') private irrigationScheduleService: IrrigationScheduleService
   ) {
     this.deviceServiceFactory = depFactoryFactory<DeviceService>('DeviceService');
     this.accountServiceFactory = depFactoryFactory<AccountService>('AccountService');
     this.subscriptionServiceFactory = depFactoryFactory<SubscriptionService>('SubscriptionService');
-
-    if (!_.isEmpty(this.httpContext) && this.httpContext.request.get('Authorization')) {
-      this.irrigationScheduleService = irrigationScheduleServiceFactory.create(this.httpContext.request);
-    }
   }
 
   public async createLocation(location: Location): Promise<Option<Location>> {

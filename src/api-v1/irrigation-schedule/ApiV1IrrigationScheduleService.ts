@@ -1,18 +1,19 @@
-import { injectable } from 'inversify';
+import { injectable, inject} from 'inversify';
+import { injectHttpContext, interfaces } from 'inversify-express-utils';
 import { HttpService } from '../../http/HttpService';
 import { IrrigationScheduleService, ComputedIrrigationSchedule, DeviceIrrigationAllowedState } from '../../core/device/IrrigationScheduleService';
 import { ResponseToComputedIrrigationSchedule, ResponseToDeviceIrrigationAllowedState } from './models';
 import { isLeft } from 'fp-ts/lib/Either';
 import { CacheMixin, cached, cacheKey, dropCache } from '../../cache/CacheMixin';
 import { MemoizeMixin, memoized } from '../../memoize/MemoizeMixin';
+import UnauthorizedError from '../../auth/UnauthorizedError';
 
 const TWELVE_HOURS = 1036800;
 
 @injectable()
 class ApiV1IrrigationScheduleService extends MemoizeMixin(CacheMixin(HttpService)) implements IrrigationScheduleService {
   constructor(
-    public apiV1Url: string = '',
-    public authToken: string = ''
+    @inject('ApiV1Url') public readonly apiV1Url: string
   ) {
     super();
   }
@@ -23,7 +24,7 @@ class ApiV1IrrigationScheduleService extends MemoizeMixin(CacheMixin(HttpService
     const request = {
       method: 'GET',
       url: `${ this.apiV1Url }/awaymode/icd/${ id }/irrigation`,
-      authToken: this.authToken
+      authToken: this.httpContext && this.httpContext.request && this.httpContext.request.get('Authorization')
     };
     const response = await this.sendRequest(request);
     const result = ResponseToComputedIrrigationSchedule.decode(response);
@@ -40,7 +41,7 @@ class ApiV1IrrigationScheduleService extends MemoizeMixin(CacheMixin(HttpService
     const request = {
       method: 'POST',
       url: `${ this.apiV1Url }/awaymode/icd/${ id }/enable`,
-      authToken: this.authToken,
+      authToken: this.httpContext && this.httpContext.request && this.httpContext.request.get('Authorization'),
       body: {
         times
       }
@@ -54,7 +55,7 @@ class ApiV1IrrigationScheduleService extends MemoizeMixin(CacheMixin(HttpService
     const request = {
       method: 'POST',
       url: `${ this.apiV1Url }/awaymode/icd/${ id }/disable`,
-      authToken: this.authToken
+      authToken: this.httpContext && this.httpContext.request && this.httpContext.request.get('Authorization')
     };
 
     await this.sendRequest(request);
@@ -67,7 +68,7 @@ class ApiV1IrrigationScheduleService extends MemoizeMixin(CacheMixin(HttpService
     const request = {
       method: 'GET',
       url: `${ this.apiV1Url }/awaymode/icd/${ id }`,
-      authToken: this.authToken
+      authToken: this.httpContext && this.httpContext.request && this.httpContext.request.get('Authorization')
     };
     const response = await this.sendRequest(request);
     const result = ResponseToDeviceIrrigationAllowedState.decode(response);
