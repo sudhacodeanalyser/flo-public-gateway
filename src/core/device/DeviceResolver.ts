@@ -12,7 +12,7 @@ import { NotificationService, NotificationServiceFactory } from '../notification
 import { LocationResolver, PropertyResolverMap, Resolver } from '../resolver';
 import DeviceForcedSystemModeTable from './DeviceForcedSystemModeTable';
 import { DeviceRecord, DeviceRecordData } from './DeviceRecord';
-import { IrrigationScheduleService, IrrigationScheduleServiceFactory } from './IrrigationScheduleService';
+import { IrrigationScheduleService } from './IrrigationScheduleService';
 import OnboardingLogTable from './OnboardingLogTable';
 import * as Option from 'fp-ts/lib/Option';
 import { pipe } from 'fp-ts/lib/pipeable';
@@ -484,7 +484,6 @@ class DeviceResolver extends Resolver<Device> {
     }
   };
   private locationResolverFactory: () => LocationResolver;
-  private irrigationScheduleService: IrrigationScheduleService;
   private notificationService: NotificationService;
   private healthTestService: HealthTestService;
 
@@ -495,21 +494,20 @@ class DeviceResolver extends Resolver<Device> {
    @inject('DeviceForcedSystemModeTable') private deviceForcedSystemModeTable: DeviceForcedSystemModeTable,
    @inject('OnboardingLogTable') private onboardingLogTable: OnboardingLogTable,
    @inject('Logger') private readonly logger: Logger,
-   @inject('IrrigationScheduleServiceFactory') irrigationScheduleServiceFactory: IrrigationScheduleServiceFactory,
    @inject('NotificationServiceFactory') notificationServiceFactory: NotificationServiceFactory,
    @inject('PairingService') private pairingService: PairingService,
    @inject('HealthTestServiceFactory') healthTestServiceFactory: HealthTestServiceFactory,
    @inject('LocationTable') private locationTable: LocationTable,
    @inject('MachineLearningService') private mlService: MachineLearningService,
    @inject('PuckTokenService') private puckTokenService: PuckTokenService,
-   @injectHttpContext private readonly httpContext: interfaces.HttpContext
+   @injectHttpContext private readonly httpContext: interfaces.HttpContext,
+   @inject('IrrigationScheduleService') private irrigationScheduleService: IrrigationScheduleService
   ) {
     super();
 
     this.locationResolverFactory = depFactoryFactory<LocationResolver>('LocationResolver');
 
     if (!_.isEmpty(this.httpContext) && this.httpContext.request.get('Authorization')) {
-      this.irrigationScheduleService = irrigationScheduleServiceFactory.create(this.httpContext.request);
       this.notificationService = notificationServiceFactory.create(this.httpContext.request);
       this.healthTestService = healthTestServiceFactory.create(this.httpContext.request);
     }

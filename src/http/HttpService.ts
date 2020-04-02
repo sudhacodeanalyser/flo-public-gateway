@@ -19,8 +19,8 @@ class HttpService {
   public baseUrl?: string;
   public authToken?: string;
   @inject('HttpClient') protected readonly httpClient: AxiosInstance;
+  @injectHttpContext protected readonly httpContext: interfaces.HttpContext;
   @inject('Logger') private readonly httpLogger: Logger;
-  @injectHttpContext private readonly httpContext: interfaces.HttpContext
 
   public async sendRequest(request: HttpRequest): Promise<any> {
     try {
