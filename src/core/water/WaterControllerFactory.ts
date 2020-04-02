@@ -13,6 +13,7 @@ import * as ReqValidator from './WaterReqValidator';
 export function WaterControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
   const authMiddlewareFactory = container.get<AuthMiddlewareFactory>('AuthMiddlewareFactory');
+  const grafanAuth = authMiddlewareFactory.create(undefined, 'ALL/api/v2/water/grafana/*');
   const authWithMacAddressOrLocationId = authMiddlewareFactory.create(
     async ({ query: { locationId, macAddress } }: Request) => ({
       location_id: locationId, device_id: macAddress
@@ -78,32 +79,32 @@ export function WaterControllerFactory(container: Container, apiVersion: number)
       return this.waterService.getMetricsAveragesByDevice(macAddress, startDate, endDate, interval, timezone);
     }
 
-    @httpGet('/grafana')
+    @httpGet('/grafana', grafanAuth)
     private async ping(): Promise<void> {
       return this.waterService.ping();
     }
 
-    @httpPost('/grafana/search')
+    @httpPost('/grafana/search', grafanAuth)
     private async getAvailableMetrics(@requestBody() availableMetricsReq: any): Promise<any> {
       return this.waterService.getAvailableMetrics(availableMetricsReq);
     }
 
-    @httpPost('/grafana/query')
+    @httpPost('/grafana/query', grafanAuth)
     private async queryMetrics(@requestBody() queryMetricsReq: any): Promise<any> {
       return this.waterService.queryMetrics(queryMetricsReq);
     }
 
-    @httpPost('/grafana/annotations')
+    @httpPost('/grafana/annotations', grafanAuth)
     private async annotations(@requestBody() annotationsRequest: any): Promise<any> {
       return this.waterService.annotations(annotationsRequest);
     }
 
-    @httpPost('/grafana/tag-keys')
+    @httpPost('/grafana/tag-keys', grafanAuth)
     private async tagKeys(@requestBody() tagKeysReq: any): Promise<any> {
       return this.waterService.tagKeys(tagKeysReq);
     }
 
-    @httpPost('/grafana/tag-values')
+    @httpPost('/grafana/tag-values', grafanAuth)
     private async tagValues(@requestBody() tagValuesReq: any): Promise<any> {
       return this.waterService.tagValues(tagValuesReq);
     }
