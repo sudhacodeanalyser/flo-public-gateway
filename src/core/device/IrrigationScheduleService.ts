@@ -36,7 +36,3 @@ export interface IrrigationScheduleService {
   disableDeviceIrrigationAllowedInAwayMode(id: string): Promise<void>;
   getDeviceIrrigationAllowedState(id: string): Promise<DeviceIrrigationAllowedState>;
 }
-
-export interface IrrigationScheduleServiceFactory {
-  create(req: Request): IrrigationScheduleService;
-}
