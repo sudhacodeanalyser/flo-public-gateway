@@ -12,6 +12,10 @@ type Fn = (...args: any[]) => any;
 function saveUnmemoizedMethod(prototype: any, methodName: string | symbol, method: (...args: any[]) => any): void {
   const unmemoizedMethods: Map<string | symbol, any> = Reflect.getMetadata('unmemoized', prototype) || new Map();
 
+  if (unmemoizedMethods.get(methodName)) {
+    throw new Error(`Method ${ String(methodName) } already has memoized decorator`);
+  }
+
   unmemoizedMethods.set(methodName, method);
 
   Reflect.defineMetadata('unmemoized', unmemoizedMethods, prototype);
@@ -57,8 +61,14 @@ type Newable<T = {}> = new(...args: any[]) => T;
 // derived class
 // tslint:disable:max-classes-per-file typedef
 export function MemoizeMixin<C extends Newable>(baseClass: C) {
+  if ((baseClass as any).hasMemoizeMixin) {
+    throw new Error(`Class ${ baseClass.name } is already memoized`);
+  }
+
   @injectable()
   class MemoizedClass extends baseClass {
+    public static hasMemoizeMixin: boolean = true;
+
     @inject('Loaders') protected loaders: Loaders;
     protected memoizedClassName: string = this.constructor.name || uuid.v4();
 

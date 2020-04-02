@@ -18,6 +18,7 @@ export interface FloDetectApiFlowEvent {
   feedbackUserId?: string;
   feedbackId?: number;
   incidentId?: string;
+  duration: number;
 }
 
 export interface FloDetectApiEventItem {
@@ -56,6 +57,29 @@ export interface FloDetectApiFixtures {
       totalSeconds: number;
     }>
   }>
+}
+
+
+// Irrigation  ================================
+
+export interface FloDetectApiIrrigationSchedule {
+  deviceId: string;
+  floDetect: {
+    updatedAt: string;
+    schedule: Array<{
+      dayOfWeek: string[];
+      startTime: string;
+      endTime: string;
+    }>;
+  };
+  user?: {
+    updatedAt: string;
+    schedule: Array<{
+      dayOfWeek: string[];
+      startTime: string;
+      endTime: string;
+    }>;
+  };
 }
 
 // ============================================
@@ -117,6 +141,21 @@ class FloDetectApi extends HttpService {
         feedbackUserId: userId
       }
     });
+  }
+
+  public async getIrrigationSchedule(macAddress: string): Promise<FloDetectApiIrrigationSchedule | null> {
+    try {
+      return (await this.sendRequest({
+        method: 'GET',
+        url: `${ this.serviceUrl }/irrigation/${ macAddress }`
+      }));
+    } catch (err) {
+      if (err.statusCode === 404) {
+        return null;
+      } 
+
+      throw err;
+    }
   }
 }
 

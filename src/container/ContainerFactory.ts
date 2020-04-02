@@ -24,6 +24,7 @@ import subscriptionProviderModule from '../subscription/containerModule';
 import validationContainerModule from '../validation/containerModule';
 import telemetryTagsContainerModule from '../telemetry/containerModule';
 import machineLearningContainerModule from '../machine-learning/containerModule';
+import irrigationContainerModule from '../irrigation/containerModule';
 
 export default function ContainerFactory(container: Container = new Container()): Container {
 
@@ -51,6 +52,7 @@ export default function ContainerFactory(container: Container = new Container())
     iftttContainerModule,
     machineLearningContainerModule,
     emailContainerModule,
+    irrigationContainerModule,
     ...coreContainerModules
   );
 

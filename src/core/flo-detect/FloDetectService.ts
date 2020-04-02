@@ -22,6 +22,7 @@ interface FloDetectResponseFlowEvent {
   id: string;
   startAt: string;
   endAt: string;
+  duration: string;
   totalGal: string;
   predicted: {
     id: string;
@@ -88,6 +89,7 @@ const ApiToResponseFlowEventSchema: StrictSchema<FloDetectResponseFlowEvent, Flo
   startAt: 'startAt',
   endAt: 'endAt',
   totalGal: 'totalGal',
+  duration: 'duration',
   predicted: {
     id: 'predictedId',
     displayText: 'predictedDisplayText'
