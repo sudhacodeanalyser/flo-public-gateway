@@ -97,7 +97,8 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
             reason: t.union([t.string, t.array(IncidentStatusReasonCodec)]),
             isInternalAlarm: BooleanFromString,
             page: IntegerFromString,
-            size: IntegerFromString
+            size: IntegerFromString,
+            lang: t.string
           })
         ])
       }))

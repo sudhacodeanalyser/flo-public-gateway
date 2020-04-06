@@ -29,6 +29,17 @@ export interface DeliveryMediumConfig {
   call: DeliveryMediumSettings;
 }
 
+interface AlertTextValue {
+  value: string;
+  lang: string[];
+  unitSystems: string[];
+}
+
+interface AlertTexts {
+  title: AlertTextValue;
+  message: AlertTextValue;
+}
+
 export interface Alarm {
   id: number;
   name: string;
@@ -46,6 +57,7 @@ export interface Alarm {
   children: Array<Id<number>>;
   deliveryMedium: DeliveryMediumConfig;
   userFeedbackFlow?: AlertFeedbackFlow[];
+  text: AlertTexts;
 }
 
 export interface TriggersAlarmResponse {
