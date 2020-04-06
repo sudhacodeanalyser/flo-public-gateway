@@ -61,12 +61,11 @@ class ApiNotificationService {
     });
   }
 
-  public async getAlarmEventsByFilter(filters: any): Promise<PaginatedResult<AlarmEvent>> {
+  public async getAlarmEventsByFilter(filters: string): Promise<PaginatedResult<AlarmEvent>> {
     try {
       return await this.notificationApi.sendRequest({
         method: 'get',
-        url: `/events`,
-        params: filters
+        url: `/events?${filters}`
       });
     } catch (err) {
       if (err.statusCode === 404) {

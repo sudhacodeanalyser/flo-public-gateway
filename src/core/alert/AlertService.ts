@@ -57,7 +57,7 @@ class AlertService {
 
 
 
-  public async getAlarmEventsByFilter(filters: any): Promise<PaginatedResult<AlarmEvent>> {
+  public async getAlarmEventsByFilter(filters: string): Promise<PaginatedResult<AlarmEvent>> {
     const alarmEvents = await this.notificationServiceFactory().getAlarmEventsByFilter(filters);
     const alarmEventsWithFeedback = await Promise.all(
       alarmEvents.items.map(async alarmEvent => this.joinAlarmEventWithFeedback(alarmEvent))

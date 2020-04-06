@@ -107,28 +107,31 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
     )
     private async getAlarmEventsByFilter(@request() req: Request): Promise<PaginatedResult<AlarmEvent>> {
       const defaultLang = 'en-us';
-
+      const filters = req.url.split('?')[1] || '';
       const userId = req.token && req.token.user_id;
       const lang = (req.query.lang ? 
-        req.query.lang : 
-        userId ? (await pipe(
-            await this.userService.getUserById(userId),
-            O.map(async user => user.locale || defaultLang),
-            O.getOrElse(async (): Promise<string> => defaultLang)
-          )
-        ) : defaultLang);
+        [] : 
+        [
+          `lang=${userId ? (await pipe(
+              await this.userService.getUserById(userId),
+              O.map(async user => user.locale || defaultLang),
+              O.getOrElse(async (): Promise<string> => defaultLang)
+            )
+          ) : defaultLang}`
+        ]);
        
-      const filters = {
-        lang,
-        ...req.query,
-        ...(
-          _.isEmpty(req.query.status) ?
-            { status: $enum(AlertStatus).getValues().map(status => status) } :
-            {}
-        )
-      };
-
-      return this.alertService.getAlarmEventsByFilter(filters);
+        const combinedFilters = [
+          filters,
+          ...(
+            _.isEmpty(req.query.status) ?
+              $enum(AlertStatus).getValues().map(status => `status=${status}`) :
+              []
+          ),
+          ...lang
+        ].join('&');
+  
+        return this.alertService.getAlarmEventsByFilter(combinedFilters);
+  
     }
 
     @httpPost('/action',
