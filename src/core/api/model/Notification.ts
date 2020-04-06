@@ -29,15 +29,15 @@ export interface DeliveryMediumConfig {
   call: DeliveryMediumSettings;
 }
 
-interface AlertText {
+interface AlertTextValue {
   value: string;
   lang: string[];
   unitSystems: string[];
 }
 
 interface AlertTexts {
-  title: AlertText;
-  message: AlertText;
+  title: AlertTextValue;
+  message: AlertTextValue;
 }
 
 export interface Alarm {
