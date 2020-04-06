@@ -1,6 +1,7 @@
 import express from 'express';
 import * as Either from 'fp-ts/lib/Either';
-import {Option} from 'fp-ts/lib/Option';
+import * as O from 'fp-ts/lib/Option';
+import { pipe } from 'fp-ts/lib/pipeable';
 import { Container, inject } from 'inversify';
 import { BaseHttpController, httpGet, httpPost, interfaces, request, requestBody, requestParam, response, httpDelete } from 'inversify-express-utils';
 import * as t from 'io-ts';
@@ -12,7 +13,7 @@ import { AlarmEvent, AlarmSeverityCodec, AlertStatus, AlertStatusCodec, ClearAle
 import { httpController, deleteMethod } from '../api/controllerUtils';
 import Request from '../api/Request';
 import { NotificationServiceFactory } from '../notification/NotificationService';
-import { AlertService } from '../service';
+import { AlertService, UserService } from '../service';
 
 export function AlertControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
@@ -55,7 +56,8 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
   class AlertController extends BaseHttpController {
     constructor(
       @inject('NotificationServiceFactory') private notificationServiceFactory: NotificationServiceFactory,
-      @inject('AlertService') private alertService: AlertService
+      @inject('AlertService') private alertService: AlertService,
+      @inject('UserService') private userService: UserService
     ) {
       super();
     }
@@ -104,18 +106,32 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
       }))
     )
     private async getAlarmEventsByFilter(@request() req: Request): Promise<PaginatedResult<AlarmEvent>> {
+      const defaultLang = 'en-us';
       const filters = req.url.split('?')[1] || '';
-
-      const combinedFilters = [
-        filters,
-        ...(
-          _.isEmpty(req.query.status) ?
-            $enum(AlertStatus).getValues().map(status => `status=${status}`) :
-            []
-        )
-      ].join('&');
-
-      return this.alertService.getAlarmEventsByFilter(combinedFilters);
+      const userId = req.token && req.token.user_id;
+      const lang = (req.query.lang ? 
+        [] : 
+        [
+          `lang=${userId ? (await pipe(
+              await this.userService.getUserById(userId),
+              O.map(async user => user.locale || defaultLang),
+              O.getOrElse(async (): Promise<string> => defaultLang)
+            )
+          ) : defaultLang}`
+        ]);
+       
+        const combinedFilters = [
+          filters,
+          ...(
+            _.isEmpty(req.query.status) ?
+              $enum(AlertStatus).getValues().map(status => `status=${status}`) :
+              []
+          ),
+          ...lang
+        ].join('&');
+  
+        return this.alertService.getAlarmEventsByFilter(combinedFilters);
+  
     }
 
     @httpPost('/action',
@@ -178,7 +194,7 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
         })
       }))
     )
-    private async getFilterStateById(@request() req: Request, @requestParam('id') filterStateId: string): Promise<Option<FilterState>> {
+    private async getFilterStateById(@request() req: Request, @requestParam('id') filterStateId: string): Promise<O.Option<FilterState>> {
       return this.notificationServiceFactory.create(req).getFilterStateById(filterStateId);
     }
 

@@ -57,4 +57,3 @@ class HttpService {
 export type HttpServiceFactory = (baseUrl?: string, authToken?: string, headers?: any) => HttpService;
 
 export { HttpService, HttpError };
-
