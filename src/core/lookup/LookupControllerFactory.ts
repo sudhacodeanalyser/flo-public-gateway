@@ -15,15 +15,6 @@ export function LookupControllerFactory(container: Container, apiVersion: number
   class LookupController extends BaseHttpController {
     private static defaultLang = 'en';
 
-    private static fixLang(lang: string): string {
-      // Return default if empty
-      if (_.isEmpty(lang)) {
-        return LookupController.defaultLang
-      }
-
-      return _.head(lang.split('-'))!.toLowerCase();
-    }
-
     constructor(
       @inject('LookupService') private lookupService: LookupService,
     ) {
@@ -53,18 +44,7 @@ export function LookupControllerFactory(container: Container, apiVersion: number
       }))
     )
     private async getByIds(@queryParamArray('id') ids: string[] = [], @queryParamArray('q') prefixes: string[] = [], @queryParam('lang') lang: string = LookupController.defaultLang): Promise<MultiLookupResponse> {
-      const cleanLang = LookupController.fixLang(lang);
-      const lookups = await this.lookupService.getByIds(ids, prefixes);
-
-      if (!_.isEmpty(lookups)) {
-        const result = _.mapValues(lookups, item => {
-          const byLang = _.groupBy(item, 'lang');
-
-          return byLang[cleanLang] || byLang[LookupController.defaultLang];
-        });
-
-        return Lookup.fromModelToMulti(result);
-      }
+      const lookups = await this.lookupService.getByIds(ids, prefixes, lang);
 
       return Lookup.fromModelToMulti(lookups);
     }
@@ -81,17 +61,7 @@ export function LookupControllerFactory(container: Container, apiVersion: number
       }))
     )
     private async getById(@requestParam('id') id: string, @queryParam('lang') lang: string = LookupController.defaultLang): Promise<LookupResponse> {
-      const cleanLang = LookupController.fixLang(lang);
-      const lookups = await this.lookupService.getByIds([id]);
-
-      if (lookups[id]) {
-        const item = lookups[id];
-        const byLang = _.groupBy(item, 'lang');
-        const filtered = byLang[cleanLang] || byLang[LookupController.defaultLang];
-        const result = { [id]:filtered };
-
-        return Lookup.fromModel(result);
-      }
+      const lookups = await this.lookupService.getByIds([id], undefined, lang);
 
       return Lookup.fromModel(lookups);
     }

@@ -6,6 +6,8 @@ import { LookupTable } from './LookupTable';
 
 @injectable()
 class LookupService {
+  private static readonly defaultLang = 'en';
+
   constructor(
     @inject('LookupTable') private lookupTable: LookupTable,
     @inject('ListCache') private listCache: Lookup
@@ -16,9 +18,7 @@ class LookupService {
       .pick(ids)
       .mapValues(value => 
         value.filter(({ lang: itemLang }) => 
-          lang ? 
-            lang === itemLang : 
-            (itemLang.toLowerCase() === 'en-us' || itemLang.toLowerCase() === 'en')
+          this.normalizeLang(lang) === itemLang 
         )
       )
       .pickBy(value => !_.isEmpty(value))
@@ -44,6 +44,16 @@ class LookupService {
       ...dbLookups
     };
   }
+
+  public normalizeLang(lang?: string): string {
+    // Return default if empty
+    if (!lang) {
+      return LookupService.defaultLang
+    }
+
+    return _.head(lang.split('-'))!.toLowerCase();
+  }
+
 }
 
 export { LookupService };
