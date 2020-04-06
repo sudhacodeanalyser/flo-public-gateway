@@ -4,6 +4,7 @@ import HttpError from './HttpError';
 import config from '../config/config';
 import { injectHttpContext, interfaces } from 'inversify-express-utils';
 import Logger from 'bunyan';
+import Qs from 'qs';
 
 export interface HttpRequest {
   method: string;
@@ -26,6 +27,7 @@ class HttpService {
     try {
       const httpContextReq = this.httpContext && this.httpContext.request;
       const response = await this.httpClient.request({
+        paramsSerializer: params => Qs.stringify(params, { arrayFormat: 'repeat' }),
         method: request.method,
         url: this.baseUrl ? `${this.baseUrl}${request.url}` : request.url,
         headers: {
@@ -57,4 +59,3 @@ class HttpService {
 export type HttpServiceFactory = (baseUrl?: string, authToken?: string, headers?: any) => HttpService;
 
 export { HttpService, HttpError };
-

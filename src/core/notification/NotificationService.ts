@@ -32,7 +32,7 @@ export interface NotificationService {
   sendAlarm(alertInfo: any): Promise<string>;
   getAlarmEvent(id: string): Promise<AlarmEvent>;
   deleteAlarmEvent(id: string): Promise<void>;
-  getAlarmEventsByFilter(filters: string): Promise<PaginatedResult<AlarmEvent>>;
+  getAlarmEventsByFilter(filters: any): Promise<PaginatedResult<AlarmEvent>>;
   clearAlarm(alarmId: string | number, data: any): Promise<ClearAlertResponse>;
   getAlarmSettings(userId: string, deviceId: string): Promise<Option<DeviceAlarmSettings>>;
   getAlarmSettingsInBulk(userId: string, deviceIds: string[]): Promise<DeviceAlarmSettings[]>;
