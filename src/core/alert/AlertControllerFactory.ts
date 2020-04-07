@@ -140,7 +140,7 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
         body: ClearAlertBodyCodec
       }))
     )
-    private async clearAlarm(@request() req: Request, @requestBody() data: ClearAlertBody): Promise<ClearAlertResponse> {
+    private async clearAlarms(@request() req: Request, @requestBody() data: ClearAlertBody): Promise<ClearAlertResponse> {
       const hasDeviceId = (obj: any): obj is { deviceId: string } => {
         return obj.deviceId !== undefined;
       };
@@ -150,15 +150,15 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
 
       const service = this.notificationServiceFactory.create(req);
 
-      const clearResponses = await Promise.all(data.alarmIds.map(alarmId => service.clearAlarm(alarmId, {
+      const clearResponse = await service.clearAlarms(data.alarmIds, {
         ...(hasDeviceId(data) && { deviceId: data.deviceId }),
         ...(hasLocationId(data) && { locationId: data.locationId }),
         snoozeSeconds: data.snoozeSeconds
-      })));
+      });
 
-      return clearResponses.reduce((acc, clearResponse) => ({
-        cleared: acc.cleared + clearResponse.cleared
-      }));
+      return {
+        cleared: clearResponse.cleared
+      };
     }
 
     @httpPost('/:id/userFeedback',

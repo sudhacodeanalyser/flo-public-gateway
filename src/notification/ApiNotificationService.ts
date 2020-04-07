@@ -81,17 +81,18 @@ class ApiNotificationService {
     }
   }
 
-  public async clearAlarm(alarmId: string | number, data: any): Promise<ClearAlertResponse> {
+  public async clearAlarms(alarmIds: number[], data: any): Promise<ClearAlertResponse> {
     const devices =  await this.getDevicesInfo(data);
     const requestBody = {
       locationId: data.locationId,
       devices: devices.map(device => ({ id: device.id, macAddress: device.macAddress })),
-      snoozeSeconds: data.snoozeSeconds
+      snoozeSeconds: data.snoozeSeconds,
+      alarmIds
     };
 
     return this.notificationApi.sendRequest({
       method: 'put',
-      url: `/alarms/${alarmId}/clear`,
+      url: `/alarms/clear`,
       body: requestBody
     });
   }
