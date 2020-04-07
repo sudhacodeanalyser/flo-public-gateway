@@ -9,6 +9,7 @@ import { DeviceService } from '../core/service';
 import { DependencyFactoryFactory } from '../core/api';
 import * as O from 'fp-ts/lib/Option';
 import NotFoundError from '../core/api/error/NotFoundError';
+import moment from 'moment';
 
 @injectable()
 class ComposedIrrigationScheduleService extends ApiV1IrrigationScheduleService {
@@ -34,7 +35,7 @@ class ComposedIrrigationScheduleService extends ApiV1IrrigationScheduleService {
       const deviceService = this.depFactoryFactory<DeviceService>('DeviceService')();
 
       const device = await deviceService.getDeviceById(id, { $select: { macAddress: true } });
-
+   
       if (O.isNone(device)) {
         return null;
       }
@@ -46,7 +47,9 @@ class ComposedIrrigationScheduleService extends ApiV1IrrigationScheduleService {
         return {
           status: ComputationStatus.SCHEDULE_FOUND,
           times: floDetectIrrigationSchedule.floDetect.schedule
-            .map(({ startTime, endTime }) => [startTime, endTime]),
+            .map(({ startTime, endTime }) => 
+              [startTime, endTime].map(time => moment(time, 'HH:mm').format('HH:mm:ss'))
+            ),  
           macAddress
         };
       }
