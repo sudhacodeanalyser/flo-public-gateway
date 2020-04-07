@@ -2,10 +2,12 @@ import { injectable, inject } from 'inversify';
 import moment from 'moment-timezone';
 import _ from 'lodash';
 import { DeviceService, LocationService } from '../service';
-import { DependencyFactoryFactory, WaterConsumptionItem, WaterConsumptionReport, WaterConsumptionInterval, WaterAveragesReport, WaterMetricsReport } from '../api';
+import { Location, DependencyFactoryFactory, WaterConsumptionItem, WaterConsumptionReport, WaterConsumptionInterval, WaterAveragesReport, WaterMetricsReport } from '../api';
 import * as Option from 'fp-ts/lib/Option';
 import { pipe } from 'fp-ts/lib/pipeable';
-import { WaterMeterService, WaterMeterReport } from './WaterMeterService';
+import { WaterMeterService, WaterMeterReport, WaterMeterDeviceReport, WaterMeterDeviceData } from './WaterMeterService';
+import { WeatherApi, WeatherData, AddressData } from './WeatherApi';
+import NotFoundError from '../api/error/NotFoundError';
 
 type InfluxRow = { time: Date, sum: number };
 type AveragesResult = {
@@ -14,6 +16,14 @@ type AveragesResult = {
   startDate: moment.Moment,
   endDate?: moment.Moment
 };
+
+interface WaterMeterDeviceDataWithWeather extends WaterMeterDeviceData {
+  averageWeatherTempF?: number;
+}
+
+interface WaterMeterDeviceReportWithWeather extends WaterMeterDeviceReport {
+  items: WaterMeterDeviceDataWithWeather[];
+}
 
 @injectable()
 class WaterService {
@@ -25,7 +35,8 @@ class WaterService {
 
   constructor(
     @inject('DependencyFactoryFactory') depFactoryFactory: DependencyFactoryFactory,
-    @inject('WaterMeterService') private waterMeterService: WaterMeterService
+    @inject('WaterMeterService') private waterMeterService: WaterMeterService,
+    @inject('WeatherApi') private weatherApi: WeatherApi
   ) {
     this.deviceServiceFactory = depFactoryFactory<DeviceService>('DeviceService');
     this.locationServiceFactory = depFactoryFactory<LocationService>('LocationService');
@@ -174,7 +185,12 @@ class WaterService {
         location: {
           $expand: true,
           $select: {
-            timezone: true
+            timezone: true,
+            address: true,
+            city: true,
+            postalCode: true,
+            state: true,
+            country: true
           }
         }
       }
@@ -186,10 +202,24 @@ class WaterService {
         d => d.location.timezone || 'Etc/UTC'
       )
     );
-    const start = this.formatDate(startDate, tz);
-    const end = this.formatDate(endDate, tz);
-    const results = await this.getWaterMeterReport([macAddress], start, end, interval, timezone);
-    const items = (results.items.length && results.items[0].items) || [];
+    const address = pipe(
+      device,
+      Option.fold(
+        () => { throw new NotFoundError('Device not found.') },
+        d => this.getAddressData(d.location as Location)
+      )
+    );
+    const start = this.formatDate(startDate, timezone);
+    const end = this.formatDate(endDate, timezone);
+    const waterReport = await this.getWaterMeterReport([macAddress], start, end, interval, timezone);
+    const weatherData = await this.weatherApi.getTemperatureByAddress(
+      address, 
+      new Date(start), 
+      new Date(end), 
+      interval === WaterConsumptionInterval.ONE_HOUR ? '1h' : '1d'
+    );
+    const results = this.joinWeatherData(waterReport, weatherData);
+    const items = (results.length && results[0].items) || [];
 
     return {
       params: {
@@ -203,7 +233,8 @@ class WaterService {
         time: moment(item.date).tz(timezone).format(),
         averageGpm: item.rate,
         averagePsi: item.psi,
-        averageTempF: item.temp
+        averageTempF: item.temp,
+        averageWeatherTempF: item.averageWeatherTempF
       }))
     };
   }
@@ -444,6 +475,64 @@ class WaterService {
     return {
       ...results,
       items: deviceResults
+    };
+  }
+
+  private joinWeatherData(waterReport: WaterMeterReport, weatherData: WeatherData): WaterMeterDeviceReportWithWeather[] {
+
+    return waterReport.items.map(deviceItems => {
+
+      if (!deviceItems.items || !deviceItems.items.length) {
+        return deviceItems as WaterMeterDeviceReportWithWeather;
+      }
+   
+      const firstDate = deviceItems.items[0].date;
+      let startIndex = _.findIndex(
+        weatherData.items, 
+        ({ time }) => moment(time).isSameOrAfter(firstDate)
+      );
+      const items: WaterMeterDeviceDataWithWeather[] = deviceItems.items
+        .map((item, i) => {
+          const nextItem = (deviceItems.items || [])[i + 1];
+          const endIndex = !nextItem ? undefined : _.findIndex(
+            weatherData.items,
+            ({ time }) => moment(time).isSameOrAfter(nextItem.date), 
+            startIndex
+          );
+          const averageWeatherTempF = !weatherData.items.length || (endIndex !== undefined && endIndex <= 0) ?
+            undefined :
+            _.chain(weatherData.items)
+              .slice(
+                startIndex,
+                endIndex
+              )
+              .meanBy('temp')
+              .value();
+
+          startIndex = !endIndex || endIndex < 0 ? weatherData.items.length : endIndex;
+
+          return {
+            ...item,
+            averageWeatherTempF: averageWeatherTempF && Math.floor(averageWeatherTempF)
+          };
+        });
+
+      const deviceReport: WaterMeterDeviceReportWithWeather = {
+        ...deviceItems,
+        items
+      };
+
+      return deviceReport;
+    })
+  }
+
+  private getAddressData(location: Location): AddressData {
+    return {
+      street: location.address,
+      city: location.city,
+      postCode: location.postalCode,
+      region: location.state,
+      country: location.country      
     };
   }
 }
