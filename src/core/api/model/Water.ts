@@ -53,6 +53,7 @@ export interface WaterMetricsItem {
   averagePsi?: number;
   averageGpm?: number;
   averageTempF?: number;
+  averageWeatherTempF?: number;
 }
 
 export interface WaterMetricsReport {

@@ -256,3 +256,6 @@ paths:
                         averageTempF:
                           type: number
                           nullable: true
+                        averageWeatherTempF:
+                          type: number
+                          nullable: true
