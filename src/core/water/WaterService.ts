@@ -216,7 +216,7 @@ class WaterService {
       address, 
       new Date(start), 
       new Date(end), 
-      interval === WaterConsumptionInterval.ONE_HOUR ? '1h' : '1d'
+      interval === WaterConsumptionInterval.ONE_HOUR ? '1h' : '24h'
     );
     const results = this.joinWeatherData(waterReport, weatherData);
     const items = (results.length && results[0].items) || [];
