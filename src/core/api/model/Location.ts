@@ -1,12 +1,13 @@
 import * as t from 'io-ts';
-import { NotificationStatistics, Omit, TimestampedModel } from '../../api';
+import { NotificationStatistics, Omit, TimestampedModel, Expandable } from '../../api';
 import { NonEmptyString } from '../../api/validator/NonEmptyString';
 import { convertEnumtoCodec } from '../enumUtils';
 import { NoYesUnsure } from '../NoYesUnsure';
 
 export const LocationUserRoleCodec = t.type({
   userId: t.string,
-  roles: t.array(t.string)
+  roles: t.array(t.string),
+  inherited: t.union([t.undefined, t.array(t.type({ roles: t.array(t.string), locationId: t.string }))])
 });
 
 export type LocationUserRole = t.TypeOf<typeof LocationUserRoleCodec>;
@@ -132,10 +133,13 @@ export enum SystemMode {
 
 export const SystemModeCodec = convertEnumtoCodec(SystemMode);
 
-const AdditionalPropsCodec = t.type({
-  nickname: t.union([t.string, t.undefined]),
-  irrigationSchedule: t.union([t.undefined, t.type({
+const AdditionalPropsCodec = t.partial({
+  nickname: t.string,
+  irrigationSchedule: t.type({
     isEnabled: t.boolean
+  }),
+  parent: t.union([t.null, t.type({
+    id: t.string
   })])
 });
 
@@ -167,16 +171,23 @@ const {
   ...profileProps
 } = LocationProfileCodec.props;
 
+const {
+  timezone,
+  ...addressProps
+} = AddressCodec.props
 
 export const LocationCreateValidator = t.intersection([
   AccountId,
-  AddressCodec,
-  t.type({
-    locationType,
-    residenceType,
-    nickname: AdditionalPropsCodec.props.nickname
+  t.partial({ 
+    ...addressProps, 
+    class: t.type({ key: t.string }),
+    parent: t.type({ id: t.string })
   }),
-  t.partial(profileProps as Omit<typeof LocationProfileCodec.props, 'locationType' | 'residenceType'>),
+  t.type({
+    nickname: AdditionalPropsCodec.props.nickname,
+    timezone
+  }),
+  t.partial(LocationProfileCodec.props),
   t.partial(LocationProfileWithLegacyCodec.props)
 ]);
 export type LocationCreate = t.TypeOf<typeof LocationCreateValidator>;
@@ -229,11 +240,22 @@ export const LocationCodec = t.intersection([
       userRoles: t.array(LocationUserRoleCodec),
       devices: t.array(t.intersection([ExpandableCodec, t.partial({ macAddress: t.string })])),
       subscription: t.union([ExpandableCodec, t.undefined]),
-      areas: AreasCodec
+      areas: AreasCodec,
+      children: t.array(t.type({ id: t.string })),
+      class: t.intersection([
+        t.type({
+          key: t.string,
+        }),
+        t.partial({
+          level: t.number
+        })
+      ])
     })
   ])
 ]);
 
 export interface Location extends t.TypeOf<typeof LocationCodec>, TimestampedModel {
   notifications?: NotificationStatistics;
+  parent?: Expandable<Location> | null;
+  children: Array<Expandable<Location>>;
 }

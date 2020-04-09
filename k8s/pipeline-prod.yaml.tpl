@@ -49,7 +49,9 @@ secrets:
     PUCK_TOKEN_SECRET: "${PUCK_TOKEN_SECRET_PROD}"
     TWILIO_AUTH_TOKEN: "${TWILIO_AUTH_TOKEN_PROD}"
     PUBLIC_GATEWAY_HOST: "${PUBLIC_GATEWAY_HOST_PROD}"
+    SEND_WITH_US_KEY: "${SEND_WITH_US_KEY_PROD}"
     FLO_DETECT_API_URL: "${FLO_DETECT_API_URL_PROD}"
+    WEATHER_API_URL: "${WEATHER_API_URL_PROD}"
 internalIngress:
   host: internal-ingress.flosecurecloud.com
 routingIngress:

@@ -3,7 +3,7 @@ import { inject, injectable } from 'inversify';
 import { injectHttpContext, interfaces } from 'inversify-express-utils';
 import _ from 'lodash';
 import { fromPartialRecord } from '../../database/Patch';
-import { DependencyFactoryFactory, PropExpand, UpdateDeviceAlarmSettings, User, UnitSystem } from '../api';
+import { DependencyFactoryFactory, PropExpand, UpdateDeviceAlarmSettings, User, UnitSystem, UserCreate } from '../api';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import { NotificationService, NotificationServiceFactory } from '../notification/NotificationService';
 import { AccountResolver, LocationResolver, PropertyResolverMap, Resolver } from '../resolver';
@@ -13,26 +13,42 @@ import { UserDetailRecord } from './UserDetailRecord';
 import UserDetailTable from './UserDetailTable';
 import { UserLocationRoleRecord, UserLocationRoleRecordData } from './UserLocationRoleRecord';
 import UserLocationRoleTable from './UserLocationRoleTable';
-import { UserRecord } from './UserRecord';
+import { UserRecord, UserRecordData } from './UserRecord';
 import UserTable from './UserTable';
+import LocationTreeTable from '../location/LocationTreeTable';
+import uuid from 'uuid';
 
 @injectable()
 class UserResolver extends Resolver<User> {
   protected propertyResolverMap: PropertyResolverMap<User> = {
     locations: async (model: User, shouldExpand: boolean = false, expandProps?: PropExpand) => {
-      const userLocationRoleRecordData: UserLocationRoleRecordData[] = await this.userLocationRoleTable.getAllByUserId(model.id);
+      const userAccountRoleRecordData = await this.userAccountRoleTable.getByUserId(model.id);
 
-      if (!shouldExpand) {
-        return userLocationRoleRecordData.map(({ location_id }) => ({ id: location_id }));
+      if (userAccountRoleRecordData == null) {
+        return null;
       }
 
-      return Promise.all(userLocationRoleRecordData.map(
-        async (userLocationRoleRecordDatum) => {
-          const location = await this.locationResolverFactory().get(userLocationRoleRecordDatum.location_id, expandProps);
+      const userLocationRoleRecordData: UserLocationRoleRecordData[] = await this.userLocationRoleTable.getAllByUserId(model.id);
+      const rootLocationIds = userLocationRoleRecordData.map(({ location_id }) => location_id);
+      const subTrees = _.flatten(await Promise.all(
+        rootLocationIds.map(parentId => this.locationTreeTable.getAllChildren(userAccountRoleRecordData.account_id, parentId))
+      ));
+      const locationIds = _.uniq([
+        ...rootLocationIds,
+        ...subTrees.map(({ child_id }) => child_id)
+      ]);
+      
+      if (!shouldExpand) {
+        return locationIds.map(id => ({ id }));
+      }
+
+      return Promise.all(locationIds.map(
+        async (locationId) => {
+          const location = await this.locationResolverFactory().get(locationId, expandProps);
 
           return {
             ...location,
-            id: userLocationRoleRecordDatum.location_id
+            id: locationId
           };
         }
       ));
@@ -59,11 +75,46 @@ class UserResolver extends Resolver<User> {
         new UserAccountRoleRecord(userAccountRoleRecordData).toUserAccountRole();
     },
     locationRoles: async (model: User, shouldExpand = false) => {
-      const userLocationRoleRecordData: UserLocationRoleRecordData[] = await this.userLocationRoleTable.getAllByUserId(model.id);
+      const userAccountRoleRecordData = await this.userAccountRoleTable.getByUserId(model.id);
 
-      return userLocationRoleRecordData.map(userLocationRoleRecordDatum =>
+      if (userAccountRoleRecordData === null) {
+        return null;
+      }
+
+      const userLocationRoleRecordData: UserLocationRoleRecordData[] = await this.userLocationRoleTable.getAllByUserId(model.id);
+      const explicitRoles = userLocationRoleRecordData.map(userLocationRoleRecordDatum =>
         new UserLocationRoleRecord(userLocationRoleRecordDatum).toUserLocationRole()
       );
+      const locationIds = explicitRoles.map(({ locationId }) => locationId);
+      const subTrees = await this.locationTreeTable.batchGetAllChildren(userAccountRoleRecordData.account_id, locationIds);
+      const childRoles = _.chain(explicitRoles)
+        .flatMap(({ locationId, roles }) => {
+          return _.chain(subTrees)
+            .filter({ parent_id: locationId })
+            .map(({ child_id }) => ({
+              locationId: child_id,
+              roles: [] as string[],
+              inherited: [{
+                roles,
+                locationId
+              }]
+            }))
+            .value();
+        })
+        .value();
+
+      return _.chain([...explicitRoles, ...childRoles])
+        .groupBy('locationId')
+        .map((locationRoles, locationId) => 
+          locationRoles.reduce((acc, { roles, inherited }) => ({
+            locationId,
+            roles: [...roles, ...acc.roles],
+            inherited: !inherited && !acc.inherited ? 
+              undefined :
+              [...(inherited || []), ...(acc.inherited || [])]
+          }))
+        )
+        .value();
     },
     alarmSettings: async (model: User, shouldExpand = false) => {
       if (!shouldExpand || !this.notificationServiceFactory) {
@@ -118,7 +169,8 @@ class UserResolver extends Resolver<User> {
     @inject('DefaultUserLocale') private defaultUserLocale: string,
     @inject('NotificationServiceFactory') notificationServiceFactory: NotificationServiceFactory,
     @injectHttpContext private readonly httpContext: interfaces.HttpContext,
-    @inject('Logger') private readonly logger: Logger
+    @inject('Logger') private readonly logger: Logger,
+    @inject('LocationTreeTable') private locationTreeTable: LocationTreeTable
   ) {
     super();
 
@@ -211,6 +263,65 @@ class UserResolver extends Resolver<User> {
 
     await this.userDetailTable.update({ user_id: id }, patch);
   }
+
+  public async createUser(userCreate: UserCreate): Promise<User> {
+    const id = uuid.v4();
+    const [
+      createdUserRecord,
+      createdUserDetailRecord
+    ] = await Promise.all([
+      this.userTable.put({
+        id,
+        account_id: userCreate.account.id,
+        email: userCreate.email,
+        password: userCreate.password,
+        source: userCreate.source,
+        is_active: true
+      }), 
+      this.userDetailTable.put({
+        user_id: id,
+        firstname: userCreate.firstName,
+        lastname: userCreate.lastName,
+        middlename: userCreate.middleName,
+        prefixname: userCreate.prefixName,
+        suffixname: userCreate.suffixName,
+        phone_mobile: userCreate.phoneMobile,
+        locale: userCreate.locale
+      })
+    ]);
+    const user = new UserRecord({
+      ...createdUserRecord,
+      ...createdUserDetailRecord
+    }).toModel();
+
+    return user;
+  }
+
+  public async getByEmail(email: string, expandProps?: PropExpand): Promise<User | null> {
+    const userRecord = await this.userTable.getByEmail(email);
+
+    if (!userRecord) {
+      return null;
+    }
+
+    const userDetailRecord = await this.userDetailTable.get({ user_id: userRecord.id });
+
+    if (!userDetailRecord) {
+      return null;
+    }
+
+    const user = new UserRecord({
+      ...userRecord,
+      ...userDetailRecord || {},
+      locale: userDetailRecord.locale || this.defaultUserLocale
+    }).toModel();
+    const expandedProps = await this.resolveProps(user, expandProps);
+
+    return {
+      ...user,
+      ...expandedProps
+    };
+  } 
 }
 
 export { UserResolver };

@@ -175,10 +175,16 @@ export interface LocationRecordData extends Partial<LegacyLocationProfile>, Time
   revert_minutes?: number;
   is_irrigation_schedule_enabled?: boolean;
   areas: AreaRecord[];
+  parent_location_id?: string;
+  location_class?: string;
 }
 
 const RecordToModelSchema: StrictSchema<Location, LocationRecordData> = {
   id: 'location_id',
+  parent: (input: LocationRecordData) => {
+    return input.parent_location_id ? { id: input.parent_location_id, nickname: '' } : undefined;
+  },
+  children: () => [],
   account: {
     id: 'account_id'
   },
@@ -362,11 +368,18 @@ const RecordToModelSchema: StrictSchema<Location, LocationRecordData> = {
   areas: (input: LocationRecordData) => ({
     default: [],
     custom: input.areas || []
+  }),
+  class: (input: LocationRecordData) => ({
+    key: input.location_class || '',
+    level: -1
   })
 };
 
 const ModelToRecordSchema: StrictSchema<LocationRecordData, Location> = {
   location_id: 'id',
+  parent_location_id: (input: Location) => {
+    return input.parent ? input.parent.id : undefined;
+  },
   account_id: 'account.id',
   address: 'address',
   address2: 'address2',
@@ -411,13 +424,17 @@ const ModelToRecordSchema: StrictSchema<LocationRecordData, Location> = {
       water_utility: input.waterUtility
     };
   },
-  areas: (input: Partial<Location>) => _.get(input, 'areas.custom', undefined)
+  areas: (input: Partial<Location>) => _.get(input, 'areas.custom', undefined),
+  location_class: 'class.key'
 };
 
 export type PartialLocationRecordData = Omit<LocationRecordData, 'profile'> & Record<'profile', Partial<LocationRecordData['profile']>>;
 
 const PartialModelToPartialRecordSchema: StrictSchema<PartialLocationRecordData, Partial<Location>> = {
   location_id: 'id',
+  parent_location_id: (input: Partial<Location>) => {
+    return input.parent ? input.parent.id : undefined;
+  },
   account_id: 'account.id',
   address: 'address',
   address2: 'address2',
@@ -462,7 +479,8 @@ const PartialModelToPartialRecordSchema: StrictSchema<PartialLocationRecordData,
       water_utility: input.waterUtility
     };
   },
-  areas: (input: Partial<Location>) => _.get(input, 'areas.custom', undefined)
+  areas: (input: Partial<Location>) => _.get(input, 'areas.custom', undefined),
+  location_class: 'class.key'
 };
 
 

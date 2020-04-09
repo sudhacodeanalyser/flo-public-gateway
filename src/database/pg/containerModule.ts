@@ -17,8 +17,38 @@ export default new ContainerModule((bind: interfaces.Bind) => {
       connectionTimeoutMillis: config.postgresConnectionTimeoutMS,
       idleTimeoutMillis: config.postgresIdleTimeoutMS    
     }) 
-  );
+  )
+  .when((request: interfaces.Request) => {
+    return (
+      !request.target.name.value() && 
+      (
+        request.parentRequest === null || 
+        !request.parentRequest.target.name.value()
+      )
+    );
+  });
 
-  // This binding will be overridden by the middleware when included
+  bind<postgres.Pool>('PostgresPool').toConstantValue(
+    new postgres.Pool({
+      user: config.postgresUser,
+      host: config.postgresHost,
+      database: 'core',
+      password: config.postgresPassword,
+      port: config.postgresPort,
+      max: config.postgresMaxPoolClients,
+      connectionTimeoutMillis: config.postgresConnectionTimeoutMS,
+      idleTimeoutMillis: config.postgresIdleTimeoutMS    
+    }) 
+  )
+  .when((request: interfaces.Request) => {
+    return (
+      request.target.name.equals('core') || 
+      (
+        request.parentRequest !== null && 
+        request.parentRequest.target.name.equals('core')
+      )
+    );
+  });
+
   bind<PostgresDbClient>('PostgresDbClient').to(PostgresDbClient);
 });

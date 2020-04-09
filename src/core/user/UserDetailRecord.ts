@@ -27,7 +27,9 @@ const ModelToRecordSchema: StrictSchema<Partial<UserDetailRecordData>, Partial<U
   suffixname: 'suffixName',
   unit_system: 'unitSystem',
   phone_mobile: 'phoneMobile',
-  locale: 'locale',
+  locale: (input: Partial<User>) => {
+    return input.locale || 'en-us';
+  },
   enabled_features: 'enabledFeatures'
 }
 

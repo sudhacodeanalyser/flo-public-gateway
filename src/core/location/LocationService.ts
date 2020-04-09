@@ -1,5 +1,5 @@
-import { fromNullable, isNone, Option } from 'fp-ts/lib/Option';
-import { inject, injectable } from 'inversify';
+import * as O from 'fp-ts/lib/Option';
+import { inject, injectable, targetName } from 'inversify';
 import { injectHttpContext, interfaces } from 'inversify-express-utils';
 import _ from 'lodash';
 import uuid from 'uuid';
@@ -8,11 +8,16 @@ import { Areas, DependencyFactoryFactory, Location, LocationUpdate, LocationUser
 import ConflictError from '../api/error/ConflictError';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import ValidationError from '../api/error/ValidationError';
+import ForbiddenError from '../api/error/ForbiddenError';
 import { DeviceSystemModeService } from '../device/DeviceSystemModeService';
 import { IrrigationScheduleService } from '../device/IrrigationScheduleService';
 import { LocationResolver } from '../resolver';
 import { AccountService, DeviceService, SubscriptionService } from '../service';
 import moment from 'moment';
+import LocationTreeTable from './LocationTreeTable'
+
+const { fromNullable, isNone } = O;
+type Option<T> = O.Option<T>;
 
 @injectable()
 class LocationService {
@@ -25,6 +30,7 @@ class LocationService {
     @inject('DependencyFactoryFactory') depFactoryFactory: DependencyFactoryFactory,
     @injectHttpContext private readonly httpContext: interfaces.HttpContext,
     @inject('AccessControlService') private accessControlService: AccessControlService,
+    @inject('LocationTreeTable') private locationTreeTable: LocationTreeTable,
     @inject('IrrigationScheduleService') private irrigationScheduleService: IrrigationScheduleService
   ) {
     this.deviceServiceFactory = depFactoryFactory<DeviceService>('DeviceService');
@@ -37,11 +43,17 @@ class LocationService {
     const accountId = location.account.id;
     const account = await this.accountServiceFactory().getAccountById(accountId);
 
-    if (!isNone(account) && createdLocation !== null) {
-      const ownerUserId = account.value.owner.id;
-      await this.locationResolver.addLocationUserRole(createdLocation.id, ownerUserId, ['owner']);
+    if (createdLocation === null || isNone(account)) {
+      return O.none;
+    }
 
-      await this.refreshUserACL(ownerUserId);
+    const ownerUserId = account.value.owner.id;
+    
+    await this.locationResolver.addLocationUserRole(createdLocation.id, ownerUserId, ['owner']);
+    await this.refreshUserACL(ownerUserId);
+
+    if (createdLocation.parent && createdLocation.parent.id) {
+      await this.locationTreeTable.updateParent(account.value.id, createdLocation.id, createdLocation.parent.id, false);
     }
 
     return fromNullable(createdLocation);
@@ -54,7 +66,46 @@ class LocationService {
   }
 
   public async updatePartialLocation(id: string, locationUpdate: LocationUpdate): Promise<Location> {
-    const updatedLocation = await this.locationResolver.updatePartialLocation(id, locationUpdate);
+
+    if (locationUpdate.parent !== undefined && (locationUpdate.parent === null || locationUpdate.parent.id !== id)) {
+      const location = await this.locationResolver.get(id, { $select: { parent: true, account: true } });
+
+      if (!location) {
+        throw new ConflictError('Location does not exist.');
+      }
+
+      const hasNewParent = locationUpdate.parent !== null;
+      const parentLocation = locationUpdate.parent !== null && await this.locationResolver.get(locationUpdate.parent.id, { $select: { account: true } });
+
+      if (locationUpdate.parent !== null && !parentLocation) {
+        throw new ValidationError('Parent does not exist.');
+      } else if (hasNewParent && location && parentLocation && parentLocation.account.id !== location.account.id) {
+        // Parent must be in same account
+        throw new ForbiddenError();
+      }
+
+      // Noop if parent is not changing to avoid expensive SQL queries
+      if ((location.parent && location.parent.id) !== (locationUpdate.parent && locationUpdate.parent.id)) {
+        await this.locationTreeTable.updateParent(
+          location.account.id, 
+          id, 
+          locationUpdate.parent && locationUpdate.parent.id, 
+          !!(location && location.parent && location.parent.id)
+        );
+      }
+    }
+
+    const updatedLocation = await this.locationResolver.updatePartialLocation(id, {
+      ...locationUpdate,
+      ...(locationUpdate.parent === null ? 
+        {
+          parent: {
+            id: ""
+          }
+        } : 
+        locationUpdate.parent && { parent: locationUpdate.parent }
+      )
+    });
 
     if (!_.isEmpty(locationUpdate.irrigationSchedule) && !_.isEmpty(this.irrigationScheduleService)) {
       const deviceService = this.deviceServiceFactory();
@@ -106,21 +157,23 @@ class LocationService {
     const subscriptionService = this.subscriptionServiceFactory();
     const subscription = await subscriptionService.getSubscriptionByRelatedEntityId(id);
 
+    await this.locationResolver.removeLocation(id);
+
     if (!isNone(subscription)) {
       await this.subscriptionServiceFactory().cancelSubscription(subscription.value.id, true, `FLO INTERNAL: location ${ id } removed`);
     }
-
-    return this.locationResolver.removeLocation(id);
   }
 
   public async getAllLocationUserRoles(locationId: string): Promise<LocationUserRole[]> {
    return this.locationResolver.getAllUserRolesByLocationId(locationId);
   }
 
-  public async addLocationUserRole(locationId: string, userId: string, roles: string[]): Promise<LocationUserRole> {
+  public async addLocationUserRole(locationId: string, userId: string, roles: string[], shouldRefreshAcl: boolean = true): Promise<LocationUserRole> {
     const locationUserRole = await this.locationResolver.addLocationUserRole(locationId, userId, roles);
 
-    await this.refreshUserACL(userId);
+    if (shouldRefreshAcl) {
+      await this.refreshUserACL(userId);
+    }
 
     return locationUserRole;
   }
@@ -275,6 +328,27 @@ class LocationService {
       default: location.areas.default,
       custom: updatedLocation.areas.custom
     };
+  }
+
+  public async getAllParentIds(locationId: string): Promise<string[]> {
+    const location = await this.getLocation(locationId, { 
+      $select: {
+        id: true,
+        account: {
+          $select: {
+            id: true
+          }
+        }
+      }
+    });
+
+    if (O.isNone(location)) {
+      return [];
+    }
+
+    const parentIds = await this.locationTreeTable.getAllParents(location.value.account.id, locationId);
+
+    return parentIds.map(({ parent_id }) => parent_id);
   }
 
   private validateAreaDoesNotExist(areas: Areas, newAreaName: string, oldAreaName?: string): void {

@@ -5,7 +5,7 @@ import squel from 'squel';
 import { DatabaseReadClient, KeyMap } from '../DatabaseClient';
 
 export type PostgresQuery = { query?: squel.PostgresSelect }
-
+export type PostgresStatement = { text: string, values?: any[] };
 @injectable()
 class PostgresDbClient implements DatabaseReadClient {
 
@@ -27,7 +27,7 @@ class PostgresDbClient implements DatabaseReadClient {
         )
       )
       .toParam();
-    const result = await this._executeQuery(text, values);
+    const result = await this.execute(text, values);
 
     return (result.rows.length && result.rows[0]) || null;
   }
@@ -46,14 +46,34 @@ class PostgresDbClient implements DatabaseReadClient {
     }
 
     const { text, values } = query.from(tableName).toParam();
-    const result = await this._executeQuery(text, values);
+    const result = await this.execute(text, values);
 
     return result.rows;
   }
 
-  private async _executeQuery(query: string, values: any[]): Promise<postgres.QueryResult> {
+  public async execute(query: string, values: any[]): Promise<postgres.QueryResult> {
 
     return this.postgresPool.query(query, values);
+  }
+
+  public async executeTransaction(statements: PostgresStatement[]): Promise<void> {
+    const conn = await this.postgresPool.connect();
+
+    try {
+      await conn.query('BEGIN');
+
+      for (const { text, values } of statements) {
+        await conn.query(text, values)
+      }
+
+      await conn.query('COMMIT');
+
+    } catch (err) {
+      await conn.query('ROLLBACK');
+      throw err;
+    } finally {
+      conn.release();
+    }
   }
 }
 

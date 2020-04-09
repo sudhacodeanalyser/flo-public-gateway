@@ -10,6 +10,8 @@ import CachedUserTable from './CachedUserTable';
 import CachedUserDetailTable from './CachedUserDetailTable';
 import MemoizedUserLocationRoleTable from './MemoizedUserLocationRoleTable';
 import MemoziedUserAccountRoleTable from './MemoizedUserAccountRoleTable';
+import { UserInviteService } from './UserRegistrationService';
+import UserRegistrationTokenMetadataTable from './UserRegistrationTokenMetadataTable';
 
 export default new ContainerModule((bind: interfaces.Bind) => {
   bind<UserAccountRoleTable>('UserAccountRoleTable').to(MemoziedUserAccountRoleTable);
@@ -19,4 +21,7 @@ export default new ContainerModule((bind: interfaces.Bind) => {
   bind<UserResolver>('UserResolver').to(UserResolver);
   bind<UserService>('UserService').to(UserService);
   bind<string>('DefaultUserLocale').toConstantValue(config.defaultUserLocale);
+  bind<UserInviteService>('UserInviteService').to(UserInviteService);
+  bind<UserRegistrationTokenMetadataTable>('UserRegistrationTokenMetadataTable').to(UserRegistrationTokenMetadataTable);
+  bind<string>('RegistrationTokenSecret').toConstantValue(config.registrationTokenSecret);
 });

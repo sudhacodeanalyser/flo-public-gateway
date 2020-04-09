@@ -24,6 +24,7 @@
   "dependencies": {
     "@instana/collector": "1.72.0",
     "@instana/core": "1.72.0",
+    "@types/bcrypt": "^3.0.0",
     "@types/express-serve-static-core": "^4.17.0",
     "@types/glob": "^7.1.1",
     "@types/js-yaml": "^3.12.1",
@@ -31,6 +32,7 @@
     "agentkeepalive": "^4.1.0",
     "aws-sdk": "^2.437.0",
     "axios": "^0.18.0",
+    "bcrypt": "^4.0.1",
     "body-parser": "^1.18.3",
     "bunyan": "^1.8.12",
     "cors": "^2.8.5",
@@ -59,6 +61,7 @@
     "morphism": "^1.11.1",
     "pg": "^7.11.0",
     "reflect-metadata": "^0.1.13",
+    "sendwithus": "^4.3.0",
     "squel": "^5.12.2",
     "stripe": "^7.14.0",
     "swagger-jsdoc": "^3.2.9",
