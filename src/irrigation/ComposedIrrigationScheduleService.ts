@@ -18,29 +18,29 @@ class ComposedIrrigationScheduleService extends ApiV1IrrigationScheduleService {
   @inject('DependencyFactoryFactory') private depFactoryFactory: DependencyFactoryFactory;
 
   public async getDeviceComputedIrrigationSchedule(id: string): Promise<ComputedIrrigationSchedule> {
-    const floDetectSchedule = await this.getFloDetectIrrigationSchedule(id);
+    const deviceService = this.depFactoryFactory<DeviceService>('DeviceService')();
+    const device = await deviceService.getDeviceById(id, { $select: { macAddress: true } });
+
+    if (O.isNone(device)) {
+      throw new NotFoundError('Device not found.');
+    }
+    const macAddress = device.value.macAddress;
+    const floDetectSchedule = await this.getFloDetectIrrigationSchedule(macAddress);
 
     if (floDetectSchedule) {
       return floDetectSchedule;
     }
 
-    const result = await super.getDeviceComputedIrrigationSchedule(id);
-
-    return result;
+    return {
+      status: ComputationStatus.SCHEDULE_NOT_FOUND,
+      times: undefined,
+      macAddress: device.value.macAddress
+    };
   }
 
   @memoized()
-  private async getFloDetectIrrigationSchedule(id: string): Promise<ComputedIrrigationSchedule | null> {
+  private async getFloDetectIrrigationSchedule(macAddress: string): Promise<ComputedIrrigationSchedule | null> {
     try {
-      const deviceService = this.depFactoryFactory<DeviceService>('DeviceService')();
-
-      const device = await deviceService.getDeviceById(id, { $select: { macAddress: true } });
-   
-      if (O.isNone(device)) {
-        return null;
-      }
-
-      const macAddress  = device.value.macAddress;
       const floDetectIrrigationSchedule = await this.floDetectApi.getIrrigationSchedule(macAddress);
 
       if (floDetectIrrigationSchedule) {
