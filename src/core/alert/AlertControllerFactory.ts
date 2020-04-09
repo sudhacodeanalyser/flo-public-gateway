@@ -1,17 +1,19 @@
 import express from 'express';
 import * as Either from 'fp-ts/lib/Either';
+import * as O from 'fp-ts/lib/Option';
+import { pipe } from 'fp-ts/lib/pipeable';
 import { Container, inject } from 'inversify';
-import { BaseHttpController, httpGet, httpPost, interfaces, request, requestBody, requestParam, response } from 'inversify-express-utils';
+import { BaseHttpController, httpGet, httpPost, interfaces, request, requestBody, requestParam, response, httpDelete } from 'inversify-express-utils';
 import * as t from 'io-ts';
 import _ from 'lodash';
 import { $enum } from 'ts-enum-util';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
-import { AlarmEvent, AlarmSeverityCodec, AlertStatus, AlertStatusCodec, ClearAlertBody, ClearAlertBodyCodec, ClearAlertResponse, IncidentStatusReasonCodec, NotificationStatistics, PaginatedResult, UserFeedback, UserFeedbackCodec } from '../api';
-import { httpController } from '../api/controllerUtils';
+import { AlarmEvent, AlarmSeverityCodec, AlertStatus, AlertStatusCodec, ClearAlertBody, ClearAlertBodyCodec, ClearAlertResponse, IncidentStatusReasonCodec, NotificationStatistics, PaginatedResult, UserFeedback, UserFeedbackCodec, FilterState, FilterStateCodec } from '../api';
+import { httpController, deleteMethod } from '../api/controllerUtils';
 import Request from '../api/Request';
 import { NotificationServiceFactory } from '../notification/NotificationService';
-import { AlertService } from '../service';
+import { AlertService, UserService } from '../service';
 
 export function AlertControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
@@ -54,7 +56,8 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
   class AlertController extends BaseHttpController {
     constructor(
       @inject('NotificationServiceFactory') private notificationServiceFactory: NotificationServiceFactory,
-      @inject('AlertService') private alertService: AlertService
+      @inject('AlertService') private alertService: AlertService,
+      @inject('UserService') private userService: UserService
     ) {
       super();
     }
@@ -67,17 +70,6 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
         .notificationServiceFactory
         .create(req)
         .retrieveStatistics(filters);
-    }
-
-    @httpGet('/:id',
-      reqValidator.create(t.type({
-        params: t.type({
-          id: t.string
-        })
-      }))
-    )
-    private async getAlarmEvent(@requestParam('id') id: string): Promise<AlarmEvent> {
-      return this.alertService.getAlarmEvent(id);
     }
 
     @httpGet('/',
@@ -107,24 +99,39 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
             reason: t.union([t.string, t.array(IncidentStatusReasonCodec)]),
             isInternalAlarm: BooleanFromString,
             page: IntegerFromString,
-            size: IntegerFromString
+            size: IntegerFromString,
+            lang: t.string
           })
         ])
       }))
     )
     private async getAlarmEventsByFilter(@request() req: Request): Promise<PaginatedResult<AlarmEvent>> {
+      const defaultLang = 'en-us';
       const filters = req.url.split('?')[1] || '';
-
-      const combinedFilters = [
-        filters,
-        ...(
-          _.isEmpty(req.query.status) ?
-            $enum(AlertStatus).getValues().map(status => `status=${status}`) :
-            []
-        )
-      ].join('&');
-
-      return this.alertService.getAlarmEventsByFilter(combinedFilters);
+      const userId = req.token && req.token.user_id;
+      const lang = (req.query.lang ? 
+        [] : 
+        [
+          `lang=${userId ? (await pipe(
+              await this.userService.getUserById(userId),
+              O.map(async user => user.locale || defaultLang),
+              O.getOrElse(async (): Promise<string> => defaultLang)
+            )
+          ) : defaultLang}`
+        ]);
+       
+        const combinedFilters = [
+          filters,
+          ...(
+            _.isEmpty(req.query.status) ?
+              $enum(AlertStatus).getValues().map(status => `status=${status}`) :
+              []
+          ),
+          ...lang
+        ].join('&');
+  
+        return this.alertService.getAlarmEventsByFilter(combinedFilters);
+  
     }
 
     @httpPost('/action',
@@ -133,7 +140,7 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
         body: ClearAlertBodyCodec
       }))
     )
-    private async clearAlarm(@request() req: Request, @requestBody() data: ClearAlertBody): Promise<ClearAlertResponse> {
+    private async clearAlarms(@request() req: Request, @requestBody() data: ClearAlertBody): Promise<ClearAlertResponse> {
       const hasDeviceId = (obj: any): obj is { deviceId: string } => {
         return obj.deviceId !== undefined;
       };
@@ -143,15 +150,15 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
 
       const service = this.notificationServiceFactory.create(req);
 
-      const clearResponses = await Promise.all(data.alarmIds.map(alarmId => service.clearAlarm(alarmId, {
+      const clearResponse = await service.clearAlarms(data.alarmIds, {
         ...(hasDeviceId(data) && { deviceId: data.deviceId }),
         ...(hasLocationId(data) && { locationId: data.locationId }),
         snoozeSeconds: data.snoozeSeconds
-      })));
+      });
 
-      return clearResponses.reduce((acc, clearResponse) => ({
-        cleared: acc.cleared + clearResponse.cleared
-      }));
+      return {
+        cleared: clearResponse.cleared
+      };
     }
 
     @httpPost('/:id/userFeedback',
@@ -177,6 +184,67 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
       const tokenMetadata = req.token;
 
       return this.alertService.submitFeedback(alarmEvent, userFeedback, tokenMetadata && tokenMetadata.user_id);
+    }
+
+    @httpGet('/filters/:id',
+      authMiddlewareFactory.create(),
+      reqValidator.create(t.type({
+        params: t.type({
+          id: t.string,
+        })
+      }))
+    )
+    private async getFilterStateById(@request() req: Request, @requestParam('id') filterStateId: string): Promise<O.Option<FilterState>> {
+      return this.notificationServiceFactory.create(req).getFilterStateById(filterStateId);
+    }
+
+    @httpGet('/filters',
+      authMiddlewareFactory.create(),
+      reqValidator.create(t.type({
+        query: t.type({
+          deviceId: t.string,
+        })
+      }))
+    )
+    private async getFilterState(@request() req: Request): Promise<FilterState[]> {
+      return this.notificationServiceFactory.create(req).getFilterState(req.query);
+    }
+
+    @httpDelete('/filters/:id',
+      authMiddlewareFactory.create(),
+      reqValidator.create(t.type({
+        params: t.type({
+          id: t.string,
+        })
+      }))
+    )
+    @deleteMethod
+    private async deleteFilterState(@request() req: Request, @requestParam('id') filterStateId: string): Promise<void> {
+      return this.notificationServiceFactory.create(req).deleteFilterState(filterStateId);
+    }
+
+    @httpPost('/filters',
+      authMiddlewareFactory.create(),
+      reqValidator.create(t.type({
+        params: t.type({
+          id: t.string,
+        }),
+        body: FilterStateCodec
+      }))
+    )
+    private async createFilterState(@request() req: Request, @requestBody() filterState: FilterState): Promise<FilterState> {
+      return this.notificationServiceFactory.create(req).createFilterState(filterState);
+    }
+
+    @httpGet('/:id',
+      reqValidator.create(t.type({
+        params: t.type({
+          id: t.string
+        })
+      }))
+    )
+    private async getAlarmEvent(@requestParam('id') id: string): Promise<AlarmEvent> {
+      return this.alertService.getAlarmEvent(id);
     }
   }
 

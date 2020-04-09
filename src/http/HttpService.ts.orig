@@ -20,7 +20,10 @@ class HttpService {
   public authToken?: string;
   @inject('HttpClient') protected readonly httpClient: AxiosInstance;
   @injectHttpContext protected readonly httpContext: interfaces.HttpContext;
+<<<<<<< HEAD
+=======
   @inject('Logger') private readonly httpLogger: Logger;
+>>>>>>> Flo/dev
 
   public async sendRequest(request: HttpRequest): Promise<any> {
     try {

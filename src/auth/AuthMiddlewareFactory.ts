@@ -15,9 +15,10 @@ import { TokenMetadata, OAuth2TokenCodec, LegacyAuthTokenCodec } from './Token';
 import Logger from 'bunyan';
 import crypto from 'crypto';
 import config from '../config/config';
+import { DependencyFactoryFactory } from '../core/api';
 
 type Params = { [param: string]: any };
-type GetParams = (req: Request) => Promise<Params>;
+type GetParams = (req: Request, depFactoryFactory: DependencyFactoryFactory) => Promise<Params>;
 
 
 @injectable()
@@ -25,6 +26,7 @@ class AuthMiddlewareFactory {
   @inject('AuthUrl') private authUrl: string;
   @inject('RedisClient') private redisClient: Redis.Redis;
   @inject('HttpClient') private httpClient: AxiosInstance;
+  @inject('DependencyFactoryFactory') private depFactoryFactory: DependencyFactoryFactory;
 
   public create(getParams?: GetParams, overrideMethodId?: string): express.Handler {
     return async (req: Request, res: express.Response, next: express.NextFunction): Promise<void> => {
@@ -37,7 +39,7 @@ class AuthMiddlewareFactory {
       const logger = req.log;
       const path = overrideMethodId || req.route.path.split('/').map((p: string) => p.replace(/:.+/g, '$')).join('/');
       const methodId = req.method + path;
-      const params = getParams && (await getParams(req));
+      const params = getParams && (await getParams(req, this.depFactoryFactory));
       const tokenMetadata = await pipe(
         await this.checkCache(methodId, token, params, logger),
         Option.fold(
@@ -73,7 +75,7 @@ class AuthMiddlewareFactory {
     const formattedParams = !params ?
       [] :
       _.chain(params)
-        .map((value, key) => `${ key }_${ value }`)
+        .map((value, key) => `${ key }_${ _.isString(value) ? value : JSON.stringify(value) }`)
         .sortBy()
         .value();
 

@@ -2,6 +2,20 @@ import { HttpService } from '../../http/HttpService';
 import { inject, injectable } from 'inversify';
 import moment from 'moment-timezone';
 
+export interface WaterMeterDeviceData {
+  date: string;
+  used?: number;
+  rate?: number;
+  psi?: number;
+  temp?: number;
+  missing?: boolean; 
+}
+
+export interface WaterMeterDeviceReport {
+  macAddress: string;
+  items?: WaterMeterDeviceData[];
+}
+
 export interface WaterMeterReport {
   params: {
     macAddressList: string[];
@@ -9,17 +23,7 @@ export interface WaterMeterReport {
     endDate: string;
     interval: string;
   };
-  items: Array<{
-    macAddress: string;
-    items?: Array<{
-      date: string;
-      used?: number;
-      rate?: number;
-      psi?: number;
-      temp?: number;
-      missing?: boolean;
-    }>;
-  }>
+  items: WaterMeterDeviceReport[];
 }
 
 

@@ -1,4 +1,4 @@
-import { inject, injectable } from 'inversify';
+import { inject, injectable, targetName } from 'inversify';
 import { injectHttpContext, interfaces } from 'inversify-express-utils';
 import _ from 'lodash';
 import uuid from 'uuid';
@@ -13,6 +13,8 @@ import { UserLocationRoleRecord } from '../user/UserLocationRoleRecord';
 import UserLocationRoleTable from '../user/UserLocationRoleTable';
 import { LocationRecord, LocationRecordData } from './LocationRecord';
 import moment from 'moment';
+import LocationTreeTable from './LocationTreeTable';
+import ConflictError from '../api/error/ConflictError';
 
 const DEFAULT_LANG = 'en';
 const DEFAULT_AREAS_ID = 'areas.default';
@@ -37,24 +39,62 @@ class LocationResolver extends Resolver<Location> {
     },
     users: async (location: Location, shouldExpand = false, expandProps?: PropExpand) => {
       const locationUserRoles = await this.getAllUserRolesByLocationId(location.id);
+      const parents = await this.locationTreeTable.getAllParents(location.account.id, location.id);
+      const parentUsers = _.flatten(await Promise.all(
+        parents.map(({ parent_id }) => 
+          this.getAllUserRolesByLocationId(parent_id)
+        )
+      ))
+      .map(({ userId }) => userId);
+      const userIds = _.uniq([
+        ...parentUsers,
+        ...locationUserRoles.map(({ userId }) => userId)
+      ]);
 
       if (shouldExpand) {
         return Promise.all(
-          locationUserRoles.map(async (locationUserRole) => {
-            const user = await this.userResolverFactory().getUserById(locationUserRole.userId, expandProps);
+          userIds.map(async userId => {
+            const user = await this.userResolverFactory().getUserById(userId, expandProps);
 
             return {
               ...user,
-              id: locationUserRole.userId
+              id: userId
             };
           })
         );
       } else {
-        return locationUserRoles.map(({ userId }) => ({ id: userId }));
+        return userIds.map(id => ({ id }));
       }
     },
     userRoles: async (location: Location, shouldExpand = false) => {
-      return this.getAllUserRolesByLocationId(location.id);
+      const explicitUserRoles = await this.getAllUserRolesByLocationId(location.id);
+      const parents = await this.locationTreeTable.getAllParents(location.account.id, location.id);
+      const parentUserRoles = _.flatten(await Promise.all(
+        parents.map(async ({ parent_id }) => {
+          const userRoles = await this.getAllUserRolesByLocationId(parent_id);
+
+          return userRoles.map(userRole => ({ ...userRole, locationId: parent_id }));
+        })
+      )) as Array<{ userId: string, locationId: string, roles: string[] }>;
+
+      return _.chain([...explicitUserRoles, ...parentUserRoles])
+        .groupBy('userId')
+        .map((userRoles, userId) => {
+           return {
+             userId,
+             roles: _.chain(userRoles)
+               .filter((userRole: any) => !userRole.locationId)
+               .flatMap(({ roles }) => roles)
+               .value(),
+             inherited: parentUserRoles.length ? 
+                 _.chain(parentUserRoles)
+                   .filter({ userId })
+                   .map(({ roles, locationId }) => ({ roles, locationId }))
+                   .value() :
+                 undefined
+           }
+        })
+        .value();
     },
     account: async (location: Location, shouldExpand = false, expandProps?: PropExpand) => {
 
@@ -188,6 +228,70 @@ class LocationResolver extends Resolver<Location> {
           name: area.shortDisplay
         }))
       };
+    },
+    class: async (location: Location, shouldExpand = false, expandProps?: PropExpand) => {
+      const lists = await this.lookupServiceFactory().getByIds(['location_class_types']);
+      const classTypes = lists.location_class_types;
+
+      if (!classTypes || !classTypes.length) {
+        return null;
+      }
+
+      const locationClass = (
+        _.find(classTypes, item => item.key === location.class.key) ||
+        _.find(classTypes, item => !!(item.data || {}).isDefault)
+      );
+
+      if (locationClass) {
+        return {
+          key: locationClass.key,
+          level: locationClass.data.level
+        };
+      } else {
+        return null;
+      }
+
+    },
+    parent: async (location: Location, shouldExpand = false, expandProps?: PropExpand) => {
+
+      if (!location.parent) {
+        return location.parent;
+      }
+
+      if (shouldExpand) {
+        const parent = await this.get(location.parent.id, expandProps); 
+        return parent;
+      }
+
+      const parent = await this.get(location.parent.id, {
+        $select: {
+          nickname: true
+        }
+      });
+
+      return parent && {
+        id: location.parent.id,
+        nickname: parent.nickname || parent.address
+      };
+    },
+    children: async (location: Location, shouldExpand = false, expandProps?: PropExpand) => {
+      const childIds = await this.locationTreeTable.getImmediateChildren(location.account.id, location.id);
+      const children = await Promise.all(
+         childIds.map(async ({ child_id }) => {
+           if (shouldExpand) {
+             return this.get(child_id, expandProps);
+           } 
+
+           const child = await this.get(child_id, { $select: { nickname: true } });
+
+           return child && {
+             id: child_id,
+             nickname: child.nickname || child.address
+           }
+         })
+       );
+
+      return children.filter(child => child) as Array<Location | { id: string, nickname: string }>;
     }
   };
 
@@ -203,7 +307,8 @@ class LocationResolver extends Resolver<Location> {
     @inject('UserLocationRoleTable') private userLocationRoleTable: UserLocationRoleTable,
     @inject('DependencyFactoryFactory') depFactoryFactory: DependencyFactoryFactory,
     @inject('NotificationServiceFactory') notificationServiceFactory: NotificationServiceFactory,
-    @injectHttpContext private readonly httpContext: interfaces.HttpContext
+    @injectHttpContext private readonly httpContext: interfaces.HttpContext,
+    @inject('LocationTreeTable') private locationTreeTable: LocationTreeTable
   ) {
     super();
 
@@ -261,15 +366,21 @@ class LocationResolver extends Resolver<Location> {
     const accountId: string | null = await this.getAccountId(id);
 
     if (accountId !== null) {
+      const location = await this.get(id, { $select: { children: true, devices: true } });
+
+      if (location && ((location.children && location.children.length > 0) || (location.devices && location.devices.length > 0))) {
+        throw new ConflictError('Cannot delete a location that has children or devices attached.');
+      }
+
       // TODO: Make this transactional.
       // https://aws.amazon.com/blogs/aws/new-amazon-dynamodb-transactions/
       await Promise.all([
         this.locationTable.remove({ account_id: accountId, location_id: id }),
-
+        this.locationTreeTable.removeSubTree(accountId, id),
         this.removeLocationUsersAllByLocationId(id),
 
-        ...(await this.deviceResolverFactory().getAllByLocationId(id))
-          .map(async ({ id: icdId }) => this.deviceResolverFactory().remove(icdId)),
+        // ...(await this.deviceResolverFactory().getAllByLocationId(id))
+        //   .map(async ({ id: icdId }) => this.deviceResolverFactory().remove(icdId)),
 
         this.subscriptionResolverFactory().getByRelatedEntityId(id).then<false | void>(subscription =>
           subscription !== null && this.subscriptionResolverFactory().remove(subscription.id)

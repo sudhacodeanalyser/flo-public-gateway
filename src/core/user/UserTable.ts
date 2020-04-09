@@ -6,6 +6,7 @@ import { Patch } from '../../database/Patch';
 import _ from 'lodash';
 import { DynamoDbQuery } from '../../database/dynamo/DynamoDbClient';
 import ConflictError from '../api/error/ConflictError';
+import bcrypt from 'bcrypt';
 
 @injectable()
 class UserTable extends DatabaseTable<UserRecordData> {
@@ -17,11 +18,14 @@ class UserTable extends DatabaseTable<UserRecordData> {
     const email = item.email;
     const existingUser = email && (await this.getByEmail(email));
 
-    if (existingUser) {
+    if (existingUser && item.id !== existingUser.id) {
       throw new ConflictError('Email already in use.');
     }
 
-    return super.put(item);
+    return super.put({
+      ...item,
+      password: await this.hashPassword(item.password)
+    });
   }
 
   public async update(keys: KeyMap, patch: Patch): Promise<UserRecordData> {
@@ -30,9 +34,15 @@ class UserTable extends DatabaseTable<UserRecordData> {
     if (emailPatch) {
       const existingUser = await this.getByEmail(emailPatch.value);
 
-      if (existingUser) {
+      if (existingUser && keys.id !== existingUser.id) {
         throw new ConflictError('Email already in use.');
       }
+    }
+
+    const passwordPatch = _.find(patch.setOps, { key: 'password' });
+
+    if (passwordPatch) {
+      passwordPatch.value = await this.hashPassword(passwordPatch.value);
     }
 
     return super.update(keys, patch);
@@ -51,6 +61,10 @@ class UserTable extends DatabaseTable<UserRecordData> {
     });
 
     return result.length ? result[0] : null;
+  }
+
+  private async hashPassword(password: string): Promise<string> {
+    return bcrypt.hash(password, 10);
   }
 }
 

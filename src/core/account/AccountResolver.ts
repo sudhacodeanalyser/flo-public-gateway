@@ -18,7 +18,9 @@ class AccountResolver extends Resolver<Account> {
       }
     },
     locations: async (account: Account, shouldExpand: boolean = false, expandProps?: PropExpand) => {
-      return this.locationResolverFactory().getAllByAccountId(account.id, expandProps);
+      const locations = await this.locationResolverFactory().getAllByAccountId(account.id, expandProps);
+
+      return locations.filter(({ parent }) => !parent);
     },
     users: async (account: Account, shouldExpand: boolean = false, expandProps?: PropExpand) => {
       const accountUserRoles = await this.getAllAccountUserRolesByAccountId(account.id);
@@ -97,10 +99,9 @@ class AccountResolver extends Resolver<Account> {
   }
 
   public async updateAccountUserRole(accountId: string, userId: string, roles: string[]): Promise<AccountUserRole> {
-    const patch = fromPartialRecord({ roles });
-    const updatedUserAccountRoleRecordData = await this.userAccountRoleTable.update({ account_id: accountId, user_id: userId }, patch);
+    const upsertedUserAccountRoleRecordData = await this.userAccountRoleTable.put({ account_id: accountId, user_id: userId, roles });
 
-    return new UserAccountRoleRecord(updatedUserAccountRoleRecordData).toAccountUserRole();
+    return new UserAccountRoleRecord(upsertedUserAccountRoleRecordData).toAccountUserRole();
   }
 
   public async getAccountByOwnerUserId(ownerUserId: string): Promise<Account | null> {
