@@ -234,7 +234,7 @@ class WaterService {
         averageGpm: item.rate,
         averagePsi: item.psi,
         averageTempF: item.temp,
-        averageWeatherTempF: 69 // item.averageWeatherTempF
+        averageWeatherTempF: item.averageWeatherTempF
       }))
     };
   }
