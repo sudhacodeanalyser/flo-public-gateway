@@ -212,15 +212,14 @@ class WaterService {
     const start = this.formatDate(startDate, timezone);
     const end = this.formatDate(endDate, timezone);
     const waterReport = await this.getWaterMeterReport([macAddress], start, end, interval, timezone);
-    // const weatherData = await this.weatherApi.getTemperatureByAddress(
-    //   address, 
-    //   new Date(start), 
-    //   new Date(end), 
-    //   interval === WaterConsumptionInterval.ONE_HOUR ? '1h' : '24h'
-    // );
-    // const results = this.joinWeatherData(waterReport, weatherData);
-    // const items = (results.length && results[0].items) || [];
-    const items = (waterReport.items.length && waterReport.items[0].items) || [];
+    const weatherData = await this.weatherApi.getTemperatureByAddress(
+      address, 
+      new Date(start), 
+      new Date(end), 
+      interval === WaterConsumptionInterval.ONE_HOUR ? '1h' : '24h'
+    );
+    const results = this.joinWeatherData(waterReport, weatherData);
+    const items = (results.length && results[0].items) || [];
 
     return {
       params: {
