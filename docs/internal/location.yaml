@@ -188,6 +188,8 @@ paths:
                     - home
                     - away
                     - sleep
+                shouldCascade:
+                  type: boolean
       responses:
         200:
           description: System mode will be changed
