@@ -37,6 +37,7 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
     target: SystemModeCodec,
     revertMinutes: t.union([t.undefined, t.Int]),
     revertMode: t.union([t.undefined, SystemModeCodec]),
+    shouldCascade: t.union([t.undefined, t.boolean])
   });
 
   type UnbrandedSystemModeRequest = t.TypeOf<typeof UnbrandedSystemModeRequestCodec>;
