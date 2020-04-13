@@ -15,6 +15,7 @@ import { LocationResolver } from '../resolver';
 import { AccountService, DeviceService, SubscriptionService } from '../service';
 import moment from 'moment';
 import LocationTreeTable from './LocationTreeTable'
+import { pipe } from 'fp-ts/lib/pipeable';
 
 const { fromNullable, isNone } = O;
 type Option<T> = O.Option<T>;
@@ -188,10 +189,21 @@ class LocationService {
     }
   }
 
-  public async setSystemMode(id: string, deviceSystemModeService: DeviceSystemModeService, { target, revertMinutes, revertMode }: { target: SystemMode, revertMinutes?: number, revertMode?: SystemMode }): Promise<void> {
+  public async setSystemMode(id: string, deviceSystemModeService: DeviceSystemModeService, { target, revertMinutes, revertMode, shouldCascade }: { target: SystemMode, revertMinutes?: number, revertMode?: SystemMode, shouldCascade?: boolean }): Promise<void> {
     const deviceService = this.deviceServiceFactory();
     const devices = await deviceService.getAllByLocationId(id);
     const unlockedDevices = devices.filter(({ systemMode }) => !(systemMode && systemMode.isLocked));
+    const accountId = shouldCascade &&
+      pipe(
+        await this.getLocation(id, { $select: { account: { $select: { id: true } } } }),
+        O.fold(
+          () => undefined,
+          ({ account: { id: accId } }) => accId
+        )
+      );
+    const childLocations = shouldCascade && accountId ? 
+      (await this.locationTreeTable.getAllChildren(accountId, id)).map(({ child_id }) => child_id) :
+      [];
 
     if (devices.length && !unlockedDevices.length) {
 
@@ -204,8 +216,7 @@ class LocationService {
         .map(async device => {
 
           await deviceSystemModeService.sleep(device.id, revertMinutes || 0, revertMode || SystemMode.HOME);
-
-          return deviceService.updatePartialDevice(device.id, {
+          await deviceService.updatePartialDevice(device.id, {
             systemMode: {
               target,
               revertMinutes,
@@ -214,7 +225,15 @@ class LocationService {
               shouldInherit: true
             }
           });
-        });
+        })
+        .concat(
+          childLocations.map(childLocationId => 
+            this.setSystemMode(
+              childLocationId, 
+              deviceSystemModeService, 
+              { target, revertMinutes, revertMode })
+            )
+        );
 
       await Promise.all(promises);
       await this.locationResolver.updatePartialLocation(id, {
@@ -232,13 +251,21 @@ class LocationService {
 
           await deviceSystemModeService.setSystemMode(device.id, target);
 
-          return deviceService.updatePartialDevice(device.id, {
+          await deviceService.updatePartialDevice(device.id, {
             systemMode: {
               target,
               shouldInherit: true
             }
           });
-        });
+        })
+        .concat(
+          childLocations.map(childLocationId => 
+            this.setSystemMode(
+              childLocationId, 
+              deviceSystemModeService, 
+              { target, revertMinutes, revertMode })
+            )
+        );
 
       await Promise.all(promises);
       await this.locationResolver.updatePartialLocation(id, {
