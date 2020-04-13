@@ -9,7 +9,7 @@ import _ from 'lodash';
 import { $enum } from 'ts-enum-util';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
-import { AlarmEvent, AlarmSeverityCodec, AlertStatus, AlertStatusCodec, ClearAlertBody, ClearAlertBodyCodec, ClearAlertResponse, IncidentStatusReasonCodec, NotificationStatistics, PaginatedResult, UserFeedback, UserFeedbackCodec, FilterState, FilterStateCodec } from '../api';
+import { AlarmEvent, AlarmSeverityCodec, AlertStatus, AlertStatusCodec, ClearAlertBody, ClearAlertBodyCodec, ClearAlertResponse, IncidentStatusReasonCodec, NotificationStatistics, PaginatedResult, UserFeedback, UserFeedbackCodec, FilterState, FilterStateCodec, User } from '../api';
 import { httpController, deleteMethod } from '../api/controllerUtils';
 import Request from '../api/Request';
 import { NotificationServiceFactory } from '../notification/NotificationService';
@@ -75,63 +75,76 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
     @httpGet('/',
       authMiddlewareFactory.create(),
       reqValidator.create(t.type({
-        query: t.intersection([
-          t.union([
-            // Just locationId
-            t.type({
-              locationId: t.union([t.string, t.array(t.string)])
-            }),
-            // Just deviceId
-            t.type({
-              deviceId: t.union([t.string, t.array(t.string)])
-            }),
-            // Both together
-            t.type({
-              locationId: t.union([t.string, t.array(t.string)]),
-              deviceId: t.union([t.string, t.array(t.string)])
-            })
-          ]),
-          t.partial({
-            accountId: t.string,
-            groupId: t.string,
-            status: t.union([t.string, t.array(AlertStatusCodec)]),
-            severity: t.union([t.string, t.array(AlarmSeverityCodec)]),
-            reason: t.union([t.string, t.array(IncidentStatusReasonCodec)]),
-            isInternalAlarm: BooleanFromString,
-            page: IntegerFromString,
-            size: IntegerFromString,
-            lang: t.string
-          })
-        ])
+        query: t.partial({
+          userId: t.string,
+          locationId: t.union([t.string, t.array(t.string)]),
+          deviceId: t.union([t.string, t.array(t.string)]),
+          accountId: t.string,
+          groupId: t.string,
+          status: t.union([t.string, t.array(AlertStatusCodec)]),
+          severity: t.union([t.string, t.array(AlarmSeverityCodec)]),
+          reason: t.union([t.string, t.array(IncidentStatusReasonCodec)]),
+          isInternalAlarm: BooleanFromString,
+          page: IntegerFromString,
+          size: IntegerFromString,
+          lang: t.string
+        })
       }))
     )
     private async getAlarmEventsByFilter(@request() req: Request): Promise<PaginatedResult<AlarmEvent>> {
       const defaultLang = 'en-us';
-      const filters = req.url.split('?')[1] || '';
-      const userId = req.token && req.token.user_id;
-      const lang = (req.query.lang ? 
-        [] : 
-        [
-          `lang=${userId ? (await pipe(
-              await this.userService.getUserById(userId),
-              O.map(async user => user.locale || defaultLang),
-              O.getOrElse(async (): Promise<string> => defaultLang)
-            )
-          ) : defaultLang}`
-        ]);
-       
-        const combinedFilters = [
-          filters,
-          ...(
-            _.isEmpty(req.query.status) ?
-              $enum(AlertStatus).getValues().map(status => `status=${status}`) :
-              []
-          ),
-          ...lang
-        ].join('&');
-  
-        return this.alertService.getAlarmEventsByFilter(combinedFilters);
-  
+      const tokenUserId = req.token && req.token.user_id;
+
+      const noLocationOrDevice = !req.query.locationId && !req.query.deviceId;
+      const maybeUserId = req.query.userId || (tokenUserId && (req.query.lang || noLocationOrDevice) ? tokenUserId : undefined);
+      const maybeUser = await pipe(
+        O.fromNullable(maybeUserId),
+        O.map(async userId => this.userService.getUserById(userId, (req.query.userId || noLocationOrDevice) ? { $select: { locations: { $expand: true } } } : undefined )),
+        O.getOrElse(async (): Promise<O.Option<User>> => O.none)
+      )      
+      const lang = { 
+        lang: (req.query.lang ? 
+          req.query.lang :         
+            `${tokenUserId ? (pipe(
+              maybeUser,
+              O.fold(
+                (): string => defaultLang,
+                user => user.locale || defaultLang
+              )
+            )) 
+          : defaultLang}`) 
+      };
+        
+      const queryDeviceIds = req.query.deviceId ?
+        _.concat([], req.query.deviceId)
+        : [];
+
+      const userDeviceIds = pipe(
+        maybeUser,
+        O.fold(
+          (): string[] => [],
+          user => _.flatMap(user.locations, l => l.devices ? l.devices.map(d => d.id) : [])
+        )
+      );
+
+      const filters = {
+        ...req.query,
+        ...(_.isEmpty(req.query.status) && { status: $enum(AlertStatus).getValues() }),
+        ...lang,
+        deviceId: _.concat(queryDeviceIds, userDeviceIds)
+      }         
+
+      if (_.isEmpty(filters.deviceId) && _.isEmpty(filters.locationId) && noLocationOrDevice) {
+        // User ID has no device or locations associated.
+        return Promise.resolve({
+          items: [],
+          total: 0,
+          page: 0,
+          pageSize: 0
+        });
+      }
+
+      return this.alertService.getAlarmEventsByFilter(filters);  
     }
 
     @httpPost('/action',
