@@ -1,7 +1,6 @@
 import express from 'express';
 import * as Either from 'fp-ts/lib/Either';
 import * as O from 'fp-ts/lib/Option';
-import { pipe } from 'fp-ts/lib/pipeable';
 import { Container, inject } from 'inversify';
 import { BaseHttpController, httpGet, httpPost, interfaces, request, requestBody, requestParam, response, httpDelete } from 'inversify-express-utils';
 import * as t from 'io-ts';
@@ -96,36 +95,38 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
       const tokenUserId = req.token && req.token.user_id;
 
       const noLocationOrDevice = !req.query.locationId && !req.query.deviceId;
-      const maybeUserId = req.query.userId || (tokenUserId && (req.query.lang || noLocationOrDevice) ? tokenUserId : undefined);
-      const maybeUser = await pipe(
-        O.fromNullable(maybeUserId),
-        O.map(async userId => this.userService.getUserById(userId, (req.query.userId || noLocationOrDevice) ? { $select: { locations: { $expand: true } } } : undefined )),
-        O.getOrElse(async (): Promise<O.Option<User>> => O.none)
-      )      
+      const userId = req.query.userId || (tokenUserId && (!req.query.lang || noLocationOrDevice) ? tokenUserId : undefined);
+      
+      const retrieveUser = async (id: string, expandLocations: boolean) => {
+        const propExpand = expandLocations ? 
+        { 
+          $select: { 
+            locations: { 
+              $expand: true 
+            } 
+          } 
+        } 
+        : undefined;
+        return this.userService.getUserById(id,  propExpand);
+      };
+      
+      const user = userId ? O.toUndefined(await retrieveUser(userId, (req.query.userId || noLocationOrDevice))) : undefined;
+
       const lang = { 
         lang: (req.query.lang ? 
-          req.query.lang :         
-            `${tokenUserId ? (pipe(
-              maybeUser,
-              O.fold(
-                (): string => defaultLang,
-                user => user.locale || defaultLang
-              )
-            )) 
-          : defaultLang}`) 
+          req.query.lang :             
+            userId === tokenUserId ? 
+              user?.locale || defaultLang :
+              O.toUndefined(await retrieveUser(tokenUserId, false))?.locale || defaultLang)
       };
         
       const queryDeviceIds = req.query.deviceId ?
         _.concat([], req.query.deviceId)
         : [];
 
-      const userDeviceIds = pipe(
-        maybeUser,
-        O.fold(
-          (): string[] => [],
-          user => _.flatMap(user.locations, l => l.devices ? l.devices.map(d => d.id) : [])
-        )
-      );
+      const userDeviceIds = user ?
+        _.flatMap(user.locations, l => l.devices ? l.devices.map(d => d.id) : [])
+        : [];
 
       const filters = {
         ...req.query,
