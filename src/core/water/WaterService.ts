@@ -218,7 +218,7 @@ class WaterService {
       new Date(end), 
       '1h'
     );
-    const results = this.joinWeatherData(waterReport, weatherData);
+    const results = this.joinWeatherData(waterReport, weatherData, new Date(end));
     const items = (results.length && results[0].items) || [];
 
     return {
@@ -478,7 +478,7 @@ class WaterService {
     };
   }
 
-  private joinWeatherData(waterReport: WaterMeterReport, weatherData: WeatherData): WaterMeterDeviceReportWithWeather[] {
+  private joinWeatherData(waterReport: WaterMeterReport, weatherData: WeatherData, endDate: Date): WaterMeterDeviceReportWithWeather[] {
 
     return waterReport.items.map(deviceItems => {
 
@@ -494,17 +494,17 @@ class WaterService {
       const items: WaterMeterDeviceDataWithWeather[] = deviceItems.items
         .map((item, i) => {
           const nextItem = (deviceItems.items || [])[i + 1];
-          const endIndex = !nextItem ? undefined : _.findIndex(
+          const endIndex = _.findIndex(
             weatherData.items,
-            ({ time }) => moment(time).isSameOrAfter(nextItem.date), 
+            ({ time }) => moment(time).isSameOrAfter(nextItem ? nextItem.date : endDate), 
             startIndex
           );
-          const averageWeatherTempF = !weatherData.items.length || (endIndex !== undefined && endIndex <= 0) ?
+          const averageWeatherTempF = !weatherData.items.length || endIndex === undefined ?
             undefined :
             _.chain(weatherData.items)
               .slice(
                 startIndex,
-                endIndex
+                endIndex < 0 ? undefined : endIndex
               )
               .meanBy('temp')
               .value();
