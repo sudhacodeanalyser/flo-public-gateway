@@ -12,7 +12,8 @@ import {
   PaginatedResult, Receipt, SendWithUsEvent,
   TwilioStatusEvent,
   UpdateDeviceAlarmSettings,
-  FilterState
+  FilterState,
+  AlarmEventFilter
 } from '../core/api';
 import { DeviceService } from '../core/device/DeviceService';
 import { HttpService } from '../http/HttpService';
@@ -61,7 +62,7 @@ class ApiNotificationService {
     });
   }
 
-  public async getAlarmEventsByFilter(filters: any): Promise<PaginatedResult<AlarmEvent>> {
+  public async getAlarmEventsByFilter(filters: AlarmEventFilter): Promise<PaginatedResult<AlarmEvent>> {
     try {
       return await this.notificationApi.sendRequest({
         method: 'post',

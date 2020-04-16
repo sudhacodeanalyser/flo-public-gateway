@@ -84,6 +84,21 @@ export interface AlarmEvent extends TimestampedModel {
   userFeedback?: UserFeedback[]
 }
 
+export interface AlarmEventFilter {
+  accountId?: string;
+  groupId?: string;
+  locationId?: string[];
+  deviceId?: string[];
+  status?: string[];
+  severity?: string[];
+  reason?: string[];
+  createdAt?: string[];
+  isInternalAlarm?: boolean;
+  lang?: string;
+  page?: number;
+  size?: number;
+}
+
 export interface SimpleAlarm {
   id: number;
   name: string;
