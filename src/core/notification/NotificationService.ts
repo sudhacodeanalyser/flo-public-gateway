@@ -10,7 +10,8 @@ import {
   Receipt,
   TwilioStatusEvent,
   SendWithUsEvent,
-  FilterState
+  FilterState,
+  AlarmEventFilter
 } from '../api';
 import Request from '../api/Request';
 import {Option} from 'fp-ts/lib/Option';
@@ -32,7 +33,7 @@ export interface NotificationService {
   sendAlarm(alertInfo: any): Promise<string>;
   getAlarmEvent(id: string): Promise<AlarmEvent>;
   deleteAlarmEvent(id: string): Promise<void>;
-  getAlarmEventsByFilter(filters: any): Promise<PaginatedResult<AlarmEvent>>;
+  getAlarmEventsByFilter(filter: AlarmEventFilter): Promise<PaginatedResult<AlarmEvent>>;
   clearAlarms(alarmIds: number[], data: any): Promise<ClearAlertResponse>;
   getAlarmSettings(userId: string, deviceId: string): Promise<Option<DeviceAlarmSettings>>;
   getAlarmSettingsInBulk(userId: string, deviceIds: string[]): Promise<DeviceAlarmSettings[]>;
