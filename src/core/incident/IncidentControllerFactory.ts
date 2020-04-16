@@ -1,17 +1,16 @@
-import * as Either from 'fp-ts/lib/Either';
-import { pipe } from 'fp-ts/lib/pipeable';
+import * as O from 'fp-ts/lib/Option';
 import { Container, inject } from 'inversify';
-import { BaseHttpController, httpDelete, httpGet, httpPost, interfaces, request, requestBody, requestParam } from 'inversify-express-utils';
+import { BaseHttpController, httpGet, httpPost, interfaces, request, requestBody, requestParam } from 'inversify-express-utils';
 import * as t from 'io-ts';
 import _ from 'lodash';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import ReqValidationError from '../../validation/ReqValidationError';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
-import { AlarmEvent, AlertFeedback, NotificationStatistics, PaginatedResult, UserFeedback, UserFeedbackCodec } from '../api';
-import { createMethod, httpController } from '../api/controllerUtils';
+import { AlarmEvent, PaginatedResult } from '../api';
+import { httpController } from '../api/controllerUtils';
 import Request from '../api/Request';
 import { NotificationServiceFactory } from '../notification/NotificationService';
-import { AlertService } from '../service';
+import { AlertService, UserService } from '../service';
 
 
 export function IncidentControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
@@ -23,7 +22,8 @@ export function IncidentControllerFactory(container: Container, apiVersion: numb
   class EventController extends BaseHttpController {
     constructor(
       @inject('NotificationServiceFactory') private notificationServiceFactory: NotificationServiceFactory,
-      @inject('AlertService') private eventService: AlertService
+      @inject('AlertService') private alertService: AlertService,
+      @inject('UserService') private userService: UserService,
     ) {
       super();
     }
@@ -39,14 +39,62 @@ export function IncidentControllerFactory(container: Container, apiVersion: numb
     @httpGet('/',
       auth
     )
-    private async getIncidentByFilter(@request() req: Request): Promise<PaginatedResult<AlarmEvent>> {
-      const filters = req.url.split('?')[1] || '';
-
-      if (_.isEmpty(req.query.deviceId) && _.isEmpty(req.query.locationId)) {
-        throw new ReqValidationError('Missing deviceId or locationId parameters.');
+    private async getIncidentByFilter(@request() req: Request): Promise<PaginatedResult<AlarmEvent>> {      
+      if (_.isEmpty(req.query.deviceId) && _.isEmpty(req.query.locationId) && _.isEmpty(req.query.userId)) {
+        throw new ReqValidationError('Missing deviceId, locationId or userId parameters.');
       }
 
-      return this.eventService.getAlarmEventsByFilter(filters);
+      const defaultLang = 'en-us';
+      
+      const retrieveUser = async (id: string) => {
+        const propExpand =  { 
+          $select: { 
+            locations: { 
+              $expand: true
+            } 
+          } 
+        };
+        return this.userService.getUserById(id,  propExpand);
+      };
+      
+      const user = req.query.userId ? O.toUndefined(await retrieveUser(req.query.userId)) : undefined;
+      const lang = req.query.lang || defaultLang;
+        
+      const queryDeviceIds = req.query.deviceId ?
+        _.concat([], req.query.deviceId)
+        : [];
+
+      const userDeviceIds = user ?
+        _.flatMap(user.locations, l => l.devices ? l.devices.map(d => d.id) : [])
+        : [];
+
+      const deviceIds = _.concat(queryDeviceIds, userDeviceIds);
+      const locationId = _.concat([], req.query.locationId || []);
+      const status = _.concat([], req.query.status || []);
+      const severity = _.concat([], req.query.severity || []);
+      const reason = _.concat([], req.query.reason || []);
+
+      const filters = {
+        ...req.query,
+        ...lang,
+        ...(!_.isEmpty(deviceIds) && { deviceId: deviceIds }),
+        ...(!_.isEmpty(locationId) && { locationId }),
+        ...(!_.isEmpty(status) && { status }),
+        ...(!_.isEmpty(severity) && { severity }),
+        ...(!_.isEmpty(reason) && { reason })
+      }
+      
+      if (_.isEmpty(filters.deviceId) && _.isEmpty(filters.locationId) && req.query.userId) {
+        // User ID has no device or locations associated.
+        return Promise.resolve({
+          items: [],
+          total: 0,
+          page: 0,
+          pageSize: 0
+        });
+      }
+
+      return this.alertService.getAlarmEventsByFilter(filters);
     }
 
     @httpGet('/:id',
@@ -58,7 +106,7 @@ export function IncidentControllerFactory(container: Container, apiVersion: numb
       }))
     )
     private async getIncident(@requestParam('id') id: string): Promise<AlarmEvent> {
-      return this.eventService.getAlarmEvent(id);
+      return this.alertService.getAlarmEvent(id);
     }
   }
 

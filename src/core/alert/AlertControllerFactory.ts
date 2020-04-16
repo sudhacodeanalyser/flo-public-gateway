@@ -102,7 +102,7 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
         { 
           $select: { 
             locations: { 
-              $expand: true 
+              $expand: true   
             } 
           } 
         } 
@@ -114,7 +114,7 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
 
       const lang = { 
         lang: (req.query.lang ? 
-          req.query.lang :             
+          req.query.lang :
             userId === tokenUserId ? 
               user?.locale || defaultLang :
               O.toUndefined(await retrieveUser(tokenUserId, false))?.locale || defaultLang)
@@ -128,12 +128,21 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
         _.flatMap(user.locations, l => l.devices ? l.devices.map(d => d.id) : [])
         : [];
 
+      const deviceIds = _.concat(queryDeviceIds, userDeviceIds);
+      const locationId = _.concat([], req.query.locationId || []);
+      const status = _.concat([], req.query.status || $enum(AlertStatus).getValues());
+      const severity = _.concat([], req.query.severity || []);
+      const reason = _.concat([], req.query.reason || []);
+
       const filters = {
         ...req.query,
-        ...(_.isEmpty(req.query.status) && { status: $enum(AlertStatus).getValues() }),
         ...lang,
-        deviceId: _.concat(queryDeviceIds, userDeviceIds)
-      }         
+        ...(!_.isEmpty(deviceIds) && { deviceId: deviceIds }),
+        ...(!_.isEmpty(locationId) && { locationId }),
+        ...(!_.isEmpty(status) && { status }),
+        ...(!_.isEmpty(severity) && { severity }),
+        ...(!_.isEmpty(reason) && { reason })
+      }
 
       if (_.isEmpty(filters.deviceId) && _.isEmpty(filters.locationId) && noLocationOrDevice) {
         // User ID has no device or locations associated.
@@ -145,7 +154,7 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
         });
       }
 
-      return this.alertService.getAlarmEventsByFilter(filters);  
+      return this.alertService.getAlarmEventsByFilter(filters);
     }
 
     @httpPost('/action',
