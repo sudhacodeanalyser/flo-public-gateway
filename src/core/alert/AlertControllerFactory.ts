@@ -1,7 +1,6 @@
 import express from 'express';
 import * as Either from 'fp-ts/lib/Either';
 import * as O from 'fp-ts/lib/Option';
-import { pipe } from 'fp-ts/lib/pipeable';
 import { Container, inject } from 'inversify';
 import { BaseHttpController, httpGet, httpPost, interfaces, request, requestBody, requestParam, response, httpDelete } from 'inversify-express-utils';
 import * as t from 'io-ts';
@@ -9,7 +8,7 @@ import _ from 'lodash';
 import { $enum } from 'ts-enum-util';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
-import { AlarmEvent, AlarmSeverityCodec, AlertStatus, AlertStatusCodec, ClearAlertBody, ClearAlertBodyCodec, ClearAlertResponse, IncidentStatusReasonCodec, NotificationStatistics, PaginatedResult, UserFeedback, UserFeedbackCodec, FilterState, FilterStateCodec } from '../api';
+import { AlarmEvent, AlarmSeverityCodec, AlertStatus, AlertStatusCodec, ClearAlertBody, ClearAlertBodyCodec, ClearAlertResponse, IncidentStatusReasonCodec, NotificationStatistics, PaginatedResult, UserFeedback, UserFeedbackCodec, FilterState, FilterStateCodec, User } from '../api';
 import { httpController, deleteMethod } from '../api/controllerUtils';
 import Request from '../api/Request';
 import { NotificationServiceFactory } from '../notification/NotificationService';
@@ -75,63 +74,87 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
     @httpGet('/',
       authMiddlewareFactory.create(),
       reqValidator.create(t.type({
-        query: t.intersection([
-          t.union([
-            // Just locationId
-            t.type({
-              locationId: t.union([t.string, t.array(t.string)])
-            }),
-            // Just deviceId
-            t.type({
-              deviceId: t.union([t.string, t.array(t.string)])
-            }),
-            // Both together
-            t.type({
-              locationId: t.union([t.string, t.array(t.string)]),
-              deviceId: t.union([t.string, t.array(t.string)])
-            })
-          ]),
-          t.partial({
-            accountId: t.string,
-            groupId: t.string,
-            status: t.union([t.string, t.array(AlertStatusCodec)]),
-            severity: t.union([t.string, t.array(AlarmSeverityCodec)]),
-            reason: t.union([t.string, t.array(IncidentStatusReasonCodec)]),
-            isInternalAlarm: BooleanFromString,
-            page: IntegerFromString,
-            size: IntegerFromString,
-            lang: t.string
-          })
-        ])
+        query: t.partial({
+          userId: t.string,
+          locationId: t.union([t.string, t.array(t.string)]),
+          deviceId: t.union([t.string, t.array(t.string)]),
+          accountId: t.string,
+          groupId: t.string,
+          status: t.union([t.string, t.array(AlertStatusCodec)]),
+          severity: t.union([t.string, t.array(AlarmSeverityCodec)]),
+          reason: t.union([t.string, t.array(IncidentStatusReasonCodec)]),
+          isInternalAlarm: BooleanFromString,
+          page: IntegerFromString,
+          size: IntegerFromString,
+          lang: t.string
+        })
       }))
     )
     private async getAlarmEventsByFilter(@request() req: Request): Promise<PaginatedResult<AlarmEvent>> {
       const defaultLang = 'en-us';
-      const filters = req.url.split('?')[1] || '';
-      const userId = req.token && req.token.user_id;
-      const lang = (req.query.lang ? 
-        [] : 
-        [
-          `lang=${userId ? (await pipe(
-              await this.userService.getUserById(userId),
-              O.map(async user => user.locale || defaultLang),
-              O.getOrElse(async (): Promise<string> => defaultLang)
-            )
-          ) : defaultLang}`
-        ]);
-       
-        const combinedFilters = [
-          filters,
-          ...(
-            _.isEmpty(req.query.status) ?
-              $enum(AlertStatus).getValues().map(status => `status=${status}`) :
-              []
-          ),
-          ...lang
-        ].join('&');
-  
-        return this.alertService.getAlarmEventsByFilter(combinedFilters);
-  
+      const tokenUserId = req.token && req.token.user_id;
+
+      const noLocationOrDevice = !req.query.locationId && !req.query.deviceId;
+      const userId = req.query.userId || (tokenUserId && (!req.query.lang || noLocationOrDevice) ? tokenUserId : undefined);
+      
+      const retrieveUser = async (id: string, expandLocations: boolean) => {
+        const propExpand = expandLocations ? 
+        { 
+          $select: { 
+            locations: { 
+              $expand: true   
+            } 
+          } 
+        } 
+        : undefined;
+        return this.userService.getUserById(id,  propExpand);
+      };
+      
+      const user = userId ? O.toUndefined(await retrieveUser(userId, (req.query.userId || noLocationOrDevice))) : undefined;
+
+      const lang = { 
+        lang: (req.query.lang ? 
+          req.query.lang :
+            userId === tokenUserId ? 
+              user?.locale || defaultLang :
+              O.toUndefined(await retrieveUser(tokenUserId, false))?.locale || defaultLang)
+      };
+        
+      const queryDeviceIds = req.query.deviceId ?
+        _.concat([], req.query.deviceId)
+        : [];
+
+      const userDeviceIds = user ?
+        _.flatMap(user.locations, l => l.devices ? l.devices.map(d => d.id) : [])
+        : [];
+
+      const deviceIds = _.concat(queryDeviceIds, userDeviceIds);
+      const locationId = _.concat([], req.query.locationId || []);
+      const status = _.concat([], req.query.status || $enum(AlertStatus).getValues());
+      const severity = _.concat([], req.query.severity || []);
+      const reason = _.concat([], req.query.reason || []);
+
+      const filters = {
+        ...req.query,
+        ...lang,
+        ...(!_.isEmpty(deviceIds) && { deviceId: deviceIds }),
+        ...(!_.isEmpty(locationId) && { locationId }),
+        ...(!_.isEmpty(status) && { status }),
+        ...(!_.isEmpty(severity) && { severity }),
+        ...(!_.isEmpty(reason) && { reason })
+      }
+
+      if (_.isEmpty(filters.deviceId) && _.isEmpty(filters.locationId) && noLocationOrDevice) {
+        // User ID has no device or locations associated.
+        return Promise.resolve({
+          items: [],
+          total: 0,
+          page: 0,
+          pageSize: 0
+        });
+      }
+
+      return this.alertService.getAlarmEventsByFilter(filters);
     }
 
     @httpPost('/action',
