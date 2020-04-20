@@ -694,7 +694,12 @@ components:
               health:
                 type: string
               updated:
-                type: date-time            
+                type: date-time
+        healthTest:
+          type: object
+          properties:
+            config:
+              $ref: '#/components/schemas/HealthTestConfig'
 
     IrrigationType:
       type: string
@@ -835,21 +840,7 @@ components:
                 latest:
                   $ref: '#/components/schemas/HealthTest'
                 config:
-                  type: object
-                  properties:
-                    scheduler:
-                      type: string
-                      enum:
-                        - manual
-                        - auto
-                        - disabled
-                    timesPerDay:
-                      type: number
-                    times:
-                      type: array
-                      items:
-                        type: string
-                        format: ^\d{2}:\d{2}$\
+                  $ref: '#/components/schemas/HealthTestConfig'
             shutoff:
               type: object
               properties:
@@ -934,7 +925,22 @@ components:
           $ref: '#/components/schemas/ThresholdDefinition'
         battery:
           $ref: '#/components/schemas/ThresholdDefinition'
-
+    HealthTestConfig:
+      type: object
+      properties:
+        scheduler:
+          type: string
+          enum:
+            - manual
+            - auto
+            - disabled
+        timesPerDay:
+          type: number
+        times:
+          type: array
+          items:
+            type: string
+            format: ^\d{2}:\d{2}$\
     HealthTest:
       type: object
       properties:
