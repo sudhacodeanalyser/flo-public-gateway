@@ -1,7 +1,7 @@
 import { injectable, inject } from 'inversify';
 import AlertFeedbackTable from './AlertFeedbackTable';
 import { AlertFeedbackRecord } from './AlertFeedbackRecord';
-import { AlarmEvent, UserFeedback, UserFeedbackCodec, PaginatedResult, AlertFeedback } from '../api';
+import { AlarmEvent, UserFeedback, UserFeedbackCodec, PaginatedResult, AlertFeedback, AlarmEventFilter } from '../api';
 import * as Option from 'fp-ts/lib/Option';
 import * as Either from 'fp-ts/lib/Either';
 import { pipe } from 'fp-ts/lib/pipeable';
@@ -57,7 +57,7 @@ class AlertService {
 
 
 
-  public async getAlarmEventsByFilter(filters: any): Promise<PaginatedResult<AlarmEvent>> {
+  public async getAlarmEventsByFilter(filters: AlarmEventFilter): Promise<PaginatedResult<AlarmEvent>> {
     const alarmEvents = await this.notificationServiceFactory().getAlarmEventsByFilter(filters);
     const alarmEventsWithFeedback = await Promise.all(
       alarmEvents.items.map(async alarmEvent => this.joinAlarmEventWithFeedback(alarmEvent))

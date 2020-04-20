@@ -6,6 +6,8 @@ import { convertEnumtoCodec } from '../../api/enumUtils';
 import { NonEmptyString } from '../../api/validator/NonEmptyString';
 import { HealthTest } from '../../device/HealthTestService';
 import { ComputedIrrigationSchedule } from '../../device/IrrigationScheduleService';
+import { FormattedString } from '../../api/validator/FormattedString';
+import { ArrayUpToLength } from '../../api/validator/ArrayUpToLength';
 
 export enum ValveState {
   OPEN = 'open',
@@ -107,6 +109,29 @@ const DeviceCreateCodec = t.type({
 export const DeviceCreateValidator = t.exact(DeviceCreateCodec);
 export type DeviceCreate = t.TypeOf<typeof DeviceCreateValidator>;
 
+export const HealthTestTimeCodec = FormattedString((s: string) => {
+  return /\d\d:\d\d/.test(s);
+});
+
+export const HealthTestAttemptTimesCodec = ArrayUpToLength(HealthTestTimeCodec, 3);
+
+export const HealthTestTimeConfigCodec = t.union([
+  t.type({
+    scheduler: t.literal('disabled')
+  }),
+  t.type({
+    scheduler: t.literal('manual'),
+    times: HealthTestAttemptTimesCodec,
+    timesPerDay: t.union([t.undefined, t.number])
+  }),
+  t.type({
+    scheduler: t.literal('auto'),
+    timesPerDay: t.union([t.undefined, t.number])
+  })
+]);
+
+export type HealthTestTimeConfig = t.TypeOf<typeof HealthTestTimeConfigCodec>;
+
 export const DeviceUpdateValidator = t.exact(t.intersection([
   t.partial(DeviceMutableCodec.props),
   t.partial({
@@ -121,6 +146,11 @@ export const DeviceUpdateValidator = t.exact(t.intersection([
   }),
   t.partial({
     hardwareThresholds: t.exact(t.partial(HardwareThresholdsCodec.props))
+  }),
+  t.partial({
+    healthTest: t.type({
+      config: HealthTestTimeConfigCodec
+    })
   })
 ]));
 
@@ -160,7 +190,7 @@ interface Battery {
   updated?: string;
 }
 
-export interface Device extends Omit<DeviceUpdate, 'valve' | 'puckConfig' | 'audio'>, TimestampedModel {
+export interface Device extends Omit<DeviceUpdate, 'valve' | 'puckConfig' | 'audio' | 'healthTest'>, TimestampedModel {
   id: string;
   macAddress: string;
   location: Expandable<Location>;
@@ -190,7 +220,8 @@ export interface Device extends Omit<DeviceUpdate, 'valve' | 'puckConfig' | 'aud
   pairingData?: PairingData;
   serialNumber?: string;
   healthTest?: {
-    latest?: HealthTest
+    latest?: HealthTest,
+    config?: HealthTestTimeConfig
   };
   puckConfig?: {
     isConfigured: boolean;
