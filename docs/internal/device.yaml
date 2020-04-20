@@ -834,6 +834,22 @@ components:
               properties:
                 latest:
                   $ref: '#/components/schemas/HealthTest'
+                config:
+                  type: object
+                  properties:
+                    scheduler:
+                      type: string
+                      enum:
+                        - manual
+                        - auto
+                        - disabled
+                    timesPerDay:
+                      type: number
+                    times:
+                      type: array
+                      items:
+                        type: string
+                        format: ^\d{2}:\d{2}$\
             shutoff:
               type: object
               properties:

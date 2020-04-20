@@ -5,7 +5,7 @@ import _ from 'lodash';
 import uuid from 'uuid';
 import { fromPartialRecord } from '../../database/Patch';
 import { InternalDeviceService } from "../../internal-device-service/InternalDeviceService";
-import { DependencyFactoryFactory, Device, DeviceCreate, DeviceModelType, DevicePairingDataCodec, DeviceSystemModeNumeric, DeviceType, DeviceUpdate, PropExpand, SystemMode, ValveState, ValveStateNumeric, AdditionalDevicePropsCodec, PuckPairingDataCodec, PairingData } from '../api';
+import { HealthTestAttemptTimesCodec, DependencyFactoryFactory, Device, DeviceCreate, DeviceModelType, DevicePairingDataCodec, DeviceSystemModeNumeric, DeviceType, DeviceUpdate, PropExpand, SystemMode, ValveState, ValveStateNumeric, AdditionalDevicePropsCodec, PuckPairingDataCodec, PairingData } from '../api';
 import { translateNumericToStringEnum } from '../api/enumUtils';
 import DeviceTable from '../device/DeviceTable';
 import { NotificationService, NotificationServiceFactory } from '../notification/NotificationService';
@@ -25,6 +25,7 @@ import { NonEmptyStringFactory } from '../api/validator/NonEmptyString';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import { MachineLearningService } from '../../machine-learning/MachineLearningService';
 import { PuckTokenService } from './PuckTokenService';
+import ConflictError from '../api/error/ConflictError';
 
 const defaultHwThresholds = (deviceModel: string) => {
   const minZero = {
@@ -269,12 +270,62 @@ class DeviceResolver extends Resolver<Device> {
       return this.notificationService.retrieveStatistics(`deviceId=${device.id}`);
     },
     healthTest: async (device: Device, shouldExpand = false) => {
-      if (!shouldExpand) {
-        return null;
+      const latest = shouldExpand ?
+        (await this.healthTestService.getLatest(device.macAddress)) : 
+        undefined;
+      const healthTest = {
+        ...(latest && ({ latest }))
+      };
+      const additionalProperties = await this.internalDeviceService.getDevice(device.macAddress);
+
+      if (additionalProperties && additionalProperties.fwProperties) {
+        if (additionalProperties.fwProperties.ht_scheduler === 'ultima') {
+          const times = pipe(
+            HealthTestAttemptTimesCodec.decode(
+              [
+                additionalProperties.fwProperties.ht_scheduler_ultima_allotted_time_1,
+                additionalProperties.fwProperties.ht_scheduler_ultima_allotted_time_2,
+                additionalProperties.fwProperties.ht_scheduler_ultima_allotted_time_3
+              ]
+              .filter(time => time && !_.isEmpty(time))
+            ),
+            Either.fold(
+              () => undefined,
+              result => result
+            )
+          );
+            
+          return {
+            ...healthTest,
+            ...(times && {
+              config: {
+                scheduler: 'manual',
+                timesPerDay: additionalProperties.fwProperties.ht_times_per_day,
+                times
+              }
+            })
+          };
+        } else if (additionalProperties.fwProperties.ht_times_per_day === 0) {
+
+          return {
+            ...healthTest,
+            config: {
+              scheduler: 'disabled'
+            }
+          };
+        } else {
+
+          return {
+            ...healthTest,
+            config: {
+              scheduler: 'auto',
+              timesPerDay: additionalProperties.fwProperties.ht_times_per_day
+            }
+          };
+        }
       }
 
-      const latest = await this.healthTestService.getLatest(device.macAddress);
-      return (!latest) ? null : { latest };
+      return healthTest;
     },
     hardwareThresholds: async (device: Device, shouldExpand = false) => {
       const additionalProperties = await this.internalDeviceService.getDevice(device.macAddress);
@@ -545,9 +596,25 @@ class DeviceResolver extends Resolver<Device> {
     const deviceRecordData = DeviceRecord.fromPartialModel(deviceUpdate);
     const patch = fromPartialRecord<DeviceRecordData>(deviceRecordData, ['puck_configured_at']);
 
-    const updatedDeviceRecordData = await this.deviceTable.update({ id }, patch);
+    if (_.isEmpty(patch) || (_.isEmpty(patch.setOps) && _.isEmpty(patch.appendOps) && _.isEmpty(patch.removeOps))) {
+      const device = await this.get(id);
 
-    return this.toModel(updatedDeviceRecordData);
+      if (!device) {
+        throw new ConflictError('Device does not exist.');
+      }
+
+      await this.updateFwProperties(device.macAddress, deviceUpdate);
+
+      return device;
+
+    } else {
+      const updatedDeviceRecordData = await this.deviceTable.update({ id }, patch);
+
+      await this.updateFwProperties(updatedDeviceRecordData.device_id, deviceUpdate);
+
+      return this.toModel(updatedDeviceRecordData);
+    }
+
   }
 
   public async remove(id: string): Promise<void> {
@@ -593,6 +660,56 @@ class DeviceResolver extends Resolver<Device> {
       return {};
     } else {
       return super.resolveProp<K>(model, prop, shouldExpand, expandProps);
+    }
+  }
+
+  private async updateFwProperties(macAddress: string, deviceUpdate: DeviceUpdate): Promise<void> {
+    const healthTestConfig = deviceUpdate.healthTest && deviceUpdate.healthTest.config;
+    let fwProperties = {};
+
+    if (healthTestConfig) {
+      if (healthTestConfig.scheduler === 'disabled') {
+
+        fwProperties = {
+          ...fwProperties,
+          ht_scheduler: 'flosense',
+          ht_times_per_day: 0,
+          ht_scheduler_ultima_allotted_time_1: '',
+          ht_scheduler_ultima_allotted_time_2: '',
+          ht_scheduler_ultima_allotted_time_3: ''
+        };
+
+      } else if (healthTestConfig.scheduler === 'auto') {
+
+        fwProperties = {
+          ...fwProperties,
+          ht_scheduler: 'flosense',
+          ht_times_per_day: healthTestConfig.timesPerDay || 1,
+          ht_scheduler_ultima_allotted_time_1: '',
+          ht_scheduler_ultima_allotted_time_2: '',
+          ht_scheduler_ultima_allotted_time_3: ''
+        };
+
+      } else if (healthTestConfig.scheduler === 'manual') {
+
+        fwProperties = {
+          ...fwProperties,
+          ht_scheduler: 'ultima',
+          ht_times_per_day: healthTestConfig.timesPerDay || 1,
+          ...[
+            'ht_scheduler_ultima_allotted_time_1', 
+            'ht_scheduler_ultima_allotted_time_2',
+            'ht_scheduler_ultima_allotted_time_3'
+           ].reduce((acc, allottedTime, i) => ({
+             ...acc,
+             [allottedTime]: healthTestConfig.times[i] || ''
+           }), {})
+        };
+      }
+    }
+
+    if (!_.isEmpty(fwProperties)) {
+      await this.internalDeviceService.setDeviceFwProperties(macAddress, fwProperties);
     }
   }
 
