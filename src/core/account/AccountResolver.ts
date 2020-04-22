@@ -1,6 +1,6 @@
 import { inject, injectable } from 'inversify';
 import { AccountRecordData, AccountRecord } from './AccountRecord';
-import { Account, AccountUserRole, DependencyFactoryFactory, PropExpand } from '../api';
+import { AccountMutable, Account, AccountUserRole, DependencyFactoryFactory, PropExpand } from '../api';
 import { Resolver, PropertyResolverMap, LocationResolver, UserResolver } from '../resolver';
 import AccountTable from './AccountTable';
 import UserAccountRoleTable from '../user/UserAccountRoleTable';
@@ -123,6 +123,14 @@ class AccountResolver extends Resolver<Account> {
           new UserAccountRoleRecord(userAccountRoleRecordDatum).toAccountUserRole()
         )
     );
+  }
+
+  public async updatePartial(id: string, accountUpdate: AccountMutable): Promise<Account> {
+    const accountRecordData = AccountRecord.fromPartialModel(accountUpdate);
+    const patch = fromPartialRecord(accountRecordData);
+    const updatedAccountRecordData = await this.accountTable.update({ id }, patch);
+
+    return new AccountRecord(updatedAccountRecordData).toModel();
   }
 }
 

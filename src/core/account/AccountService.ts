@@ -1,5 +1,5 @@
 import { injectable, inject } from 'inversify';
-import { Account, AccountUserRole, UserInvite, UserCreate, PropExpand, DependencyFactoryFactory, User, InviteAcceptData } from '../api';
+import { AccountMutable, Account, AccountUserRole, UserInvite, UserCreate, PropExpand, DependencyFactoryFactory, User, InviteAcceptData } from '../api';
 import { UserInviteService, InviteTokenData } from '../user/UserRegistrationService';
 import { AccountResolver } from '../resolver';
 import { Option, fromNullable } from 'fp-ts/lib/Option';
@@ -138,6 +138,10 @@ class AccountService {
 
   public async revokeInvitation(email: string): Promise<void> {
     return this.userInviteService.revoke(email);
+  }
+
+  public async updateAccount(id: string, accountUpdate: AccountMutable): Promise<Account> {
+    return this.accountResolver.updatePartial(id, accountUpdate);
   }
 }
 
