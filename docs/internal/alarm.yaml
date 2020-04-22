@@ -108,6 +108,9 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AlertFeedbackFlow'
+        userFeedbackOptions:
+          type: object
+          $ref: '#/components/schemas/UserFeedbackOptions'
         deliveryMedium:
           type: object
           properties:
@@ -143,6 +146,61 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Action'
+
+    FeedbackOption:
+      type: object
+      properties:
+        id: 
+          type: string
+        type:
+          type: string
+          enum:
+            - list
+            - card
+            - item
+        displayName:
+          type: string
+        displayTitle:
+          type: string
+        value:
+          type: string
+        sortOrder:
+          type: number
+        sortRandom:
+          type: boolean
+        icon:
+          type: object
+          properties:
+            tag:
+              type: string
+            imageUrl:
+              type: string
+        options:
+          type: array
+          items:
+            $ref: '#/components/schemas/FeedbackOption'
+        optionsKey:
+          type: string
+        actions:
+          type: array
+          items:
+            type: string
+            enum:
+              - resolve-incident
+              - sleep-device
+
+    UserFeedbackOptions:
+      type: object
+      properties:
+        id:
+          type: string
+        feedback:
+          type: object
+          $ref: '#/components/schemas/FeedbackOption'
+        optionsKeyList:
+          type: array
+          items:
+            $ref: '#/components/schemas/FeedbackOption'
 
     Action:
       type: object
