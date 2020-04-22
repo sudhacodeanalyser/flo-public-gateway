@@ -4,7 +4,7 @@ import { inject, Container } from 'inversify';
 import { AccountService, UserService } from '../service';
 import { parseExpand, httpController, deleteMethod, withResponseType } from '../api/controllerUtils';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
-import { Account, AccountUserRole, UserInviteCodec, UserCreate, InviteAcceptValidator, InviteAcceptData, User } from '../api';
+import { AccountMutable, AccountMutableCodec, Account, AccountUserRole, UserInviteCodec, UserCreate, InviteAcceptValidator, InviteAcceptData, User } from '../api';
 import { InviteTokenData } from '../user/UserRegistrationService';
 import { NonEmptyArray } from '../api/validator/NonEmptyArray';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
@@ -66,6 +66,21 @@ export function AccountControllerFactory(container: Container, apiVersion: numbe
       const expandProps = parseExpand(expand);
       
       return this.accountService.getAccountById(id, expandProps);
+    }
+
+    @httpPost('/:id',
+      authWithId,
+      reqValidator.create(t.type({
+        params: t.type({
+          id: t.string
+        }),
+        body: AccountMutableCodec
+      }))
+    )
+    @withResponseType<Account, Responses.AccountResponse>(Responses.Account.fromModel)
+    private async updateAccount(@requestParam('id') id: string, @requestBody() accountUpdate: AccountMutable): Promise<Option<Account>> {
+
+      return O.some(await this.accountService.updateAccount(id, accountUpdate));
     }
 
     @httpDelete('/:id',

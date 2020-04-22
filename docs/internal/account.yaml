@@ -27,7 +27,36 @@ paths:
           $ref: '#/components/responses/ForbiddenError'
         404:
           $ref: '#/components/responses/NotFoundError'
-
+    post:
+      summary: Update an Account by ID
+      tags:
+        - Accounts
+      produces: 
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccountMutable'
+      responses:
+        200:
+          description: The Account was successfully updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        403:
+          $ref: '#/components/responses/ForbiddenError'
     delete:
       summary: Deletes an Account by ID.
       tags:
@@ -96,6 +125,11 @@ components:
               type: string
               format: uuid
         - $ref: '#/components/schemas/Roles'
+    AccountMutable:
+      type: object
+      properties:
+        type:
+          type: string
 
     Account:
       allOf:
@@ -106,6 +140,8 @@ components:
               format: uuid
             owner:
               $ref: '#/components/schemas/UserExpandable'
+            type:
+              type: string
             locations:
               type: array
               items:
