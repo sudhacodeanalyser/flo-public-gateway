@@ -29,10 +29,40 @@ export interface DeliveryMediumConfig {
   call: DeliveryMediumSettings;
 }
 
-interface AlertTextValue {
+export enum FeedbackOptionType {
+  LIST = 'list',
+  CARD = 'card',
+  ITEM = 'item'
+}
+
+export enum FeedbackAction {
+  RESOLVE_INCIDENT = 'resolve-incident',
+  SLEEP_DEVICE = 'sleep-device'
+}
+
+export interface FeedbackOptionIcon {
+  tag: string;
+  imageUrl: string;
+}
+
+export interface FeedbackOption {
+  id: string;
+  type: FeedbackOptionType;
+  displayName?: string;
+  displayTitle?: string;
   value: string;
-  lang: string[];
-  unitSystems: string[];
+  sortOrder?: number;
+  sortRandom?: boolean;
+  icon?: FeedbackOptionIcon;
+  options: FeedbackOption[];
+  optionsKey?: string;
+  actions?: FeedbackAction[];
+}
+
+export interface UserFeedbackOptions {
+  id: string;
+  feedback: FeedbackOption;
+  optionsKeyList: FeedbackOption[];  
 }
 
 export interface Alarm {
@@ -52,6 +82,7 @@ export interface Alarm {
   children: Array<Id<number>>;
   deliveryMedium: DeliveryMediumConfig;
   userFeedbackFlow?: AlertFeedbackFlow[];
+  userFeedbackOptions?: UserFeedbackOptions;
 }
 
 export interface TriggersAlarmResponse {
