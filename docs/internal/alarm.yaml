@@ -181,13 +181,6 @@ components:
             $ref: '#/components/schemas/FeedbackOption'
         optionsKey:
           type: string
-        actions:
-          type: array
-          items:
-            type: string
-            enum:
-              - resolve-incident
-              - sleep-device
 
     UserFeedbackOptions:
       type: object
