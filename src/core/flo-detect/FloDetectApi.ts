@@ -84,6 +84,8 @@ export interface FloDetectApiIrrigationSchedule {
 
 // ============================================
 
+export type FloDetectApiEventFilters = { from?: Date, to?: Date, limit?: number, offset?: number, lang?: string };
+export type FloDetectApiFixtureFilters = { from?: Date, to?: Date, lang?: string };
 
 @injectable()
 class FloDetectApi extends HttpService {
@@ -116,7 +118,7 @@ class FloDetectApi extends HttpService {
 
   public async getFixtures(
     macAddresses: string[],
-    opts?: { from?: Date, to?: Date, lang?: string }
+    opts?: FloDetectApiFixtureFilters
   ): Promise<FloDetectApiFixtures> {
     return this.sendRequest({
       method: 'GET',

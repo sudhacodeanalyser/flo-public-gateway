@@ -3,7 +3,24 @@ import FloDetectEventChronologyTable from './FloDetectEventChronologyTable';
 import { FloDetectEventChronologyRecord } from './FloDetectEventChronologyRecord';
 import FloDetectResultTable from './FloDetectResultTable';
 import { FloDetectResultRecord, FloDetectResultRecordData } from './FloDetectResultRecord';
-import { Subscription, FloDetectEventPage, Device, DeviceType, DependencyFactoryFactory, FloDetectLearning, FloDetectComputation, FloDetectCompuationDuration, FloDetectEvent, FloDetectEventFeedback, FloDetectStatus } from '../api';
+import {
+  PropExpand,
+  Subscription, 
+  FloDetectEventPage, 
+  Device, 
+  DeviceType, 
+  DependencyFactoryFactory, 
+  FloDetectLearning, 
+  FloDetectComputation, 
+  FloDetectCompuationDuration, 
+  FloDetectEvent, 
+  FloDetectEventFeedback, 
+  FloDetectStatus,
+  FloDetectResponseFlowEvent,
+  FloDetectResponseEventItem,
+  FloDetectResponseEventPage,
+  FloDetectResponseFixtures
+} from '../api';
 import * as Option from 'fp-ts/lib/Option';
 import * as TaskEitherOption from '../../util/TaskEitherOption';
 import { pipe } from 'fp-ts/lib/pipeable';
@@ -16,152 +33,89 @@ import { FloDetectApi, FloDetectApiEventPage, FloDetectApiFlowEvent, FloDetectAp
 import _ from 'lodash';
 import NotFoundError from '../api/error/NotFoundError';
 import ForbiddenError from '../api/error/ForbiddenError';
-
-
-interface FloDetectResponseFlowEvent {
-  id: string;
-  startAt: string;
-  endAt: string;
-  duration: string;
-  totalGal: string;
-  predicted: {
-    id: string;
-    displayText: string;
-  };
-  feedback?: {
-    id: number;
-    displayText: string;
-    user?: {
-      id: string;
-    }
-  };
-  incident?: {
-    id: string;
-  };
-}
-
-interface FloDetectResponseEventItem {
-  macAddress: string;
-  error?: string;
-  events: FloDetectResponseFlowEvent[];
-}
-
-export interface FloDetectResponseEventPage {
-  params: {
-    macAddress?: string;
-    locationId?: string;
-    from: string;
-    to: string;
-    tz: string;
-    minGallons: number;
-  },
-  items: FloDetectResponseEventItem[];
-}
-
-export interface FloDetectResponseFixtures {
-  params: {
-    macAddress?: string;
-    locationId?: string;
-    from: string;
-    to: string;
-    tz: string;
-    minGallons: number;
-  };
-  items: Array<{
-    macAddress: string;
-    error?: string;
-    fixtures: Array<{
-      id: number;
-      displayText: string;
-      totalEvents: number;
-      totalGallons: number;
-      totalSeconds: number;
-    }>
-  }>
-}
-
+import { FloDetectResolver } from '../resolver';
 
 // Mappings ===================================
 
 
-const ApiToResponseFlowEventSchema: StrictSchema<FloDetectResponseFlowEvent, FloDetectApiFlowEvent> = {
-  id: 'id',
-  startAt: 'startAt',
-  endAt: 'endAt',
-  totalGal: 'totalGal',
-  duration: 'duration',
-  predicted: {
-    id: 'predictedId',
-    displayText: 'predictedDisplayText'
-  },
-  feedback: (input: FloDetectApiFlowEvent) => {
-    return input.feedbackId !== undefined ? 
-      {
-        id: input.feedbackId,
-        displayText: input.feedbackDisplayText || '',
-        user: input.feedbackUserId !== undefined ?
-          { id: input.feedbackUserId } :
-          undefined
-      } : 
-      undefined;
-  },
-  incident: (input: FloDetectApiFlowEvent) => {
-    return input.incidentId !== undefined ?
-      { id: input.incidentId } :
-      undefined;
-  }
-}
+// const ApiToResponseFlowEventSchema: StrictSchema<FloDetectResponseFlowEvent, FloDetectApiFlowEvent> = {
+//   id: 'id',
+//   startAt: 'startAt',
+//   endAt: 'endAt',
+//   totalGal: 'totalGal',
+//   duration: 'duration',
+//   predicted: {
+//     id: 'predictedId',
+//     displayText: 'predictedDisplayText'
+//   },
+//   feedback: (input: FloDetectApiFlowEvent) => {
+//     return input.feedbackId !== undefined ? 
+//       {
+//         id: input.feedbackId,
+//         displayText: input.feedbackDisplayText || '',
+//         user: input.feedbackUserId !== undefined ?
+//           { id: input.feedbackUserId } :
+//           undefined
+//       } : 
+//       undefined;
+//   },
+//   incident: (input: FloDetectApiFlowEvent) => {
+//     return input.incidentId !== undefined ?
+//       { id: input.incidentId } :
+//       undefined;
+//   }
+// }
 
-const ApiToResponseEventItem: StrictSchema<FloDetectResponseEventItem, FloDetectApiEventItem> = {
-  macAddress: 'deviceId',
-  error: 'error',
-  events: (input: FloDetectApiEventItem) => {
-    return (input.events || []).map(
-      apiEvent => morphism(
-        ApiToResponseFlowEventSchema, 
-        apiEvent
-      )
-    );
-  }
-}
+// const ApiToResponseEventItem: StrictSchema<FloDetectResponseEventItem, FloDetectApiEventItem> = {
+//   macAddress: 'deviceId',
+//   error: 'error',
+//   events: (input: FloDetectApiEventItem) => {
+//     return (input.events || []).map(
+//       apiEvent => morphism(
+//         ApiToResponseFlowEventSchema, 
+//         apiEvent
+//       )
+//     );
+//   }
+// }
 
-const ApiToResponsePageSchema: StrictSchema<FloDetectResponseEventPage, FloDetectApiEventPage> = {
-  params: {
-    macAddress: () => undefined,
-    locationId: () => undefined,
-    from: 'params.from',
-    to: 'params.to',
-    tz: () => 'Etc/UTC',
-    minGallons: 'params.minGallons'
-  },
-  items: (input: FloDetectApiEventPage) => {
-    return input.items.map(apiItem => morphism(ApiToResponseEventItem, apiItem));
-  }
-}
+// const ApiToResponsePageSchema: StrictSchema<FloDetectResponseEventPage, FloDetectApiEventPage> = {
+//   params: {
+//     macAddress: () => undefined,
+//     locationId: () => undefined,
+//     from: 'params.from',
+//     to: 'params.to',
+//     tz: () => 'Etc/UTC',
+//     minGallons: 'params.minGallons'
+//   },
+//   items: (input: FloDetectApiEventPage) => {
+//     return input.items.map(apiItem => morphism(ApiToResponseEventItem, apiItem));
+//   }
+// }
 
-const ApiToResponseFixtures: StrictSchema<FloDetectResponseFixtures, FloDetectApiFixtures> = {
-  params: {
-    macAddress: () => undefined,
-    locationId: () => undefined,
-    from: 'params.from',
-    to: 'params.to',
-    tz: () => 'Etc/UTC',
-    minGallons: 'params.minGallons'
-  },
-  items: (input: FloDetectApiFixtures) => {
-    return input.items.map(apiItem => ({
-      macAddress: apiItem.deviceId,
-      error: apiItem.error,
-      fixtures: (apiItem.fixtures || []).map(fixture => ({
-        id: fixture.id,
-        displayText: fixture.displayText,
-        totalGallons: fixture.totalGallons,
-        totalEvents: fixture.count,
-        totalSeconds: fixture.totalSeconds
-      }))
-    }));
-  }
-};
+// const ApiToResponseFixtures: StrictSchema<FloDetectResponseFixtures, FloDetectApiFixtures> = {
+//   params: {
+//     macAddress: () => undefined,
+//     locationId: () => undefined,
+//     from: 'params.from',
+//     to: 'params.to',
+//     tz: () => 'Etc/UTC',
+//     minGallons: 'params.minGallons'
+//   },
+//   items: (input: FloDetectApiFixtures) => {
+//     return input.items.map(apiItem => ({
+//       macAddress: apiItem.deviceId,
+//       error: apiItem.error,
+//       fixtures: (apiItem.fixtures || []).map(fixture => ({
+//         id: fixture.id,
+//         displayText: fixture.displayText,
+//         totalGallons: fixture.totalGallons,
+//         totalEvents: fixture.count,
+//         totalSeconds: fixture.totalSeconds
+//       }))
+//     }));
+//   }
+// };
 
 // ============================================
 
@@ -174,7 +128,8 @@ class FloDetectService {
     @inject('FloDetectResultTable') private floDetectResultTable: FloDetectResultTable,
     @inject('FloDetectEventChronologyTable') private floDetectEventChronologyTable: FloDetectEventChronologyTable,
     @inject('DependencyFactoryFactory') depFactoryFactory: DependencyFactoryFactory,
-    @inject('FloDetectApi') private floDetectApi: FloDetectApi
+    @inject('FloDetectApi') private floDetectApi: FloDetectApi,
+    @inject('FloDetectResolver') private floDetectResolver: FloDetectResolver
   ) {
     this.deviceServiceFactory = depFactoryFactory<DeviceService>('DeviceService');
     this.locationServiceFactory = depFactoryFactory<LocationService>('LocationService');
@@ -281,7 +236,9 @@ class FloDetectService {
       offset?: number,
       tz?: string
       lang?: string
-  }): Promise<FloDetectResponseEventPage> {
+    },
+    expand?: PropExpand
+  ): Promise<FloDetectResponseEventPage> {
     const data = await (isMacAddress(idData) ?
       this.getLocationDataByMacAddress(idData.macAddress) :
       this.getLocationDataByLocationId(idData.locationId));
@@ -300,8 +257,7 @@ class FloDetectService {
     const toDate = to && !_.isEmpty(to) ?
       hasUTCOffset(to) ? new Date(to) : moment.tz(to, tz || data.timezone || 'Etc/UTC').toDate() :
       undefined; 
-    const result = await this.floDetectApi.getEvents(macAddresses, { from: fromDate, to: toDate, limit, offset, lang });
-    const rawResponse = morphism(ApiToResponsePageSchema, result);
+    const rawResponse = await this.floDetectResolver.getEvents(macAddresses, { from: fromDate, to: toDate, limit, offset, lang }, expand);
 
     return {
       params: {
@@ -350,8 +306,7 @@ class FloDetectService {
     const toDate = to && !_.isEmpty(to) ?
       hasUTCOffset(to) ? new Date(to) : moment.tz(to, tz || data.timezone || 'Etc/UTC').toDate() :
       undefined; 
-    const result = await this.floDetectApi.getFixtures(macAddresses, { from: fromDate, to: toDate, lang });
-    const rawResponse = morphism(ApiToResponseFixtures, result);
+    const rawResponse = await this.floDetectResolver.getFixtures(macAddresses, { from: fromDate, to: toDate, lang });
 
     return {
       ...rawResponse,
@@ -367,10 +322,9 @@ class FloDetectService {
     return this.floDetectApi.submitFeedback(eventId, feedbackId, userId);
   }
 
-  public async getEventById(eventId: string): Promise<FloDetectResponseFlowEvent> {
-    const result = await this.floDetectApi.getEventById(eventId);
+  public async getEventById(eventId: string, expand?: PropExpand): Promise<FloDetectResponseFlowEvent> {
 
-    return morphism(ApiToResponseFlowEventSchema, result);
+    return this.floDetectResolver.getEventById(eventId, expand);
   }
 
   private async getLocationDataByMacAddress(macAddress: string): Promise<{ locationId: string, timezone: string, macAddresses: string[], hasActiveSubscription: boolean } | null> {
