@@ -56,7 +56,6 @@ export interface FeedbackOption {
   icon?: FeedbackOptionIcon;
   options: FeedbackOption[];
   optionsKey?: string;
-  actions?: FeedbackAction[];
 }
 
 export interface UserFeedbackOptions {
