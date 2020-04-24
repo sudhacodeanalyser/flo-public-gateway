@@ -1,3 +1,4 @@
+import _ from 'lodash';
 import { AxiosInstance } from 'axios';
 import { injectable, inject } from 'inversify';
 import HttpError from './HttpError';
@@ -46,7 +47,8 @@ class HttpService {
       if (!err.response) {
         throw err;
       } else if (err.response.status >= 400 && err.response.status < 500) {
-        throw new HttpError(err.response.status, err.response.data.message);
+        const message = err.response.data.message || _.head(err.response.data.errors)
+        throw new HttpError(err.response.status, message);
       } else {
         throw err;
       }

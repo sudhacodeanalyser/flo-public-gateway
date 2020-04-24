@@ -310,3 +310,13 @@ export const FilterStateCodec = t.type({
 });
 
 export interface FilterState extends t.TypeOf<typeof FilterStateCodec> {}
+
+export const NewUserFeedbackCodec = t.type({
+  userId: t.string,
+  feedback: t.array(t.type({
+    id: t.string,
+    value: t.string
+  }))
+});
+
+export interface NewUserFeedback extends t.TypeOf<typeof NewUserFeedbackCodec> {}

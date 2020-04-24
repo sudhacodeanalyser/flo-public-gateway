@@ -1,7 +1,7 @@
 import { injectable, inject } from 'inversify';
 import AlertFeedbackTable from './AlertFeedbackTable';
 import { AlertFeedbackRecord } from './AlertFeedbackRecord';
-import { AlarmEvent, UserFeedback, UserFeedbackCodec, PaginatedResult, AlertFeedback, AlarmEventFilter } from '../api';
+import { AlarmEvent, UserFeedback, UserFeedbackCodec, PaginatedResult, AlertFeedback, AlarmEventFilter, NewUserFeedback } from '../api';
 import * as Option from 'fp-ts/lib/Option';
 import * as Either from 'fp-ts/lib/Either';
 import { pipe } from 'fp-ts/lib/pipeable';
@@ -73,6 +73,10 @@ class AlertService {
     const alarmEvent = await this.notificationServiceFactory().getAlarmEvent(incidentId);
 
     return this.joinAlarmEventWithFeedback(alarmEvent);
+  }
+
+  public async saveUserFeedback(incidentId: string, userFeedback: NewUserFeedback, force?: boolean): Promise<void> {
+    return this.notificationServiceFactory().saveUserFeedback(incidentId, userFeedback, force);
   }
 
   private async joinAlarmEventWithFeedback(alarmEvent: AlarmEvent): Promise<AlarmEvent> {
