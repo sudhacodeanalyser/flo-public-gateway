@@ -110,7 +110,7 @@ class FloDetectResolver extends Resolver<FloDetectResponseFlowEvent> {
         return floDetectEvent.incident;
       }
 
-      return this.alertServiceFactory().getAlarmEvent(floDetectEvent.incident.id);
+      return this.alertServiceFactory().getAlarmEvent(floDetectEvent.incident.id, this.locale);
     }
   };
 
@@ -118,7 +118,8 @@ class FloDetectResolver extends Resolver<FloDetectResponseFlowEvent> {
 
   constructor(
      @inject('FloDetectApi') private floDetectApi: FloDetectApi,
-     @inject('DependencyFactoryFactory') depFactoryFactory: DependencyFactoryFactory
+     @inject('DependencyFactoryFactory') depFactoryFactory: DependencyFactoryFactory,
+     @inject('Locale') private locale: string | undefined
   ) {
     super();
 
