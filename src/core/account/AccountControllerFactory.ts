@@ -50,70 +50,6 @@ export function AccountControllerFactory(container: Container, apiVersion: numbe
       super();
     }
 
-    @httpGet('/:id',
-      authWithId,
-      reqValidator.create(t.type({
-        params: t.type({
-          id: t.string
-        }),
-        query: t.partial({
-          expand: t.string
-        })
-      }))
-    )
-    @withResponseType<Account, Responses.AccountResponse>(Responses.Account.fromModel)
-    private async getAccount(@requestParam('id') id: string, @queryParam('expand') expand?: string): Promise<Option<Account>> {
-      const expandProps = parseExpand(expand);
-      
-      return this.accountService.getAccountById(id, expandProps);
-    }
-
-    @httpPost('/:id',
-      authWithId,
-      reqValidator.create(t.type({
-        params: t.type({
-          id: t.string
-        }),
-        body: AccountMutableCodec
-      }))
-    )
-    @withResponseType<Account, Responses.AccountResponse>(Responses.Account.fromModel)
-    private async updateAccount(@requestParam('id') id: string, @requestBody() accountUpdate: AccountMutable): Promise<Option<Account>> {
-
-      return O.some(await this.accountService.updateAccount(id, accountUpdate));
-    }
-
-    @httpDelete('/:id',
-      authWithId,
-      reqValidator.create(t.type({
-        params: t.type({
-          id: t.string
-        })
-      }))
-    )
-    private async removeAccount(@requestParam('id') id: string): Promise<void> {
-
-      return this.accountService.removeAccount(id);
-    }
-
-    @httpPost('/:id/user-roles/:userId',
-      authWithId,
-      reqValidator.create(t.type({
-        params: t.type({
-          id: t.string,
-          userId: t.string
-        }),
-        body: t.strict({
-          roles: NonEmptyArray(t.string)
-        })
-      }))
-    )
-    @deleteMethod
-    private async updateAccountUserRole(@requestParam('id') id: string, @requestParam('userId') userId: string, @requestBody() { roles }: Pick<AccountUserRole, 'roles'>): Promise<AccountUserRole> {
-
-      return this.accountService.updateAccountUserRole(id, userId, roles);
-    }
-
     @httpPost('/invite',
       authWithIdBody,
       reqValidator.create(t.type({
@@ -201,6 +137,73 @@ export function AccountControllerFactory(container: Container, apiVersion: numbe
 
       return tokenData;
     }
+
+
+    @httpGet('/:id',
+      authWithId,
+      reqValidator.create(t.type({
+        params: t.type({
+          id: t.string
+        }),
+        query: t.partial({
+          expand: t.string
+        })
+      }))
+    )
+    @withResponseType<Account, Responses.AccountResponse>(Responses.Account.fromModel)
+    private async getAccount(@requestParam('id') id: string, @queryParam('expand') expand?: string): Promise<Option<Account>> {
+      const expandProps = parseExpand(expand);
+      
+      return this.accountService.getAccountById(id, expandProps);
+    }
+
+    @httpPost('/:id',
+      authWithId,
+      reqValidator.create(t.type({
+        params: t.type({
+          id: t.string
+        }),
+        body: AccountMutableCodec
+      }))
+    )
+    @withResponseType<Account, Responses.AccountResponse>(Responses.Account.fromModel)
+    private async updateAccount(@requestParam('id') id: string, @requestBody() accountUpdate: AccountMutable): Promise<Option<Account>> {
+
+      return O.some(await this.accountService.updateAccount(id, accountUpdate));
+    }
+
+    @httpDelete('/:id',
+      authWithId,
+      reqValidator.create(t.type({
+        params: t.type({
+          id: t.string
+        })
+      }))
+    )
+    private async removeAccount(@requestParam('id') id: string): Promise<void> {
+
+      return this.accountService.removeAccount(id);
+    }
+
+    @httpPost('/:id/user-roles/:userId',
+      authWithId,
+      reqValidator.create(t.type({
+        params: t.type({
+          id: t.string,
+          userId: t.string
+        }),
+        body: t.strict({
+          roles: NonEmptyArray(t.string)
+        })
+      }))
+    )
+    @deleteMethod
+    private async updateAccountUserRole(@requestParam('id') id: string, @requestParam('userId') userId: string, @requestBody() { roles }: Pick<AccountUserRole, 'roles'>): Promise<AccountUserRole> {
+
+      return this.accountService.updateAccountUserRole(id, userId, roles);
+    }
+
+    
   }
 
   return AccountController;
