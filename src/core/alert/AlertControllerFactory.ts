@@ -2,13 +2,13 @@ import express from 'express';
 import * as Either from 'fp-ts/lib/Either';
 import * as O from 'fp-ts/lib/Option';
 import { Container, inject } from 'inversify';
-import { BaseHttpController, httpGet, httpPost, interfaces, request, requestBody, requestParam, response, httpDelete } from 'inversify-express-utils';
+import { BaseHttpController, httpGet, httpPost, interfaces, request, requestBody, requestParam, response, httpDelete, queryParam, httpPut } from 'inversify-express-utils';
 import * as t from 'io-ts';
 import _ from 'lodash';
 import { $enum } from 'ts-enum-util';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
-import { AlarmEvent, AlarmSeverityCodec, AlertStatus, AlertStatusCodec, ClearAlertBody, ClearAlertBodyCodec, ClearAlertResponse, IncidentStatusReasonCodec, NotificationStatistics, PaginatedResult, UserFeedback, UserFeedbackCodec, FilterState, FilterStateCodec, User } from '../api';
+import { AlarmEvent, AlarmSeverityCodec, AlertStatus, AlertStatusCodec, ClearAlertBody, ClearAlertBodyCodec, ClearAlertResponse, IncidentStatusReasonCodec, NotificationStatistics, PaginatedResult, UserFeedback, UserFeedbackCodec, FilterState, FilterStateCodec, NewUserFeedback, NewUserFeedbackCodec } from '../api';
 import { httpController, deleteMethod } from '../api/controllerUtils';
 import Request from '../api/Request';
 import { NotificationServiceFactory } from '../notification/NotificationService';
@@ -268,6 +268,21 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
     )
     private async getAlarmEvent(@requestParam('id') id: string): Promise<AlarmEvent> {
       return this.alertService.getAlarmEvent(id);
+    }
+
+    @httpPut('/:id/feedback',
+      reqValidator.create(t.type({
+        params: t.type({
+          id: t.string
+        }),
+        query: t.partial({
+          force: BooleanFromString
+        }),
+        body: NewUserFeedbackCodec
+      }))
+    )
+    private async saveUserFeedback(@requestParam('id') id: string, @requestBody() userFeedback: NewUserFeedback, @queryParam('force') force?: boolean): Promise<void> {
+      return this.alertService.saveUserFeedback(id, userFeedback, force);
     }
   }
 

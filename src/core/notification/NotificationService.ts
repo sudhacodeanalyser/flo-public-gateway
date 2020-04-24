@@ -11,7 +11,8 @@ import {
   TwilioStatusEvent,
   SendWithUsEvent,
   FilterState,
-  AlarmEventFilter
+  AlarmEventFilter,
+  NewUserFeedback
 } from '../api';
 import Request from '../api/Request';
 import {Option} from 'fp-ts/lib/Option';
@@ -44,4 +45,5 @@ export interface NotificationService {
   getFilterState(filters: any): Promise<FilterState[]>;
   deleteFilterState(id: string): Promise<void>;
   createFilterState(filterState: FilterState): Promise<FilterState>;
+  saveUserFeedback(incidentId: string, userFeedback: NewUserFeedback, force?: boolean): Promise<void>
 }
