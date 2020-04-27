@@ -58,7 +58,7 @@ export interface FeedbackOption {
   optionsKey?: string;
 }
 
-export interface UserFeedbackOptions {
+export interface FeedbackOptions {
   id: string;
   feedback: FeedbackOption;
   optionsKeyList: FeedbackOption[];  
@@ -81,7 +81,7 @@ export interface Alarm {
   children: Array<Id<number>>;
   deliveryMedium: DeliveryMediumConfig;
   userFeedbackFlow?: AlertFeedbackFlow[];
-  userFeedbackOptions?: UserFeedbackOptions;
+  feedbackOptions?: FeedbackOptions;
 }
 
 export interface TriggersAlarmResponse {
@@ -112,6 +112,7 @@ export interface AlarmEvent extends TimestampedModel {
   locationId: string;
   systemMode: string;
   userFeedback?: UserFeedback[]
+  feedback?: NewUserFeedback
 }
 
 export interface AlarmEventFilter {
@@ -313,7 +314,7 @@ export interface FilterState extends t.TypeOf<typeof FilterStateCodec> {}
 
 export const NewUserFeedbackCodec = t.type({
   userId: t.string,
-  feedback: t.array(t.type({
+  options: t.array(t.type({
     id: t.string,
     value: t.string
   }))

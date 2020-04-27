@@ -309,6 +309,42 @@ paths:
         400:
           description: Invalid request request body
 
+  /api/v2/alerts/{id}/feedback:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Alert ID
+    put:
+      summary: Submits user feedback about an alert
+      tags:
+        - Alerts
+      parameters:
+        - in: query
+          name: force
+          schema:
+            type: boolean
+          description: Overwrite feedback
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                feedback:
+                  $ref: '#/components/schemas/NewFeedback'
+      produces:
+        - application/json
+      responses:
+        200:
+          description: Feedback successfully submitted
+        409:
+          description: Feedback has already been submitted by another user
+
 components:
   schemas:
     FilterState:
@@ -448,6 +484,9 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/UserFeedback'
+        feedback:
+          type: '#/components/schemas/NewFeedback'
+
     UserFeedback:
       type: object
       properties:
@@ -547,3 +586,16 @@ components:
           type: object
           additionalProperties:
             $ref: '#/components/schemas/AlertFeedbackStep'
+    NewFeedback:
+      type: object
+      properties:
+        userId:
+          type: string
+          format: uuid
+        options:
+          type: array
+          items:
+            type: object
+            properties:
+              id: string
+              value: string
