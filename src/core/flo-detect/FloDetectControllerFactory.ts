@@ -3,10 +3,21 @@ import { BaseHttpController, httpPost, interfaces, request, queryParam, requestP
 import * as t from 'io-ts';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
-import { FloDetectEventPage, FloDetectComputation, FloDetectLearning, FloDetectCompuationDuration, FloDetectComputationDurationCodec, FloDetectEventFeedbackCodec, FloDetectEvent, FloDetectEventFeedback } from '../api';
-import { httpController, httpGet, queryParamArray } from '../api/controllerUtils';
+import { 
+  FloDetectEventPage, 
+  FloDetectComputation, 
+  FloDetectLearning, 
+  FloDetectCompuationDuration, 
+  FloDetectComputationDurationCodec, 
+  FloDetectEventFeedbackCodec, 
+  FloDetectEvent, 
+  FloDetectEventFeedback, 
+  FloDetectResponseEventPage, 
+  FloDetectResponseFixtures 
+} from '../api';
+import { httpController, httpGet, queryParamArray, parseExpand } from '../api/controllerUtils';
 import Request from '../api/Request';
-import { FloDetectService, FloDetectResponseEventPage, FloDetectResponseFixtures } from '../service';
+import { FloDetectService } from '../service';
 import NotFoundError from '../api/error/NotFoundError'
 import * as Option from 'fp-ts/lib/Option';
 import { pipe } from 'fp-ts/lib/pipeable';
@@ -234,7 +245,8 @@ export function FloDetectControllerFactory(container: Container, apiVersion: num
             offset: IntegerFromString,
             limit: IntegerFromString,
             lang: t.string,
-            tz: t.string
+            tz: t.string,
+            expand: t.string
           })
         ])
       }))
@@ -247,8 +259,10 @@ export function FloDetectControllerFactory(container: Container, apiVersion: num
       @queryParam('limit') limit?: number,
       @queryParam('offset') offset?: number,
       @queryParam('lang') lang?: string,
-      @queryParam('tz') tz?: string
+      @queryParam('tz') tz?: string,
+      @queryParam('expand') expand?: string
     ): Promise<FloDetectResponseEventPage> {
+      const parsedExpand = parseExpand(expand);
 
       return this.floDetectService.getEvents( 
         macAddress ? { macAddress } : { locationId: locationId || '' },
@@ -259,7 +273,8 @@ export function FloDetectControllerFactory(container: Container, apiVersion: num
           offset,
           lang,
           tz
-        }
+        },
+        parsedExpand
       );
     }
 
@@ -268,11 +283,16 @@ export function FloDetectControllerFactory(container: Container, apiVersion: num
       reqValidator.create(t.type({
         params: t.type({
           id: t.string
+        }),
+        query: t.partial({
+          expand: t.string
         })
       }))
     )
-    private async getEventById(@requestParam('id') eventId: string): Promise<any> {
-      return this.floDetectService.getEventById(eventId);
+    private async getEventById(@requestParam('id') eventId: string, @queryParam('expand') expand?: string): Promise<any> {
+      const parsedExpand = parseExpand(expand);
+
+      return this.floDetectService.getEventById(eventId, parsedExpand);
     }
 
     @httpPost('/events/:id',

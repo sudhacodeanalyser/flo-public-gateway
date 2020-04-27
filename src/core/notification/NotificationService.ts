@@ -32,7 +32,7 @@ export interface NotificationService {
   getAlarmById(id: string, queryParams: any): Promise<Alarm>;
   getAlarms(queryParams: any): Promise<AlarmListResult>;
   sendAlarm(alertInfo: any): Promise<string>;
-  getAlarmEvent(id: string): Promise<AlarmEvent>;
+  getAlarmEvent(id: string, queryParams?: Record<string, any>): Promise<AlarmEvent>;
   deleteAlarmEvent(id: string): Promise<void>;
   getAlarmEventsByFilter(filter: AlarmEventFilter): Promise<PaginatedResult<AlarmEvent>>;
   clearAlarms(alarmIds: number[], data: any): Promise<ClearAlertResponse>;

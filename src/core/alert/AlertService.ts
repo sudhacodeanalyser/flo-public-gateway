@@ -69,8 +69,8 @@ class AlertService {
     }
   }
 
-  public async getAlarmEvent(incidentId: string): Promise<AlarmEvent> {
-    const alarmEvent = await this.notificationServiceFactory().getAlarmEvent(incidentId);
+  public async getAlarmEvent(incidentId: string, lang?: string): Promise<AlarmEvent> {
+    const alarmEvent = await this.notificationServiceFactory().getAlarmEvent(incidentId, lang ? { lang } : undefined);
 
     return this.joinAlarmEventWithFeedback(alarmEvent);
   }

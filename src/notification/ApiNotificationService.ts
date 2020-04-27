@@ -49,10 +49,11 @@ class ApiNotificationService {
     });
   }
 
-  public async getAlarmEvent(id: string): Promise<AlarmEvent> {
+  public async getAlarmEvent(id: string, queryParams?: Record<string, any>): Promise<AlarmEvent> {
     return this.notificationApi.sendRequest({
       method: 'get',
-      url: `/events/${id}`
+      url: `/events/${id}`,
+      params: queryParams
     });
   }
 
