@@ -60,7 +60,27 @@ class EntityActivityService {
   private mapItem(type: EntityActivityType, data: any): any {
     switch (type) {
       case EntityActivityType.DEVICE:
-        return Device.fromModel(data as DeviceModel);
+        const {
+          macAddress,
+          id,
+          deviceModel,
+          deviceType,
+          nickname,
+          serialNumber,
+          fwVersion,
+          lastHeardFromTime
+        } = Device.fromModel(data as DeviceModel);
+
+        return {
+          macAddress,
+          id,
+          deviceModel,
+          deviceType,
+          nickname,
+          serialNumber,
+          fwVersion,
+          lastHeardFromTime
+        };
       case EntityActivityType.LOCATION:
         return Location.fromModel(data as LocationModel);
       case EntityActivityType.ACCOUNT:

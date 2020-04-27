@@ -72,12 +72,25 @@ class DeviceService {
         ...(deviceUpdate.pes && { pes: deviceUpdate.pes }),
         ...(deviceUpdate.floSense && { floSense: deviceUpdate.floSense })
       });
-
-      return {
+      const updatedProps = {
         ...updatedDevice,
         ...updatedMLProps
       };
+
+      await this.entityActivityService.publishEntityActivity(
+        EntityActivityType.DEVICE,
+        EntityActivityAction.UPDATED,
+        updatedProps
+      );
+
+      return updatedProps;
     }
+
+    await this.entityActivityService.publishEntityActivity(
+      EntityActivityType.DEVICE,
+      EntityActivityAction.UPDATED,
+      updatedDevice
+    );
 
     return updatedDevice;
   }
@@ -148,7 +161,12 @@ class DeviceService {
     }
 
     await this.internalDeviceService.upsertDevice(createdDevice.macAddress, deviceCreate);
-
+    await this.entityActivityService.publishEntityActivity(
+      EntityActivityType.DEVICE,
+      EntityActivityAction.CREATED,
+      createdDevice
+    );
+    
     return createdDevice;
   }
 
