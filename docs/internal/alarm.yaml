@@ -108,9 +108,9 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AlertFeedbackFlow'
-        userFeedbackOptions:
+        feedbackOptions:
           type: object
-          $ref: '#/components/schemas/UserFeedbackOptions'
+          $ref: '#/components/schemas/FeedbackOptions'
         deliveryMedium:
           type: object
           properties:
@@ -182,7 +182,7 @@ components:
         optionsKey:
           type: string
 
-    UserFeedbackOptions:
+    FeedbackOptions:
       type: object
       properties:
         id:
