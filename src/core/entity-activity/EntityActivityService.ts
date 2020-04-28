@@ -62,31 +62,92 @@ class EntityActivityService {
       case EntityActivityType.DEVICE:
         const {
           macAddress,
-          id,
+          id: deviceId,
           deviceModel,
           deviceType,
-          nickname,
+          nickname: deviceNickname,
           serialNumber,
           fwVersion,
-          lastHeardFromTime
+          lastHeardFromTime,
+          location
         } = Device.fromModel(data as DeviceModel);
+        const {
+          id: deviceLocationId,
+          account: deviceLocationAccount
+        } = location || {};
 
         return {
           macAddress,
-          id,
+          id: deviceId,
           deviceModel,
           deviceType,
-          nickname,
+          nickname: deviceNickname,
           serialNumber,
           fwVersion,
-          lastHeardFromTime
+          lastHeardFromTime,
+          location: location && {
+            id: deviceLocationId,
+            account: deviceLocationAccount
+          }
         };
-      case EntityActivityType.LOCATION:
-        return Location.fromModel(data as LocationModel);
+      case EntityActivityType.LOCATION: 
+        const {
+          id: locationId,
+          account: locationAccount,
+          address,
+          address2,
+          city,
+          state,
+          postalCode,
+          country,
+          ['class']: locationClass,
+          nickname: locationNickname
+        } = Location.fromModel(data as LocationModel);
+        const {
+          id: locationAccountId,
+        } = locationAccount || {};
+
+        return {
+          id: locationId,
+          address,
+          address2,
+          city,
+          state,
+          postalCode,
+          country,
+          ['class']: locationClass,
+          nickname: locationNickname,
+          account: locationAccount && {
+            id: locationAccountId
+          }
+        };
       case EntityActivityType.ACCOUNT:
         return Account.fromModel(data as AccountModel);
       case EntityActivityType.USER:
-        return User.fromModel(data as UserModel);
+        const {
+          id: userId,
+          firstName,
+          lastName,
+          prefixName,
+          email,
+          phoneMobile,
+          locale,
+          account: userAccount,
+        } = User.fromModel(data as UserModel);
+        const {
+          id: userAccountId
+        } = userAccount || {};
+
+        return {
+          id: userId,
+          firstName,
+          lastName,
+          prefixName,
+          email,
+          phoneMobile,
+          locale,
+          account: userAccount && { id: userAccountId }
+        };
       default:
         return data;
     }
