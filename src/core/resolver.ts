@@ -69,5 +69,6 @@ export * from './device/DeviceResolver';
 export * from './location/LocationResolver';
 export * from './subscription/SubscriptionResolver';
 export * from './user/UserResolver';
+export * from './flo-detect/FloDetectResolver';
 export { Resolver };
 

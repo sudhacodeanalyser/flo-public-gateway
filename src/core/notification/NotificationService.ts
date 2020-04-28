@@ -11,7 +11,8 @@ import {
   TwilioStatusEvent,
   SendWithUsEvent,
   FilterState,
-  AlarmEventFilter
+  AlarmEventFilter,
+  NewUserFeedback
 } from '../api';
 import Request from '../api/Request';
 import {Option} from 'fp-ts/lib/Option';
@@ -31,7 +32,7 @@ export interface NotificationService {
   getAlarmById(id: string, queryParams: any): Promise<Alarm>;
   getAlarms(queryParams: any): Promise<AlarmListResult>;
   sendAlarm(alertInfo: any): Promise<string>;
-  getAlarmEvent(id: string): Promise<AlarmEvent>;
+  getAlarmEvent(id: string, queryParams?: Record<string, any>): Promise<AlarmEvent>;
   deleteAlarmEvent(id: string): Promise<void>;
   getAlarmEventsByFilter(filter: AlarmEventFilter): Promise<PaginatedResult<AlarmEvent>>;
   clearAlarms(alarmIds: number[], data: any): Promise<ClearAlertResponse>;
@@ -44,4 +45,5 @@ export interface NotificationService {
   getFilterState(filters: any): Promise<FilterState[]>;
   deleteFilterState(id: string): Promise<void>;
   createFilterState(filterState: FilterState): Promise<FilterState>;
+  saveUserFeedback(incidentId: string, userFeedback: NewUserFeedback, force?: boolean): Promise<void>
 }

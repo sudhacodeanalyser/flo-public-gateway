@@ -12,7 +12,13 @@ export interface AccountGroup {
   name: string;
 }
 
-export interface Account extends TimestampedModel {
+export const AccountMutableCodec = t.partial({
+  type: t.string
+});
+
+export type AccountMutable = t.TypeOf<typeof AccountMutableCodec>;
+
+export interface Account extends TimestampedModel, AccountMutable {
   id: string;
   owner: Expandable<User>;
   locations: Array<Expandable<Location>>;

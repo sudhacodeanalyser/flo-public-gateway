@@ -13,7 +13,8 @@ import {
   TwilioStatusEvent,
   UpdateDeviceAlarmSettings,
   FilterState,
-  AlarmEventFilter
+  AlarmEventFilter,
+  NewUserFeedback
 } from '../core/api';
 import { DeviceService } from '../core/device/DeviceService';
 import { HttpService } from '../http/HttpService';
@@ -48,10 +49,11 @@ class ApiNotificationService {
     });
   }
 
-  public async getAlarmEvent(id: string): Promise<AlarmEvent> {
+  public async getAlarmEvent(id: string, queryParams?: Record<string, any>): Promise<AlarmEvent> {
     return this.notificationApi.sendRequest({
       method: 'get',
-      url: `/events/${id}`
+      url: `/events/${id}`,
+      params: queryParams
     });
   }
 
@@ -200,6 +202,17 @@ class ApiNotificationService {
       method: 'post',
       url: `/sms/events/${incidentId}/${userId}`,
       body: this.toLowerCamelCaseObject(event)
+    });
+  }
+
+  public async saveUserFeedback(incidentId: string, userFeedback: NewUserFeedback, force?: boolean): Promise<void> {
+    return this.notificationApi.sendRequest({
+      method: 'put',
+      url: `/alerts/${incidentId}/feedback`,
+      params: {
+        ...(force && { force })
+      },
+      body: userFeedback
     });
   }
 

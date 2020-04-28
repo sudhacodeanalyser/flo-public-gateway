@@ -120,7 +120,7 @@ export interface ControllerOptions {
 }
 
 export function httpController(options: ControllerOptions, path: string, ...args: interfaces.Middleware[]): (target: any) => void {
-  return controller(`/api/v${ options.version }${ path }`, 'LoggerMiddleware', 'MemoizeMiddleware', 'CacheMiddleware', ...args);
+  return controller(`/api/v${ options.version }${ path }`, 'LoggerMiddleware', 'MemoizeMiddleware', 'CacheMiddleware', 'LocaleMiddleware', ...args);
 }
 
 export function createMethod(target: any, propertyName: string, propertyDescriptor: PropertyDescriptor): void {

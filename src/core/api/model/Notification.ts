@@ -29,10 +29,39 @@ export interface DeliveryMediumConfig {
   call: DeliveryMediumSettings;
 }
 
-interface AlertTextValue {
+export enum FeedbackOptionType {
+  LIST = 'list',
+  CARD = 'card',
+  ITEM = 'item'
+}
+
+export enum FeedbackAction {
+  RESOLVE_INCIDENT = 'resolve-incident',
+  SLEEP_DEVICE = 'sleep-device'
+}
+
+export interface FeedbackOptionIcon {
+  tag: string;
+  imageUrl: string;
+}
+
+export interface FeedbackOption {
+  id: string;
+  type: FeedbackOptionType;
+  displayName?: string;
+  displayTitle?: string;
   value: string;
-  lang: string[];
-  unitSystems: string[];
+  sortOrder?: number;
+  sortRandom?: boolean;
+  icon?: FeedbackOptionIcon;
+  options: FeedbackOption[];
+  optionsKey?: string;
+}
+
+export interface FeedbackOptions {
+  id: string;
+  feedback: FeedbackOption;
+  optionsKeyList: FeedbackOption[];  
 }
 
 export interface Alarm {
@@ -52,6 +81,7 @@ export interface Alarm {
   children: Array<Id<number>>;
   deliveryMedium: DeliveryMediumConfig;
   userFeedbackFlow?: AlertFeedbackFlow[];
+  feedbackOptions?: FeedbackOptions;
 }
 
 export interface TriggersAlarmResponse {
@@ -82,6 +112,7 @@ export interface AlarmEvent extends TimestampedModel {
   locationId: string;
   systemMode: string;
   userFeedback?: UserFeedback[]
+  feedback?: NewUserFeedback
 }
 
 export interface AlarmEventFilter {
@@ -280,3 +311,13 @@ export const FilterStateCodec = t.type({
 });
 
 export interface FilterState extends t.TypeOf<typeof FilterStateCodec> {}
+
+export const NewUserFeedbackCodec = t.type({
+  userId: t.string,
+  options: t.array(t.type({
+    id: t.string,
+    value: t.string
+  }))
+});
+
+export interface NewUserFeedback extends t.TypeOf<typeof NewUserFeedbackCodec> {}
