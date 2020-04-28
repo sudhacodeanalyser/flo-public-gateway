@@ -12,7 +12,7 @@ import ForbiddenError from '../api/error/ForbiddenError';
 import { DeviceSystemModeService } from '../device/DeviceSystemModeService';
 import { IrrigationScheduleService } from '../device/IrrigationScheduleService';
 import { LocationResolver } from '../resolver';
-import { AccountService, DeviceService, SubscriptionService } from '../service';
+import { AccountService, DeviceService, SubscriptionService, EntityActivityAction, EntityActivityService, EntityActivityType } from '../service';
 import moment from 'moment';
 import LocationTreeTable from './LocationTreeTable'
 import { pipe } from 'fp-ts/lib/pipeable';
@@ -32,7 +32,8 @@ class LocationService {
     @injectHttpContext private readonly httpContext: interfaces.HttpContext,
     @inject('AccessControlService') private accessControlService: AccessControlService,
     @inject('LocationTreeTable') private locationTreeTable: LocationTreeTable,
-    @inject('IrrigationScheduleService') private irrigationScheduleService: IrrigationScheduleService
+    @inject('IrrigationScheduleService') private irrigationScheduleService: IrrigationScheduleService,
+    @inject('EntityActivityService') private entityActivityService: EntityActivityService
   ) {
     this.deviceServiceFactory = depFactoryFactory<DeviceService>('DeviceService');
     this.accountServiceFactory = depFactoryFactory<AccountService>('AccountService');
@@ -56,6 +57,12 @@ class LocationService {
     if (createdLocation.parent && createdLocation.parent.id) {
       await this.locationTreeTable.updateParent(account.value.id, createdLocation.id, createdLocation.parent.id, false);
     }
+
+    await this.entityActivityService.publishEntityActivity(
+      EntityActivityType.LOCATION,
+      EntityActivityAction.CREATED,
+      createdLocation
+    );
 
     return fromNullable(createdLocation);
   }
@@ -151,18 +158,35 @@ class LocationService {
       }
     }
 
+    await this.entityActivityService.publishEntityActivity(
+      EntityActivityType.LOCATION,
+      EntityActivityAction.UPDATED,
+      updatedLocation
+    );
+
     return updatedLocation;
   }
 
   public async removeLocation(id: string): Promise<void> {
     const subscriptionService = this.subscriptionServiceFactory();
     const subscription = await subscriptionService.getSubscriptionByRelatedEntityId(id);
+    const location = await this.locationResolver.get(id);
+
+    if (!location) {
+      throw new ConflictError('Location not found.');
+    }
 
     await this.locationResolver.removeLocation(id);
 
     if (!isNone(subscription)) {
       await this.subscriptionServiceFactory().cancelSubscription(subscription.value.id, true, `FLO INTERNAL: location ${ id } removed`);
     }
+
+    await this.entityActivityService.publishEntityActivity(
+      EntityActivityType.LOCATION,
+      EntityActivityAction.DELETED,
+      location
+    );
   }
 
   public async getAllLocationUserRoles(locationId: string): Promise<LocationUserRole[]> {
