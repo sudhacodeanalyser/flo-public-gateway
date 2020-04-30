@@ -312,12 +312,20 @@ export const FilterStateCodec = t.type({
 
 export interface FilterState extends t.TypeOf<typeof FilterStateCodec> {}
 
-export const NewUserFeedbackCodec = t.type({
-  userId: t.string,
+export const NewUserFeedbackRequestCodec = t.type({
   options: t.array(t.type({
     id: t.string,
     value: t.string
   }))
 });
+
+export interface NewUserFeedbackRequest extends t.TypeOf<typeof NewUserFeedbackRequestCodec> {}
+
+export const NewUserFeedbackCodec = t.intersection([
+  NewUserFeedbackRequestCodec,
+  t.type({
+    userId: t.string
+  })
+]);
 
 export interface NewUserFeedback extends t.TypeOf<typeof NewUserFeedbackCodec> {}
