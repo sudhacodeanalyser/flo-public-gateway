@@ -589,9 +589,6 @@ components:
     NewFeedback:
       type: object
       properties:
-        userId:
-          type: string
-          format: uuid
         options:
           type: array
           items:
