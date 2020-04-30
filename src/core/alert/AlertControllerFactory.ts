@@ -8,11 +8,12 @@ import _ from 'lodash';
 import { $enum } from 'ts-enum-util';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
-import { AlarmEvent, AlarmSeverityCodec, AlertStatus, AlertStatusCodec, ClearAlertBody, ClearAlertBodyCodec, ClearAlertResponse, IncidentStatusReasonCodec, NotificationStatistics, PaginatedResult, UserFeedback, UserFeedbackCodec, FilterState, FilterStateCodec, NewUserFeedback, NewUserFeedbackCodec } from '../api';
+import { AlarmEvent, AlarmSeverityCodec, AlertStatus, AlertStatusCodec, ClearAlertBody, ClearAlertBodyCodec, ClearAlertResponse, IncidentStatusReasonCodec, NotificationStatistics, PaginatedResult, UserFeedback, UserFeedbackCodec, FilterState, FilterStateCodec, NewUserFeedbackRequest, NewUserFeedbackRequestCodec } from '../api';
 import { httpController, deleteMethod } from '../api/controllerUtils';
 import Request from '../api/Request';
 import { NotificationServiceFactory } from '../notification/NotificationService';
 import { AlertService, UserService } from '../service';
+import UnauthorizedError from '../api/error/UnauthorizedError';
 
 export function AlertControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
@@ -260,6 +261,7 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
     }
 
     @httpGet('/:id',
+      authMiddlewareFactory.create(),
       reqValidator.create(t.type({
         params: t.type({
           id: t.string
@@ -271,6 +273,7 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
     }
 
     @httpPut('/:id/feedback',
+      authMiddlewareFactory.create(),
       reqValidator.create(t.type({
         params: t.type({
           id: t.string
@@ -278,10 +281,21 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
         query: t.partial({
           force: BooleanFromString
         }),
-        body: NewUserFeedbackCodec
+        body: NewUserFeedbackRequestCodec
       }))
     )
-    private async saveUserFeedback(@requestParam('id') id: string, @requestBody() userFeedback: NewUserFeedback, @queryParam('force') force?: boolean): Promise<void> {
+    private async saveUserFeedback(@request() req: Request, @requestParam('id') id: string, @requestBody() userFeedbackBody: NewUserFeedbackRequest, @queryParam('force') force?: boolean): Promise<void> {
+      const userId = req.token && req.token.user_id;
+      
+      if (!userId) {
+        throw new UnauthorizedError();
+      }
+
+      const userFeedback = {
+        ...userFeedbackBody,
+        userId
+      };
+
       return this.alertService.saveUserFeedback(id, userFeedback, force);
     }
   }
