@@ -14,7 +14,7 @@ import { IrrigationScheduleService } from '../device/IrrigationScheduleService';
 import { LocationResolver } from '../resolver';
 import { AccountService, DeviceService, SubscriptionService, EntityActivityAction, EntityActivityService, EntityActivityType } from '../service';
 import moment from 'moment';
-import LocationTreeTable from './LocationTreeTable'
+import LocationTreeTable, { LocationTreeRow } from './LocationTreeTable'
 import { pipe } from 'fp-ts/lib/pipeable';
 
 const { fromNullable, isNone } = O;
@@ -402,6 +402,10 @@ class LocationService {
     return parentIds.map(({ parent_id }) => parent_id);
   }
 
+  public async getAllChildren(location: Location): Promise<LocationTreeRow[]> {
+    return this.locationTreeTable.getAllChildren(location.account.id, location.id);
+  }
+
   private validateAreaDoesNotExist(areas: Areas, newAreaName: string, oldAreaName?: string): void {
     const defaultAreas = areas.default.map(a => a.name.toLowerCase());
     const customAreas = areas.custom.map(a => a.name.toLowerCase());
@@ -432,4 +436,3 @@ class LocationService {
 }
 
 export { LocationService };
-
