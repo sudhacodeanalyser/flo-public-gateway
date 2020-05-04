@@ -177,24 +177,32 @@ class CachedLocationTreeTable extends LocationTreeTable {
     }
 ​
     public async updateParent(accountId: string, id: string, parentId: string | null, hasPrevParent: boolean): Promise<void> {
- 
-      const [allChildren, allParents] = await Promise.all([
+      const [allChildren, allParents, allParentsParents] = await Promise.all([
         super.getAllChildren(accountId, id),
-        super.getAllParents(accountId, id)
+        super.getAllParents(accountId, id),
+        !parentId ? [] : super.getAllParents(accountId, parentId)
       ]);
 ​
       await super.updateParent(accountId, id, parentId, hasPrevParent);
 ​
+      // Build transaction
       const multi = this.redisClient.multi()
+        // Drop cached parents of this location
         .del(this.formatParentsKey(accountId, id));
 
+      // Drop cached parents of all children of this location
       allChildren.forEach(({ child_id }) => multi.del(this.formatParentsKey(accountId, child_id)));
+      // Drop cached children of all parents of this location
       allParents.forEach(({ parent_id }) => multi.del(this.formatChildrenKey(accountId, parent_id)));
 
       if (parentId) {
+        // If parent is being set to a non-null value, drop cached children on the new parent and all children of 
+        // its parents
         multi.del(this.formatChildrenKey(accountId, parentId));
+        allParentsParents.forEach(({ parent_id }) => multi.del(this.formatChildrenKey(accountId, parent_id)));
       }
 
+      // Execute transaction
       (await multi.exec()).forEach(([err]: any[]) => { 
         if (err) {
           throw err;
