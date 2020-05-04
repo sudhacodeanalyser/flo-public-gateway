@@ -61,6 +61,11 @@ class AlertService {
       ? await Promise.all(filters.locationId.map(async l => this.locationService.getLocation(l, {
         $select: {
           id: true,
+          account: {
+            $select: {
+              id: true
+            }
+          },
           ['class']: true
         }
       })))
