@@ -76,7 +76,7 @@ class AlertService {
         maybeLocation,
         Option.fold(
           async () => [],
-          async l => l.class.key === 'unit' ? l.id : this.getAllChildrenUnits(l)
+          async l => l.class.key === 'unit' ? [l.id] : this.getAllChildrenUnits(l)
         )
       )
     ))));
