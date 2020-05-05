@@ -1,7 +1,7 @@
 import { injectable, inject } from 'inversify';
 import AlertFeedbackTable from './AlertFeedbackTable';
 import { AlertFeedbackRecord } from './AlertFeedbackRecord';
-import { AlarmEvent, UserFeedback, UserFeedbackCodec, PaginatedResult, AlertFeedback, AlarmEventFilter, NewUserFeedback, Location } from '../api';
+import { AlarmEvent, UserFeedback, UserFeedbackCodec, PaginatedResult, AlertFeedback, AlarmEventFilter, NewUserFeedback, Location, AlertReportDefinition, PropertyFilter } from '../api';
 import * as Option from 'fp-ts/lib/Option';
 import * as Either from 'fp-ts/lib/Either';
 import { pipe } from 'fp-ts/lib/pipeable';
@@ -105,6 +105,34 @@ class AlertService {
 
   public async saveUserFeedback(incidentId: string, userFeedback: NewUserFeedback, force?: boolean): Promise<void> {
     return this.notificationServiceFactory().saveUserFeedback(incidentId, userFeedback, force);
+  }
+
+  public async buildAlertReport(alertReportDefinition: AlertReportDefinition): Promise<PaginatedResult<AlarmEvent>> {
+    const isPropertyFilter = (obj: any): obj is PropertyFilter => {
+      return obj.hasOwnProperty('property');
+    };
+
+    const propertyFilters = alertReportDefinition.basic.filters.items
+      .filter(isPropertyFilter)
+      .reduce((obj, propertyFilter: PropertyFilter) => ({
+        ...obj,
+        [propertyFilter.property.name]: propertyFilter.property.values
+      }), {});
+
+    const filters = {
+      ...propertyFilters,
+      ...(alertReportDefinition.view || {})
+    };
+
+    const alarmEvents = await this.notificationServiceFactory().getAlarmEventsByFilter(filters);
+    const alarmEventsWithFeedback = await Promise.all(
+      alarmEvents.items.map(async alarmEvent => this.joinAlarmEventWithFeedback(alarmEvent))
+    );
+
+    return {
+      ...alarmEvents,
+      items: alarmEventsWithFeedback
+    }
   }
 
   private async joinAlarmEventWithFeedback(alarmEvent: AlarmEvent): Promise<AlarmEvent> {
