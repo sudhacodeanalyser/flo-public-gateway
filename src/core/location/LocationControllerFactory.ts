@@ -89,7 +89,10 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
     @createMethod
     @withResponseType<Location, Responses.Location>(Responses.Location.fromModel)
     private async createLocation(@request() req: Request, @requestBody() location: Location): Promise<Option<Location>> {
-      return this.locationService.createLocation(location);
+      const tokenMetadata = req.token;
+      const userId = tokenMetadata && tokenMetadata.user_id;
+
+      return this.locationService.createLocation(location, userId);
     }
 
     @httpGet(

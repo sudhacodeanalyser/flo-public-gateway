@@ -40,7 +40,7 @@ class LocationService {
     this.subscriptionServiceFactory = depFactoryFactory<SubscriptionService>('SubscriptionService');
   }
 
-  public async createLocation(location: Location): Promise<Option<Location>> {
+  public async createLocation(location: Location, userId?: string): Promise<Option<Location>> {
     const createdLocation: Location | null = await this.locationResolver.createLocation(location);
     const accountId = location.account.id;
     const account = await this.accountServiceFactory().getAccountById(accountId);
@@ -50,9 +50,28 @@ class LocationService {
     }
 
     const ownerUserId = account.value.owner.id;
+    const rolePromises: Array<Promise<any>> = [];
+    const aclPromises: Array<() => Promise<any>> = [];
     
-    await this.locationResolver.addLocationUserRole(createdLocation.id, ownerUserId, ['owner']);
-    await this.refreshUserACL(ownerUserId);
+    rolePromises.push(
+      this.locationResolver.addLocationUserRole(createdLocation.id, ownerUserId, ['owner'])
+    );
+    aclPromises.push(
+      () => this.refreshUserACL(ownerUserId)
+    );
+
+    // If user executing creation belongs to the account and is not the owner, grant them full access
+    if (userId && userId !== ownerUserId && _.find(account.value.users, { id: userId })) {
+      rolePromises.push(
+        this.locationResolver.addLocationUserRole(createdLocation.id, userId, ['write'])
+      );
+      aclPromises.push(
+        () => this.refreshUserACL(userId)
+      );
+    }
+
+    await Promise.all(rolePromises);
+    await Promise.all(aclPromises.map(thunk => thunk()));
 
     if (createdLocation.parent && createdLocation.parent.id) {
       await this.locationTreeTable.updateParent(account.value.id, createdLocation.id, createdLocation.parent.id, false);
