@@ -75,11 +75,11 @@ class LocationService {
       await this.locationTreeTable.updateParent(account.value.id, createdLocation.id, createdLocation.parent.id, false);
     }
 
-    // await this.entityActivityService.publishEntityActivity(
-    //   EntityActivityType.LOCATION,
-    //   EntityActivityAction.CREATED,
-    //   createdLocation
-    // );
+    await this.entityActivityService.publishEntityActivity(
+      EntityActivityType.LOCATION,
+      EntityActivityAction.CREATED,
+      createdLocation
+    );
 
     return fromNullable(createdLocation);
   }
