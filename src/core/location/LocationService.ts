@@ -63,7 +63,7 @@ class LocationService {
     // If user executing creation belongs to the account and is not the owner, grant them full access
     if (userId && userId !== ownerUserId && _.find(account.value.users, { id: userId })) {
       rolePromises.push(
-        this.locationResolver.addLocationUserRole(createdLocation.id, userId, ['write'])
+        this.locationResolver.addLocationUserRole(createdLocation.id, userId, ['write', 'valve-open', 'valve-close'])
       );
       aclPromises.push(
         () => this.refreshUserACL(userId)
