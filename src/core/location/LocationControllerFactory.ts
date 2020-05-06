@@ -6,7 +6,7 @@ import _ from 'lodash';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
 import { DependencyFactoryFactory, AreaName, AreaNameCodec, Areas, Location, LocationCreateValidator, LocationUpdate, LocationUpdateValidator, LocationUserRole, SystemMode, SystemModeCodec } from '../api';
-import { createMethod, deleteMethod, httpController, parseExpand, withResponseType } from '../api/controllerUtils';
+import { createMethod, deleteMethod, httpController, parseExpand, withResponseType, httpMethod, queryParamArray } from '../api/controllerUtils';
 import Request from '../api/Request';
 import * as Responses from '../api/response';
 import { NonEmptyArray } from '../api/validator/NonEmptyArray';
@@ -77,22 +77,26 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
       super();
     }
 
-    @httpPost(
+    @httpMethod(
+      'post',
       '/',
       authMiddlewareFactory.create(
         async ({ body }: Request) => ({ account_id: _.get(body, 'account.id', null) })
       ),
       reqValidator.create(t.type({
-        body: LocationCreateValidator
+        body: LocationCreateValidator,
+        query: t.partial({
+          roles: t.union([t.array(t.string), t.string])
+        })
       }))
     )
     @createMethod
     @withResponseType<Location, Responses.Location>(Responses.Location.fromModel)
-    private async createLocation(@request() req: Request, @requestBody() location: Location): Promise<Option<Location>> {
+    private async createLocation(@request() req: Request, @requestBody() location: Location, @queryParamArray('roles') roles?: string[]): Promise<Option<Location>> {
       const tokenMetadata = req.token;
       const userId = tokenMetadata && tokenMetadata.user_id;
 
-      return this.locationService.createLocation(location, userId);
+      return this.locationService.createLocation(location, userId, roles);
     }
 
     @httpGet(

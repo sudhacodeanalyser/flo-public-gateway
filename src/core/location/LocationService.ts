@@ -40,7 +40,7 @@ class LocationService {
     this.subscriptionServiceFactory = depFactoryFactory<SubscriptionService>('SubscriptionService');
   }
 
-  public async createLocation(location: Location, userId?: string): Promise<Option<Location>> {
+  public async createLocation(location: Location, userId?: string, roles: string[] = ['write', 'valve-open', 'valve-close']): Promise<Option<Location>> {
     const createdLocation: Location | null = await this.locationResolver.createLocation(location);
     const accountId = location.account.id;
     const account = await this.accountServiceFactory().getAccountById(accountId);
@@ -63,7 +63,7 @@ class LocationService {
     // If user executing creation belongs to the account and is not the owner, grant them full access
     if (userId && userId !== ownerUserId && _.find(account.value.users, { id: userId })) {
       rolePromises.push(
-        this.locationResolver.addLocationUserRole(createdLocation.id, userId, ['write', 'valve-open', 'valve-close'])
+        this.locationResolver.addLocationUserRole(createdLocation.id, userId, roles)
       );
       aclPromises.push(
         () => this.refreshUserACL(userId)
