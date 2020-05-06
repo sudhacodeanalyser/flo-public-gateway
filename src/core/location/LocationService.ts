@@ -50,26 +50,28 @@ class LocationService {
     }
 
     const ownerUserId = account.value.owner.id;
-    const authPromises: Array<Promise<any>> = [];
+    const rolePromises: Array<Promise<any>> = [];
+    const aclPromises: Array<() => Promise<any>> = [];
     
-    authPromises.push(
+    rolePromises.push(
       this.locationResolver.addLocationUserRole(createdLocation.id, ownerUserId, ['owner'])
     );
-    authPromises.push(
-      this.refreshUserACL(ownerUserId)
+    aclPromises.push(
+      () => this.refreshUserACL(ownerUserId)
     );
 
     // If user executing creation belongs to the account and is not the owner, grant them full access
     if (userId && userId !== ownerUserId && _.find(account.value.users, { id: userId })) {
-      authPromises.push(
+      rolePromises.push(
         this.locationResolver.addLocationUserRole(createdLocation.id, userId, ['write'])
       );
-      authPromises.push(
-        this.refreshUserACL(userId)
+      aclPromises.push(
+        () => this.refreshUserACL(userId)
       );
     }
 
-    await Promise.all(authPromises);
+    await Promise.all(rolePromises);
+    await Promise.all(aclPromises.map(thunk => thunk()));
 
     if (createdLocation.parent && createdLocation.parent.id) {
       await this.locationTreeTable.updateParent(account.value.id, createdLocation.id, createdLocation.parent.id, false);
