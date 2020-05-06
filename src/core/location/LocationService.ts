@@ -40,7 +40,7 @@ class LocationService {
     this.subscriptionServiceFactory = depFactoryFactory<SubscriptionService>('SubscriptionService');
   }
 
-  public async createLocation(location: Location): Promise<Option<Location>> {
+  public async createLocation(location: Location, userId?: string): Promise<Option<Location>> {
     const createdLocation: Location | null = await this.locationResolver.createLocation(location);
     const accountId = location.account.id;
     const account = await this.accountServiceFactory().getAccountById(accountId);
@@ -50,19 +50,36 @@ class LocationService {
     }
 
     const ownerUserId = account.value.owner.id;
+    const authPromises: Array<Promise<any>> = [];
     
-    await this.locationResolver.addLocationUserRole(createdLocation.id, ownerUserId, ['owner']);
-    await this.refreshUserACL(ownerUserId);
+    authPromises.push(
+      this.locationResolver.addLocationUserRole(createdLocation.id, ownerUserId, ['owner'])
+    );
+    authPromises.push(
+      this.refreshUserACL(ownerUserId)
+    );
+
+    // If user executing creation belongs to the account and is not the owner, grant them full access
+    if (userId && userId !== ownerUserId && _.find(account.value.users, { id: userId })) {
+      authPromises.push(
+        this.locationResolver.addLocationUserRole(createdLocation.id, userId, ['write'])
+      );
+      authPromises.push(
+        this.refreshUserACL(userId)
+      );
+    }
+
+    await Promise.all(authPromises);
 
     if (createdLocation.parent && createdLocation.parent.id) {
       await this.locationTreeTable.updateParent(account.value.id, createdLocation.id, createdLocation.parent.id, false);
     }
 
-    await this.entityActivityService.publishEntityActivity(
-      EntityActivityType.LOCATION,
-      EntityActivityAction.CREATED,
-      createdLocation
-    );
+    // await this.entityActivityService.publishEntityActivity(
+    //   EntityActivityType.LOCATION,
+    //   EntityActivityAction.CREATED,
+    //   createdLocation
+    // );
 
     return fromNullable(createdLocation);
   }
