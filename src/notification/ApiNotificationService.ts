@@ -144,7 +144,7 @@ class ApiNotificationService {
   public async retrieveStatisticsInBatch(filters: StatsFilter): Promise<NotificationStatistics> {
     return this.notificationApi.sendRequest({
       method: 'post',
-      url: `/statistics/batch`,
+      url: '/statistics/batch',
       body: filters
     });
   }
@@ -159,7 +159,7 @@ class ApiNotificationService {
   public async getFilterState(filters: any): Promise<FilterState[]> {
     return this.notificationApi.sendRequest({
       method: 'get',
-      url: `/filters`,
+      url: '/filters',
       params: filters
     });
   }
@@ -174,7 +174,7 @@ class ApiNotificationService {
   public async createFilterState(filterState: FilterState): Promise<FilterState> {
     return this.notificationApi.sendRequest({
       method: 'post',
-      url: `/filters`,
+      url: '/filters',
       body: filterState
     });
   }
@@ -199,7 +199,7 @@ class ApiNotificationService {
 
     return this.notificationApi.sendRequest({
       method: 'post',
-      url: `/email/events`,
+      url: '/email/events',
       body: {
         events: formattedEvents
       }

@@ -57,14 +57,14 @@ class AlertService {
   }
 
   public async getAlarmEventsByFilter(filters: AlarmEventFilter): Promise<PaginatedResult<AlarmEvent>> {
-    const expandedLocations = filters.locationId ? await this.expandLocations(filters.locationId) : undefined;
+    const unitLocations = filters.locationId ? await this.fetchUnitLocations(filters.locationId) : undefined;
   
-    const expandedFilters = {
+    const enrichedFilters = {
       ...filters,
-      ...(!_.isEmpty(expandedLocations) && { locationId: expandedLocations })
+      ...(!_.isEmpty(unitLocations) && { locationId: unitLocations })
     };
 
-    const alarmEvents = await this.notificationServiceFactory().getAlarmEventsByFilter(expandedFilters);
+    const alarmEvents = await this.notificationServiceFactory().getAlarmEventsByFilter(enrichedFilters);
     const alarmEventsWithFeedback = await Promise.all(
       alarmEvents.items.map(async alarmEvent => this.joinAlarmEventWithFeedback(alarmEvent))
     );
@@ -102,13 +102,13 @@ class AlertService {
       ...(alertReportDefinition.view || {})
     };    
 
-    const expandedLocations = filters.locationId ? await this.expandLocations(filters.locationId) : undefined;
-    const expandedFilters = {
+    const unitLocations = filters.locationId ? await this.fetchUnitLocations(filters.locationId) : undefined;
+    const enrichedFilters = {
       ...filters,
-      ...(!_.isEmpty(expandedLocations) && { locationId: expandedLocations })
+      ...(!_.isEmpty(unitLocations) && { locationId: unitLocations })
     };
 
-    const alarmEvents = await this.notificationServiceFactory().getAlarmEventsByFilter(expandedFilters);
+    const alarmEvents = await this.notificationServiceFactory().getAlarmEventsByFilter(enrichedFilters);
     const alarmEventsWithFeedback = await Promise.all(
       alarmEvents.items.map(async alarmEvent => this.joinAlarmEventWithFeedback(alarmEvent))
     );
@@ -146,7 +146,7 @@ class AlertService {
     );
   }
 
-  private async expandLocations(locationIds: string[]): Promise<string[]> {
+  private async fetchUnitLocations(locationIds: string[]): Promise<string[]> {
     const locations = await Promise.all(
       locationIds.map(async l => this.locationService.getLocation(l, {
         $select: {
