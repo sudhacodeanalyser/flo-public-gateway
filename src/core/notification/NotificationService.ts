@@ -12,7 +12,8 @@ import {
   SendWithUsEvent,
   FilterState,
   AlarmEventFilter,
-  NewUserFeedback
+  NewUserFeedback,
+  StatsFilter
 } from '../api';
 import Request from '../api/Request';
 import {Option} from 'fp-ts/lib/Option';
@@ -39,8 +40,9 @@ export interface NotificationService {
   getAlarmSettings(userId: string, deviceId: string): Promise<Option<DeviceAlarmSettings>>;
   getAlarmSettingsInBulk(userId: string, deviceIds: string[]): Promise<DeviceAlarmSettings[]>;
   updateAlarmSettings(userId: string, settings: UpdateDeviceAlarmSettings): Promise<void>;
-  generateEventsSample(data: any): Promise<void>;
+  generateEventsSample(data: any): Promise<void>; 
   retrieveStatistics(filters: string): Promise<NotificationStatistics>;
+  retrieveStatisticsInBatch(filter: StatsFilter): Promise<NotificationStatistics>;
   getFilterStateById(id: string): Promise<Option<FilterState>>;
   getFilterState(filters: any): Promise<FilterState[]>;
   deleteFilterState(id: string): Promise<void>;

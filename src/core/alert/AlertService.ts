@@ -57,36 +57,14 @@ class AlertService {
   }
 
   public async getAlarmEventsByFilter(filters: AlarmEventFilter): Promise<PaginatedResult<AlarmEvent>> {
-    const locations = filters.locationId
-      ? await Promise.all(filters.locationId.map(async l => this.locationService.getLocation(l, {
-        $select: {
-          id: true,
-          account: {
-            $select: {
-              id: true
-            }
-          },
-          ['class']: true
-        }
-      })))
-      : undefined;
-     
-    const expandedLocations = _.flatten((await Promise.all(_.map(locations, async (maybeLocation) => 
-      pipe(
-        maybeLocation,
-        Option.fold(
-          async () => [],
-          async l => l.class.key === 'unit' ? [l.id] : this.getAllChildrenUnits(l)
-        )
-      )
-    ))));
-
-    const expandedFilters = {
+    const unitLocations = filters.locationId ? await this.fetchUnitLocations(filters.locationId) : undefined;
+  
+    const enrichedFilters = {
       ...filters,
-      ...(!_.isEmpty(expandedLocations) && { locationId: expandedLocations })
+      ...(!_.isEmpty(unitLocations) && { locationId: unitLocations })
     };
 
-    const alarmEvents = await this.notificationServiceFactory().getAlarmEventsByFilter(expandedFilters);
+    const alarmEvents = await this.notificationServiceFactory().getAlarmEventsByFilter(enrichedFilters);
     const alarmEventsWithFeedback = await Promise.all(
       alarmEvents.items.map(async alarmEvent => this.joinAlarmEventWithFeedback(alarmEvent))
     );
@@ -119,12 +97,18 @@ class AlertService {
         [propertyFilter.property.name]: propertyFilter.property.values
       }), {});
 
-    const filters = {
+    const filters: AlarmEventFilter = {
       ...propertyFilters,
       ...(alertReportDefinition.view || {})
+    };    
+
+    const unitLocations = filters.locationId ? await this.fetchUnitLocations(filters.locationId) : undefined;
+    const enrichedFilters = {
+      ...filters,
+      ...(!_.isEmpty(unitLocations) && { locationId: unitLocations })
     };
 
-    const alarmEvents = await this.notificationServiceFactory().getAlarmEventsByFilter(filters);
+    const alarmEvents = await this.notificationServiceFactory().getAlarmEventsByFilter(enrichedFilters);
     const alarmEventsWithFeedback = await Promise.all(
       alarmEvents.items.map(async alarmEvent => this.joinAlarmEventWithFeedback(alarmEvent))
     );
@@ -160,6 +144,32 @@ class AlertService {
       Option.fromNullable(await this.alertFeedbackTable.get({ icd_id: deviceId, incident_id: incidentId })),
       Option.map(alertFeedbackRecord => AlertFeedbackRecord.toModel(alertFeedbackRecord))
     );
+  }
+
+  private async fetchUnitLocations(locationIds: string[]): Promise<string[]> {
+    const locations = await Promise.all(
+      locationIds.map(async l => this.locationService.getLocation(l, {
+        $select: {
+          id: true,
+          account: {
+            $select: {
+              id: true
+            }
+          },
+          ['class']: true
+        }
+      }))
+    );
+     
+    return _.flatten((await Promise.all(_.map(locations, async (maybeLocation) => 
+      pipe(
+        maybeLocation,
+        Option.fold(
+          async () => [],
+          async l => l.class.key === 'unit' ? [l.id] : this.getAllChildrenUnits(l)
+        )
+      )
+    ))));
   }
 
   private async getAllChildrenUnits(location: Location): Promise<string[]> {

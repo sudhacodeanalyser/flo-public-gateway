@@ -14,7 +14,8 @@ import {
   UpdateDeviceAlarmSettings,
   FilterState,
   AlarmEventFilter,
-  NewUserFeedback
+  NewUserFeedback,
+  StatsFilter
 } from '../core/api';
 import { DeviceService } from '../core/device/DeviceService';
 import { HttpService } from '../http/HttpService';
@@ -140,6 +141,14 @@ class ApiNotificationService {
     });
   }
 
+  public async retrieveStatisticsInBatch(filters: StatsFilter): Promise<NotificationStatistics> {
+    return this.notificationApi.sendRequest({
+      method: 'post',
+      url: '/statistics/batch',
+      body: filters
+    });
+  }
+
   public async getFilterStateById(id: string): Promise<Option<FilterState>> {
     return this.notificationApi.sendRequest({
       method: 'get',
@@ -150,7 +159,7 @@ class ApiNotificationService {
   public async getFilterState(filters: any): Promise<FilterState[]> {
     return this.notificationApi.sendRequest({
       method: 'get',
-      url: `/filters`,
+      url: '/filters',
       params: filters
     });
   }
@@ -165,7 +174,7 @@ class ApiNotificationService {
   public async createFilterState(filterState: FilterState): Promise<FilterState> {
     return this.notificationApi.sendRequest({
       method: 'post',
-      url: `/filters`,
+      url: '/filters',
       body: filterState
     });
   }
@@ -190,7 +199,7 @@ class ApiNotificationService {
 
     return this.notificationApi.sendRequest({
       method: 'post',
-      url: `/email/events`,
+      url: '/email/events',
       body: {
         events: formattedEvents
       }
