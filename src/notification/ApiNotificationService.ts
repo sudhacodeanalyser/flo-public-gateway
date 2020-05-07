@@ -14,7 +14,8 @@ import {
   UpdateDeviceAlarmSettings,
   FilterState,
   AlarmEventFilter,
-  NewUserFeedback
+  NewUserFeedback,
+  StatsFilter
 } from '../core/api';
 import { DeviceService } from '../core/device/DeviceService';
 import { HttpService } from '../http/HttpService';
@@ -137,6 +138,14 @@ class ApiNotificationService {
     return this.notificationApi.sendRequest({
       method: 'get',
       url: `/statistics?${filters}`
+    });
+  }
+
+  public async retrieveStatisticsInBatch(filters: StatsFilter): Promise<NotificationStatistics> {
+    return this.notificationApi.sendRequest({
+      method: 'post',
+      url: `/statistics/batch`,
+      body: filters
     });
   }
 

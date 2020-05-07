@@ -130,6 +130,11 @@ export interface AlarmEventFilter {
   size?: number;
 }
 
+export interface StatsFilter {
+  locationIds?: string[];
+  deviceIds?: string[]
+}
+
 export interface SimpleAlarm {
   id: number;
   name: string;

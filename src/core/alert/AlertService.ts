@@ -57,30 +57,8 @@ class AlertService {
   }
 
   public async getAlarmEventsByFilter(filters: AlarmEventFilter): Promise<PaginatedResult<AlarmEvent>> {
-    const locations = filters.locationId
-      ? await Promise.all(filters.locationId.map(async l => this.locationService.getLocation(l, {
-        $select: {
-          id: true,
-          account: {
-            $select: {
-              id: true
-            }
-          },
-          ['class']: true
-        }
-      })))
-      : undefined;
-     
-    const expandedLocations = _.flatten((await Promise.all(_.map(locations, async (maybeLocation) => 
-      pipe(
-        maybeLocation,
-        Option.fold(
-          async () => [],
-          async l => l.class.key === 'unit' ? [l.id] : this.getAllChildrenUnits(l)
-        )
-      )
-    ))));
-
+    const expandedLocations = filters.locationId ? await this.expandLocations(filters.locationId) : undefined;
+  
     const expandedFilters = {
       ...filters,
       ...(!_.isEmpty(expandedLocations) && { locationId: expandedLocations })
@@ -119,12 +97,18 @@ class AlertService {
         [propertyFilter.property.name]: propertyFilter.property.values
       }), {});
 
-    const filters = {
+    const filters: AlarmEventFilter = {
       ...propertyFilters,
       ...(alertReportDefinition.view || {})
+    };    
+
+    const expandedLocations = filters.locationId ? await this.expandLocations(filters.locationId) : undefined;
+    const expandedFilters = {
+      ...filters,
+      ...(!_.isEmpty(expandedLocations) && { locationId: expandedLocations })
     };
 
-    const alarmEvents = await this.notificationServiceFactory().getAlarmEventsByFilter(filters);
+    const alarmEvents = await this.notificationServiceFactory().getAlarmEventsByFilter(expandedFilters);
     const alarmEventsWithFeedback = await Promise.all(
       alarmEvents.items.map(async alarmEvent => this.joinAlarmEventWithFeedback(alarmEvent))
     );
@@ -160,6 +144,32 @@ class AlertService {
       Option.fromNullable(await this.alertFeedbackTable.get({ icd_id: deviceId, incident_id: incidentId })),
       Option.map(alertFeedbackRecord => AlertFeedbackRecord.toModel(alertFeedbackRecord))
     );
+  }
+
+  private async expandLocations(locationIds: string[]): Promise<string[]> {
+    const locations = await Promise.all(
+      locationIds.map(async l => this.locationService.getLocation(l, {
+        $select: {
+          id: true,
+          account: {
+            $select: {
+              id: true
+            }
+          },
+          ['class']: true
+        }
+      }))
+    );
+     
+    return _.flatten((await Promise.all(_.map(locations, async (maybeLocation) => 
+      pipe(
+        maybeLocation,
+        Option.fold(
+          async () => [],
+          async l => l.class.key === 'unit' ? [l.id] : this.getAllChildrenUnits(l)
+        )
+      )
+    ))));
   }
 
   private async getAllChildrenUnits(location: Location): Promise<string[]> {

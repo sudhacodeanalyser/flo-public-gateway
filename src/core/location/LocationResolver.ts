@@ -1,4 +1,4 @@
-import { inject, injectable, targetName } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { injectHttpContext, interfaces } from 'inversify-express-utils';
 import _ from 'lodash';
 import uuid from 'uuid';
@@ -15,6 +15,8 @@ import { LocationRecord, LocationRecordData } from './LocationRecord';
 import moment from 'moment';
 import LocationTreeTable from './LocationTreeTable';
 import ConflictError from '../api/error/ConflictError';
+import * as Option from 'fp-ts/lib/Option';
+import { pipe } from 'fp-ts/lib/pipeable';
 
 const DEFAULT_LANG = 'en';
 const DEFAULT_AREAS_ID = 'areas.default';
@@ -217,7 +219,9 @@ class LocationResolver extends Resolver<Location> {
         return null;
       }
 
-      return this.notificationService.retrieveStatistics(`locationId=${location.id}`);
+      const childrenUnits = await this.getAllChildrenUnits(location);
+      const locationIds = _.isEmpty(childrenUnits) ? [location.id] : childrenUnits;
+      return this.notificationService.retrieveStatisticsInBatch({locationIds});
     },
     areas: async (location: Location, shouldExpand = false) => {
       const defaultAreas = await this.lookupServiceFactory().getByIds([DEFAULT_AREAS_ID], [], DEFAULT_LANG);
@@ -467,7 +471,29 @@ class LocationResolver extends Resolver<Location> {
 
     return locationRecordData === null ? null : locationRecordData.account_id;
   }
+
+  private async getAllChildrenUnits(location: Location): Promise<string[]> {
+    const childIds = await this.locationTreeTable.getAllChildren(location.account.id, location.id);
+    const childLocations = await Promise.all(
+      childIds.map(({ child_id: childId }) => 
+        this.get(childId, {
+          $select: {
+            id: true,
+            ['class']: true
+          }
+        })
+      )
+    );
+    return _.flatMap(childLocations, maybeChildLocation => 
+      pipe(
+        Option.fromNullable(maybeChildLocation),
+        Option.fold(
+          () => [],
+          childLocation => childLocation.class.key === 'unit' ? [childLocation.id] : []
+        )
+      )
+    )
+  }
 }
 
 export { LocationResolver };
-
