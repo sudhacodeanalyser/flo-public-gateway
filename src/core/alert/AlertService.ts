@@ -1,7 +1,7 @@
 import { injectable, inject } from 'inversify';
 import AlertFeedbackTable from './AlertFeedbackTable';
 import { AlertFeedbackRecord } from './AlertFeedbackRecord';
-import { AlarmEvent, UserFeedback, UserFeedbackCodec, PaginatedResult, AlertFeedback, AlarmEventFilter, NewUserFeedback } from '../api';
+import { AlarmEvent, UserFeedback, UserFeedbackCodec, PaginatedResult, AlertFeedback, AlarmEventFilter, NewUserFeedback, Location, AlertReportDefinition, PropertyFilter } from '../api';
 import * as Option from 'fp-ts/lib/Option';
 import * as Either from 'fp-ts/lib/Either';
 import { pipe } from 'fp-ts/lib/pipeable';
@@ -9,7 +9,7 @@ import { NotificationServiceFactory, NotificationService } from '../notification
 import { injectHttpContext, interfaces } from 'inversify-express-utils';
 import * as t from 'io-ts';
 import _ from 'lodash';
-import ForbiddenError from '../api/error/ForbiddenError';
+import { LocationService } from '../location/LocationService';
 
 @injectable()
 class AlertService {
@@ -18,6 +18,7 @@ class AlertService {
   constructor(
     @inject('AlertFeedbackTable') private alertFeedbackTable: AlertFeedbackTable,
     @inject('NotificationServiceFactory') notificationServiceFactory: NotificationServiceFactory,
+    @inject('LocationService') private readonly locationService: LocationService,
     @injectHttpContext private readonly httpContext: interfaces.HttpContext
   ) {
 
@@ -55,10 +56,15 @@ class AlertService {
     };
   }
 
-
-
   public async getAlarmEventsByFilter(filters: AlarmEventFilter): Promise<PaginatedResult<AlarmEvent>> {
-    const alarmEvents = await this.notificationServiceFactory().getAlarmEventsByFilter(filters);
+    const unitLocations = filters.locationId ? await this.fetchUnitLocations(filters.locationId) : undefined;
+  
+    const enrichedFilters = {
+      ...filters,
+      ...(!_.isEmpty(unitLocations) && { locationId: unitLocations })
+    };
+
+    const alarmEvents = await this.notificationServiceFactory().getAlarmEventsByFilter(enrichedFilters);
     const alarmEventsWithFeedback = await Promise.all(
       alarmEvents.items.map(async alarmEvent => this.joinAlarmEventWithFeedback(alarmEvent))
     );
@@ -77,6 +83,40 @@ class AlertService {
 
   public async saveUserFeedback(incidentId: string, userFeedback: NewUserFeedback, force?: boolean): Promise<void> {
     return this.notificationServiceFactory().saveUserFeedback(incidentId, userFeedback, force);
+  }
+
+  public async buildAlertReport(alertReportDefinition: AlertReportDefinition): Promise<PaginatedResult<AlarmEvent>> {
+    const isPropertyFilter = (obj: any): obj is PropertyFilter => {
+      return obj.hasOwnProperty('property');
+    };
+
+    const propertyFilters = alertReportDefinition.basic.filters.items
+      .filter(isPropertyFilter)
+      .reduce((obj, propertyFilter: PropertyFilter) => ({
+        ...obj,
+        [propertyFilter.property.name]: propertyFilter.property.values
+      }), {});
+
+    const filters: AlarmEventFilter = {
+      ...propertyFilters,
+      ...(alertReportDefinition.view || {})
+    };    
+
+    const unitLocations = filters.locationId ? await this.fetchUnitLocations(filters.locationId) : undefined;
+    const enrichedFilters = {
+      ...filters,
+      ...(!_.isEmpty(unitLocations) && { locationId: unitLocations })
+    };
+
+    const alarmEvents = await this.notificationServiceFactory().getAlarmEventsByFilter(enrichedFilters);
+    const alarmEventsWithFeedback = await Promise.all(
+      alarmEvents.items.map(async alarmEvent => this.joinAlarmEventWithFeedback(alarmEvent))
+    );
+
+    return {
+      ...alarmEvents,
+      items: alarmEventsWithFeedback
+    }
   }
 
   private async joinAlarmEventWithFeedback(alarmEvent: AlarmEvent): Promise<AlarmEvent> {
@@ -104,6 +144,55 @@ class AlertService {
       Option.fromNullable(await this.alertFeedbackTable.get({ icd_id: deviceId, incident_id: incidentId })),
       Option.map(alertFeedbackRecord => AlertFeedbackRecord.toModel(alertFeedbackRecord))
     );
+  }
+
+  private async fetchUnitLocations(locationIds: string[]): Promise<string[]> {
+    const locations = await Promise.all(
+      locationIds.map(async l => this.locationService.getLocation(l, {
+        $select: {
+          id: true,
+          account: {
+            $select: {
+              id: true
+            }
+          },
+          ['class']: true
+        }
+      }))
+    );
+     
+    return _.flatten((await Promise.all(_.map(locations, async (maybeLocation) => 
+      pipe(
+        maybeLocation,
+        Option.fold(
+          async () => [],
+          async l => l.class.key === 'unit' ? [l.id] : this.getAllChildrenUnits(l)
+        )
+      )
+    ))));
+  }
+
+  private async getAllChildrenUnits(location: Location): Promise<string[]> {
+    const childIds = await this.locationService.getAllChildren(location);
+    const childLocations = await Promise.all(
+      childIds.map(({ child_id: childId }) => 
+        this.locationService.getLocation(childId, {
+          $select: {
+            id: true,
+            ['class']: true
+          }
+        })
+      )
+    );
+    return _.flatMap(childLocations, maybeChildLocation => 
+      pipe(
+        maybeChildLocation,
+        Option.fold(
+          () => [],
+          childLocation => childLocation.class.key === 'unit' ? [childLocation.id] : []
+        )
+      )
+    )
   }
 }
 

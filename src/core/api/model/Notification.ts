@@ -130,6 +130,11 @@ export interface AlarmEventFilter {
   size?: number;
 }
 
+export interface StatsFilter {
+  locationIds?: string[];
+  deviceIds?: string[]
+}
+
 export interface SimpleAlarm {
   id: number;
   name: string;
@@ -292,8 +297,8 @@ export interface TwilioStatusEvent extends t.TypeOf<typeof TwilioStatusEventCode
 
 
 enum FilterStateType {
-  SNOOZE = "snooze",
-  MAX_FREQUENCY_CAP = "max-frequency-cap"
+  SNOOZE = 'snooze',
+  MAX_FREQUENCY_CAP = 'max-frequency-cap'
 }
 
 const FilterStateTypeCodec = convertEnumtoCodec(FilterStateType)
@@ -329,3 +334,65 @@ export const NewUserFeedbackCodec = t.intersection([
 ]);
 
 export interface NewUserFeedback extends t.TypeOf<typeof NewUserFeedbackCodec> {}
+
+enum AlertReportOperator {
+  AND = 'and',
+  OR = 'or'
+}
+const AlertReportOperatorCodec = convertEnumtoCodec(AlertReportOperator);
+
+enum MatchType {
+  PREFIX = 'prefix',
+  INFIX = 'infix',
+  SUFFIX = 'suffix',
+  EXACT = 'exact'
+}
+const MatchTypeCodec = convertEnumtoCodec(MatchType);
+
+const QueryFilterCodec = t.type({
+  query: t.type({
+    text: t.string,
+    matchType: MatchTypeCodec,
+    properties: t.array(t.string)
+  })  
+});
+
+export interface QueryFilter extends t.TypeOf<typeof QueryFilterCodec> {}
+
+const PropertyFilterCodec = t.type({
+  property: t.type({
+    name: t.string,
+    values: t.array(t.string)
+  })
+});
+
+export interface PropertyFilter extends t.TypeOf<typeof PropertyFilterCodec> {}
+
+const AlertReportBasicFiltersCodec = t.type({
+  filters: t.type({
+    operator: t.union([t.undefined, AlertReportOperatorCodec]),
+    items: t.array(t.union([
+      QueryFilterCodec,
+      PropertyFilterCodec
+    ]))
+  })
+});
+
+const AlertReportSortCodec = t.type({
+  property: t.string,
+  valueOrder: t.union([t.undefined, t.array(t.string)]),
+  direction: t.union([t.undefined, t.string])
+});
+
+const AlertReportViewCodec = t.partial({
+  page: t.number,
+  size: t.number
+});
+
+export const AlertReportDefinitionCodec = t.type({
+  basic: AlertReportBasicFiltersCodec,
+  sort: t.union([t.undefined, AlertReportSortCodec]),
+  view: t.union([t.undefined, AlertReportViewCodec])
+});
+
+export interface AlertReportDefinition extends t.TypeOf<typeof AlertReportDefinitionCodec> {}

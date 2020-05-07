@@ -5,18 +5,28 @@ import _ from 'lodash';
 import { PropExpand, UpdateDeviceAlarmSettings, User, UserUpdate, UserCreate, UserAccountRole } from '../api';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import ValidationError from '../api/error/ValidationError';
+import ConflictError from '../api/error/ConflictError';
 import { UserResolver } from '../resolver';
-import { AccountService } from '../service';
+import { EntityActivityAction, EntityActivityService, EntityActivityType, AccountService } from '../service';
 
 @injectable()
 class UserService {
   constructor(
     @inject('UserResolver') private userResolver: UserResolver,
-    @inject('AccountService') private accountService: AccountService
+    @inject('AccountService') private accountService: AccountService,
+    @inject('EntityActivityService') private entityActivityService: EntityActivityService
   ) {}
 
   public async updatePartialUser(id: string, userUpdate: UserUpdate): Promise<User> {
-    return this.userResolver.updatePartialUser(id, userUpdate);
+    const updatedUser = await this.userResolver.updatePartialUser(id, userUpdate);
+
+    await this.entityActivityService.publishEntityActivity(
+      EntityActivityType.USER,
+      EntityActivityAction.UPDATED,
+      updatedUser
+    );
+
+    return updatedUser;
   }
 
   public async getUserById(id: string, expand?: PropExpand): Promise<Option<User>> {
@@ -34,6 +44,18 @@ class UserService {
     if (!_.isEmpty(account)) {
       throw new ValidationError('Cannot delete Account owner.');
     }
+
+    const user = await this.userResolver.getUserById(id);
+
+    if (!user) {
+      throw new ConflictError('User not found.');
+    }
+
+    await this.entityActivityService.publishEntityActivity(
+      EntityActivityType.USER,
+      EntityActivityAction.DELETED,
+      user
+    );
 
     return this.userResolver.removeUser(id);
   }
@@ -77,7 +99,15 @@ class UserService {
   }
 
   public async createUser(userCreate: UserCreate): Promise<User> {
-    return this.userResolver.createUser(userCreate);
+    const createdUser = await this.userResolver.createUser(userCreate);
+
+    await this.entityActivityService.publishEntityActivity(
+      EntityActivityType.USER,
+      EntityActivityAction.CREATED,
+      createdUser
+    );
+
+    return createdUser;
   }
 }
 

@@ -8,7 +8,7 @@ import _ from 'lodash';
 import { $enum } from 'ts-enum-util';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
-import { AlarmEvent, AlarmSeverityCodec, AlertStatus, AlertStatusCodec, ClearAlertBody, ClearAlertBodyCodec, ClearAlertResponse, IncidentStatusReasonCodec, NotificationStatistics, PaginatedResult, UserFeedback, UserFeedbackCodec, FilterState, FilterStateCodec, NewUserFeedbackRequest, NewUserFeedbackRequestCodec } from '../api';
+import { AlarmEvent, AlarmSeverityCodec, AlertReportDefinition, AlertReportDefinitionCodec, AlertStatus, AlertStatusCodec, ClearAlertBody, ClearAlertBodyCodec, ClearAlertResponse, IncidentStatusReasonCodec, NotificationStatistics, PaginatedResult, UserFeedback, UserFeedbackCodec, FilterState, FilterStateCodec, NewUserFeedbackRequest, NewUserFeedbackRequestCodec } from '../api';
 import { httpController, deleteMethod } from '../api/controllerUtils';
 import Request from '../api/Request';
 import { NotificationServiceFactory } from '../notification/NotificationService';
@@ -297,6 +297,16 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
       };
 
       return this.alertService.saveUserFeedback(id, userFeedback, force);
+    }
+
+    @httpPost('/report',
+      authMiddlewareFactory.create(),
+      reqValidator.create(t.type({
+        body: AlertReportDefinitionCodec
+      }))
+    )
+    private async buildAlertReport(@requestBody() alertReportDefinition: AlertReportDefinition): Promise<PaginatedResult<AlarmEvent>> {
+      return this.alertService.buildAlertReport(alertReportDefinition);
     }
   }
 
