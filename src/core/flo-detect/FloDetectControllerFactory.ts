@@ -4,14 +4,6 @@ import * as t from 'io-ts';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
 import { 
-  FloDetectEventPage, 
-  FloDetectComputation, 
-  FloDetectLearning, 
-  FloDetectCompuationDuration, 
-  FloDetectComputationDurationCodec, 
-  FloDetectEventFeedbackCodec, 
-  FloDetectEvent, 
-  FloDetectEventFeedback, 
   FloDetectResponseEventPage, 
   FloDetectResponseFixtures 
 } from '../api';
@@ -25,6 +17,7 @@ import { either } from 'fp-ts/lib/Either';
 import UnauthorizedError from '../api/error/UnauthorizedError';
 import ForbiddenError from '../api/error/ForbiddenError';
 import express from 'express';
+import GoneError from '../api/error/GoneError';
 
 export function FloDetectControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
@@ -80,105 +73,22 @@ export function FloDetectControllerFactory(container: Container, apiVersion: num
       super();
     }
 
-    @httpGet('/computations',
-      authMiddlewareFactory.create(async ({ query: { macAddress }}) => ({ device_id: macAddress })),
-      reqValidator.create(t.type({
-        query: t.type({
-          macAddress: t.string,
-          duration: FloDetectComputationDurationCodec
-        })
-      }))
-    )
-    private async getLatestComputation(@queryParam('macAddress') macAddress: string, @queryParam('duration') duration: FloDetectCompuationDuration): Promise<FloDetectComputation | FloDetectLearning> {
-      return pipe(
-        await this.floDetectService.getLatestComputation(macAddress, duration),
-        Option.getOrElse<FloDetectComputation | FloDetectLearning>(() => {
-          throw new NotFoundError();
-        })
-      );
+    @httpGet('/computations')
+    private async getLatestComputation(): Promise<any> {
+
+      throw new GoneError();
     }
 
-    @httpGet('/computations/:id/events',
-      // Auth deferred to controller method
-      reqValidator.create(t.type({
-        params: t.type({
-          id: t.string
-        }),
-        query: t.partial({
-          start: DateFromURIEncodedISOString,
-          size: IntegerFromString,
-          order: t.union([t.literal('desc'), t.literal('asc')])
-        })
-      }))
-    )
-    private async getEventChronologyPage(
-      @request() req: Request, 
-      @response() res: express.Response, 
-      @requestParam('id') id: string, 
-      @queryParam('start') startDate?: Date, 
-      @queryParam('size') pageSize?: number, 
-      @queryParam('order') order: string = 'asc'
-    ): Promise<FloDetectEventPage> {
+    @httpGet('/computations/:id/events')
+    private async getEventChronologyPage(): Promise<any> {
 
-      if (!req.get('Authorization')) {
-        throw new UnauthorizedError();
-      }
-
-      const computation = await this.getComputationById(id);
-
-      await this.authorizeByMacAddress(req, res, computation.macAddress);
-
-      const page = await this.floDetectService.getEventChronologyPage(
-        computation.macAddress, 
-        id, 
-        startDate && startDate.toISOString(), 
-        !pageSize || pageSize < 0 ? undefined : pageSize, 
-        order === 'desc'
-      );
-   
-      return page;
+      throw new GoneError();
     }
     
-    @httpPost('/computations/:id/events/:startDate',
-      // Auth deferred to controller method
-      reqValidator.create(t.type({
-        params: t.type({
-          id: t.string,
-          startDate: DateFromURIEncodedISOString
-        }),
-        body: t.type({
-          feedback: FloDetectEventFeedbackCodec
-        })
-      }))
-    )
-    private async submitEventFeedback(
-      @request() req: Request,
-      @response() res: express.Response,
-      @requestParam('id') id: string,
-      @requestParam('startDate') startDate: Date,
-      @requestBody() { feedback }: { feedback: FloDetectEventFeedback }
-    ): Promise<FloDetectEvent> {
-
-      if (!req.get('Authorization')) {
-        throw new UnauthorizedError();
-      }
-
-      const computation = await this.getComputationById(id);
-
-      await this.authorizeByMacAddress(req, res, computation.macAddress);
-
-      return this.floDetectService.submitEventFeedback(computation.macAddress, id, startDate.toISOString(), feedback);
+    @httpPost('/computations/:id/events/:startDate')
+    private async submitEventFeedback(): Promise<any> {
+      throw new GoneError();
     }  
-
-    private async getComputationById(id: string): Promise<FloDetectComputation> {
-      return pipe(
-        await this.floDetectService.getComputationById(id),
-        Option.fold(
-          () => { throw new NotFoundError(); },
-          computation => computation
-        )
-      );
-    }
 
     private async authorizeByMacAddress(req: Request, res: express.Response, macAddress: string): Promise<void> {
       await authMiddlewareFactory.create(async () => ({ device_id: macAddress }))(req, res, (err?: any) => {
