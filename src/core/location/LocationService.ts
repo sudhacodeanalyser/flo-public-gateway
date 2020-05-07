@@ -12,9 +12,9 @@ import ForbiddenError from '../api/error/ForbiddenError';
 import { DeviceSystemModeService } from '../device/DeviceSystemModeService';
 import { IrrigationScheduleService } from '../device/IrrigationScheduleService';
 import { LocationResolver } from '../resolver';
-import { AccountService, DeviceService, SubscriptionService } from '../service';
+import { AccountService, DeviceService, SubscriptionService, EntityActivityAction, EntityActivityService, EntityActivityType } from '../service';
 import moment from 'moment';
-import LocationTreeTable from './LocationTreeTable'
+import LocationTreeTable, { LocationTreeRow } from './LocationTreeTable'
 import { pipe } from 'fp-ts/lib/pipeable';
 
 const { fromNullable, isNone } = O;
@@ -32,14 +32,15 @@ class LocationService {
     @injectHttpContext private readonly httpContext: interfaces.HttpContext,
     @inject('AccessControlService') private accessControlService: AccessControlService,
     @inject('LocationTreeTable') private locationTreeTable: LocationTreeTable,
-    @inject('IrrigationScheduleService') private irrigationScheduleService: IrrigationScheduleService
+    @inject('IrrigationScheduleService') private irrigationScheduleService: IrrigationScheduleService,
+    @inject('EntityActivityService') private entityActivityService: EntityActivityService
   ) {
     this.deviceServiceFactory = depFactoryFactory<DeviceService>('DeviceService');
     this.accountServiceFactory = depFactoryFactory<AccountService>('AccountService');
     this.subscriptionServiceFactory = depFactoryFactory<SubscriptionService>('SubscriptionService');
   }
 
-  public async createLocation(location: Location): Promise<Option<Location>> {
+  public async createLocation(location: Location, userId?: string, roles: string[] = ['write', 'valve-open', 'valve-close']): Promise<Option<Location>> {
     const createdLocation: Location | null = await this.locationResolver.createLocation(location);
     const accountId = location.account.id;
     const account = await this.accountServiceFactory().getAccountById(accountId);
@@ -49,13 +50,38 @@ class LocationService {
     }
 
     const ownerUserId = account.value.owner.id;
+    const rolePromises: Array<Promise<any>> = [];
+    const aclPromises: Array<() => Promise<any>> = [];
     
-    await this.locationResolver.addLocationUserRole(createdLocation.id, ownerUserId, ['owner']);
-    await this.refreshUserACL(ownerUserId);
+    rolePromises.push(
+      this.locationResolver.addLocationUserRole(createdLocation.id, ownerUserId, ['owner'])
+    );
+    aclPromises.push(
+      () => this.refreshUserACL(ownerUserId)
+    );
+
+    // If user executing creation belongs to the account and is not the owner, grant them full access
+    if (userId && userId !== ownerUserId && _.find(account.value.users, { id: userId })) {
+      rolePromises.push(
+        this.locationResolver.addLocationUserRole(createdLocation.id, userId, roles)
+      );
+      aclPromises.push(
+        () => this.refreshUserACL(userId)
+      );
+    }
+
+    await Promise.all(rolePromises);
+    await Promise.all(aclPromises.map(thunk => thunk()));
 
     if (createdLocation.parent && createdLocation.parent.id) {
       await this.locationTreeTable.updateParent(account.value.id, createdLocation.id, createdLocation.parent.id, false);
     }
+
+    await this.entityActivityService.publishEntityActivity(
+      EntityActivityType.LOCATION,
+      EntityActivityAction.CREATED,
+      createdLocation
+    );
 
     return fromNullable(createdLocation);
   }
@@ -151,18 +177,35 @@ class LocationService {
       }
     }
 
+    await this.entityActivityService.publishEntityActivity(
+      EntityActivityType.LOCATION,
+      EntityActivityAction.UPDATED,
+      updatedLocation
+    );
+
     return updatedLocation;
   }
 
   public async removeLocation(id: string): Promise<void> {
     const subscriptionService = this.subscriptionServiceFactory();
     const subscription = await subscriptionService.getSubscriptionByRelatedEntityId(id);
+    const location = await this.locationResolver.get(id);
+
+    if (!location) {
+      throw new ConflictError('Location not found.');
+    }
 
     await this.locationResolver.removeLocation(id);
 
     if (!isNone(subscription)) {
       await this.subscriptionServiceFactory().cancelSubscription(subscription.value.id, true, `FLO INTERNAL: location ${ id } removed`);
     }
+
+    await this.entityActivityService.publishEntityActivity(
+      EntityActivityType.LOCATION,
+      EntityActivityAction.DELETED,
+      location
+    );
   }
 
   public async getAllLocationUserRoles(locationId: string): Promise<LocationUserRole[]> {
@@ -378,6 +421,10 @@ class LocationService {
     return parentIds.map(({ parent_id }) => parent_id);
   }
 
+  public async getAllChildren(location: Location): Promise<LocationTreeRow[]> {
+    return this.locationTreeTable.getAllChildren(location.account.id, location.id);
+  }
+
   private validateAreaDoesNotExist(areas: Areas, newAreaName: string, oldAreaName?: string): void {
     const defaultAreas = areas.default.map(a => a.name.toLowerCase());
     const customAreas = areas.custom.map(a => a.name.toLowerCase());
@@ -408,4 +455,3 @@ class LocationService {
 }
 
 export { LocationService };
-
