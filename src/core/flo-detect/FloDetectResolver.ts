@@ -13,8 +13,6 @@ import { morphism, StrictSchema } from 'morphism';
 import { 
   DependencyFactoryFactory,
   PropExpand,
-  FloDetectEventFeedback, 
-  FloDetectStatus,
   FloDetectResponseFlowEvent,
   FloDetectResponseEventItem,
   FloDetectResponseEventPage,
