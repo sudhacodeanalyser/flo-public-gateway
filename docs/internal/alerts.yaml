@@ -89,6 +89,19 @@ paths:
           schema:
             type: number
           description: Page size
+        - in: query
+          name: lang
+          schema:
+            type: string
+          description: Language
+        - in: query
+          name: unitSystem
+          schema:
+            type: string
+            enum:
+              - imperial
+              - metric
+          description: Unit System
       responses:
         200:
           description: A list of matching alerts.
@@ -155,6 +168,19 @@ paths:
             type: string
             format: uuid
           description: Alert Event ID
+        - in: query
+          name: lang
+          schema:
+            type: string
+          description: Language
+        - in: query
+          name: unitSystem
+          schema:
+            type: string
+            enum:
+              - imperial
+              - metric
+          description: Unit System          
       produces:
         - application/json
       responses:

@@ -75,8 +75,12 @@ class AlertService {
     }
   }
 
-  public async getAlarmEvent(incidentId: string, lang?: string): Promise<AlarmEvent> {
-    const alarmEvent = await this.notificationServiceFactory().getAlarmEvent(incidentId, lang ? { lang } : undefined);
+  public async getAlarmEvent(incidentId: string, lang?: string, unitSystem?: string): Promise<AlarmEvent> {
+    const filters = {
+      ...lang && { lang },
+      ...unitSystem && { unitSystem },
+    }
+    const alarmEvent = await this.notificationServiceFactory().getAlarmEvent(incidentId, filters);
 
     return this.joinAlarmEventWithFeedback(alarmEvent);
   }
