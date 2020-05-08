@@ -126,6 +126,7 @@ export interface AlarmEventFilter {
   createdAt?: string[];
   isInternalAlarm?: boolean;
   lang?: string;
+  unitSystem?: string;
   page?: number;
   size?: number;
 }
