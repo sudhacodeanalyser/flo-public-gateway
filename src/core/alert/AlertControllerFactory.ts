@@ -8,7 +8,7 @@ import _ from 'lodash';
 import { $enum } from 'ts-enum-util';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
-import { AlarmEvent, AlarmSeverityCodec, AlertReportDefinition, AlertReportDefinitionCodec, AlertStatus, AlertStatusCodec, ClearAlertBody, ClearAlertBodyCodec, ClearAlertResponse, IncidentStatusReasonCodec, NotificationStatistics, PaginatedResult, UserFeedback, UserFeedbackCodec, FilterState, FilterStateCodec, NewUserFeedbackRequest, NewUserFeedbackRequestCodec } from '../api';
+import { AlarmEvent, AlarmSeverityCodec, AlertReportDefinition, AlertReportDefinitionCodec, AlertStatus, AlertStatusCodec, ClearAlertBody, ClearAlertBodyCodec, ClearAlertResponse, IncidentStatusReasonCodec, NotificationStatistics, PaginatedResult, UserFeedback, UserFeedbackCodec, FilterState, FilterStateCodec, NewUserFeedbackRequest, NewUserFeedbackRequestCodec, UnitSystem } from '../api';
 import { httpController, deleteMethod } from '../api/controllerUtils';
 import Request from '../api/Request';
 import { NotificationServiceFactory } from '../notification/NotificationService';
@@ -87,7 +87,8 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
           isInternalAlarm: BooleanFromString,
           page: IntegerFromString,
           size: IntegerFromString,
-          lang: t.string
+          lang: t.string,
+          unitSystem: t.string
         })
       }))
     )
@@ -110,6 +111,8 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
         : undefined;
         return this.userService.getUserById(id,  propExpand);
       };
+
+      const convertUnitSystem = (unitSystem?: UnitSystem) => unitSystem === UnitSystem.METRIC_KPA ? 'metric' : 'imperial';
       
       const user = userId ? O.toUndefined(await retrieveUser(userId, (req.query.userId || noLocationOrDevice))) : undefined;
 
@@ -119,6 +122,14 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
             userId === tokenUserId ? 
               user?.locale || defaultLang :
               O.toUndefined(await retrieveUser(tokenUserId, false))?.locale || defaultLang)
+      };
+
+      const unitSystem = { 
+        unitSystem: (req.query.unitSystem ? 
+          req.query.unitSystem :
+            userId === tokenUserId ? 
+              convertUnitSystem(user?.unitSystem) :
+              convertUnitSystem(O.toUndefined(await retrieveUser(tokenUserId, false))?.unitSystem))
       };
         
       const queryDeviceIds = req.query.deviceId ?
@@ -138,12 +149,13 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
       const filters = {
         ...req.query,
         ...lang,
+        ...unitSystem,
         ...(!_.isEmpty(deviceIds) && { deviceId: deviceIds }),
         ...(!_.isEmpty(locationId) && { locationId }),
         ...(!_.isEmpty(status) && { status }),
         ...(!_.isEmpty(severity) && { severity }),
         ...(!_.isEmpty(reason) && { reason })
-      }
+      };
 
       if (_.isEmpty(filters.deviceId) && _.isEmpty(filters.locationId) && noLocationOrDevice) {
         // User ID has no device or locations associated.
@@ -265,6 +277,10 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
       reqValidator.create(t.type({
         params: t.type({
           id: t.string
+        }),
+        query: t.partial({
+          lang: t.string,
+          unitSystem: t.string
         })
       }))
     )
