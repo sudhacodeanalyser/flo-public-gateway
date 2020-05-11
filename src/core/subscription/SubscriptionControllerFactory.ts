@@ -151,7 +151,7 @@ export function SubscriptionControllerFactory(container: Container, apiVersion: 
     @withResponseType<Subscription, Responses.SubscriptionResponse>(Responses.Subscription.fromModel)
     private async getSubscription(
       @request() req: Request,
-      @response() res: express.Response
+      @response() res: express.Response,
       @requestParam('id') id: string, 
       @queryParam('expand') expand?: string, 
       @queryParam('fields') fields?: string
@@ -199,7 +199,7 @@ export function SubscriptionControllerFactory(container: Container, apiVersion: 
     @deleteMethod
     private async cancelSubscription(
       @request() req: Request,
-      @response() res: express.Response
+      @response() res: express.Response,
       @requestParam('id') id: string, 
       @requestBody() { cancellationReason, cancelImmediately }: { cancellationReason?: string, cancelImmediately?: boolean }      
     ): Promise<Subscription> {
