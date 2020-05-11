@@ -151,7 +151,7 @@ export function SubscriptionControllerFactory(container: Container, apiVersion: 
     @withResponseType<Subscription, Responses.SubscriptionResponse>(Responses.Subscription.fromModel)
     private async getSubscription(
       @request() req: Request,
-      @response() res: express.Response
+      @response() res: express.Response,
       @requestParam('id') id: string, 
       @queryParam('expand') expand?: string, 
       @queryParam('fields') fields?: string
@@ -169,7 +169,7 @@ export function SubscriptionControllerFactory(container: Container, apiVersion: 
       } 
 
       await (new Promise((resolve, reject) => 
-        authMiddlewareFactory.create(() => {
+        authMiddlewareFactory.create(async () => {
           const sub = subscription as Subscription;
 
           return Promise.resolve({ 
@@ -199,7 +199,7 @@ export function SubscriptionControllerFactory(container: Container, apiVersion: 
     @deleteMethod
     private async cancelSubscription(
       @request() req: Request,
-      @response() res: express.Response
+      @response() res: express.Response,
       @requestParam('id') id: string, 
       @requestBody() { cancellationReason, cancelImmediately }: { cancellationReason?: string, cancelImmediately?: boolean }      
     ): Promise<Subscription> {
@@ -221,7 +221,7 @@ export function SubscriptionControllerFactory(container: Container, apiVersion: 
       if (!_.isEmpty(subscription)) {
 
         await (new Promise((resolve, reject) => 
-          authMiddlewareFactory.create(() => {
+          authMiddlewareFactory.create(async () => {
             const sub = subscription as Subscription;
 
             return Promise.resolve({ 
