@@ -206,7 +206,7 @@ export function FloDetectControllerFactory(container: Container, apiVersion: num
     }
 
     @httpPost('/events/:id',
-      auth,
+      // Auth deferred to method body
       reqValidator.create(t.type({
         params: t.type({
           id: t.string
@@ -219,11 +219,28 @@ export function FloDetectControllerFactory(container: Container, apiVersion: num
       }))
     )
     private async submitEventFeedbackV2(
-      @request() req: Request, 
+      @request() req: Request,
+      @response() res: express.Response,
       @requestParam('id') eventId: string, 
       @requestBody() { feedback: { id: feedbackId } }: { feedback: { id: number } }
     ): Promise<any> {
-      // TODO better auth
+
+      if (!req.get('Authorization')) {
+        throw new UnauthorizedError('Missing token.');
+      }
+
+      const event = await this.floDetectService.getEventById(eventId);
+
+      await (new Promise((resolve, reject) => authMiddlewareFactory.create(
+        () => Promise.resolve({ device_id: event.macAddress })
+      )(req, res, err => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve();
+        }
+      })));
+
       const tokenMetadata = req.token;
       const userId = tokenMetadata && tokenMetadata.user_id;
 

@@ -19,7 +19,8 @@ export interface FloDetectResponseFlowEvent {
       id: string;
     }
   };
-  incident?: Expandable<AlarmEvent>
+  incident?: Expandable<AlarmEvent>,
+  macAddress: string;
 }
 
 export interface FloDetectResponseEventItem {

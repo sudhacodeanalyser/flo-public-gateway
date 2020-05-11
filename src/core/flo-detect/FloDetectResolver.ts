@@ -45,7 +45,8 @@ const ApiToResponseFlowEventSchema: StrictSchema<FloDetectResponseFlowEvent, Flo
     return input.incidentId !== undefined ?
       { id: input.incidentId } :
       undefined;
-  }
+  },
+  macAddress: 'deviceId'
 }
 
 const ApiToResponseEventItem: StrictSchema<FloDetectResponseEventItem, FloDetectApiEventItem> = {
