@@ -169,7 +169,7 @@ export function SubscriptionControllerFactory(container: Container, apiVersion: 
       } 
 
       await (new Promise((resolve, reject) => 
-        authMiddlewareFactory.create(() => {
+        authMiddlewareFactory.create(async () => {
           const sub = subscription as Subscription;
 
           return Promise.resolve({ 
@@ -221,7 +221,7 @@ export function SubscriptionControllerFactory(container: Container, apiVersion: 
       if (!_.isEmpty(subscription)) {
 
         await (new Promise((resolve, reject) => 
-          authMiddlewareFactory.create(() => {
+          authMiddlewareFactory.create(async () => {
             const sub = subscription as Subscription;
 
             return Promise.resolve({ 
