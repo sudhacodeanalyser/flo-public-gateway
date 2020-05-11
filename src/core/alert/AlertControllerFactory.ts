@@ -112,7 +112,7 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
         return this.userService.getUserById(id,  propExpand);
       };
 
-      const convertUnitSystem = (unitSystem?: UnitSystem) => unitSystem === UnitSystem.METRIC_KPA ? 'metric' : 'imperial'
+      const convertUnitSystem = (unitSystem?: UnitSystem) => unitSystem === UnitSystem.METRIC_KPA ? 'metric' : 'imperial';
       
       const user = userId ? O.toUndefined(await retrieveUser(userId, (req.query.userId || noLocationOrDevice))) : undefined;
 
@@ -155,7 +155,7 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
         ...(!_.isEmpty(status) && { status }),
         ...(!_.isEmpty(severity) && { severity }),
         ...(!_.isEmpty(reason) && { reason })
-      }
+      };
 
       if (_.isEmpty(filters.deviceId) && _.isEmpty(filters.locationId) && noLocationOrDevice) {
         // User ID has no device or locations associated.
