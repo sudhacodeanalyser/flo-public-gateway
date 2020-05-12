@@ -189,7 +189,7 @@ export function FloDetectControllerFactory(container: Container, apiVersion: num
     }
 
     @httpGet('/events/:id',
-      auth,
+      // Auth deferred to method body
       reqValidator.create(t.type({
         params: t.type({
           id: t.string
@@ -199,10 +199,25 @@ export function FloDetectControllerFactory(container: Container, apiVersion: num
         })
       }))
     )
-    private async getEventById(@requestParam('id') eventId: string, @queryParam('expand') expand?: string): Promise<any> {
-      const parsedExpand = parseExpand(expand);
+    private async getEventById(
+      @request() req: Request,
+      @response() res: express.Response,
+      @requestParam('id') eventId: string, 
+      @queryParam('expand') expand?: string
+    ): Promise<any> {
+      
+      if (!req.get('Authorization')) {
+        throw new UnauthorizedError('Missing token.');
+      }
 
-      return this.floDetectService.getEventById(eventId, parsedExpand);
+      const parsedExpand = parseExpand(expand);
+      const event = await this.floDetectService.getEventById(eventId, parsedExpand);
+
+      await (new Promise((resolve, reject) => authMiddlewareFactory.create(
+        () => Promise.resolve({ device_id: event.macAddress })
+      )(req, res, err => err ? reject(err) : resolve())));
+
+      return event;
     }
 
     @httpPost('/events/:id',
@@ -233,13 +248,7 @@ export function FloDetectControllerFactory(container: Container, apiVersion: num
 
       await (new Promise((resolve, reject) => authMiddlewareFactory.create(
         () => Promise.resolve({ device_id: event.macAddress })
-      )(req, res, err => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve();
-        }
-      })));
+      )(req, res, err => err ? reject(err) : resolve())));
 
       const tokenMetadata = req.token;
       const userId = tokenMetadata && tokenMetadata.user_id;
