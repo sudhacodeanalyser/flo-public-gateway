@@ -19,6 +19,7 @@ export interface FloDetectApiFlowEvent {
   feedbackId?: number;
   incidentId?: string;
   duration: number;
+  deviceId: string;
 }
 
 export interface FloDetectApiEventItem {
