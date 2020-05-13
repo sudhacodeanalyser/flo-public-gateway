@@ -1,6 +1,6 @@
 import { none, Option, some } from 'fp-ts/lib/Option';
 import { Container, inject, multiInject } from 'inversify';
-import { BaseHttpController, httpDelete, httpGet, httpPost, interfaces, queryParam, requestBody, requestParam } from 'inversify-express-utils';
+import { BaseHttpController, httpDelete, httpGet, httpPost, interfaces, queryParam, requestBody, requestParam, request, response } from 'inversify-express-utils';
 import * as t from 'io-ts';
 import _ from 'lodash';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
@@ -13,6 +13,8 @@ import { SubscriptionService } from '../service';
 import Request from '../api/Request';
 import { either } from 'fp-ts/lib/Either';
 import ValidationError from '../api/error/ValidationError';
+import * as express from 'express';
+import UnauthorizedError from '../api/error/UnauthorizedError';
 
 export function SubscriptionControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
@@ -21,7 +23,6 @@ export function SubscriptionControllerFactory(container: Container, apiVersion: 
   // to authorize subscription requests. This currently will only require a valid token, regardless
   // of which location or account for which you are creating the subscription.
   const auth = authMiddlewareFactory.create(undefined, 'ALL/api/v2/subscriptions');
-
   type Integer = t.TypeOf<typeof t.Integer>;
 
   const IntegerFromString = new t.Type<Integer, string, unknown>(
@@ -48,7 +49,7 @@ export function SubscriptionControllerFactory(container: Container, apiVersion: 
 
     @httpGet(
       '/',
-      auth,
+      authMiddlewareFactory.create(),
       reqValidator.create(t.type({
         query: t.partial({
           next: t.any,
@@ -77,7 +78,11 @@ export function SubscriptionControllerFactory(container: Container, apiVersion: 
 
     @httpPost(
       '/',
-      auth,
+      authMiddlewareFactory.create(
+        ({ body }) => Promise.resolve({ 
+          location_id: body.location && body.location.id 
+        })
+      ),
       reqValidator.create(t.type({
         body: SubscriptionCreateValidator
       }))
@@ -92,7 +97,9 @@ export function SubscriptionControllerFactory(container: Container, apiVersion: 
 
     @httpGet(
       '/payment',
-      auth,
+      authMiddlewareFactory.create(
+        (req: Request) => Promise.resolve({ user_id: req.query.userId })
+      ),
       reqValidator.create(t.type({
         query: t.type({
           userId: t.string,
@@ -110,7 +117,9 @@ export function SubscriptionControllerFactory(container: Container, apiVersion: 
 
     @httpPost(
       '/payment',
-      auth,
+      authMiddlewareFactory.create(
+        (req: Request) => Promise.resolve({ user_id: req.body.userId })
+      ),
       reqValidator.create(t.type({
        body: t.type({
          userId: t.string,
@@ -128,7 +137,7 @@ export function SubscriptionControllerFactory(container: Container, apiVersion: 
 
 
     @httpGet('/:id',
-      // auth,
+      // Auth deferred to method body
       reqValidator.create(t.type({
         params: t.type({
           id: t.string
@@ -140,20 +149,43 @@ export function SubscriptionControllerFactory(container: Container, apiVersion: 
       }))
     )
     @withResponseType<Subscription, Responses.SubscriptionResponse>(Responses.Subscription.fromModel)
-    private async getSubscription(@requestParam('id') id: string, @queryParam('expand') expand?: string, @queryParam('fields') fields?: string): Promise<Option<Subscription>> {
+    private async getSubscription(
+      @request() req: Request,
+      @response() res: express.Response,
+      @requestParam('id') id: string, 
+      @queryParam('expand') expand?: string, 
+      @queryParam('fields') fields?: string
+    ): Promise<Option<Subscription>> {
+
+      if (!req.get('Authorization')) {
+        throw new UnauthorizedError('Missing token.');
+      }
+
       const expandProps = parseExpand(expand, fields);
       const subscription = await this.subscriptionService.getSubscriptionById(id, expandProps);
 
       if (_.isEmpty(subscription)) {
         return none;
-      }
+      } 
+
+      await (new Promise((resolve, reject) => 
+        authMiddlewareFactory.create(async () => {
+          const sub = subscription as Subscription;
+
+          return Promise.resolve({ 
+            location_id: sub.location && sub.location.id
+          });
+        })(req, res, (err) => 
+          err ? reject(err) : resolve()
+        )
+      ));
 
       return some(subscription as Subscription);
     }
 
     @httpDelete(
       '/:id',
-      auth,
+      // Auth deferred to method body
       reqValidator.create(t.type({
         params: t.type({
           id: t.string
@@ -165,7 +197,41 @@ export function SubscriptionControllerFactory(container: Container, apiVersion: 
       }))
     )
     @deleteMethod
-    private async cancelSubscription(@requestParam('id') id: string, @requestBody() { cancellationReason, cancelImmediately }: { cancellationReason?: string, cancelImmediately?: boolean } ): Promise<Subscription> {
+    private async cancelSubscription(
+      @request() req: Request,
+      @response() res: express.Response,
+      @requestParam('id') id: string, 
+      @requestBody() { cancellationReason, cancelImmediately }: { cancellationReason?: string, cancelImmediately?: boolean }      
+    ): Promise<Subscription> {
+
+      if (!req.get('Authorization')) {
+        throw new UnauthorizedError('Missing token.');
+      }
+
+      const subscription = await this.subscriptionService.getSubscriptionById(id, { 
+        $select: { 
+          location: { 
+            $select: { 
+              id: true 
+            }
+          }
+        }
+      });
+
+      if (!_.isEmpty(subscription)) {
+
+        await (new Promise((resolve, reject) => 
+          authMiddlewareFactory.create(async () => {
+            const sub = subscription as Subscription;
+
+            return Promise.resolve({ 
+              location_id: sub.location && sub.location.id
+            });
+          })(req, res, (err) => 
+            err ? reject(err) : resolve()
+          )
+        ));
+      }
 
       return this.subscriptionService.cancelSubscription(id, cancelImmediately, cancellationReason);
     }
