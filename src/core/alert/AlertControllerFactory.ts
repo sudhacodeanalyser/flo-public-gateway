@@ -284,8 +284,8 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
         })
       }))
     )
-    private async getAlarmEvent(@requestParam('id') id: string): Promise<AlarmEvent> {
-      return this.alertService.getAlarmEvent(id);
+    private async getAlarmEvent(@requestParam('id') id: string, @queryParam('lang') lang?: string, @queryParam('unitSystem') unitSystem?: string): Promise<AlarmEvent> {
+      return this.alertService.getAlarmEvent(id, lang, unitSystem);
     }
 
     @httpPut('/:id/feedback',
