@@ -8,11 +8,11 @@ import _ from 'lodash';
 import { $enum } from 'ts-enum-util';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
-import { AlarmEvent, AlarmSeverityCodec, AlertReportDefinition, AlertReportDefinitionCodec, AlertStatus, AlertStatusCodec, ClearAlertBody, ClearAlertBodyCodec, ClearAlertResponse, IncidentStatusReasonCodec, NotificationStatistics, PaginatedResult, UserFeedback, UserFeedbackCodec, FilterState, FilterStateCodec, NewUserFeedbackRequest, NewUserFeedbackRequestCodec, UnitSystem } from '../api';
+import { DependencyFactoryFactory, AlarmEvent, AlarmSeverityCodec, AlertReportDefinition, AlertReportDefinitionCodec, AlertStatus, AlertStatusCodec, ClearAlertBody, ClearAlertBodyCodec, ClearAlertResponse, IncidentStatusReasonCodec, NotificationStatistics, PaginatedResult, UserFeedback, UserFeedbackCodec, FilterState, FilterStateCodec, NewUserFeedbackRequest, NewUserFeedbackRequestCodec, UnitSystem } from '../api';
 import { httpController, deleteMethod } from '../api/controllerUtils';
 import Request from '../api/Request';
 import { NotificationServiceFactory } from '../notification/NotificationService';
-import { AlertService, UserService } from '../service';
+import { AlertService, UserService, LocationService } from '../service';
 import UnauthorizedError from '../api/error/UnauthorizedError';
 
 export function AlertControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
@@ -23,6 +23,16 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
       icd_id: deviceId, location_id: locationId
     })
   );
+
+  const authWithIcdIdOrLocationIdOrParents = authMiddlewareFactory.create(async ({ body: { deviceId, locationId } }: Request, depFactoryFactory: DependencyFactoryFactory) => {
+    const locationService: LocationService | undefined = locationId && depFactoryFactory<LocationService>('LocationService')();
+    const parentIds = locationId ? (await locationService.getAllParentIds(locationId)) : [];
+    return {
+      location_id: locationId && [locationId, ...parentIds],
+      icd_id: deviceId
+    };
+  });
+
 
   type Integer = t.TypeOf<typeof t.Integer>;
 
@@ -171,7 +181,7 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
     }
 
     @httpPost('/action',
-      authWithIcdIdOrLocationId,
+      authWithIcdIdOrLocationIdOrParents,
       reqValidator.create(t.type({
         body: ClearAlertBodyCodec
       }))
