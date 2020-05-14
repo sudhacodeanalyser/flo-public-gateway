@@ -112,7 +112,7 @@ export interface AlarmEvent extends TimestampedModel {
   locationId: string;
   systemMode: string;
   userFeedback?: UserFeedback[]
-  feedback?: NewUserFeedback
+  feedback?: NewUserFeedbackResponse
 }
 
 export interface AlarmEventFilter {
@@ -335,6 +335,18 @@ export const NewUserFeedbackCodec = t.intersection([
 ]);
 
 export interface NewUserFeedback extends t.TypeOf<typeof NewUserFeedbackCodec> {}
+
+export const NewUserFeedbackResponseCodec = t.intersection([
+  NewUserFeedbackCodec,
+  t.type({
+    displayTitle: t.string,
+    displaySummary: t.string,
+    createdAt: t.union([t.string, t.undefined]),
+    updatedAt: t.union([t.string, t.undefined])
+  })
+]);
+
+export interface NewUserFeedbackResponse extends t.TypeOf<typeof NewUserFeedbackResponseCodec> {}
 
 enum AlertReportOperator {
   AND = 'and',
