@@ -137,7 +137,7 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
 
     @httpDelete(
       '/:id',
-      authWithParents,
+      authWithId,
       reqValidator.create(t.type({
         params: t.type({
           id: t.string

@@ -3,6 +3,7 @@ import _ from 'lodash';
 import { Lookup } from '../api';
 import { fromRecord, LookupItemRecord } from './LookupItemRecord';
 import { LookupTable } from './LookupTable';
+import moment from 'moment';
 
 @injectable()
 class LookupService {
@@ -10,12 +11,17 @@ class LookupService {
 
   constructor(
     @inject('LookupTable') private lookupTable: LookupTable,
-    @inject('ListCache') private listCache: Lookup
+    @inject('ListCache') private listCache: Lookup,
+    @inject('ListCacheTtl') private listCacheTtl: Record<string, string | undefined>
   ) {}
 
   public async getByIds(ids: string[], prefixes?: string[], lang?: string): Promise<Lookup> {
     const cached = _.chain(this.listCache)
       .pick(ids)
+      .pickBy((value, listId) => {
+        const listTtl = this.listCacheTtl[listId];
+        return listTtl && moment().isBefore(listTtl);
+      })
       .mapValues(value => 
         value.filter(({ lang: itemLang }) => 
           this.normalizeLang(lang) === itemLang 
@@ -32,10 +38,13 @@ class LookupService {
 
     if (!_.isEmpty(dbResult)) {
       _.forEach(dbLookups, (items, listId) => {
+
         this.listCache[listId] = _.uniqBy(
           [...(this.listCache[listId] || []), ...items],
           ({ key, lang: itemLang }) => `${ key }_${ itemLang }`
-        ); 
+        );
+
+        this.listCacheTtl[listId] = moment().add(60, 'seconds').toISOString();
       });
     }
 
