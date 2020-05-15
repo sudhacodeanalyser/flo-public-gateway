@@ -187,15 +187,43 @@ export const DeviceAlarmSettingsCodec = t.type({
   settings: t.union([t.array(AlarmSettingsCodec), t.undefined])
 });
 
-export const UpdateDeviceAlarmSettingsCodec = t.type({
-  items: t.array(DeviceAlarmSettingsCodec)
+export const LocationAlarmSettingsCodec = t.type({
+  locationId: t.string,
+  settings: t.union([t.array(AlarmSettingsCodec), t.undefined])
 });
+
+export const EntityAlarmSettingsItemCodec = t.union([DeviceAlarmSettingsCodec, LocationAlarmSettingsCodec]);
+
+export const EntityAlarmSettingsCodec = t.type({
+  items: t.array(EntityAlarmSettingsItemCodec)
+});
+
+export const UpdateAlarmSettingsCodec = t.type({
+  items: t.array(EntityAlarmSettingsItemCodec)
+});
+
+export const RetrieveAlarmSettingsFilterCodec = t.union([
+  t.type({
+    deviceIds: t.array(t.string)
+  }),
+  t.type({
+    locationIds: t.array(t.string)
+  })
+]);
 
 export interface AlarmSettings extends t.TypeOf<typeof AlarmSettingsCodec> {}
 
-export interface UpdateDeviceAlarmSettings extends t.TypeOf<typeof UpdateDeviceAlarmSettingsCodec> {}
+export interface UpdateAlarmSettings extends t.TypeOf<typeof UpdateAlarmSettingsCodec> {}
 
 export interface DeviceAlarmSettings extends t.TypeOf<typeof DeviceAlarmSettingsCodec> {}
+
+export interface LocationAlarmSettings extends t.TypeOf<typeof LocationAlarmSettingsCodec> {}
+
+export interface EntityAlarmSettings extends t.TypeOf<typeof EntityAlarmSettingsCodec> {}
+
+export type EntityAlarmSettingsItem = t.TypeOf<typeof EntityAlarmSettingsItemCodec>
+
+export type RetrieveAlarmSettingsFilter = t.TypeOf<typeof RetrieveAlarmSettingsFilterCodec>
 
 export interface UserActions {
   displayTitle: string;

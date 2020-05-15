@@ -2,7 +2,7 @@ import { fold, fromNullable, Option } from 'fp-ts/lib/Option';
 import { pipe } from 'fp-ts/lib/pipeable';
 import { inject, injectable } from 'inversify';
 import _ from 'lodash';
-import { PropExpand, UpdateDeviceAlarmSettings, User, UserUpdate, UserCreate, UserAccountRole } from '../api';
+import { PropExpand, UpdateAlarmSettings, User, UserUpdate, UserCreate, UserAccountRole, RetrieveAlarmSettingsFilter, EntityAlarmSettings } from '../api';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import ValidationError from '../api/error/ValidationError';
 import ConflictError from '../api/error/ConflictError';
@@ -64,8 +64,12 @@ class UserService {
     return _.includes(user.accountRole.roles, 'owner');
   }
 
-  public async updateAlarmSettings(id: string, settings: UpdateDeviceAlarmSettings): Promise<void> {
+  public async updateAlarmSettings(id: string, settings: UpdateAlarmSettings): Promise<void> {
     return this.userResolver.updateAlarmSettings(id, settings);
+  }
+
+  public async retrieveAlarmSettings(id: string, filter: RetrieveAlarmSettingsFilter): Promise<EntityAlarmSettings> {
+    return this.userResolver.retrieveAlarmSettings(id, filter);
   }
 
   public async addEnabledFeatures(id: string, features: string[]): Promise<void> {
@@ -112,4 +116,3 @@ class UserService {
 }
 
 export { UserService };
-

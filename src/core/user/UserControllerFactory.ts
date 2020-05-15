@@ -4,7 +4,7 @@ import { BaseHttpController, httpDelete, httpGet, httpPost, interfaces, queryPar
 import * as t from 'io-ts';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
-import { UpdateDeviceAlarmSettings, UpdateDeviceAlarmSettingsCodec, User, UserUpdate, UserUpdateValidator } from '../api';
+import { UpdateAlarmSettings, UpdateAlarmSettingsCodec, User, UserUpdate, UserUpdateValidator, RetrieveAlarmSettingsFilterCodec, RetrieveAlarmSettingsFilter, EntityAlarmSettings } from '../api';
 import { asyncMethod, authorizationHeader, createMethod, deleteMethod, httpController, parseExpand, withResponseType } from '../api/controllerUtils';
 import Request from '../api/Request';
 import * as Responses from '../api/response';
@@ -202,11 +202,25 @@ export function UserControllerFactory(container: Container, apiVersion: number):
         params: t.type({
           id: t.string
         }),
-        body: UpdateDeviceAlarmSettingsCodec
+        body: UpdateAlarmSettingsCodec
       }))
     )
-    private async updateAlarmSettings(@requestParam('id') id: string, @requestBody() data: UpdateDeviceAlarmSettings): Promise<void> {
+    private async updateAlarmSettings(@requestParam('id') id: string, @requestBody() data: UpdateAlarmSettings): Promise<void> {
       return this.userService.updateAlarmSettings(id, data);
+    }
+
+    @httpPost(
+      '/:id/alarmSettings/_get',
+      authWithId,
+      reqValidator.create(t.type({
+        params: t.type({
+          id: t.string
+        }),
+        body: RetrieveAlarmSettingsFilterCodec
+      }))
+    )
+    private async retrieveAlarmSettings(@requestParam('id') id: string, @requestBody() filters: RetrieveAlarmSettingsFilter): Promise<EntityAlarmSettings> {
+      return this.userService.retrieveAlarmSettings(id, filters);
     }
 
     @httpPost(
