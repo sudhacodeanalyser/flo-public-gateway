@@ -3,7 +3,7 @@ import { inject, injectable } from 'inversify';
 import { injectHttpContext, interfaces } from 'inversify-express-utils';
 import _ from 'lodash';
 import { fromPartialRecord } from '../../database/Patch';
-import { DependencyFactoryFactory, PropExpand, UpdateDeviceAlarmSettings, User, UnitSystem, UserCreate } from '../api';
+import { DependencyFactoryFactory, DeviceAlarmSettings, EntityAlarmSettingsItem, PropExpand, UpdateAlarmSettings, User, UnitSystem, UserCreate, RetrieveAlarmSettingsFilter, EntityAlarmSettings } from '../api';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import { NotificationService, NotificationServiceFactory } from '../notification/NotificationService';
 import { AccountResolver, LocationResolver, PropertyResolverMap, Resolver } from '../resolver';
@@ -144,7 +144,12 @@ class UserResolver extends Resolver<User> {
           return null;
         }
 
-        return (await this.notificationServiceFactory().getAlarmSettingsInBulk(model.id, devices.map(device => device.id)));
+        const isDeviceSettings = (s: EntityAlarmSettingsItem): s is DeviceAlarmSettings => {
+          return (s as DeviceAlarmSettings).deviceId !== undefined;
+        }
+        const settings = (await this.notificationServiceFactory().getAlarmSettingsInBulk(model.id, { deviceIds: devices.map(device => device.id) }));
+        return settings.items.filter(isDeviceSettings);
+        
       } catch (err) {
         this.logger.error({ err });
 
@@ -251,8 +256,12 @@ class UserResolver extends Resolver<User> {
     ]);
   }
 
-  public async updateAlarmSettings(id: string, settings: UpdateDeviceAlarmSettings): Promise<void> {
+  public async updateAlarmSettings(id: string, settings: UpdateAlarmSettings): Promise<void> {
     return this.notificationServiceFactory().updateAlarmSettings(id, settings);
+  }
+
+  public async retrieveAlarmSettings(id: string, filter: RetrieveAlarmSettingsFilter): Promise<EntityAlarmSettings> {
+    return this.notificationServiceFactory().getAlarmSettingsInBulk(id, filter);
   }
 
   public async setEnabledFeatures(id: string, features: string[]): Promise<void> {
