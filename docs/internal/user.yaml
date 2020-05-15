@@ -273,11 +273,63 @@ paths:
                 items:
                   type: array
                   items:
-                    $ref: '#/components/schemas/DeviceAlarmSettings'
+                    $ref: '#/components/schemas/EntityAlarmSettings'
 
       responses:
         200:
           description: 'User alarm settings were updated'
+        400:
+          description: 'Invalid request body, invalid token, or expired token'
+        401:
+          description: 'Invalid client'
+        403:
+          description: 'Unauthorized client'
+
+  /api/v2/users/{id}/alarmSettings/_get:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: User ID
+
+    post:
+      summary: Retrieves user alarm settings
+      tags:
+        - Users
+      produces:
+        - application/json
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - type: object
+                  properties:
+                    deviceIds:
+                      type: array
+                      items:
+                        type: string
+                - type: object
+                  properties:
+                    locationId:
+                      type: array
+                      items:
+                        type: string
+
+      responses:
+        200:
+          description: 'User alarm settings'
+          schema:
+            type: object
+            properties:
+              items:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EntityAlarmSettings'
         400:
           description: 'Invalid request body, invalid token, or expired token'
         401:
@@ -450,6 +502,28 @@ components:
               type: string
               format: uuid
         - $ref: '#/components/schemas/User'
+
+    EntityAlarmSettings:
+      type: object
+      properties:
+        allOf:
+          - oneOf:
+            - type: object
+              properties:
+                deviceId:
+                  type: string
+                  format: uuid
+            - type: object
+              properties:
+                locationId:
+                  type: string
+                  format: uuid
+          - type: object
+            properties:
+              settings:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AlarmSettings'
 
     DeviceAlarmSettings:
       type: object
