@@ -11,11 +11,13 @@ import {
   NotificationStatistics,
   PaginatedResult, Receipt, SendWithUsEvent,
   TwilioStatusEvent,
-  UpdateDeviceAlarmSettings,
+  UpdateAlarmSettings,
   FilterState,
   AlarmEventFilter,
   NewUserFeedback,
-  StatsFilter
+  StatsFilter,
+  RetrieveAlarmSettingsFilter,
+  EntityAlarmSettings
 } from '../core/api';
 import { DeviceService } from '../core/device/DeviceService';
 import { HttpService } from '../http/HttpService';
@@ -103,22 +105,25 @@ class ApiNotificationService {
   }
 
   public async getAlarmSettings(userId: string, deviceId: string): Promise<Option<DeviceAlarmSettings>> {
-    const settingsArray = await this.getAlarmSettingsInBulk(userId, [deviceId]);
-
-    return fromNullable(_.head(settingsArray));
-  }
-
-  public async getAlarmSettingsInBulk(userId: string, deviceIds: string[]): Promise<DeviceAlarmSettings[]> {
-    const devices = deviceIds.join(',');
     const settings: DeviceAlarmSettings[] = await this.notificationApi.sendRequest({
       method: 'get',
-      url: `/settings/${userId}?devices=${devices}`
+      url: `/settings/${userId}?devices=${deviceId}`,
+    });
+
+    return fromNullable(_.head(settings));
+  }
+
+  public async getAlarmSettingsInBulk(userId: string, filters: RetrieveAlarmSettingsFilter): Promise<EntityAlarmSettings> {    
+    const settings: EntityAlarmSettings = await this.notificationApi.sendRequest({
+      method: 'post',
+      url: `/settings/${userId}/batch`,
+      body: filters
     });
 
     return settings;
   }
 
-  public async updateAlarmSettings(userId: string, settings: UpdateDeviceAlarmSettings): Promise<void> {
+  public async updateAlarmSettings(userId: string, settings: UpdateAlarmSettings): Promise<void> {
     return this.notificationApi.sendRequest({
       method: 'post',
       url: `/settings/${userId}`,

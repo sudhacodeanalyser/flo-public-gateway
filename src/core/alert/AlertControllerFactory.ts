@@ -12,7 +12,7 @@ import { DependencyFactoryFactory, AlarmEvent, AlarmSeverityCodec, AlertReportDe
 import { httpController, deleteMethod } from '../api/controllerUtils';
 import Request from '../api/Request';
 import { NotificationServiceFactory } from '../notification/NotificationService';
-import { AlertService, UserService, LocationService } from '../service';
+import { AlertService, UserService, LocationService, DeviceService } from '../service';
 import UnauthorizedError from '../api/error/UnauthorizedError';
 
 export function AlertControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
@@ -25,10 +25,17 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
   );
 
   const authWithIcdIdOrLocationIdOrParents = authMiddlewareFactory.create(async ({ body: { deviceId, locationId } }: Request, depFactoryFactory: DependencyFactoryFactory) => {
-    const locationService: LocationService | undefined = locationId && depFactoryFactory<LocationService>('LocationService')();
-    const parentIds = locationId ? (await locationService.getAllParentIds(locationId)) : [];
+    const locationService = depFactoryFactory<LocationService>('LocationService')();
+    const deviceService = deviceId && depFactoryFactory<DeviceService>('DeviceService')();
+    const device = deviceId && O.toNullable((await deviceService.getDeviceById(deviceId, { $select: { location: { $select: { id: true } } } })));
+    const parentIds = locationId ? 
+      (await locationService.getAllParentIds(locationId)) :
+      device ?
+        (await locationService.getAllParentIds(device.location.id)) :
+        [];
+
     return {
-      location_id: locationId && [locationId, ...parentIds],
+      location_id: locationId ? [locationId, ...parentIds] : parentIds,
       icd_id: deviceId
     };
   });
