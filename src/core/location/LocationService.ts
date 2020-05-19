@@ -4,7 +4,7 @@ import { injectHttpContext, interfaces } from 'inversify-express-utils';
 import _ from 'lodash';
 import uuid from 'uuid';
 import { AccessControlService } from '../../auth/AccessControlService';
-import { Areas, DependencyFactoryFactory, Location, LocationUpdate, LocationUserRole, PropExpand, SystemMode } from '../api';
+import { Areas, DependencyFactoryFactory, Location, LocationUpdate, LocationUserRole, PropExpand, SystemMode, Device, DeviceType } from '../api';
 import ConflictError from '../api/error/ConflictError';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import ValidationError from '../api/error/ValidationError';
@@ -16,6 +16,7 @@ import { AccountService, DeviceService, SubscriptionService, EntityActivityActio
 import moment from 'moment';
 import LocationTreeTable, { LocationTreeRow } from './LocationTreeTable'
 import { pipe } from 'fp-ts/lib/pipeable';
+import { MachineLearningService } from '../../machine-learning/MachineLearningService';
 
 const { fromNullable, isNone } = O;
 type Option<T> = O.Option<T>;
@@ -33,7 +34,8 @@ class LocationService {
     @inject('AccessControlService') private accessControlService: AccessControlService,
     @inject('LocationTreeTable') private locationTreeTable: LocationTreeTable,
     @inject('IrrigationScheduleService') private irrigationScheduleService: IrrigationScheduleService,
-    @inject('EntityActivityService') private entityActivityService: EntityActivityService
+    @inject('EntityActivityService') private entityActivityService: EntityActivityService,
+    @inject('MachineLearningService') private mlService: MachineLearningService
   ) {
     this.deviceServiceFactory = depFactoryFactory<DeviceService>('DeviceService');
     this.accountServiceFactory = depFactoryFactory<AccountService>('AccountService');
@@ -423,6 +425,58 @@ class LocationService {
 
   public async getAllChildren(location: Location): Promise<LocationTreeRow[]> {
     return this.locationTreeTable.getAllChildren(location.account.id, location.id);
+  }
+
+  public async forwardPes(id: string, method: string, subPath: string, data: any, shouldCascade?: boolean): Promise<void> {
+    const location = O.toNullable(await this.getLocation(id, { 
+      $select: { 
+        account: {
+          $select: {
+            id: true
+          }
+        },
+        devices: {
+          $select: {
+            macAddress: true,
+            deviceType: true
+          }
+        }
+      }
+    }));
+
+    if (!location) {
+      throw new ResourceDoesNotExistError('Location does not exist.');
+    }
+
+    const devices: Array<Pick<Device, 'macAddress' | 'deviceType'>> = [...location.devices as Device[]];
+
+    if (shouldCascade) {
+      const childIds = await this.getAllChildren(location);
+      const childLocations = await Promise.all(
+        childIds.map(({ child_id }) => this.getLocation(child_id, {
+          $select: {
+            devices: {
+              $select: {
+                macAddress: true,
+                deviceType: true
+              }
+            }
+          }
+        }))
+      );
+      const childDevices = _.chain(childLocations)
+        .map(opt => O.toNullable(opt))
+        .flatMap(loc => (loc ? loc.devices : []) as Device[])
+        .value();
+
+      childDevices.forEach(device => devices.push(device));
+    }
+
+    await Promise.all(
+      devices
+        .filter(device => device.deviceType !== DeviceType.PUCK)
+        .map(device => this.mlService.forward(method, `${ device.macAddress }/pes/${ subPath }`, data))
+    );
   }
 
   private validateAreaDoesNotExist(areas: Areas, newAreaName: string, oldAreaName?: string): void {
