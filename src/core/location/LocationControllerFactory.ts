@@ -1,12 +1,12 @@
 import { Option, some } from 'fp-ts/lib/Option';
 import { Container, inject } from 'inversify';
-import { BaseHttpController, httpDelete, httpGet, httpPost, httpPut, interfaces, queryParam, request, requestBody, requestParam } from 'inversify-express-utils';
+import { BaseHttpController, httpDelete, httpGet, httpPost, httpPut, interfaces, queryParam, request, requestBody, requestParam, all } from 'inversify-express-utils';
 import * as t from 'io-ts';
 import _ from 'lodash';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
 import { DependencyFactoryFactory, AreaName, AreaNameCodec, Areas, Location, LocationCreateValidator, LocationUpdate, LocationUpdateValidator, LocationUserRole, SystemMode, SystemModeCodec } from '../api';
-import { createMethod, deleteMethod, httpController, parseExpand, withResponseType, httpMethod, queryParamArray } from '../api/controllerUtils';
+import { createMethod, deleteMethod, httpController, parseExpand, withResponseType, httpMethod, queryParamArray, asyncMethod } from '../api/controllerUtils';
 import Request from '../api/Request';
 import * as Responses from '../api/response';
 import { NonEmptyArray } from '../api/validator/NonEmptyArray';
@@ -242,6 +242,26 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
     private async removeArea(@requestParam('locationId') locationId: string, @requestParam('areaId') areaId: string): Promise<Areas> {
       return this.locationService.removeArea(locationId, areaId);
     }
+
+    @all(
+      '/:id/pes/*',
+      authWithParents,
+      reqValidator.create(t.type({
+        params: t.type({
+          id: t.string
+        }),
+        body: t.any,
+        query: t.partial({
+          shouldCascade: t.boolean
+        })
+      }))
+    )
+    @asyncMethod
+    private async forwardPes(@request() req: Request, @requestParam('id') id: string, @requestBody() data: any, @queryParam('shouldCascade') shouldCascade?: boolean): Promise<void> {
+      const subPath = req.url.toLowerCase().split('pes/')[1];
+
+      await this.locationService.forwardPes(id, req.method, subPath, data, shouldCascade);
+    }  
   }
 
   return LocationControllerFactory;
