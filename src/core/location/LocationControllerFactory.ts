@@ -6,7 +6,7 @@ import _ from 'lodash';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
 import { DependencyFactoryFactory, AreaName, AreaNameCodec, Areas, Location, LocationCreateValidator, LocationUpdate, LocationUpdateValidator, LocationUserRole, SystemMode, SystemModeCodec } from '../api';
-import { createMethod, deleteMethod, httpController, parseExpand, withResponseType, httpMethod, queryParamArray } from '../api/controllerUtils';
+import { createMethod, deleteMethod, httpController, parseExpand, withResponseType, httpMethod, queryParamArray, asyncMethod } from '../api/controllerUtils';
 import Request from '../api/Request';
 import * as Responses from '../api/response';
 import { NonEmptyArray } from '../api/validator/NonEmptyArray';
@@ -256,12 +256,11 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
         })
       }))
     )
+    @asyncMethod
     private async forwardPes(@request() req: Request, @requestParam('id') id: string, @requestBody() data: any, @queryParam('shouldCascade') shouldCascade?: boolean): Promise<void> {
       const subPath = req.url.toLowerCase().split('pes/')[1];
 
       await this.locationService.forwardPes(id, req.method, subPath, data, shouldCascade);
-
-      this.statusCode(202);
     }  
   }
 
