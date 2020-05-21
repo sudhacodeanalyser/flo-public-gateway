@@ -3,10 +3,10 @@ import { inject, injectable } from 'inversify';
 import { injectHttpContext, interfaces } from 'inversify-express-utils';
 import _ from 'lodash';
 import { fromPartialRecord } from '../../database/Patch';
-import { DependencyFactoryFactory, DeviceAlarmSettings, EntityAlarmSettingsItem, PropExpand, UpdateAlarmSettings, User, UnitSystem, UserCreate, RetrieveAlarmSettingsFilter, EntityAlarmSettings } from '../api';
+import { DependencyFactoryFactory, DeviceAlarmSettings, EntityAlarmSettingsItem, PropExpand, UpdateAlarmSettings, User, UnitSystem, UserCreate, RetrieveAlarmSettingsFilter, EntityAlarmSettings, LocationAlarmSettings, AlarmSettings } from '../api';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import { NotificationService, NotificationServiceFactory } from '../notification/NotificationService';
-import { AccountResolver, LocationResolver, PropertyResolverMap, Resolver } from '../resolver';
+import { AccountResolver, DeviceResolver, LocationResolver, PropertyResolverMap, Resolver } from '../resolver';
 import { UserAccountRoleRecord } from './UserAccountRoleRecord';
 import UserAccountRoleTable from './UserAccountRoleTable';
 import { UserDetailRecord } from './UserDetailRecord';
@@ -15,7 +15,7 @@ import { UserLocationRoleRecord, UserLocationRoleRecordData } from './UserLocati
 import UserLocationRoleTable from './UserLocationRoleTable';
 import { UserRecord, UserRecordData } from './UserRecord';
 import UserTable from './UserTable';
-import LocationTreeTable from '../location/LocationTreeTable';
+import LocationTreeTable, { LocationTreeRow } from '../location/LocationTreeTable';
 import uuid from 'uuid';
 
 @injectable()
@@ -144,12 +144,10 @@ class UserResolver extends Resolver<User> {
           return null;
         }
 
-        const isDeviceSettings = (s: EntityAlarmSettingsItem): s is DeviceAlarmSettings => {
-          return (s as DeviceAlarmSettings).deviceId !== undefined;
-        }
-        const settings = (await this.notificationServiceFactory().getAlarmSettingsInBulk(model.id, { deviceIds: devices.map(device => device.id) }));
-        return settings.items.filter(isDeviceSettings);
-        
+        const settings = (await this.retrieveAlarmSettings(model.id, { deviceIds: devices.map(device => device.id) }));
+        return settings.items
+          .filter(this.isDeviceSetting)
+          .map(({ userDefined, ...rest }) => rest);
       } catch (err) {
         this.logger.error({ err });
 
@@ -163,6 +161,7 @@ class UserResolver extends Resolver<User> {
 
   private locationResolverFactory: () => LocationResolver;
   private accountResolverFactory: () => AccountResolver;
+  private deviceResolverFactory: () => DeviceResolver;
   private notificationServiceFactory: () => NotificationService;
 
   constructor(
@@ -181,6 +180,7 @@ class UserResolver extends Resolver<User> {
 
     this.locationResolverFactory = depFactoryFactory<LocationResolver>('LocationResolver');
     this.accountResolverFactory = depFactoryFactory<AccountResolver>('AccountResolver');
+    this.deviceResolverFactory = depFactoryFactory<DeviceResolver>('DeviceResolver');
 
     if (!_.isEmpty(this.httpContext)) {
       this.notificationServiceFactory = () => notificationServiceFactory.create(this.httpContext.request);
@@ -261,7 +261,80 @@ class UserResolver extends Resolver<User> {
   }
 
   public async retrieveAlarmSettings(id: string, filter: RetrieveAlarmSettingsFilter): Promise<EntityAlarmSettings> {
-    return this.notificationServiceFactory().getAlarmSettingsInBulk(id, filter);
+    const isLocationFilter = (f: RetrieveAlarmSettingsFilter): f is { locationIds: string[] } => {
+      return !_.isEmpty((f as any).locationIds);
+    };    
+
+    const hierarchyToSet = (h: Record<string, string>) => 
+      new Set(_.chain(h)
+        .entries()
+        .flatMap(([k, v]) => [k, v])
+        .value());
+
+    if (isLocationFilter(filter)) { 
+      const locationHierarchyMap: Record<string, string> = await filter.locationIds.reduce(
+        async (eventualObj: Promise<Record<string, string>>, locationId: string) => {
+          const locationHierarchyMapping = await this.getLocationHierarchy(locationId);
+          const obj = await eventualObj;
+          return {
+            ...obj,
+            ...locationHierarchyMapping
+          };
+        }, Promise.resolve({})
+      );
+
+      const locationIdSet = hierarchyToSet(locationHierarchyMap);
+      const alarmSettings = await this.notificationServiceFactory().getAlarmSettingsInBulk(id, { locationIds: Array.from(locationIdSet) });      
+      const settingsByLocation: Record<string, LocationAlarmSettings> = alarmSettings.items.reduce((obj, item) => ({
+        ...obj,
+        ...(this.isLocationSetting(item) && { [item.locationId]: item })
+      }), {});
+
+      return { 
+        items: filter.locationIds.map(locationId => this.buildLocationSettings(locationId, settingsByLocation, locationHierarchyMap))
+      };
+
+    }
+
+    const deviceSettings = await this.notificationServiceFactory().getAlarmSettingsInBulk(id, filter);
+    const locationMapping: Record<string, any> = await filter.deviceIds.reduce(
+      async (eventualObj: Promise<Record<string, any>>, deviceId: string) => {
+        const device = await this.deviceResolverFactory().get(deviceId, { $select: { location: { $select: { id: true, account: { $select: { id: true } } } } } });
+        const locationHierarchyMapping = await this.getLocationHierarchy(device?.location?.id);
+        const obj = await eventualObj;
+        return {
+          locationByDevice: {
+            ...obj.locationByDevice,
+            [deviceId]: device?.location?.id,
+          },
+          
+          locationHierarchy: {
+            ...obj.locationHierarchy,
+            ...locationHierarchyMapping
+          }
+        };
+      }, Promise.resolve({})
+    );
+
+    const locationIdSet = hierarchyToSet(locationMapping.locationHierarchy);
+    const locationSettings = await this.notificationServiceFactory().getAlarmSettingsInBulk(id, { locationIds: Array.from(locationIdSet) });
+    const settingsById = _.chain(deviceSettings.items)
+      .concat(locationSettings.items)
+      .reduce((obj, item) => ({
+        ...obj,
+        ...(this.isLocationSetting(item) && { [item.locationId]: item }),
+        ...(this.isDeviceSetting(item) && { [item.deviceId]: item })
+      }), {})
+      .value();
+
+    const hierarchyMap = {
+      ...locationMapping.locationHierarchy,
+      ...locationMapping.locationByDevice
+    }
+
+    return { 
+      items: filter.deviceIds.map(deviceId => this.buildDeviceSettings(deviceId, settingsById, hierarchyMap))
+    };
   }
 
   public async setEnabledFeatures(id: string, features: string[]): Promise<void> {
@@ -330,7 +403,66 @@ class UserResolver extends Resolver<User> {
       ...user,
       ...expandedProps
     };
-  } 
+  }
+  
+  private async getLocationHierarchy(locationId?: string): Promise<Record<string, string>> {
+    if (!locationId) {
+      return {};
+    }
+    const location = await this.locationResolverFactory().get(locationId, { $select: { account: { $select: { id: true } } } });
+    const parents: LocationTreeRow[] = await (location ? 
+      this.locationTreeTable.getAllParents(location.account.id, locationId) :
+      []);    
+    return parents.reduce((mapping, row: LocationTreeRow) => ({
+      ...mapping,
+      [row.child_id]: row.parent_id
+    }), {});
+  }
+
+  private buildLocationSettings(locationId: string, settingsByLocation: Record<string, LocationAlarmSettings>, locationHierarchyMap: Record<string, string | undefined>): LocationAlarmSettings {
+    return {
+      locationId,
+      settings: this.buildSettings(locationId, settingsByLocation, locationHierarchyMap),
+      userDefined: undefined
+    };
+  }
+
+  private buildDeviceSettings(deviceId: string, settingsById: Record<string, EntityAlarmSettingsItem>, hierarchyMap: Record<string, string | undefined>): DeviceAlarmSettings {
+    const deviceSettings = settingsById[deviceId] || {};
+    return {
+      deviceId,
+      smallDripSensitivity: undefined,
+      floSenseLevel: undefined,
+      ...(this.isDeviceSetting(deviceSettings) && {
+        smallDripSensitivity: deviceSettings.smallDripSensitivity,
+        floSenseLevel: deviceSettings.floSenseLevel
+      }),
+      settings: this.buildSettings(deviceId, settingsById, hierarchyMap),
+      userDefined: undefined
+    };
+  }
+
+  private buildSettings(entityId: string, settingsById: Record<string, EntityAlarmSettingsItem>, hierarchyMap: Record<string, string | undefined>): AlarmSettings[] {
+    const baseLocationIdSettings: EntityAlarmSettingsItem = settingsById[entityId] || {};
+    const parentLocationId = hierarchyMap[entityId];
+    const settingsMap: Record<string, AlarmSettings[]> = _.merge({},
+      !baseLocationIdSettings.settings ? {} : _.groupBy(baseLocationIdSettings.settings, (s) => `${s.alarmId}-${s.systemMode}`),
+      !parentLocationId ? {} : _.groupBy(this.buildSettings(parentLocationId, settingsById, hierarchyMap), (s) => `${s.alarmId}-${s.systemMode}`),
+      !baseLocationIdSettings.userDefined ? {} : _.groupBy(baseLocationIdSettings.userDefined, (s) => `${s.alarmId}-${s.systemMode}`)
+    );
+    return _.chain(settingsMap)
+      .keys()
+      .reduce((arr, k) => _.concat(arr, settingsMap[k]), [] as AlarmSettings[])
+      .value();
+  }
+
+  private isLocationSetting = (s: EntityAlarmSettingsItem): s is LocationAlarmSettings => {
+    return !_.isNil((s as any).locationId);
+  };
+
+  private isDeviceSetting = (s: EntityAlarmSettingsItem): s is DeviceAlarmSettings => {
+    return !_.isNil((s as any).deviceId);
+  };
 }
 
 export { UserResolver };
