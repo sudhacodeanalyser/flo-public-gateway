@@ -410,13 +410,27 @@ class UserResolver extends Resolver<User> {
       return {};
     }
     const location = await this.locationResolverFactory().get(locationId, { $select: { account: { $select: { id: true } } } });
-    const parents: LocationTreeRow[] = await (location ? 
-      this.locationTreeTable.getAllParents(location.account.id, locationId) :
-      []);    
-    return parents.reduce((mapping, row: LocationTreeRow) => ({
-      ...mapping,
-      [row.child_id]: row.parent_id
-    }), {});
+    const parents: LocationTreeRow[] = location ? 
+      await this.locationTreeTable.getAllParents(location.account.id, locationId) :
+      [];
+    
+    if (_.isEmpty(parents)) {
+      return {};
+    }
+    
+    const reduceParents = (mapping: Record<string, string>, parentArray: LocationTreeRow[], currentChildId: string): Record<string, string> => {
+      const [head, ...rest] = parentArray;
+      if (!head) {
+        return mapping;
+      }
+      return {        
+        [currentChildId]: head.parent_id,
+        ...reduceParents(mapping, rest, head.parent_id)
+      };
+    };
+
+    const sortedParents = _.sortBy(parents, (e) => e.depth);
+    return reduceParents({}, sortedParents, sortedParents[0].child_id);
   }
 
   private buildLocationSettings(locationId: string, settingsByLocation: Record<string, LocationAlarmSettings>, locationHierarchyMap: Record<string, string | undefined>): LocationAlarmSettings {
@@ -446,14 +460,33 @@ class UserResolver extends Resolver<User> {
     const baseLocationIdSettings: EntityAlarmSettingsItem = settingsById[entityId] || {};
     const parentLocationId = hierarchyMap[entityId];
     const settingsMap: Record<string, AlarmSettings[]> = _.merge({},
-      !baseLocationIdSettings.settings ? {} : _.groupBy(baseLocationIdSettings.settings, (s) => `${s.alarmId}-${s.systemMode}`),
-      !parentLocationId ? {} : _.groupBy(this.buildSettings(parentLocationId, settingsById, hierarchyMap), (s) => `${s.alarmId}-${s.systemMode}`),
-      !baseLocationIdSettings.userDefined ? {} : _.groupBy(baseLocationIdSettings.userDefined, (s) => `${s.alarmId}-${s.systemMode}`)
+      !baseLocationIdSettings.settings ? 
+        {} : 
+        _.groupBy(
+          baseLocationIdSettings.settings, 
+          this.buildAlarmSettingsKey
+        ),
+      !parentLocationId ? 
+        {} : 
+        _.groupBy(
+          this.buildSettings(parentLocationId, settingsById, hierarchyMap), 
+          this.buildAlarmSettingsKey
+        ),
+      !baseLocationIdSettings.userDefined ? 
+        {} : 
+        _.groupBy(
+          baseLocationIdSettings.userDefined, 
+          this.buildAlarmSettingsKey
+        )
     );
     return _.chain(settingsMap)
       .keys()
       .reduce((arr, k) => _.concat(arr, settingsMap[k]), [] as AlarmSettings[])
       .value();
+  }
+
+  private buildAlarmSettingsKey(s: AlarmSettings): string { 
+    return `${s.alarmId}-${s.systemMode}`;
   }
 
   private isLocationSetting = (s: EntityAlarmSettingsItem): s is LocationAlarmSettings => {
