@@ -418,19 +418,21 @@ class UserResolver extends Resolver<User> {
       return {};
     }
     
-    const reduceParents = (mapping: Record<string, string>, parentArray: LocationTreeRow[], currentChildId: string): Record<string, string> => {
-      const [head, ...rest] = parentArray;
-      if (!head) {
-        return mapping;
-      }
-      return {        
-        [currentChildId]: head.parent_id,
-        ...reduceParents(mapping, rest, head.parent_id)
-      };
-    };
+    const { mapping } = _.chain(parents)
+      .sortBy('depth')
+      .reduce(
+        ({ mapping, currentChildId }, { parent_id, child_id }) => ({
+          currentChildId: parent_id,
+          mapping: {
+            ...mapping,
+            [currentChildId || child_id]: parent_id
+          }
+        }),
+        { mapping: {}, currentChildId: '' }
+      )
+      .value();
 
-    const sortedParents = _.sortBy(parents, (e) => e.depth);
-    return reduceParents({}, sortedParents, sortedParents[0].child_id);
+    return mapping;
   }
 
   private buildLocationSettings(locationId: string, settingsByLocation: Record<string, LocationAlarmSettings>, locationHierarchyMap: Record<string, string | undefined>): LocationAlarmSettings {
