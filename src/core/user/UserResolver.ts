@@ -421,10 +421,10 @@ class UserResolver extends Resolver<User> {
     const { mapping } = _.chain(parents)
       .sortBy('depth')
       .reduce(
-        ({ mapping, currentChildId }, { parent_id, child_id }) => ({
+        ({ mapping: currentMapping, currentChildId }, { parent_id, child_id }) => ({
           currentChildId: parent_id,
           mapping: {
-            ...mapping,
+            ...currentMapping,
             [currentChildId || child_id]: parent_id
           }
         }),
