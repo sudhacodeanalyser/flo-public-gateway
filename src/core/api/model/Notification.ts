@@ -184,12 +184,14 @@ export const DeviceAlarmSettingsCodec = t.type({
   deviceId: t.string,
   smallDripSensitivity: t.union([t.number, t.undefined]),
   floSenseLevel: t.union([t.number, t.undefined]),
-  settings: t.union([t.array(AlarmSettingsCodec), t.undefined])
+  settings: t.union([t.array(AlarmSettingsCodec), t.undefined]),
+  userDefined: t.union([t.array(AlarmSettingsCodec), t.undefined])
 });
 
 export const LocationAlarmSettingsCodec = t.type({
   locationId: t.string,
-  settings: t.union([t.array(AlarmSettingsCodec), t.undefined])
+  settings: t.union([t.array(AlarmSettingsCodec), t.undefined]),
+  userDefined: t.union([t.array(AlarmSettingsCodec), t.undefined])
 });
 
 export const EntityAlarmSettingsItemCodec = t.union([DeviceAlarmSettingsCodec, LocationAlarmSettingsCodec]);
