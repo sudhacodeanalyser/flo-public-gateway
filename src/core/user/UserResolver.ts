@@ -265,14 +265,14 @@ class UserResolver extends Resolver<User> {
       return !_.isEmpty((f as any).locationIds);
     };    
 
-    const hierarchyToSet = (h: Record<string, string>) => 
+    const hierarchyToSet = (h: Record<string, string | undefined>) => 
       new Set(_.chain(h)
         .entries()
-        .flatMap(([k, v]) => [k, v])
+        .flatMap(([k, v]) => v ? [k, v] : [k])
         .value());
 
     if (isLocationFilter(filter)) { 
-      const locationHierarchyMap: Record<string, string> = await filter.locationIds.reduce(
+      const locationHierarchyMap: Record<string, string | undefined> = await filter.locationIds.reduce(
         async (eventualObj: Promise<Record<string, string>>, locationId: string) => {
           const locationHierarchyMapping = await this.getLocationHierarchy(locationId);
           const obj = await eventualObj;
@@ -405,7 +405,7 @@ class UserResolver extends Resolver<User> {
     };
   }
   
-  private async getLocationHierarchy(locationId?: string): Promise<Record<string, string>> {
+  private async getLocationHierarchy(locationId?: string): Promise<Record<string, string | undefined>> {
     if (!locationId) {
       return {};
     }
@@ -415,7 +415,9 @@ class UserResolver extends Resolver<User> {
       [];
     
     if (_.isEmpty(parents)) {
-      return {};
+      return {
+        [locationId]: undefined
+      };
     }
     
     const { mapping } = _.chain(parents)
