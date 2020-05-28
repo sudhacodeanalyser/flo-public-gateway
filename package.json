@@ -99,7 +99,6 @@
     "jest": "^24.7.1",
     "prettier": "^1.16.4",
     "shx": "^0.3.2",
-    "source-map-support": "^0.5.19",
     "ts-jest": "^24.0.1",
     "tsc-watch": "^2.1.2",
     "tslint": "^5.15.0",
