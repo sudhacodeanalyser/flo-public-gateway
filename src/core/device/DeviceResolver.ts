@@ -20,7 +20,7 @@ import { PairingService } from '../../api-v1/pairing/PairingService';
 import * as t from 'io-ts';
 import * as Either from 'fp-ts/lib/Either';
 import { HealthTestServiceFactory, HealthTestService } from './HealthTestService';
-import LocationTable from '../location/LocationTable';
+import LocationPgTable from '../location/LocationPgTable';
 import { NonEmptyStringFactory } from '../api/validator/NonEmptyString';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import { MachineLearningService } from '../../machine-learning/MachineLearningService';
@@ -408,14 +408,14 @@ class DeviceResolver extends Resolver<Device> {
         return NonEmptyStringFactory.create('not_sure');
       }
 
-      const locationRecord = await this.locationTable.getByLocationId(device.location.id);
+      const locationRecord = await this.locationPgTable.get({ id: device.location.id });
 
       if (!locationRecord) {
         return NonEmptyStringFactory.create('not_sure');
       }
 
       const hasSprinklers = (locationRecord.outdoor_amenities || []).some(amenity => amenity.toLowerCase() === 'sprinklers');
-      const isIrrigationOnly = (locationRecord.location_type || '').toLowerCase() === 'irrigation';
+      const isIrrigationOnly = (locationRecord.type || '').toLowerCase() === 'irrigation';
 
       if (hasSprinklers || isIrrigationOnly) {
         return NonEmptyStringFactory.create('sprinklers');
@@ -548,7 +548,7 @@ class DeviceResolver extends Resolver<Device> {
    @inject('NotificationServiceFactory') notificationServiceFactory: NotificationServiceFactory,
    @inject('PairingService') private pairingService: PairingService,
    @inject('HealthTestServiceFactory') healthTestServiceFactory: HealthTestServiceFactory,
-   @inject('LocationTable') private locationTable: LocationTable,
+   @inject('LocationPgTable') private locationPgTable: LocationPgTable,
    @inject('MachineLearningService') private mlService: MachineLearningService,
    @inject('PuckTokenService') private puckTokenService: PuckTokenService,
    @injectHttpContext private readonly httpContext: interfaces.HttpContext,
