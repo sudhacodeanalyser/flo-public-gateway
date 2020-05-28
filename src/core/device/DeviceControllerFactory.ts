@@ -1,4 +1,4 @@
-import { isNone, Option, some } from 'fp-ts/lib/Option';
+import * as O from 'fp-ts/lib/Option';
 import { Container, inject } from 'inversify';
 import { BaseHttpController, httpDelete, httpGet, httpPost, interfaces, queryParam, request, requestBody, requestParam, all } from 'inversify-express-utils';
 import * as t from 'io-ts';
@@ -7,7 +7,7 @@ import { QrData, QrDataValidator } from '../../api-v1/pairing/PairingService';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import { InternalDeviceService } from '../../internal-device-service/InternalDeviceService';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
-import { Device, DeviceActionRules, DeviceActionRulesCreate, DeviceActionRulesCreateCodec, DeviceCreate, DeviceCreateValidator, DeviceType, DeviceUpdate, DeviceUpdateValidator, SystemMode as DeviceSystemMode, SystemModeCodec as DeviceSystemModeCodec, HardwareThresholdsCodec, HardwareThresholds, FirmwareInfo } from '../api';
+import { DependencyFactoryFactory, Device, DeviceActionRules, DeviceActionRulesCreate, DeviceActionRulesCreateCodec, DeviceCreate, DeviceCreateValidator, DeviceType, DeviceUpdate, DeviceUpdateValidator, SystemMode as DeviceSystemMode, SystemModeCodec as DeviceSystemModeCodec, HardwareThresholdsCodec, HardwareThresholds, FirmwareInfo } from '../api';
 import { asyncMethod, authorizationHeader, createMethod, deleteMethod, httpController, parseExpand, withResponseType } from '../api/controllerUtils';
 import { convertEnumtoCodec } from '../api/enumUtils';
 import ForbiddenError from '../api/error/ForbiddenError';
@@ -17,7 +17,7 @@ import ValidationError from '../api/error/ValidationError'
 import UnauthorizedError from '../api/error/UnauthorizedError';
 import Request from '../api/Request';
 import * as Responses from '../api/response';
-import { DeviceService, PuckTokenService } from '../service';
+import { DeviceService, PuckTokenService, LocationService } from '../service';
 import { DeviceSystemModeServiceFactory } from './DeviceSystemModeService';
 import { DirectiveServiceFactory } from './DirectiveService';
 import { HealthTest, HealthTestServiceFactory } from './HealthTestService';
@@ -26,6 +26,9 @@ import moment from 'moment';
 import { authUnion } from '../../auth/authUnion';
 import { PuckAuthMiddleware } from '../../auth/PuckAuthMiddleware';
 import { MachineLearningService } from '../../machine-learning/MachineLearningService';
+
+const { isNone, some  } = O;
+type Option<T> = O.Option<T>;
 
 enum HealthTestActions {
   RUN = 'run'
@@ -41,6 +44,28 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
   const authWithId = authMiddlewareFactory.create(async ({ params: { id } }: Request) => ({icd_id: id}));
   const authWithLocation = authMiddlewareFactory.create(async ({ body: { location: { id } } }: Request) => ({ location_id: id }));
   const puckAuthMiddleware = container.get<PuckAuthMiddleware>('PuckAuthMiddleware');
+  const authWithParents = authMiddlewareFactory.create(async ({ params: { id }, query: { macAddress } }: Request, depFactoryFactory: DependencyFactoryFactory) => {
+    const deviceService = depFactoryFactory<DeviceService>('DeviceService')();
+    const locationService = depFactoryFactory<LocationService>('LocationService')();
+    const device = id ? 
+      O.toNullable(await deviceService.getDeviceById(id)) :
+      O.toNullable(await deviceService.getByMacAddress(macAddress));
+
+    if (!device) {
+      return {
+        device_id: macAddress,
+        icd_id: id
+      };
+    }
+
+    const parentIds = await locationService.getAllParentIds(device.location.id);
+
+    return {
+      location_id: [device.location.id, ...parentIds],
+      device_id: macAddress,
+      icd_id: id
+    };
+  });
 
   interface SystemModeRequestBrand {
     readonly SystemModeRequest: unique symbol;
@@ -102,7 +127,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     }
 
     @httpGet('/',
-      authMiddlewareFactory.create(async ({ query: { macAddress } }) => ({ device_id: macAddress })),
+      authWithParents,
       reqValidator.create(t.type({
         query: t.type({
           macAddress: t.string,
@@ -145,7 +170,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     }
 
     @httpGet('/:id',
-      authUnion(authWithId, puckAuthMiddleware.handler.bind(puckAuthMiddleware)),
+      authUnion(authWithParents, puckAuthMiddleware.handler.bind(puckAuthMiddleware)),
       reqValidator.create(t.type({
         params: t.type({
           id: t.string
@@ -163,7 +188,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     }
 
     @httpPost('/:id',
-      authWithId,
+      authWithParents,
       reqValidator.create(t.type({
         params: t.type({
           id: t.string
