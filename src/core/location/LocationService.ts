@@ -4,7 +4,7 @@ import { injectHttpContext, interfaces } from 'inversify-express-utils';
 import _ from 'lodash';
 import uuid from 'uuid';
 import { AccessControlService } from '../../auth/AccessControlService';
-import { Areas, DependencyFactoryFactory, Location, LocationUpdate, LocationUserRole, PropExpand, SystemMode, Device, DeviceType } from '../api';
+import { Areas, DependencyFactoryFactory, Location, LocationUpdate, LocationUserRole, PropExpand, SystemMode, Device, DeviceType, PesThresholds } from '../api';
 import ConflictError from '../api/error/ConflictError';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import ValidationError from '../api/error/ValidationError';
@@ -428,19 +428,98 @@ class LocationService {
   }
 
   public async forwardPes(id: string, method: string, subPath: string, data: any, shouldCascade?: boolean): Promise<void> {
-    const location = O.toNullable(await this.getLocation(id, { 
+    const devices = await this.getDevices(id, {
+      $select: {
+        macAddress: true,
+        deviceType: true
+      }
+    }, shouldCascade);
+
+    await Promise.all(
+      devices
+        .filter(device => device.deviceType !== DeviceType.PUCK)
+        .map(device => this.mlService.forward(method, `${ device.macAddress }/pes/${ subPath }`, data))
+    );
+  }
+
+  public async updatePes(locationId: string, pesThresholds: PesThresholds): Promise<void> {
+    const payload = {
+      floSense: {
+        userEnabled: false,
+        pesOverride: {
+          home: {
+            shutoffDisabled: false,
+            shutoffDelay: 300,
+            eventLimits: {
+              ...pesThresholds,
+              flowRateDuration: 20
+            }
+          },
+          away: {
+            shutoffDisabled: false,
+            shutoffDelay: 0,
+            eventLimits: {
+              ...pesThresholds,
+              flowRateDuration: 5
+            }
+          }
+        }
+      }
+    };
+
+    const isDevice = (d: Partial<Device>): d is Pick<Device, 'macAddress'> => {
+      return !_.isNil(d.macAddress) && d.deviceType !== DeviceType.PUCK;
+    };
+
+    const devices = await this.getDevices(locationId, {
+      $select: {
+        macAddress: true,
+        deviceType: true
+      }
+    }, true);
+
+    await Promise.all(
+      devices
+        .filter(isDevice)
+        .map(device => this.mlService.update(device.macAddress, payload))
+    );
+  }
+
+  public async getUnitLocations(locationIds: string[]): Promise<string[]> {
+    const locations = await Promise.all(
+      locationIds.map(async l => this.getLocation(l, {
+        $select: {
+          id: true,
+          account: {
+            $select: {
+              id: true
+            }
+          },
+          ['class']: true
+        }
+      }))
+    );
+     
+    return _.flatten((await Promise.all(_.map(locations, async (maybeLocation) => 
+      pipe(
+        maybeLocation,
+        O.fold(
+          async () => [],
+          async l => l.class.key === 'unit' ? [l.id] : this.locationResolver.getAllChildrenUnits(l)
+        )
+      )
+    ))));
+  }
+
+  private async getDevices(locationId: string, deviceExpand: PropExpand, shouldCascade?: boolean): Promise<Array<Partial<Device>>> {
+    const location = O.toNullable(await this.getLocation(locationId, { 
       $select: { 
         account: {
           $select: {
             id: true
           }
         },
-        devices: {
-          $select: {
-            macAddress: true,
-            deviceType: true
-          }
-        }
+        devices: deviceExpand
       }
     }));
 
@@ -448,35 +527,24 @@ class LocationService {
       throw new ResourceDoesNotExistError('Location does not exist.');
     }
 
-    const devices: Array<Pick<Device, 'macAddress' | 'deviceType'>> = [...location.devices as Device[]];
+    const devices: Array<Partial<Device>> = [...location.devices as Device[]];
 
-    if (shouldCascade) {
+    const cascadeDevices = async () => {
       const childIds = await this.getAllChildren(location);
       const childLocations = await Promise.all(
         childIds.map(({ child_id }) => this.getLocation(child_id, {
           $select: {
-            devices: {
-              $select: {
-                macAddress: true,
-                deviceType: true
-              }
-            }
+            devices: deviceExpand
           }
         }))
       );
-      const childDevices = _.chain(childLocations)
+      return _.chain(childLocations)
         .map(opt => O.toNullable(opt))
         .flatMap(loc => (loc ? loc.devices : []) as Device[])
         .value();
-
-      childDevices.forEach(device => devices.push(device));
     }
 
-    await Promise.all(
-      devices
-        .filter(device => device.deviceType !== DeviceType.PUCK)
-        .map(device => this.mlService.forward(method, `${ device.macAddress }/pes/${ subPath }`, data))
-    );
+    return _.concat(devices, shouldCascade ? await cascadeDevices() : []);
   }
 
   private validateAreaDoesNotExist(areas: Areas, newAreaName: string, oldAreaName?: string): void {
