@@ -1,4 +1,4 @@
-import { Option, some } from 'fp-ts/lib/Option';
+import * as O from 'fp-ts/lib/Option';
 import { Container, inject } from 'inversify';
 import { BaseHttpController, httpDelete, httpGet, httpPost, httpPut, interfaces, queryParam, request, requestBody, requestParam, all } from 'inversify-express-utils';
 import * as t from 'io-ts';
@@ -12,6 +12,9 @@ import * as Responses from '../api/response';
 import { NonEmptyArray } from '../api/validator/NonEmptyArray';
 import { DeviceSystemModeServiceFactory } from '../device/DeviceSystemModeService';
 import { LocationService } from '../service';
+
+const { some } = O;
+type Option<T> = O.Option<T>;
 
 export function LocationControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
@@ -96,6 +99,32 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
       const userId = tokenMetadata && tokenMetadata.user_id;
 
       return this.locationService.createLocation(location, userId, roles);
+    }
+
+    @httpGet(
+      '/',
+       reqValidator.create(t.type({
+         query: t.intersection([
+           t.type({
+             userId: t.string
+           }),
+           t.partial({
+             class: t.string,
+             expand: t.string
+           })
+         ])
+       }))
+    )
+    private async getLocations(@queryParam('userId') userId: string, @queryParam('class') locationClass?: string, @queryParam('expand') expand?: string): Promise<Responses.Location[]> {
+      const expandProps = parseExpand(expand);
+
+      return (await (
+          locationClass ? 
+            this.locationService.getByUserIdAndClass(userId, locationClass, expandProps) :
+            this.locationService.getByUserId(userId, expandProps)
+        )
+      )
+      .map(loc => Responses.Location.fromModel(loc));
     }
 
     @httpGet(

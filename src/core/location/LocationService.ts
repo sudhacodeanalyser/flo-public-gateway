@@ -511,6 +511,14 @@ class LocationService {
     ))));
   }
 
+  public async getByUserIdAndClass(userId: string, locClass: string, expandProps?: PropExpand, size?: number, page?: number): Promise<Location[]> {
+    return this.locationResolver.getByUserIdAndClass(userId, locClass, expandProps, size, page);
+  }
+
+  public async getByUserId(userId: string, expandProps?: PropExpand, size?: number, page?: number): Promise<Location[]> {
+    return this.locationResolver.getByUserId(userId, expandProps, size, page);
+  }
+
   private async getDevices(locationId: string, deviceExpand: PropExpand, shouldCascade?: boolean): Promise<Array<Partial<Device>>> {
     const location = O.toNullable(await this.getLocation(locationId, { 
       $select: { 
