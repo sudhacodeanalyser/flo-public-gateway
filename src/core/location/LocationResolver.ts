@@ -17,8 +17,6 @@ import LocationTreeTable from './LocationTreeTable';
 import ConflictError from '../api/error/ConflictError';
 import * as Option from 'fp-ts/lib/Option';
 import { pipe } from 'fp-ts/lib/pipeable';
-import LocationPgTable from './LocationPgTable';
-import { LocationPgRecord } from './LocationPgRecord';
 
 const DEFAULT_LANG = 'en';
 const DEFAULT_AREAS_ID = 'areas.default';
@@ -221,7 +219,7 @@ class LocationResolver extends Resolver<Location> {
         return null;
       }
 
-      const childrenUnits: string[] = [];// await this.getAllChildrenUnits(location);
+      const childrenUnits = await this.getAllChildrenUnits(location);
       const locationIds = _.isEmpty(childrenUnits) ? [location.id] : childrenUnits;
       return this.notificationService.retrieveStatisticsInBatch({locationIds});
     },
@@ -258,7 +256,8 @@ class LocationResolver extends Resolver<Location> {
       }
 
     },
-    parent: async (location: Location, shouldExpand = false, expandProps?: PropExpand) => {      
+    parent: async (location: Location, shouldExpand = false, expandProps?: PropExpand) => {
+
       if (!location.parent) {
         return location.parent;
       }
@@ -313,8 +312,7 @@ class LocationResolver extends Resolver<Location> {
     @inject('DependencyFactoryFactory') depFactoryFactory: DependencyFactoryFactory,
     @inject('NotificationServiceFactory') notificationServiceFactory: NotificationServiceFactory,
     @injectHttpContext private readonly httpContext: interfaces.HttpContext,
-    @inject('LocationTreeTable') private locationTreeTable: LocationTreeTable,
-    @inject('LocationPgTable') private locationPgTable: LocationPgTable
+    @inject('LocationTreeTable') private locationTreeTable: LocationTreeTable
   ) {
     super();
 
@@ -330,13 +328,13 @@ class LocationResolver extends Resolver<Location> {
   }
 
   public async get(id: string, expandProps?: PropExpand): Promise<Location | null> {
-    const locationPgRecordData = await this.locationPgTable.get({ id });
+    const locationRecordData: LocationRecordData | null = await this.locationTable.getByLocationId(id);
 
-    if (locationPgRecordData === null) {
+    if (locationRecordData === null) {
       return null;
     }
 
-    const location = LocationPgRecord.toModel(locationPgRecordData);
+    const location = new LocationRecord(locationRecordData).toModel();
     const resolvedProps = await this.resolveProps(location, expandProps);
 
     return {
@@ -398,15 +396,12 @@ class LocationResolver extends Resolver<Location> {
   }
 
   public async getAllByAccountId(accountId: string, expandProps?: PropExpand): Promise<Location[]> {
-    const { items } = await this.locationPgTable.getByAccountId(accountId, 20);
-    // const locationRecordData = await this.locationTable.getAllByAccountId(accountId);
+    const locationRecordData = await this.locationTable.getAllByAccountId(accountId);
+
     return Promise.all(
-      items
-        .map(async (item) => {
-          const location = LocationPgRecord.toModel(item);
-        //     locationRecordData
-        // .map(async (datum) => {
-        //   const location = new LocationRecord(datum).toModel();
+      locationRecordData
+        .map(async (datum) => {
+          const location = new LocationRecord(datum).toModel();
           const resolvedProps = await this.resolveProps(location, expandProps);
 
           return {
@@ -463,22 +458,6 @@ class LocationResolver extends Resolver<Location> {
         .map(async datum =>
           this.removeLocationUserRole(datum.location_id, datum.user_id)
         )
-    );
-  }
-
-  public async getByUserIdWithChildren(userId: string, expandProps?: PropExpand, size?: number, page?: number): Promise<Location[]> {
-    const { items } = await this.locationPgTable.getByUserIdWithChildren(userId, size, page);
-
-    return Promise.all(
-      items.map(async item => {
-        const location = LocationPgRecord.toModel(item);
-        const resolved = await this.resolveProps(location, expandProps);
-
-        return {
-          ...location,
-          ...resolved
-        };
-      })
     );
   }
 
