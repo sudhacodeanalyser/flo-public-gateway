@@ -15,6 +15,7 @@ import { ApiV1DeviceSystemModeService } from './device-system-mode/ApiV1DeviceSy
 import { ApiV1DirectiveService } from './directive/ApiV1DirectiveService';
 
 export default new ContainerModule((bind: interfaces.Bind) => {
+  bind<string>('ApiV1Token').toConstantValue(config.apiV1Token);
   bind<string>('ApiV1Url').toConstantValue(config.apiV1Url);
   bind<PairingService>('PairingService').to(PairingService);
   bind<UserRegistrationService>('UserRegistrationService').to(ApiV1UserRegistrationService);

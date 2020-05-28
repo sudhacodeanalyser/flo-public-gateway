@@ -52,6 +52,7 @@ secrets:
     SEND_WITH_US_KEY: "${SEND_WITH_US_KEY}"
     FLO_DETECT_API_URL: "${FLO_DETECT_API_URL}"
     WEATHER_API_URL: "${WEATHER_API_URL}"
+    API_V1_TOKEN: "${API_V1_TOKEN}"
 internalIngress:
   host: internal-ingress.flocloud.co
 routingIngress:
