@@ -264,7 +264,17 @@ class UserResolver extends Resolver<User> {
     const userAccountRoleRecordData = await this.userAccountRoleTable.getByUserId(id);
     const accountType = !userAccountRoleRecordData ? 
       'personal' :  
-      ((await this.accountResolverFactory().getAccount(userAccountRoleRecordData.account_id))?.type) || 'personal';
+      (
+        (await this.accountResolverFactory().getAccount(
+          userAccountRoleRecordData.account_id, 
+          { 
+            $select: {
+              id: true,
+              type: true
+            }
+          }
+        )
+      )?.type) || 'personal';
 
     const isLocationFilter = (f: RetrieveAlarmSettingsFilter): f is { locationIds: string[] } => {
       return !_.isEmpty((f as any).locationIds);
