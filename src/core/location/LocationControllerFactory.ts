@@ -252,6 +252,7 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
         body: PesThresholdsCodec
       }))
     )
+    @asyncMethod
     private async overridePes(@requestParam('id') id: string, @requestBody() pesThresholds: PesThresholds): Promise<void> {
       return this.locationService.updatePes(id, pesThresholds);
     }
