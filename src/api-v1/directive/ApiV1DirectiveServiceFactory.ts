@@ -13,11 +13,13 @@ class ApiV1DirectiveServiceFactory implements DirectiveServiceFactory  {
   ) {}
 
   public create(req: Request): DirectiveService {
+    const authToken = req.get('Authorization');
     const origin = req.get('origin');
     const userAgent = req.get('user-agent');
     const customHeaders = {
       ...(origin && { origin }),
-      ...(userAgent && { 'user-agent': userAgent })
+      ...(userAgent && { 'user-agent': userAgent }),
+      ...(authToken && { 'x-user-token': authToken })
     };
 
     return this.directiveServiceFactory(this.apiV1Url, `Bearer ${ this.apiV1Token }`, customHeaders);
