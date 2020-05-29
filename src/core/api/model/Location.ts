@@ -259,3 +259,11 @@ export interface Location extends t.TypeOf<typeof LocationCodec>, TimestampedMod
   parent?: Expandable<Location> | null;
   children: Array<Expandable<Location>>;
 }
+
+export const PesThresholdsCodec = t.type({
+  duration: t.number,
+  volume: t.number,
+  flowRate: t.number
+});
+
+export interface PesThresholds extends t.TypeOf<typeof PesThresholdsCodec> {}

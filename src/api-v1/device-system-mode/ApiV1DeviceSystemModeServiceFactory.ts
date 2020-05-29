@@ -8,6 +8,7 @@ class ApiV1DeviceSystemModeServiceFactory implements DeviceSystemModeServiceFact
 
   constructor(
     @inject('ApiV1Url') private readonly apiV1Url: string,
+    @inject('ApiV1Token') private readonly apiV1Token: string,
     @inject('Factory<DeviceSystemModeService>') private deviceSystemModeServiceFactory: (apiV1Url: string, authToken: string, customHeaders: any) => DeviceSystemModeService
   ) {}
 
@@ -17,13 +18,12 @@ class ApiV1DeviceSystemModeServiceFactory implements DeviceSystemModeServiceFact
     const userAgent = req.get('user-agent');
     const customHeaders = {
       ...(origin && { origin }),
-      ...(userAgent && { 'user-agent': userAgent })
+      ...(userAgent && { 'user-agent': userAgent }),
+      ...(authToken && { 'x-user-token': authToken })
     };
 
-    if (authToken === undefined)  {
-      throw new UnauthorizedError();
-    }
-    return this.deviceSystemModeServiceFactory(this.apiV1Url, authToken, customHeaders);
+
+    return this.deviceSystemModeServiceFactory(this.apiV1Url, `Bearer ${ this.apiV1Token }`, customHeaders);
   }
 }
 

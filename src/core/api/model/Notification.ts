@@ -184,12 +184,14 @@ export const DeviceAlarmSettingsCodec = t.type({
   deviceId: t.string,
   smallDripSensitivity: t.union([t.number, t.undefined]),
   floSenseLevel: t.union([t.number, t.undefined]),
-  settings: t.union([t.array(AlarmSettingsCodec), t.undefined])
+  settings: t.union([t.array(AlarmSettingsCodec), t.undefined]),
+  userDefined: t.union([t.array(AlarmSettingsCodec), t.undefined])
 });
 
 export const LocationAlarmSettingsCodec = t.type({
   locationId: t.string,
-  settings: t.union([t.array(AlarmSettingsCodec), t.undefined])
+  settings: t.union([t.array(AlarmSettingsCodec), t.undefined]),
+  userDefined: t.union([t.array(AlarmSettingsCodec), t.undefined])
 });
 
 export const EntityAlarmSettingsItemCodec = t.union([DeviceAlarmSettingsCodec, LocationAlarmSettingsCodec]);
@@ -202,13 +204,18 @@ export const UpdateAlarmSettingsCodec = t.type({
   items: t.array(EntityAlarmSettingsItemCodec)
 });
 
-export const RetrieveAlarmSettingsFilterCodec = t.union([
-  t.type({
-    deviceIds: t.array(t.string)
+export const RetrieveAlarmSettingsFilterCodec = t.intersection([
+  t.partial({
+    accountType: t.string
   }),
-  t.type({
-    locationIds: t.array(t.string)
-  })
+  t.union([
+    t.type({
+      deviceIds: t.array(t.string)
+    }),
+    t.type({
+      locationIds: t.array(t.string)
+    })
+  ])
 ]);
 
 export interface AlarmSettings extends t.TypeOf<typeof AlarmSettingsCodec> {}

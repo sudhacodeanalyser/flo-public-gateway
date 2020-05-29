@@ -461,18 +461,7 @@ class LocationResolver extends Resolver<Location> {
     );
   }
 
-  // The DynamoDB Location table has account_id as a hash key on the primary
-  // table. The location_id is only a hash key on a Global Second Index on the
-  // table, and writes are not permitted against indices in Dynamo.
-  // Therefore we must retrieve the account_id before doing any writes where we only
-  // have the location_id previously known.
-  private async getAccountId(locationId: string): Promise<string | null> {
-    const locationRecordData: LocationRecordData | null = await this.locationTable.getByLocationId(locationId);
-
-    return locationRecordData === null ? null : locationRecordData.account_id;
-  }
-
-  private async getAllChildrenUnits(location: Location): Promise<string[]> {
+  public async getAllChildrenUnits(location: Location): Promise<string[]> {
     const childIds = await this.locationTreeTable.getAllChildren(location.account.id, location.id);
     const childLocations = await Promise.all(
       childIds.map(({ child_id: childId }) => 
@@ -494,6 +483,41 @@ class LocationResolver extends Resolver<Location> {
       )
     )
   }
+
+  public async getAllDevices(location: Location, devicesExpand: PropExpand): Promise<Array<Partial<Device>>> {
+    const childIds = await this.locationTreeTable.getAllChildren(location.account.id, location.id);
+    const childLocations = await Promise.all(
+      childIds.map(({ child_id: childId }) => 
+        this.get(childId, {
+          $select: {
+            id: true,
+            ['class']: true,
+            devices: devicesExpand
+          }
+        })
+      )
+    );
+    return _.flatMap(childLocations, maybeChildLocation => 
+      pipe(
+        Option.fromNullable(maybeChildLocation),
+        Option.fold(
+          () => [],
+          childLocation => childLocation.devices
+        )
+      )
+    )
+  }
+
+  // The DynamoDB Location table has account_id as a hash key on the primary
+  // table. The location_id is only a hash key on a Global Second Index on the
+  // table, and writes are not permitted against indices in Dynamo.
+  // Therefore we must retrieve the account_id before doing any writes where we only
+  // have the location_id previously known.
+  private async getAccountId(locationId: string): Promise<string | null> {
+    const locationRecordData: LocationRecordData | null = await this.locationTable.getByLocationId(locationId);
+
+    return locationRecordData === null ? null : locationRecordData.account_id;
+  }  
 }
 
 export { LocationResolver };

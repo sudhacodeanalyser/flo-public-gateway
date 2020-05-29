@@ -116,7 +116,8 @@ const config = {
   publicGatewayHost: process.env.PUBLIC_GATEWAY_HOST,
   sendWithUsKey: process.env.SEND_WITH_US_KEY,
   floDetectApiUrl: process.env.FLO_DETECT_API_URL,
-  weatherApiUrl: process.env.WEATHER_API_URL
+  weatherApiUrl: process.env.WEATHER_API_URL,
+  apiV1Token: process.env.API_V1_TOKEN
 };
 
 export default {

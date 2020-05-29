@@ -1,7 +1,7 @@
 import { interfaces, controller, httpGet, requestParam, queryParam, httpPost, requestBody } from 'inversify-express-utils';
 import { inject, Container } from 'inversify';
-import { WaterService } from '../service';
-import { WaterConsumptionReport, WaterAveragesReport, WaterConsumptionInterval, WaterMetricsReport } from '../api';
+import { WaterService, LocationService, DeviceService } from '../service';
+import { WaterConsumptionReport, WaterAveragesReport, WaterConsumptionInterval, WaterMetricsReport, DependencyFactoryFactory } from '../api';
 import { httpController } from '../api/controllerUtils';
 import moment from 'moment';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
@@ -9,6 +9,7 @@ import * as t from 'io-ts';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import Request from '../api/Request';
 import * as ReqValidator from './WaterReqValidator';
+import * as O from 'fp-ts/lib/Option';
 
 export function WaterControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
@@ -19,6 +20,36 @@ export function WaterControllerFactory(container: Container, apiVersion: number)
       location_id: locationId, device_id: macAddress
     })
   );
+  const authWithParents = authMiddlewareFactory.create(async ({ query: { locationId, macAddress } }: Request, depFactoryFactory: DependencyFactoryFactory) => {
+
+    if (locationId) {
+      const locationService = depFactoryFactory<LocationService>('LocationService')();
+      const parentIds = await locationService.getAllParentIds(locationId);
+
+      return {
+        location_id: [locationId, ...parentIds]
+      };
+
+    } else if (macAddress) {
+      const deviceService = depFactoryFactory<DeviceService>('DeviceService')();
+      const locationService = depFactoryFactory<LocationService>('LocationService')();
+      const device = O.toNullable(await deviceService.getByMacAddress(macAddress));
+
+      if (!device) {
+        return {
+          device_id: macAddress
+        };
+      }
+
+      const parentIds = await locationService.getAllParentIds(device.location.id);
+
+      return {
+        location_id: [device.location.id, ...parentIds]
+      };
+    } else {
+      return {};
+    }
+  });
 
   @httpController({ version: apiVersion }, '/water')
   class WaterController implements interfaces.Controller {
@@ -27,7 +58,7 @@ export function WaterControllerFactory(container: Container, apiVersion: number)
     ) {}
 
     @httpGet('/consumption',
-      authWithMacAddressOrLocationId,
+      authWithParents,
       reqValidator.create(ReqValidator.getConsumption)
     )
     private async getConsumption(

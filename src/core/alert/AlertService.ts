@@ -57,7 +57,7 @@ class AlertService {
   }
 
   public async getAlarmEventsByFilter(filters: AlarmEventFilter): Promise<PaginatedResult<AlarmEvent>> {
-    const unitLocations = filters.locationId ? await this.fetchUnitLocations(filters.locationId) : undefined;
+    const unitLocations = filters.locationId ? await this.locationService.getUnitLocations(filters.locationId) : undefined;
   
     const enrichedFilters = {
       ...filters,
@@ -106,7 +106,7 @@ class AlertService {
       ...(alertReportDefinition.view || {})
     };    
 
-    const unitLocations = filters.locationId ? await this.fetchUnitLocations(filters.locationId) : undefined;
+    const unitLocations = filters.locationId ? await this.locationService.getUnitLocations(filters.locationId) : undefined;
     const enrichedFilters = {
       ...filters,
       ...(!_.isEmpty(unitLocations) && { locationId: unitLocations })
@@ -148,55 +148,6 @@ class AlertService {
       Option.fromNullable(await this.alertFeedbackTable.get({ icd_id: deviceId, incident_id: incidentId })),
       Option.map(alertFeedbackRecord => AlertFeedbackRecord.toModel(alertFeedbackRecord))
     );
-  }
-
-  private async fetchUnitLocations(locationIds: string[]): Promise<string[]> {
-    const locations = await Promise.all(
-      locationIds.map(async l => this.locationService.getLocation(l, {
-        $select: {
-          id: true,
-          account: {
-            $select: {
-              id: true
-            }
-          },
-          ['class']: true
-        }
-      }))
-    );
-     
-    return _.flatten((await Promise.all(_.map(locations, async (maybeLocation) => 
-      pipe(
-        maybeLocation,
-        Option.fold(
-          async () => [],
-          async l => l.class.key === 'unit' ? [l.id] : this.getAllChildrenUnits(l)
-        )
-      )
-    ))));
-  }
-
-  private async getAllChildrenUnits(location: Location): Promise<string[]> {
-    const childIds = await this.locationService.getAllChildren(location);
-    const childLocations = await Promise.all(
-      childIds.map(({ child_id: childId }) => 
-        this.locationService.getLocation(childId, {
-          $select: {
-            id: true,
-            ['class']: true
-          }
-        })
-      )
-    );
-    return _.flatMap(childLocations, maybeChildLocation => 
-      pipe(
-        maybeChildLocation,
-        Option.fold(
-          () => [],
-          childLocation => childLocation.class.key === 'unit' ? [childLocation.id] : []
-        )
-      )
-    )
   }
 }
 
