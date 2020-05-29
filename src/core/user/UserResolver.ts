@@ -261,6 +261,11 @@ class UserResolver extends Resolver<User> {
   }
 
   public async retrieveAlarmSettings(id: string, filter: RetrieveAlarmSettingsFilter): Promise<EntityAlarmSettings> {
+    const userAccountRoleRecordData = await this.userAccountRoleTable.getByUserId(id);
+    const accountType = !userAccountRoleRecordData ? 
+      'personal' :  
+      ((await this.accountResolverFactory().getAccount(userAccountRoleRecordData.account_id))?.type) || 'personal';
+
     const isLocationFilter = (f: RetrieveAlarmSettingsFilter): f is { locationIds: string[] } => {
       return !_.isEmpty((f as any).locationIds);
     };    
@@ -284,7 +289,10 @@ class UserResolver extends Resolver<User> {
       );
 
       const locationIdSet = hierarchyToSet(locationHierarchyMap);
-      const alarmSettings = await this.notificationServiceFactory().getAlarmSettingsInBulk(id, { locationIds: Array.from(locationIdSet) });      
+      const alarmSettings = await this.notificationServiceFactory().getAlarmSettings(id, { 
+        locationIds: Array.from(locationIdSet),
+        accountType
+      });
       const settingsByLocation: Record<string, LocationAlarmSettings> = alarmSettings.items.reduce((obj, item) => ({
         ...obj,
         ...(this.isLocationSetting(item) && { [item.locationId]: item })
@@ -296,7 +304,10 @@ class UserResolver extends Resolver<User> {
 
     }
 
-    const deviceSettings = await this.notificationServiceFactory().getAlarmSettingsInBulk(id, filter);
+    const deviceSettings = await this.notificationServiceFactory().getAlarmSettings(id, {
+      ...filter,
+      accountType
+    });
     const locationMapping: Record<string, any> = await filter.deviceIds.reduce(
       async (eventualObj: Promise<Record<string, any>>, deviceId: string) => {
         const device = await this.deviceResolverFactory().get(deviceId, { $select: { location: { $select: { id: true, account: { $select: { id: true } } } } } });
@@ -317,7 +328,10 @@ class UserResolver extends Resolver<User> {
     );
 
     const locationIdSet = hierarchyToSet(locationMapping.locationHierarchy);
-    const locationSettings = await this.notificationServiceFactory().getAlarmSettingsInBulk(id, { locationIds: Array.from(locationIdSet) });
+    const locationSettings = await this.notificationServiceFactory().getAlarmSettings(id, { 
+      locationIds: Array.from(locationIdSet),
+      accountType
+    });
     const settingsById = _.chain(deviceSettings.items)
       .concat(locationSettings.items)
       .reduce((obj, item) => ({
