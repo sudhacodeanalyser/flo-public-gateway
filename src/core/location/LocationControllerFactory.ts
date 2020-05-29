@@ -242,26 +242,6 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
       return this.locationService.removeArea(locationId, areaId);
     }
 
-    @all(
-      '/:id/pes/*',
-      authWithParents,
-      reqValidator.create(t.type({
-        params: t.type({
-          id: t.string
-        }),
-        body: t.any,
-        query: t.partial({
-          shouldCascade: t.boolean
-        })
-      }))
-    )
-    @asyncMethod
-    private async forwardPes(@request() req: Request, @requestParam('id') id: string, @requestBody() data: any, @queryParam('shouldCascade') shouldCascade?: boolean): Promise<void> {
-      const subPath = req.url.toLowerCase().split('pes/')[1];
-
-      await this.locationService.forwardPes(id, req.method, `/pes/${subPath}`, data, shouldCascade);
-    }  
-
     @httpPost(
       '/:id/floSense',
       authWithParents,
