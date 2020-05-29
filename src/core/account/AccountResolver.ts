@@ -42,6 +42,9 @@ class AccountResolver extends Resolver<Account> {
     },
     userRoles: async (account: Account, shouldExpand: boolean = false) => {
       return this.getAllAccountUserRolesByAccountId(account.id);
+    },
+    type: async (account: Account, shouldExpand: boolean = false) => {
+      return account.type || 'personal';
     }
   };
   private locationResolverFactory: () => LocationResolver;
