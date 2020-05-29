@@ -39,8 +39,7 @@ export interface NotificationService {
   deleteAlarmEvent(id: string): Promise<void>;
   getAlarmEventsByFilter(filter: AlarmEventFilter): Promise<PaginatedResult<AlarmEvent>>;
   clearAlarms(alarmIds: number[], data: any): Promise<ClearAlertResponse>;
-  getAlarmSettings(userId: string, deviceId: string): Promise<Option<DeviceAlarmSettings>>;
-  getAlarmSettingsInBulk(userId: string, filters: RetrieveAlarmSettingsFilter): Promise<EntityAlarmSettings>;
+  getAlarmSettings(userId: string, filters: RetrieveAlarmSettingsFilter): Promise<EntityAlarmSettings>;
   updateAlarmSettings(userId: string, settings: UpdateAlarmSettings): Promise<void>;
   generateEventsSample(data: any): Promise<void>; 
   retrieveStatistics(filters: string): Promise<NotificationStatistics>;

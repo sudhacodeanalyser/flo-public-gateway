@@ -104,16 +104,7 @@ class ApiNotificationService {
     });
   }
 
-  public async getAlarmSettings(userId: string, deviceId: string): Promise<Option<DeviceAlarmSettings>> {
-    const settings: DeviceAlarmSettings[] = await this.notificationApi.sendRequest({
-      method: 'get',
-      url: `/settings/${userId}?devices=${deviceId}`,
-    });
-
-    return fromNullable(_.head(settings));
-  }
-
-  public async getAlarmSettingsInBulk(userId: string, filters: RetrieveAlarmSettingsFilter): Promise<EntityAlarmSettings> {    
+  public async getAlarmSettings(userId: string, filters: RetrieveAlarmSettingsFilter): Promise<EntityAlarmSettings> {    
     const settings: EntityAlarmSettings = await this.notificationApi.sendRequest({
       method: 'post',
       url: `/settings/${userId}/batch`,

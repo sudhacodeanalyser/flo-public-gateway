@@ -204,13 +204,18 @@ export const UpdateAlarmSettingsCodec = t.type({
   items: t.array(EntityAlarmSettingsItemCodec)
 });
 
-export const RetrieveAlarmSettingsFilterCodec = t.union([
-  t.type({
-    deviceIds: t.array(t.string)
+export const RetrieveAlarmSettingsFilterCodec = t.intersection([
+  t.partial({
+    accountType: t.string
   }),
-  t.type({
-    locationIds: t.array(t.string)
-  })
+  t.union([
+    t.type({
+      deviceIds: t.array(t.string)
+    }),
+    t.type({
+      locationIds: t.array(t.string)
+    })
+  ])
 ]);
 
 export interface AlarmSettings extends t.TypeOf<typeof AlarmSettingsCodec> {}
