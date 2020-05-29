@@ -23,7 +23,7 @@ class ApiV1DeviceSystemModeServiceFactory implements DeviceSystemModeServiceFact
     };
 
 
-    return this.deviceSystemModeServiceFactory(this.apiV1Url, this.apiV1Token, customHeaders);
+    return this.deviceSystemModeServiceFactory(this.apiV1Url, `Bearer ${ this.apiV1Token }`, customHeaders);
   }
 }
 
