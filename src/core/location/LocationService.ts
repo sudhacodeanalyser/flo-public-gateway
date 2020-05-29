@@ -477,7 +477,7 @@ class LocationService {
         deviceType: true
       }
     }, true);
-
+    
     await Promise.all(
       devices
         .filter(isDevice)
@@ -514,6 +514,7 @@ class LocationService {
   private async getDevices(locationId: string, deviceExpand: PropExpand, shouldCascade?: boolean): Promise<Array<Partial<Device>>> {
     const location = O.toNullable(await this.getLocation(locationId, { 
       $select: { 
+        id: true,
         account: {
           $select: {
             id: true
@@ -538,6 +539,7 @@ class LocationService {
           }
         }))
       );
+
       return _.chain(childLocations)
         .map(opt => O.toNullable(opt))
         .flatMap(loc => (loc ? loc.devices : []) as Device[])
