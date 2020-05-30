@@ -200,9 +200,14 @@ export const EntityAlarmSettingsCodec = t.type({
   items: t.array(EntityAlarmSettingsItemCodec)
 });
 
-export const UpdateAlarmSettingsCodec = t.type({
-  items: t.array(EntityAlarmSettingsItemCodec)
-});
+export const UpdateAlarmSettingsCodec = t.intersection([
+  t.type({
+    items: t.array(EntityAlarmSettingsItemCodec)
+  }),
+  t.partial({
+    accountType: t.string
+  })
+]);
 
 export const RetrieveAlarmSettingsFilterCodec = t.intersection([
   t.partial({
