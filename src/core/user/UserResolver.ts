@@ -421,7 +421,7 @@ class UserResolver extends Resolver<User> {
   }
 
   private async getAccountType(userId: string): Promise<string> {
-    const userAccountRoleRecordData = await this.userAccountRoleTable.getByUserId(id);
+    const userAccountRoleRecordData = await this.userAccountRoleTable.getByUserId(userId);
     return !userAccountRoleRecordData ? 
       'personal' :  
       (
