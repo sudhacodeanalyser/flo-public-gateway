@@ -257,24 +257,15 @@ class UserResolver extends Resolver<User> {
   }
 
   public async updateAlarmSettings(id: string, settings: UpdateAlarmSettings): Promise<void> {
-    return this.notificationServiceFactory().updateAlarmSettings(id, settings);
+    const accountType = await this.getAccountType(id);
+    return this.notificationServiceFactory().updateAlarmSettings(id, {
+      ...settings,
+      accountType
+    });
   }
 
   public async retrieveAlarmSettings(id: string, filter: RetrieveAlarmSettingsFilter): Promise<EntityAlarmSettings> {
-    const userAccountRoleRecordData = await this.userAccountRoleTable.getByUserId(id);
-    const accountType = !userAccountRoleRecordData ? 
-      'personal' :  
-      (
-        (await this.accountResolverFactory().getAccount(
-          userAccountRoleRecordData.account_id, 
-          { 
-            $select: {
-              id: true,
-              type: true
-            }
-          }
-        )
-      )?.type) || 'personal';
+    const accountType = await this.getAccountType(id);
 
     const isLocationFilter = (f: RetrieveAlarmSettingsFilter): f is { locationIds: string[] } => {
       return !_.isEmpty((f as any).locationIds);
@@ -427,6 +418,23 @@ class UserResolver extends Resolver<User> {
       ...user,
       ...expandedProps
     };
+  }
+
+  private async getAccountType(userId: string): Promise<string> {
+    const userAccountRoleRecordData = await this.userAccountRoleTable.getByUserId(id);
+    return !userAccountRoleRecordData ? 
+      'personal' :  
+      (
+        (await this.accountResolverFactory().getAccount(
+          userAccountRoleRecordData.account_id, 
+          { 
+            $select: {
+              id: true,
+              type: true
+            }
+          }
+        )
+      )?.type) || 'personal';
   }
   
   private async getLocationHierarchy(locationId?: string): Promise<Record<string, string | undefined>> {
