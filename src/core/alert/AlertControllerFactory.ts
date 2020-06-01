@@ -125,7 +125,12 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
               { 
                 locations: { 
                   $select: {
-                    id: true
+                    id: true,
+                    devices: {
+                      $select: {
+                        id: true
+                      }
+                    }
                   } 
                 } 
               } : 
