@@ -121,7 +121,20 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
           $select: { 
             locale: true,
             unitSystem: true,
-            ...(expandLocations ? { locations: { $expand: true } } : {})
+            ...(expandLocations ? 
+              { 
+                locations: { 
+                  $select: {
+                    id: true,
+                    devices: {
+                      $select: {
+                        id: true
+                      }
+                    }
+                  } 
+                } 
+              } : 
+              {})
           } 
         };
         return this.userService.getUserById(id,  propExpand);
