@@ -103,6 +103,7 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
 
     @httpGet(
       '/',
+      authMiddlewareFactory.create(async ({ query: { userId } }) => ({ user_id: userId })),
        reqValidator.create(t.type({
          query: t.intersection([
            t.type({
