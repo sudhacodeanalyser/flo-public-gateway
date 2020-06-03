@@ -3,7 +3,7 @@ import { injectHttpContext, interfaces } from 'inversify-express-utils';
 import _ from 'lodash';
 import uuid from 'uuid';
 import { fromPartialRecord } from '../../database/Patch';
-import { DependencyFactoryFactory, Device, Location, LocationUserRole, LookupItem, PropExpand, SystemMode } from '../api';
+import { DependencyFactoryFactory, Device, Location, LocationUserRole, LookupItem, PropExpand, SystemMode, LocationPage } from '../api';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import LocationTable from '../location/LocationTable';
 import { NotificationService, NotificationServiceFactory } from '../notification/NotificationService';
@@ -462,10 +462,9 @@ class LocationResolver extends Resolver<Location> {
     );
   }
 
-  public async getByUserIdWithChildren(userId: string, expandProps?: PropExpand, size?: number, page?: number): Promise<Location[]> {
-    const { items } = await this.locationPgTable.getByUserIdWithChildren(userId, size, page);
-
-    return Promise.all(
+  public async getByUserIdWithChildren(userId: string, expandProps?: PropExpand, size?: number, page?: number): Promise<LocationPage> {
+    const { items, total } = await this.locationPgTable.getByUserIdWithChildren(userId, size, page);
+    const locations = await Promise.all(
       items.map(async item => {
         const location = LocationPgRecord.toModel(item);
         const resolved = await this.resolveProps(location, expandProps);
@@ -476,12 +475,17 @@ class LocationResolver extends Resolver<Location> {
         };
       })
     );
+
+    return {
+      total,
+      page: page || 0,
+      items: locations
+    }
   }
 
-  public async getByUserId(userId: string, expandProps?: PropExpand, size?: number, page?: number): Promise<Location[]> {
-    const { items } = await this.locationPgTable.getByUserId(userId, size, page);
-
-    return Promise.all(
+  public async getByUserId(userId: string, expandProps?: PropExpand, size?: number, page?: number): Promise<LocationPage> {
+    const { items, total } = await this.locationPgTable.getByUserId(userId, size, page);
+    const locations = await Promise.all(
       items.map(async item => {
         const location = LocationPgRecord.toModel(item);
         const resolved = await this.resolveProps(location, expandProps);
@@ -492,13 +496,18 @@ class LocationResolver extends Resolver<Location> {
         };
       })
     );
+
+    return {
+      total,
+      page: page || 0,
+      items: locations
+    }
   }
 
-  public async getByUserIdAndClass(userId: string, locClass: string, expandProps?: PropExpand, size?: number, page?: number): Promise<Location[]> {
-    const locationRecords = await this.locationPgTable.getByUserIdAndClass(userId, locClass, size, page);
-
-    return Promise.all(
-      locationRecords.items
+  public async getByUserIdAndClass(userId: string, locClass: string, expandProps?: PropExpand, size?: number, page?: number): Promise<LocationPage> {
+    const { items, total } = await this.locationPgTable.getByUserIdAndClass(userId, locClass, size, page);
+    const locations = await Promise.all(
+      items
         .map(async locationRecord => {
           const location = LocationPgRecord.toModel(locationRecord);
           const resolvedProps = await this.resolveProps(location, expandProps);
@@ -509,6 +518,12 @@ class LocationResolver extends Resolver<Location> {
           };
         })
     );
+
+    return {
+      total,
+      page: page || 0,
+      items: locations
+    }
 
   }
 

@@ -116,16 +116,19 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
          ])
        }))
     )
-    private async getLocations(@queryParam('userId') userId: string, @queryParam('class') locationClass?: string, @queryParam('expand') expand?: string): Promise<Responses.Location[]> {
+    private async getLocations(@queryParam('userId') userId: string, @queryParam('class') locationClass?: string, @queryParam('expand') expand?: string): Promise<{ total: number; page: number; items: Responses.Location[] }> {
       const expandProps = parseExpand(expand);
-
-      return (await (
+      const page = (await (
           locationClass ? 
             this.locationService.getByUserIdAndClass(userId, locationClass, expandProps) :
             this.locationService.getByUserId(userId, expandProps)
         )
-      )
-      .map(loc => Responses.Location.fromModel(loc));
+      );
+
+      return {
+        ...page,
+        items: page.items.map(loc => Responses.Location.fromModel(loc))
+      };
     }
 
     @httpGet(
