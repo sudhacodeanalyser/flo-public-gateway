@@ -504,8 +504,8 @@ class LocationResolver extends Resolver<Location> {
     }
   }
 
-  public async getByUserIdAndClass(userId: string, locClass: string, expandProps?: PropExpand, size?: number, page?: number): Promise<LocationPage> {
-    const { items, total } = await this.locationPgTable.getByUserIdAndClass(userId, locClass, size, page);
+  public async getByUserIdAndClassWithChildren(userId: string, locClass: string, expandProps?: PropExpand, size?: number, page?: number): Promise<LocationPage> {
+    const { items, total } = await this.locationPgTable.getByUserIdAndClassWithChildren(userId, locClass, size, page);
     const locations = await Promise.all(
       items
         .map(async locationRecord => {

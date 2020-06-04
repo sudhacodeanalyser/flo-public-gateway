@@ -144,8 +144,8 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
       const expandProps = parseExpand(expand);
       const locPage = (await (
           locationClass ? 
-            this.locationService.getByUserIdAndClass(userId, locationClass, expandProps, size, page) :
-            this.locationService.getByUserId(userId, expandProps, size, page)
+            this.locationService.getByUserIdAndClassWithChildren(userId, locationClass, expandProps, size, page) :
+            this.locationService.getByUserIdWithChildren(userId, expandProps, size, page)
         )
       );
 

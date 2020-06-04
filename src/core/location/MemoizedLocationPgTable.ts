@@ -10,7 +10,7 @@ import { Patch } from '../../database/Patch';
 class MemoizedLocationPgTable extends MemoizeMixin(CacheMixin(LocationPgTable)) {
 
   @memoized()
-  @cached('LocationPg')
+  // @cached('LocationPg')
   public async get(keys: KeyMap): Promise<LocationPgRecordData | null> {
     return super.get(keys);
   }
@@ -30,7 +30,7 @@ class MemoizedLocationPgTable extends MemoizeMixin(CacheMixin(LocationPgTable)) 
     results.items
       .forEach(location => {
         this.primeMethodLoader('get', { id: location.id }, location);
-        this.cache(location, 'LocationPg', JSON.stringify({ id: location.id }));       
+        // this.cache(location, 'LocationPg', JSON.stringify({ id: location.id }));       
       });
 
     return results;
@@ -45,7 +45,7 @@ class MemoizedLocationPgTable extends MemoizeMixin(CacheMixin(LocationPgTable)) 
     results.items
       .forEach(location => {
         this.primeMethodLoader('get', { id: location.id }, location);
-        this.cache(location, 'LocationPg', JSON.stringify({ id: location.id }));       
+        // this.cache(location, 'LocationPg', JSON.stringify({ id: location.id }));       
       });
 
     return results;
@@ -60,7 +60,22 @@ class MemoizedLocationPgTable extends MemoizeMixin(CacheMixin(LocationPgTable)) 
     results.items
       .forEach(location => {
         this.primeMethodLoader('get', { id: location.id }, location);
-        this.cache(location, 'LocationPg', JSON.stringify({ id: location.id }));       
+        // this.cache(location, 'LocationPg', JSON.stringify({ id: location.id }));       
+      });
+
+    return results;
+  }
+
+  @memoized((args: any[]) => args) 
+  @cached('LocationPgByUserIdAndClassWithChildren', 30)
+  public async getByUserIdAndClassWithChildren(...args: any[]): Promise<LocationPgPage> {
+    const [[userId, locClass, size, page]] = args;
+    const results = await super.getByUserIdAndClassWithChildren(userId, locClass, size, page);
+
+    results.items
+      .forEach(location => {
+        this.primeMethodLoader('get', { id: location.id }, location);
+        // this.cache(location, 'LocationPg', JSON.stringify({ id: location.id }));       
       });
 
     return results;

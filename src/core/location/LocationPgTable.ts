@@ -127,6 +127,35 @@ class LocationPgTable extends PostgresTable<LocationPgRecordData> {
       items
     };
   }
+
+  public async getByUserIdAndClassWithChildren(userId: string, locClass: string, size: number = 100, page: number = 1): Promise<LocationPgPage> {
+    const { text, values } = squel.useFlavour('postgres')
+      .select()
+      .from('"location"', '"l"')
+      .field('"l".*')
+      .field('COUNT(*) OVER()', '"total"')
+      .where(`
+        EXISTS(
+          SELECT 1 FROM "user_location" AS "ul"
+          LEFT JOIN "location_tree" AS "lt" ON "ul"."location_id" = "lt"."parent_id"
+          WHERE "ul"."user_id" = ?
+          AND "l"."id" = COALESCE("lt"."child_id", "ul"."location_id")
+          AND "l"."location_class" = ?
+        )
+      `, userId, locClass)
+      .limit(Math.max(1, size))
+      .offset(Math.max(0, page - 1))
+      .toParam();
+    const results = await this.pgDbClient.execute(text, values);
+    const total = results.rows[0] ? results.rows[0].total : 0;
+    const items = results.rows.map(({ total: ignoreTotal, ...item }) => item);
+    
+    return {
+      page,
+      total,
+      items
+    };
+  }
 }
 
 export default LocationPgTable;
