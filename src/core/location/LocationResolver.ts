@@ -221,7 +221,7 @@ class LocationResolver extends Resolver<Location> {
         return null;
       }
 
-      const childrenUnits: string[] = [];// await this.getAllChildrenUnits(location);
+      const childrenUnits = await this.getAllChildrenUnits(location);
       const locationIds = _.isEmpty(childrenUnits) ? [location.id] : childrenUnits;
       return this.notificationService.retrieveStatisticsInBatch({locationIds});
     },
