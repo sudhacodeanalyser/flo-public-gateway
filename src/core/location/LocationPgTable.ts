@@ -15,14 +15,15 @@ class LocationPgTable extends PostgresTable<LocationPgRecordData> {
   }
 
   public async getByAccountId(accountId: string, size: number = 100, page: number = 1): Promise<LocationPgPage> {
+    const limit = Math.max(1, size);
     const { text, values } = squel.useFlavour('postgres')
       .select()
       .field('*')
       .field('COUNT(*) OVER()', '"total"')
       .from('"location"')
       .where('"account_id" = ?', accountId)
-      .limit(Math.max(size, 0))
-      .offset(Math.max(page - 1, 0))
+      .limit(limit)
+      .offset(limit * Math.max(0, page - 1))
       .group('"id"')
       .toParam()
     const results = await this.pgDbClient.execute(text, values);
@@ -37,6 +38,7 @@ class LocationPgTable extends PostgresTable<LocationPgRecordData> {
   }
 
   public async getByUserId(userId: string, size: number = 100, page: number = 1): Promise<LocationPgPage> {
+    const limit = Math.max(1, size);
     const { text, values } = squel.useFlavour('postgres')
       .select()
       .field('"l".*')
@@ -44,8 +46,8 @@ class LocationPgTable extends PostgresTable<LocationPgRecordData> {
       .from('"user_location"', '"ul"')
       .join('"location"', '"l"', '"ul"."location_id" = "l"."id"')
       .where('"ul"."user_id" = ?', userId)
-      .limit(Math.max(1, size))
-      .offset(Math.max(0, page - 1))
+      .limit(limit)
+      .offset(limit * Math.max(0, page - 1))
       .toParam();
     const results = await this.pgDbClient.execute(text, values);
     const total = results.rows[0] ? results.rows[0].total : 0;
@@ -59,6 +61,7 @@ class LocationPgTable extends PostgresTable<LocationPgRecordData> {
   }
 
   public async getByUserIdAndClass(userId: string, locClass: string, size: number = 100, page: number = 1): Promise<LocationPgPage> {
+    const limit = Math.max(1, size);    
     const { text, values } = squel.useFlavour('postgres')
       .select()
       .field('"l".*')
@@ -67,8 +70,8 @@ class LocationPgTable extends PostgresTable<LocationPgRecordData> {
       .join('"location"', '"l"', '"ul"."location_id" = "l"."id"')
       .where('"ul"."user_id" = ?', userId)
       .where('"l"."location_class" = ?', locClass)
-      .limit(Math.max(1, size))
-      .offset(Math.max(0, page - 1))
+      .limit(limit)
+      .offset(limit * Math.max(0, page - 1))
       .toParam();
     const results = await this.pgDbClient.execute(text, values);
     const total = results.rows[0] ? results.rows[0].total : 0;
@@ -103,6 +106,7 @@ class LocationPgTable extends PostgresTable<LocationPgRecordData> {
   }
 
   public async getByUserIdWithChildren(userId: string, size: number = 100, page: number = 1): Promise<LocationPgPage> {
+    const limit = Math.max(1, size);
     const { text, values } = squel.useFlavour('postgres')
       .select()
       .from('"location"', '"l"')
@@ -116,6 +120,8 @@ class LocationPgTable extends PostgresTable<LocationPgRecordData> {
           AND "l"."id" = COALESCE("lt"."child_id", "ul"."location_id")
         )
       `, userId)
+      .limit(limit)
+      .offset(limit * Math.max(0, page - 1))
       .toParam();
     const results = await this.pgDbClient.execute(text, values);
     const total = results.rows[0] ? results.rows[0].total : 0;
@@ -129,6 +135,7 @@ class LocationPgTable extends PostgresTable<LocationPgRecordData> {
   }
 
   public async getByUserIdAndClassWithChildren(userId: string, locClass: string, size: number = 100, page: number = 1): Promise<LocationPgPage> {
+    const limit = Math.max(1, size);
     const { text, values } = squel.useFlavour('postgres')
       .select()
       .from('"location"', '"l"')
@@ -143,8 +150,8 @@ class LocationPgTable extends PostgresTable<LocationPgRecordData> {
           AND "l"."location_class" = ?
         )
       `, userId, locClass)
-      .limit(Math.max(1, size))
-      .offset(Math.max(0, page - 1))
+      .limit(limit)
+      .offset(limit * Math.max(0, page - 1))
       .toParam();
     const results = await this.pgDbClient.execute(text, values);
     const total = results.rows[0] ? results.rows[0].total : 0;
