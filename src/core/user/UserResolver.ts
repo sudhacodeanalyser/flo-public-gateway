@@ -52,6 +52,14 @@ class UserResolver extends Resolver<User> {
           };
         }
       ));
+
+      // const locations = await this.locationResolverFactory().getByUserIdWithChildren(model.id, shouldExpand ? expandProps : undefined);
+      
+      // if (!shouldExpand) {
+      //   return locations.items.map(({ id }) => ({ id }));
+      // }
+
+      // return locations.items;
     },
     account: async (model: User, shouldExpand = false) => {
       const userAccountRoleRecordData = await this.userAccountRoleTable.getByUserId(model.id);
@@ -140,6 +148,17 @@ class UserResolver extends Resolver<User> {
                 })
         ));
 
+        // const locations = await this.locationResolverFactory().getByUserIdWithChildren(model.id, {
+        //   $select: {
+        //     devices: {
+        //       $select: {
+        //         id: true
+        //       }
+        //     }
+        //   }
+        // });
+        // const devices = _.flatten(locations.items.map(location => location.devices || []));
+
         if (_.isEmpty(devices)) {
           return null;
         }
@@ -174,7 +193,7 @@ class UserResolver extends Resolver<User> {
     @inject('NotificationServiceFactory') notificationServiceFactory: NotificationServiceFactory,
     @injectHttpContext private readonly httpContext: interfaces.HttpContext,
     @inject('Logger') private readonly logger: Logger,
-    @inject('LocationTreeTable') private locationTreeTable: LocationTreeTable
+    @inject('LocationTreeTable') private locationTreeTable: LocationTreeTable,
   ) {
     super();
 
