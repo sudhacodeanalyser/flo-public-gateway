@@ -28,13 +28,38 @@ class UserResolver extends Resolver<User> {
         return null;
       }
 
-      const locations = await this.locationResolverFactory().getByUserIdWithChildren(model.id, shouldExpand ? expandProps : undefined);
+      const userLocationRoleRecordData: UserLocationRoleRecordData[] = await this.userLocationRoleTable.getAllByUserId(model.id);
+      const rootLocationIds = userLocationRoleRecordData.map(({ location_id }) => location_id);
+      const subTrees = _.flatten(await Promise.all(
+        rootLocationIds.map(parentId => this.locationTreeTable.getAllChildren(userAccountRoleRecordData.account_id, parentId))
+      ));
+      const locationIds = _.uniq([
+        ...rootLocationIds,
+        ...subTrees.map(({ child_id }) => child_id)
+      ]);
       
       if (!shouldExpand) {
-        return locations.map(({ id }) => ({ id }));
+        return locationIds.map(id => ({ id }));
       }
 
-      return locations;
+      return Promise.all(locationIds.map(
+        async (locationId) => {
+          const location = await this.locationResolverFactory().get(locationId, expandProps);
+
+          return {
+            ...location,
+            id: locationId
+          };
+        }
+      ));
+
+      // const locations = await this.locationResolverFactory().getByUserIdWithChildren(model.id, shouldExpand ? expandProps : undefined);
+      
+      // if (!shouldExpand) {
+      //   return locations.items.map(({ id }) => ({ id }));
+      // }
+
+      // return locations.items;
     },
     account: async (model: User, shouldExpand = false) => {
       const userAccountRoleRecordData = await this.userAccountRoleTable.getByUserId(model.id);
@@ -105,34 +130,34 @@ class UserResolver extends Resolver<User> {
       }
 
       try {
-        // const userLocationRoleRecordData: UserLocationRoleRecordData[] = await this.userLocationRoleTable.getAllByUserId(model.id);
-        // const locationResolver = this.locationResolverFactory();
-        // const devices = _.flatten(await Promise.all(
-        //     userLocationRoleRecordData
-        //         .map(async ({ location_id }) => {
-        //           const location = await locationResolver.get(location_id, {
-        //             $select: {
-        //               devices: {
-        //                 $select: {
-        //                   id: true
-        //                 }
-        //               }
-        //             }
-        //           });
-        //           return location ? location.devices: [];
-        //         })
-        // ));
+        const userLocationRoleRecordData: UserLocationRoleRecordData[] = await this.userLocationRoleTable.getAllByUserId(model.id);
+        const locationResolver = this.locationResolverFactory();
+        const devices = _.flatten(await Promise.all(
+            userLocationRoleRecordData
+                .map(async ({ location_id }) => {
+                  const location = await locationResolver.get(location_id, {
+                    $select: {
+                      devices: {
+                        $select: {
+                          id: true
+                        }
+                      }
+                    }
+                  });
+                  return location ? location.devices: [];
+                })
+        ));
 
-        const locations = await this.locationResolverFactory().getByUserIdWithChildren(model.id, {
-          $select: {
-            devices: {
-              $select: {
-                id: true
-              }
-            }
-          }
-        });
-        const devices = _.flatten(locations.map(location => location.devices || []));
+        // const locations = await this.locationResolverFactory().getByUserIdWithChildren(model.id, {
+        //   $select: {
+        //     devices: {
+        //       $select: {
+        //         id: true
+        //       }
+        //     }
+        //   }
+        // });
+        // const devices = _.flatten(locations.items.map(location => location.devices || []));
 
         if (_.isEmpty(devices)) {
           return null;
