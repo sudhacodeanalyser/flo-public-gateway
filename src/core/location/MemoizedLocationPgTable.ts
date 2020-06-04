@@ -22,9 +22,18 @@ class MemoizedLocationPgTable extends MemoizeMixin(CacheMixin(LocationPgTable)) 
   }
 
   @memoized((args: any[]) => args)
+  @cached('LocationPgByUserId', 30)
   public async getByUserId(...args: any[]): Promise<LocationPgPage> {
     const [[userId, size, page]] = args;
-    return super.getByUserId(userId, size, page);
+    const results = await super.getByUserId(userId, size, page);
+
+    results.items
+      .forEach(location => {
+        this.primeMethodLoader('get', { id: location.id }, location);
+        this.cache(location, 'LocationPg', JSON.stringify({ id: location.id }));       
+      });
+
+    return results;
   }
 
   @memoized((args: any[]) => args)
@@ -35,7 +44,21 @@ class MemoizedLocationPgTable extends MemoizeMixin(CacheMixin(LocationPgTable)) 
 
     results.items
       .forEach(location => {
-        this.primeMethodLoader('getByUserId', args, location);
+        this.primeMethodLoader('get', { id: location.id }, location);
+        this.cache(location, 'LocationPg', JSON.stringify({ id: location.id }));       
+      });
+
+    return results;
+  }
+
+  @memoized((args: any[]) => args) 
+  @cached('LocationPgByUserIdAndClass', 30)
+  public async getByUserIdAndClass(...args: any[]): Promise<LocationPgPage> {
+    const [[userId, locClass, size, page]] = args;
+    const results = await super.getByUserIdAndClass(userId, locClass, size, page);
+
+    results.items
+      .forEach(location => {
         this.primeMethodLoader('get', { id: location.id }, location);
         this.cache(location, 'LocationPg', JSON.stringify({ id: location.id }));       
       });
