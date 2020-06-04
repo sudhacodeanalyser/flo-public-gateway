@@ -330,7 +330,7 @@ class LocationResolver extends Resolver<Location> {
   }
 
   public async get(id: string, expandProps?: PropExpand): Promise<Location | null> {
-    const locationRecordData = await this.locationTable.get({ id });
+    const locationRecordData = await this.locationTable.getByLocationId(id);
 
     if (locationRecordData === null) {
       return null;
@@ -478,7 +478,7 @@ class LocationResolver extends Resolver<Location> {
 
     return {
       total,
-      page: page || 0,
+      page: page || 1,
       items: locations
     }
   }
@@ -499,7 +499,7 @@ class LocationResolver extends Resolver<Location> {
 
     return {
       total,
-      page: page || 0,
+      page: page || 1,
       items: locations
     }
   }
@@ -521,7 +521,7 @@ class LocationResolver extends Resolver<Location> {
 
     return {
       total,
-      page: page || 0,
+      page: page || 1,
       items: locations
     }
 
