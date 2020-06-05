@@ -1,3 +1,4 @@
+import { inject, injectable } from 'inversify';
 import { fold, fromNullable, Option } from 'fp-ts/lib/Option';
 import { pipe } from 'fp-ts/lib/pipeable';
 import _ from 'lodash';
@@ -17,19 +18,28 @@ import {
   NewUserFeedback,
   StatsFilter,
   RetrieveAlarmSettingsFilter,
-  EntityAlarmSettings
+  EntityAlarmSettings,
+  DependencyFactoryFactory
 } from '../core/api';
 import { DeviceService } from '../core/device/DeviceService';
 import { HttpService } from '../http/HttpService';
 
-class ApiNotificationService {
+@injectable()
+class ApiNotificationService extends HttpService {
+  private deviceServiceFactory: () => DeviceService;
+  
   constructor(
-    private readonly deviceServiceFactory: () => DeviceService,
-    private notificationApi: HttpService
-  ) {}
+    @inject('notificationApiUrl') private readonly notificationApiUrl: string,
+    @inject('DependencyFactoryFactory') depFactoryFactory: DependencyFactoryFactory
+  ) {
+    super();
+    this.baseUrl = this.notificationApiUrl;
+    this.authToken = this.httpContext && this.httpContext.request && this.httpContext.request.get('Authorization');
+    this.deviceServiceFactory = depFactoryFactory<DeviceService>('DeviceService');
+  }
 
   public async getAlarmById(id: string, queryParams: any): Promise<Alarm> {
-    return this.notificationApi.sendRequest({
+    return this.sendRequest({
       method: 'get',
       url: `/alarms/${id}`,
       params: queryParams
@@ -37,7 +47,7 @@ class ApiNotificationService {
   }
 
   public async getAlarms(queryParams: any): Promise<AlarmListResult> {
-    return this.notificationApi.sendRequest({
+    return this.sendRequest({
       method: 'get',
       url: `/alarms`,
       params: queryParams
@@ -45,7 +55,7 @@ class ApiNotificationService {
   }
 
   public async sendAlarm(alertInfo: any): Promise<string> {
-    return this.notificationApi.sendRequest({
+    return this.sendRequest({
       method: 'post',
       url: '/events',
       body: alertInfo
@@ -53,7 +63,7 @@ class ApiNotificationService {
   }
 
   public async getAlarmEvent(id: string, queryParams?: Record<string, any>): Promise<AlarmEvent> {
-    return this.notificationApi.sendRequest({
+    return this.sendRequest({
       method: 'get',
       url: `/events/${id}`,
       params: queryParams
@@ -61,7 +71,7 @@ class ApiNotificationService {
   }
 
   public async deleteAlarmEvent(id: string): Promise<void> {
-    return this.notificationApi.sendRequest({
+    return this.sendRequest({
       method: 'delete',
       url: `/events/${id}`
     });
@@ -69,7 +79,7 @@ class ApiNotificationService {
 
   public async getAlarmEventsByFilter(filters: AlarmEventFilter): Promise<PaginatedResult<AlarmEvent>> {
     try {
-      return await this.notificationApi.sendRequest({
+      return await this.sendRequest({
         method: 'post',
         url: `/events/batch`,
         body: filters
@@ -97,7 +107,7 @@ class ApiNotificationService {
       alarmIds
     };
 
-    return this.notificationApi.sendRequest({
+    return this.sendRequest({
       method: 'put',
       url: `/alarms/clear`,
       body: requestBody
@@ -105,7 +115,7 @@ class ApiNotificationService {
   }
 
   public async getAlarmSettings(userId: string, filters: RetrieveAlarmSettingsFilter): Promise<EntityAlarmSettings> {    
-    const settings: EntityAlarmSettings = await this.notificationApi.sendRequest({
+    const settings: EntityAlarmSettings = await this.sendRequest({
       method: 'post',
       url: `/settings/${userId}/batch`,
       body: filters
@@ -115,7 +125,7 @@ class ApiNotificationService {
   }
 
   public async updateAlarmSettings(userId: string, settings: UpdateAlarmSettings): Promise<void> {
-    return this.notificationApi.sendRequest({
+    return this.sendRequest({
       method: 'post',
       url: `/settings/${userId}`,
       body: settings
@@ -123,7 +133,7 @@ class ApiNotificationService {
   }
 
   public async generateEventsSample(data: any): Promise<void> {
-    return this.notificationApi.sendRequest({
+    return this.sendRequest({
       method: 'post',
       url: '/events/sample',
       body: data
@@ -131,14 +141,14 @@ class ApiNotificationService {
   }
 
   public async retrieveStatistics(filters: string): Promise<NotificationStatistics> {
-    return this.notificationApi.sendRequest({
+    return this.sendRequest({
       method: 'get',
       url: `/statistics?${filters}`
     });
   }
 
   public async retrieveStatisticsInBatch(filters: StatsFilter): Promise<NotificationStatistics> {
-    return this.notificationApi.sendRequest({
+    return this.sendRequest({
       method: 'post',
       url: '/statistics/batch',
       body: filters
@@ -146,14 +156,14 @@ class ApiNotificationService {
   }
 
   public async getFilterStateById(id: string): Promise<Option<FilterState>> {
-    return this.notificationApi.sendRequest({
+    return this.sendRequest({
       method: 'get',
       url: `/filters/${id}`
     });
   }
 
   public async getFilterState(filters: any): Promise<FilterState[]> {
-    return this.notificationApi.sendRequest({
+    return this.sendRequest({
       method: 'get',
       url: '/filters',
       params: filters
@@ -161,14 +171,14 @@ class ApiNotificationService {
   }
 
   public async deleteFilterState(id: string): Promise<void> {
-    return this.notificationApi.sendRequest({
+    return this.sendRequest({
       method: 'delete',
       url: `/filters/${id}`
     });
   }
 
   public async createFilterState(filterState: FilterState): Promise<FilterState> {
-    return this.notificationApi.sendRequest({
+    return this.sendRequest({
       method: 'post',
       url: '/filters',
       body: filterState
@@ -176,7 +186,7 @@ class ApiNotificationService {
   }
 
   public async registerEmailServiceEvent(incidentId: string, userId: string, receipt: Receipt): Promise<void> {
-    return this.notificationApi.sendRequest({
+    return this.sendRequest({
       method: 'post',
       url: `/email/events/${incidentId}/${userId}`,
       body: {
@@ -193,7 +203,7 @@ class ApiNotificationService {
         category: JSON.stringify(event.category)
       }));
 
-    return this.notificationApi.sendRequest({
+    return this.sendRequest({
       method: 'post',
       url: '/email/events',
       body: {
@@ -203,7 +213,7 @@ class ApiNotificationService {
   }
 
   public async registerSmsServiceEvent(incidentId: string, userId: string, event: TwilioStatusEvent): Promise<void> {
-    return this.notificationApi.sendRequest({
+    return this.sendRequest({
       method: 'post',
       url: `/sms/events/${incidentId}/${userId}`,
       body: this.toLowerCamelCaseObject(event)
@@ -211,7 +221,7 @@ class ApiNotificationService {
   }
 
   public async saveUserFeedback(incidentId: string, userFeedback: NewUserFeedback, force?: boolean): Promise<void> {
-    return this.notificationApi.sendRequest({
+    return this.sendRequest({
       method: 'put',
       url: `/alerts/${incidentId}/feedback`,
       params: {
