@@ -105,6 +105,16 @@ export function CacheMixin<C extends Newable>(baseClass: C) {
   class CachedClass extends baseClass {
     @inject('RedisClient') protected redisClient: Redis.Redis;
     @inject('CachePolicy') protected cachePolicy: CachePolicy;
+
+    protected async cache(data: any, entityType: string, key: string, ttl?: number): Promise<void> {
+      const k = `${ entityType }_${ key }`;
+
+      if (ttl) {
+        await this.redisClient.setex(k, ttl, JSON.stringify(data));
+      } else {
+        await this.redisClient.set(k, JSON.stringify(data));
+      }
+    }
   }
 
   return CachedClass;

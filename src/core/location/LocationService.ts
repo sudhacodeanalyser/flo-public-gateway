@@ -4,7 +4,7 @@ import { injectHttpContext, interfaces } from 'inversify-express-utils';
 import _ from 'lodash';
 import uuid from 'uuid';
 import { AccessControlService } from '../../auth/AccessControlService';
-import { Areas, DependencyFactoryFactory, Location, LocationUpdate, LocationUserRole, PropExpand, SystemMode, Device, DeviceType, PesThresholds } from '../api';
+import { Areas, DependencyFactoryFactory, Location, LocationUpdate, LocationUserRole, PropExpand, SystemMode, Device, DeviceType, PesThresholds, LocationPage } from '../api';
 import ConflictError from '../api/error/ConflictError';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import ValidationError from '../api/error/ValidationError';
@@ -509,6 +509,14 @@ class LocationService {
         )
       )
     ))));
+  }
+
+  public async getByUserIdAndClassWithChildren(userId: string, locClass: string, expandProps?: PropExpand, size?: number, page?: number): Promise<LocationPage> {
+    return this.locationResolver.getByUserIdAndClassWithChildren(userId, locClass, expandProps, size, page);
+  }
+
+  public async getByUserIdWithChildren(userId: string, expandProps?: PropExpand, size?: number, page?: number): Promise<LocationPage> {
+    return this.locationResolver.getByUserIdWithChildren(userId, expandProps, size, page);
   }
 
   private async getDevices(locationId: string, deviceExpand: PropExpand, shouldCascade?: boolean): Promise<Array<Partial<Device>>> {

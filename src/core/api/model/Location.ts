@@ -267,3 +267,9 @@ export const PesThresholdsCodec = t.type({
 });
 
 export interface PesThresholds extends t.TypeOf<typeof PesThresholdsCodec> {}
+
+export interface LocationPage {
+  total: number;
+  page: number;
+  items: Location[];
+}
