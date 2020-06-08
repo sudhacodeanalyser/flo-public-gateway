@@ -20,7 +20,7 @@ import {
 } from '../api';
 import { httpController } from '../api/controllerUtils';
 import Request from '../api/Request';
-import { NotificationServiceFactory } from '../notification/NotificationService';
+import { UnAuthNotificationService } from '../notification/NotificationService';
 import TwilioAuthMiddlewareFactory from "./TwilioAuthMiddlewareFactory";
 
 export function DeliveryHookControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
@@ -41,7 +41,7 @@ export function DeliveryHookControllerFactory(container: Container, apiVersion: 
   @httpController({ version: apiVersion }, '/delivery/hooks')
   class DeliveryHookController extends BaseHttpController {
     constructor(
-      @inject('NotificationServiceFactory') private notificationServiceFactory: NotificationServiceFactory
+      @inject('UnAuthNotificationService') private notificationService: UnAuthNotificationService
     ) {
       super();
     }
@@ -51,8 +51,7 @@ export function DeliveryHookControllerFactory(container: Container, apiVersion: 
     )
     private async registerSendgridEmailEvent(@request() req: Request, @requestBody() events: SendWithUsEvent[]): Promise<void> {
       return this
-        .notificationServiceFactory
-        .createNoAuth(req)
+        .notificationService
         .registerSendgridEmailEvent(events);
     }
 
@@ -67,8 +66,7 @@ export function DeliveryHookControllerFactory(container: Container, apiVersion: 
       @requestBody() receipt: Receipt
     ): Promise<void> {
       return this
-        .notificationServiceFactory
-        .createNoAuth(req)
+        .notificationService
         .registerEmailServiceEvent(incidentId, userId, receipt);
     }
 
@@ -83,8 +81,7 @@ export function DeliveryHookControllerFactory(container: Container, apiVersion: 
       @requestBody() event: TwilioStatusEvent
     ): Promise<void> {
       return this
-        .notificationServiceFactory
-        .createNoAuth(req)
+        .notificationService
         .registerSmsServiceEvent(incidentId, userId, event);
     }
   }

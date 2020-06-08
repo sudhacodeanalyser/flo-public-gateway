@@ -6,7 +6,7 @@ import { fromPartialRecord } from '../../database/Patch';
 import { DependencyFactoryFactory, Device, Location, LocationUserRole, LookupItem, PropExpand, SystemMode, LocationPage } from '../api';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import LocationTable from '../location/LocationTable';
-import { NotificationService, NotificationServiceFactory } from '../notification/NotificationService';
+import { NotificationService } from '../notification/NotificationService';
 import { AccountResolver, DeviceResolver, PropertyResolverMap, Resolver, SubscriptionResolver, UserResolver } from '../resolver';
 import { LookupService } from '../service';
 import { UserLocationRoleRecord } from '../user/UserLocationRoleRecord';
@@ -304,14 +304,13 @@ class LocationResolver extends Resolver<Location> {
   private accountResolverFactory: () => AccountResolver;
   private userResolverFactory: () => UserResolver;
   private subscriptionResolverFactory: () => SubscriptionResolver;
-  private notificationService: NotificationService;
   private lookupServiceFactory: () => LookupService;
 
   constructor(
     @inject('LocationTable') private locationTable: LocationTable,
     @inject('UserLocationRoleTable') private userLocationRoleTable: UserLocationRoleTable,
     @inject('DependencyFactoryFactory') depFactoryFactory: DependencyFactoryFactory,
-    @inject('NotificationServiceFactory') notificationServiceFactory: NotificationServiceFactory,
+    @inject('NotificationService') private notificationService: NotificationService,
     @injectHttpContext private readonly httpContext: interfaces.HttpContext,
     @inject('LocationTreeTable') private locationTreeTable: LocationTreeTable,
     @inject('LocationPgTable') private locationPgTable: LocationPgTable
@@ -323,10 +322,6 @@ class LocationResolver extends Resolver<Location> {
     this.userResolverFactory = depFactoryFactory<UserResolver>('UserResolver');
     this.subscriptionResolverFactory = depFactoryFactory<SubscriptionResolver>('SubscriptionResolver');
     this.lookupServiceFactory = depFactoryFactory<LookupService>('LookupService');
-
-    if (!_.isEmpty(this.httpContext) && this.httpContext.request.get('Authorization')) {
-      this.notificationService = notificationServiceFactory.create(this.httpContext.request);
-    }
   }
 
   public async get(id: string, expandProps?: PropExpand): Promise<Location | null> {
@@ -504,7 +499,7 @@ class LocationResolver extends Resolver<Location> {
     }
   }
 
-  public async getByUserIdAndClassWithChildren(userId: string, locClass: string, expandProps?: PropExpand, size?: number, page?: number): Promise<LocationPage> {
+  public async getByUserIdAndClassWithChildren(userId: string, locClass: string[], expandProps?: PropExpand, size?: number, page?: number): Promise<LocationPage> {
     const { items, total } = await this.locationPgTable.getByUserIdAndClassWithChildren(userId, locClass, size, page);
     const locations = await Promise.all(
       items

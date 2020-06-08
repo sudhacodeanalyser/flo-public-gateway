@@ -8,7 +8,7 @@ import { InternalDeviceService } from "../../internal-device-service/InternalDev
 import { HealthTestAttemptTimesCodec, DependencyFactoryFactory, Device, DeviceCreate, DeviceModelType, DevicePairingDataCodec, DeviceSystemModeNumeric, DeviceType, DeviceUpdate, PropExpand, SystemMode, ValveState, ValveStateNumeric, AdditionalDevicePropsCodec, PuckPairingDataCodec, PairingData } from '../api';
 import { translateNumericToStringEnum } from '../api/enumUtils';
 import DeviceTable from '../device/DeviceTable';
-import { NotificationService, NotificationServiceFactory } from '../notification/NotificationService';
+import { NotificationService } from '../notification/NotificationService';
 import { LocationResolver, PropertyResolverMap, Resolver } from '../resolver';
 import DeviceForcedSystemModeTable from './DeviceForcedSystemModeTable';
 import { DeviceRecord, DeviceRecordData } from './DeviceRecord';
@@ -535,7 +535,6 @@ class DeviceResolver extends Resolver<Device> {
     }
   };
   private locationResolverFactory: () => LocationResolver;
-  private notificationService: NotificationService;
   private healthTestService: HealthTestService;
 
   constructor(
@@ -545,7 +544,7 @@ class DeviceResolver extends Resolver<Device> {
    @inject('DeviceForcedSystemModeTable') private deviceForcedSystemModeTable: DeviceForcedSystemModeTable,
    @inject('OnboardingLogTable') private onboardingLogTable: OnboardingLogTable,
    @inject('Logger') private readonly logger: Logger,
-   @inject('NotificationServiceFactory') notificationServiceFactory: NotificationServiceFactory,
+   @inject('NotificationService') private notificationService: NotificationService,
    @inject('PairingService') private pairingService: PairingService,
    @inject('HealthTestServiceFactory') healthTestServiceFactory: HealthTestServiceFactory,
    @inject('LocationTable') private locationTable: LocationTable,
@@ -559,7 +558,6 @@ class DeviceResolver extends Resolver<Device> {
     this.locationResolverFactory = depFactoryFactory<LocationResolver>('LocationResolver');
 
     if (!_.isEmpty(this.httpContext) && this.httpContext.request.get('Authorization')) {
-      this.notificationService = notificationServiceFactory.create(this.httpContext.request);
       this.healthTestService = healthTestServiceFactory.create(this.httpContext.request);
     }
   }
