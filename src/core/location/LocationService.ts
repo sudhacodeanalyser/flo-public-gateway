@@ -511,7 +511,7 @@ class LocationService {
     ))));
   }
 
-  public async getByUserIdAndClassWithChildren(userId: string, locClass: string, expandProps?: PropExpand, size?: number, page?: number): Promise<LocationPage> {
+  public async getByUserIdAndClassWithChildren(userId: string, locClass: string[], expandProps?: PropExpand, size?: number, page?: number): Promise<LocationPage> {
     return this.locationResolver.getByUserIdAndClassWithChildren(userId, locClass, expandProps, size, page);
   }
 

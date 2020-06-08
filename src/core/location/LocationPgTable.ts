@@ -134,7 +134,7 @@ class LocationPgTable extends PostgresTable<LocationPgRecordData> {
     };
   }
 
-  public async getByUserIdAndClassWithChildren(userId: string, locClass: string, size: number = 100, page: number = 1): Promise<LocationPgPage> {
+  public async getByUserIdAndClassWithChildren(userId: string, locClass: string[], size: number = 100, page: number = 1): Promise<LocationPgPage> {
     const limit = Math.max(1, size);
     const { text, values } = squel.useFlavour('postgres')
       .select()
@@ -147,7 +147,7 @@ class LocationPgTable extends PostgresTable<LocationPgRecordData> {
           LEFT JOIN "location_tree" AS "lt" ON "ul"."location_id" = "lt"."parent_id"
           WHERE "ul"."user_id" = ?
           AND "l"."id" = COALESCE("lt"."child_id", "ul"."location_id")
-          AND "l"."location_class" = ?
+          AND "l"."location_class" IN ?
         )
       `, userId, locClass)
       .limit(limit)

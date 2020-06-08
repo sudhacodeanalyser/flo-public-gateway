@@ -117,7 +117,8 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
       return this.locationService.createLocation(location, userId, roles);
     }
 
-    @httpGet(
+    @httpMethod(
+      'get',
       '/',
       authMiddlewareFactory.create(async ({ query: { userId } }) => ({ user_id: userId })),
        reqValidator.create(t.type({
@@ -126,7 +127,7 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
                userId: t.string
            }),
            t.partial({
-             class: t.string,
+             class: t.union([t.array(t.string), t.string]),
              expand: t.string,
              size: IntegerFromString,
              page: IntegerFromString
@@ -136,14 +137,14 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
     )
     private async getLocations(
       @queryParam('userId') userId: string, 
-      @queryParam('class') locationClass?: string, 
+      @queryParamArray('class') locationClass?: string[], 
       @queryParam('expand') expand?: string,
       @queryParam('size') size?: number,
       @queryParam('page') page?: number
     ): Promise<{ total: number; page: number; items: Responses.Location[] }> {
       const expandProps = parseExpand(expand);
       const locPage = (await (
-          locationClass ? 
+          locationClass && !_.isEmpty(locationClass) ? 
             this.locationService.getByUserIdAndClassWithChildren(userId, locationClass, expandProps, size, page) :
             this.locationService.getByUserIdWithChildren(userId, expandProps, size, page)
         )
