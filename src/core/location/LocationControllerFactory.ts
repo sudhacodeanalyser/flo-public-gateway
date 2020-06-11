@@ -5,7 +5,7 @@ import * as t from 'io-ts';
 import _ from 'lodash';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
-import { DependencyFactoryFactory, AreaName, AreaNameCodec, Areas, Location, LocationCreateValidator, LocationUpdate, LocationUpdateValidator, LocationUserRole, SystemMode, SystemModeCodec, PesThresholdsCodec, PesThresholds } from '../api';
+import { DependencyFactoryFactory, AreaName, AreaNameCodec, Areas, Location, LocationCreateValidator, LocationUpdate, LocationUpdateValidator, LocationUserRole, SystemMode, SystemModeCodec, PesThresholdsCodec, PesThresholds, LocationPage } from '../api';
 import { createMethod, deleteMethod, httpController, parseExpand, withResponseType, httpMethod, queryParamArray, asyncMethod } from '../api/controllerUtils';
 import Request from '../api/Request';
 import * as Responses from '../api/response';
@@ -46,6 +46,18 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
     },
     a => `${ a }`
   ) 
+
+  const BooleanFromString = new t.Type<boolean, string, unknown>(
+    'BooleanFromString',
+    (u): u is boolean => t.boolean.is(u),
+    (u, c) => {
+      return either.chain(t.string.validate(u, c), str => {
+        const s = str.toLowerCase();
+        return s !== 'true' && s !== 'false' ? t.failure(str, c) : t.success(s === 'true');
+      });
+    },
+    a => `${ a }`
+  )
 
   interface SystemModeRequestBrand {
     readonly SystemModeRequest: unique symbol;
@@ -130,7 +142,9 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
              class: t.union([t.array(t.string), t.string]),
              expand: t.string,
              size: IntegerFromString,
-             page: IntegerFromString
+             page: IntegerFromString,
+             withChildren: BooleanFromString,
+             q: t.string
            })
          ])
        }))
@@ -140,15 +154,24 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
       @queryParamArray('class') locationClass?: string[], 
       @queryParam('expand') expand?: string,
       @queryParam('size') size?: number,
-      @queryParam('page') page?: number
+      @queryParam('page') page?: number,
+      @queryParam('withChildren') withChildren: boolean = true,
+      @queryParam('q') searchText?: string
     ): Promise<{ total: number; page: number; items: Responses.Location[] }> {
       const expandProps = parseExpand(expand);
-      const locPage = (await (
-          locationClass && !_.isEmpty(locationClass) ? 
-            this.locationService.getByUserIdAndClassWithChildren(userId, locationClass, expandProps, size, page) :
-            this.locationService.getByUserIdWithChildren(userId, expandProps, size, page)
-        )
-      );
+      let locPage: LocationPage;
+
+      if (withChildren) {
+        locPage = await (locationClass && !_.isEmpty(locationClass) ? 
+            this.locationService.getByUserIdAndClassWithChildren(userId, locationClass, expandProps, size, page, searchText) :
+            this.locationService.getByUserIdWithChildren(userId, expandProps, size, page, searchText)
+        );
+      } else {
+        locPage = await (locationClass && !_.isEmpty(locationClass) ? 
+          this.locationService.getByUserIdAndClass(userId, locationClass, expandProps, size, page, searchText) :
+          this.locationService.getByUserId(userId, expandProps, size, page, searchText)
+        );
+      }
 
       return {
         ...locPage,
