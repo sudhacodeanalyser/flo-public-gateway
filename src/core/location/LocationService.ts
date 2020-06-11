@@ -511,12 +511,20 @@ class LocationService {
     ))));
   }
 
-  public async getByUserIdAndClassWithChildren(userId: string, locClass: string[], expandProps?: PropExpand, size?: number, page?: number): Promise<LocationPage> {
-    return this.locationResolver.getByUserIdAndClassWithChildren(userId, locClass, expandProps, size, page);
+  public async getByUserIdAndClassWithChildren(userId: string, locClass: string[], expandProps?: PropExpand, size?: number, page?: number, searchText?: string): Promise<LocationPage> {
+    return this.locationResolver.getByUserIdAndClassWithChildren(userId, locClass, expandProps, size, page, searchText);
   }
 
-  public async getByUserIdWithChildren(userId: string, expandProps?: PropExpand, size?: number, page?: number): Promise<LocationPage> {
-    return this.locationResolver.getByUserIdWithChildren(userId, expandProps, size, page);
+  public async getByUserIdWithChildren(userId: string, expandProps?: PropExpand, size?: number, page?: number, searchText?: string): Promise<LocationPage> {
+    return this.locationResolver.getByUserIdWithChildren(userId, expandProps, size, page, searchText);
+  }
+
+  public async getByUserIdAndClass(userId: string, locClass: string[], expandProps?: PropExpand, size?: number, page?: number, searchText?: string): Promise<LocationPage> {
+    return this.locationResolver.getByUserIdAndClass(userId, locClass, expandProps, size, page, searchText);
+  }
+
+  public async getByUserId(userId: string, expandProps?: PropExpand, size?: number, page?: number, searchText?: string): Promise<LocationPage> {
+    return this.locationResolver.getByUserId(userId, expandProps, size, page, searchText);
   }
 
   private async getDevices(locationId: string, deviceExpand: PropExpand, shouldCascade?: boolean): Promise<Array<Partial<Device>>> {

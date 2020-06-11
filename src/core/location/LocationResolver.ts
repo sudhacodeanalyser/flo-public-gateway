@@ -457,8 +457,8 @@ class LocationResolver extends Resolver<Location> {
     );
   }
 
-  public async getByUserIdWithChildren(userId: string, expandProps?: PropExpand, size?: number, page?: number): Promise<LocationPage> {
-    const { items, total } = await this.locationPgTable.getByUserIdWithChildren(userId, size, page);
+  public async getByUserIdWithChildren(userId: string, expandProps?: PropExpand, size?: number, page?: number, searchText?: string): Promise<LocationPage> {
+    const { items, total } = await this.locationPgTable.getByUserIdWithChildren(userId, size, page, searchText);
     const locations = await Promise.all(
       items.map(async item => {
         const location = LocationPgRecord.toModel(item);
@@ -478,8 +478,8 @@ class LocationResolver extends Resolver<Location> {
     }
   }
 
-  public async getByUserId(userId: string, expandProps?: PropExpand, size?: number, page?: number): Promise<LocationPage> {
-    const { items, total } = await this.locationPgTable.getByUserId(userId, size, page);
+  public async getByUserId(userId: string, expandProps?: PropExpand, size?: number, page?: number, searchText?: string): Promise<LocationPage> {
+    const { items, total } = await this.locationPgTable.getByUserId(userId, size, page, searchText);
     const locations = await Promise.all(
       items.map(async item => {
         const location = LocationPgRecord.toModel(item);
@@ -499,8 +499,29 @@ class LocationResolver extends Resolver<Location> {
     }
   }
 
-  public async getByUserIdAndClassWithChildren(userId: string, locClass: string[], expandProps?: PropExpand, size?: number, page?: number): Promise<LocationPage> {
-    const { items, total } = await this.locationPgTable.getByUserIdAndClassWithChildren(userId, locClass, size, page);
+  public async getByUserIdAndClass(userId: string, locClass: string[], expandProps?: PropExpand, size?: number, page?: number, searchText?: string): Promise<LocationPage> {
+    const { items, total } = await this.locationPgTable.getByUserIdAndClass(userId, locClass, size, page, searchText);
+    const locations = await Promise.all(
+      items.map(async item => {
+        const location = LocationPgRecord.toModel(item);
+        const resolved = await this.resolveProps(location, expandProps);
+
+        return {
+          ...location,
+          ...resolved
+        };
+      })
+    );
+
+    return {
+      total,
+      page: page || 1,
+      items: locations
+    }
+  }
+
+  public async getByUserIdAndClassWithChildren(userId: string, locClass: string[], expandProps?: PropExpand, size?: number, page?: number, searchText?: string): Promise<LocationPage> {
+    const { items, total } = await this.locationPgTable.getByUserIdAndClassWithChildren(userId, locClass, size, page, searchText);
     const locations = await Promise.all(
       items
         .map(async locationRecord => {

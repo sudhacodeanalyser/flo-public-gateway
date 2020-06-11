@@ -24,8 +24,8 @@ class MemoizedLocationPgTable extends MemoizeMixin(CacheMixin(LocationPgTable)) 
   @memoized((args: any[]) => args)
   @cached('LocationPgByUserId', 30)
   public async getByUserId(...args: any[]): Promise<LocationPgPage> {
-    const [[userId, size, page]] = args;
-    const results = await super.getByUserId(userId, size, page);
+    const [[userId, size, page, searchText]] = args;
+    const results = await super.getByUserId(userId, size, page, searchText);
 
     results.items
       .forEach(location => {
@@ -39,8 +39,8 @@ class MemoizedLocationPgTable extends MemoizeMixin(CacheMixin(LocationPgTable)) 
   @memoized((args: any[]) => args)
   @cached('LocationPgByUserIdWithChildren', 30)
   public async getByUserIdWithChildren(...args: any[]): Promise<LocationPgPage> {
-    const [[userId, size, page]] = args;
-    const results = await super.getByUserIdWithChildren(userId, size, page);
+    const [[userId, size, page, searchText]] = args;
+    const results = await super.getByUserIdWithChildren(userId, size, page, searchText);
 
     results.items
       .forEach(location => {
@@ -54,8 +54,8 @@ class MemoizedLocationPgTable extends MemoizeMixin(CacheMixin(LocationPgTable)) 
   @memoized((args: any[]) => args) 
   @cached('LocationPgByUserIdAndClass', 30)
   public async getByUserIdAndClass(...args: any[]): Promise<LocationPgPage> {
-    const [[userId, locClass, size, page]] = args;
-    const results = await super.getByUserIdAndClass(userId, locClass, size, page);
+    const [[userId, locClass, size, page, searchText]] = args;
+    const results = await super.getByUserIdAndClass(userId, locClass, size, page, searchText);
 
     results.items
       .forEach(location => {
@@ -69,8 +69,8 @@ class MemoizedLocationPgTable extends MemoizeMixin(CacheMixin(LocationPgTable)) 
   @memoized((args: any[]) => args) 
   @cached('LocationPgByUserIdAndClassWithChildren', 30)
   public async getByUserIdAndClassWithChildren(...args: any[]): Promise<LocationPgPage> {
-    const [[userId, locClass, size, page]] = args;
-    const results = await super.getByUserIdAndClassWithChildren(userId, locClass, size, page);
+    const [[userId, locClass, size, page, searchText]] = args;
+    const results = await super.getByUserIdAndClassWithChildren(userId, locClass, size, page, searchText);
 
     results.items
       .forEach(location => {
