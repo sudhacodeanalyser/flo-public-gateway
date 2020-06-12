@@ -48,8 +48,8 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     const deviceService = depFactoryFactory<DeviceService>('DeviceService')();
     const locationService = depFactoryFactory<LocationService>('LocationService')();
     const device = id ? 
-      O.toNullable(await deviceService.getDeviceById(id)) :
-      O.toNullable(await deviceService.getByMacAddress(macAddress));
+      O.toNullable(await deviceService.getDeviceById(id, { $select: { location: { $select: { id: true } } } })) :
+      O.toNullable(await deviceService.getByMacAddress(macAddress, { $select: { location: { $select: { id: true } } } }));
 
     if (!device) {
       return {
@@ -183,7 +183,6 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     @withResponseType<Device, Responses.Device>(Responses.Device.fromModel)
     private async getDevice(@requestParam('id') id: string, @queryParam('expand') expand?: string): Promise<Option<Device>> {
       const expandProps = parseExpand(expand);
-
       return this.deviceService.getDeviceById(id, expandProps);
     }
 
