@@ -188,7 +188,7 @@ class DeviceResolver extends Resolver<Device> {
           lastKnown: _.get(additionalProperties, 'systemMode.lastKnown') || translateNumericToStringEnum(
             SystemMode,
             DeviceSystemModeNumeric,
-            _.get(additionalProperties, 'fwProperties.system_mode')
+            _.get(additionalProperties, 'lastKnownFwProperties.system_mode')
           )
         };
       } catch (err) {
@@ -205,7 +205,7 @@ class DeviceResolver extends Resolver<Device> {
           lastKnown: _.get(additionalProperties, 'valve.lastKnown') || translateNumericToStringEnum(
             ValveState,
             ValveStateNumeric,
-            _.get(additionalProperties, 'fwProperties.valve_state')
+            _.get(additionalProperties, 'lastKnownFwProperties.valve_state')
           )
         };
       } catch (err) {
