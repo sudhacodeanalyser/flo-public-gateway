@@ -92,12 +92,12 @@ class DeviceService {
     if (deviceUpdate.healthTest) {
       const userId = (this?.httpContext?.request as Request)?.token?.user_id;
       const healthTestConfig = deviceUpdate.healthTest.config;
-      const fwProperties = !healthTestConfig.enabled || !healthTestConfig.timesPerday ? 
+      const fwProperties = !healthTestConfig.enabled || !healthTestConfig.timesPerDay ? 
         {
           ht_times_per_day: 0
         } : 
         {
-          ht_times_per_day: healthTestConfig.timesPerday,
+          ht_times_per_day: healthTestConfig.timesPerDay,
           ht_scheduler_start: healthTestConfig.start,
           ht_scheduler_end: healthTestConfig.end
         };

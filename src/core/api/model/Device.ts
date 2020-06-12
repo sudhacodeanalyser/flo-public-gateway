@@ -119,7 +119,7 @@ export const HealthTestTimeConfigCodec = t.union([
   }),
   t.type({
     enabled: t.literal(true),
-    timesPerday: t.number,
+    timesPerDay: t.number,
     start: HealthTestTimeCodec,
     end: HealthTestTimeCodec
   })
