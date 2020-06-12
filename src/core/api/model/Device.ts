@@ -113,20 +113,15 @@ export const HealthTestTimeCodec = FormattedString((s: string) => {
   return /\d\d:\d\d/.test(s);
 });
 
-export const HealthTestAttemptTimesCodec = ArrayUpToLength(HealthTestTimeCodec, 3);
-
 export const HealthTestTimeConfigCodec = t.union([
   t.type({
-    scheduler: t.literal('disabled')
+    enabled: t.literal(false)
   }),
   t.type({
-    scheduler: t.literal('manual'),
-    times: HealthTestAttemptTimesCodec,
-    timesPerDay: t.union([t.undefined, t.number])
-  }),
-  t.type({
-    scheduler: t.literal('auto'),
-    timesPerDay: t.union([t.undefined, t.number])
+    enabled: t.literal(true),
+    timesPerday: t.number,
+    start: HealthTestTimeCodec,
+    end: HealthTestTimeCodec
   })
 ]);
 
