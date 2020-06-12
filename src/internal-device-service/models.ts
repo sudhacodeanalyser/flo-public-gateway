@@ -66,7 +66,7 @@ const InternalDeviceCodec = t.type({
   fwPropertiesUpdateReq: t.union([
     t.type({
       meta: t.union([t.undefined, t.null, t.record(t.string, t.any)]),
-      fwProperties: t.record(t.string, t.any)
+      fwProperties: t.union([t.undefined, t.null, t.record(t.string, t.any)])
     }), 
     t.null, 
     t.undefined
