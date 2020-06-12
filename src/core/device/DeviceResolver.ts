@@ -5,7 +5,7 @@ import _ from 'lodash';
 import uuid from 'uuid';
 import { fromPartialRecord } from '../../database/Patch';
 import { InternalDeviceService } from "../../internal-device-service/InternalDeviceService";
-import { HealthTestAttemptTimesCodec, DependencyFactoryFactory, Device, DeviceCreate, DeviceModelType, DevicePairingDataCodec, DeviceSystemModeNumeric, DeviceType, DeviceUpdate, PropExpand, SystemMode, ValveState, ValveStateNumeric, AdditionalDevicePropsCodec, PuckPairingDataCodec, PairingData } from '../api';
+import { DependencyFactoryFactory, Device, DeviceCreate, DeviceModelType, DevicePairingDataCodec, DeviceSystemModeNumeric, DeviceType, DeviceUpdate, PropExpand, SystemMode, ValveState, ValveStateNumeric, AdditionalDevicePropsCodec, PuckPairingDataCodec, PairingData } from '../api';
 import { translateNumericToStringEnum } from '../api/enumUtils';
 import DeviceTable from '../device/DeviceTable';
 import { NotificationService } from '../notification/NotificationService';
@@ -114,7 +114,10 @@ class DeviceResolver extends Resolver<Device> {
           // Strip properties not exposed to on Device model
           return pipe(
             t.exact(AdditionalDevicePropsCodec).decode(additionalProps),
-            Either.fold(() => null, result => result)
+            Either.fold(() => null, result => ({
+              ...result,
+              fwProperties: additionalProps.lastKnownFwProperties
+            }))
           );
         }
 
@@ -185,7 +188,7 @@ class DeviceResolver extends Resolver<Device> {
           lastKnown: _.get(additionalProperties, 'systemMode.lastKnown') || translateNumericToStringEnum(
             SystemMode,
             DeviceSystemModeNumeric,
-            _.get(additionalProperties, 'fwProperties.system_mode')
+            _.get(additionalProperties, 'lastKnownFwProperties.system_mode')
           )
         };
       } catch (err) {
@@ -202,7 +205,7 @@ class DeviceResolver extends Resolver<Device> {
           lastKnown: _.get(additionalProperties, 'valve.lastKnown') || translateNumericToStringEnum(
             ValveState,
             ValveStateNumeric,
-            _.get(additionalProperties, 'fwProperties.valve_state')
+            _.get(additionalProperties, 'lastKnownFwProperties.valve_state')
           )
         };
       } catch (err) {
@@ -266,6 +269,7 @@ class DeviceResolver extends Resolver<Device> {
       if (!this.notificationService) {
         return null;
       }
+      
 
       return this.notificationService.retrieveStatistics(`deviceId=${device.id}`);
     },
@@ -279,50 +283,25 @@ class DeviceResolver extends Resolver<Device> {
       const additionalProperties = await this.internalDeviceService.getDevice(device.macAddress);
 
       if (additionalProperties && additionalProperties.fwProperties) {
-        if (additionalProperties.fwProperties.ht_scheduler === 'ultima') {
-          const times = pipe(
-            HealthTestAttemptTimesCodec.decode(
-              [
-                additionalProperties.fwProperties.ht_scheduler_ultima_allotted_time_1,
-                additionalProperties.fwProperties.ht_scheduler_ultima_allotted_time_2,
-                additionalProperties.fwProperties.ht_scheduler_ultima_allotted_time_3
-              ]
-              .filter(time => time && !_.isEmpty(time))
-            ),
-            Either.fold(
-              () => undefined,
-              result => result
-            )
-          );
-            
-          return {
-            ...healthTest,
-            ...(times && {
-              config: {
-                scheduler: 'manual',
-                timesPerDay: additionalProperties.fwProperties.ht_times_per_day,
-                times
-              }
-            })
+        const start = additionalProperties.fwProperties.ht_scheduler_start;
+        const end = additionalProperties.fwProperties.ht_scheduler_end;
+        const timesPerDay = additionalProperties.fwProperties.ht_times_per_day
+        const isEnabled = timesPerDay > 0;
+        const config = isEnabled ? 
+          {
+            enabled: true,
+            timesPerDay,
+            start,
+            end
+          } :
+          {
+            enable: false
           };
-        } else if (additionalProperties.fwProperties.ht_times_per_day === 0) {
 
-          return {
-            ...healthTest,
-            config: {
-              scheduler: 'disabled'
-            }
-          };
-        } else {
-
-          return {
-            ...healthTest,
-            config: {
-              scheduler: 'auto',
-              timesPerDay: additionalProperties.fwProperties.ht_times_per_day
-            }
-          };
-        }
+        return {
+          ...healthTest,
+          config
+        };
       }
 
       return healthTest;
@@ -601,14 +580,10 @@ class DeviceResolver extends Resolver<Device> {
         throw new ConflictError('Device does not exist.');
       }
 
-      await this.updateFwProperties(device.macAddress, deviceUpdate);
-
       return device;
-
     } else {
       const updatedDeviceRecordData = await this.deviceTable.update({ id }, patch);
 
-      await this.updateFwProperties(updatedDeviceRecordData.device_id, deviceUpdate);
 
       return this.toModel(updatedDeviceRecordData);
     }
@@ -658,56 +633,6 @@ class DeviceResolver extends Resolver<Device> {
       return {};
     } else {
       return super.resolveProp<K>(model, prop, shouldExpand, expandProps);
-    }
-  }
-
-  private async updateFwProperties(macAddress: string, deviceUpdate: DeviceUpdate): Promise<void> {
-    const healthTestConfig = deviceUpdate.healthTest && deviceUpdate.healthTest.config;
-    let fwProperties = {};
-
-    if (healthTestConfig) {
-      if (healthTestConfig.scheduler === 'disabled') {
-
-        fwProperties = {
-          ...fwProperties,
-          ht_scheduler: 'flosense',
-          ht_times_per_day: 0,
-          ht_scheduler_ultima_allotted_time_1: '',
-          ht_scheduler_ultima_allotted_time_2: '',
-          ht_scheduler_ultima_allotted_time_3: ''
-        };
-
-      } else if (healthTestConfig.scheduler === 'auto') {
-
-        fwProperties = {
-          ...fwProperties,
-          ht_scheduler: 'flosense',
-          ht_times_per_day: healthTestConfig.timesPerDay || 1,
-          ht_scheduler_ultima_allotted_time_1: '',
-          ht_scheduler_ultima_allotted_time_2: '',
-          ht_scheduler_ultima_allotted_time_3: ''
-        };
-
-      } else if (healthTestConfig.scheduler === 'manual') {
-
-        fwProperties = {
-          ...fwProperties,
-          ht_scheduler: 'ultima',
-          ht_times_per_day: healthTestConfig.timesPerDay || 1,
-          ...[
-            'ht_scheduler_ultima_allotted_time_1', 
-            'ht_scheduler_ultima_allotted_time_2',
-            'ht_scheduler_ultima_allotted_time_3'
-           ].reduce((acc, allottedTime, i) => ({
-             ...acc,
-             [allottedTime]: healthTestConfig.times[i] || ''
-           }), {})
-        };
-      }
-    }
-
-    if (!_.isEmpty(fwProperties)) {
-      await this.internalDeviceService.setDeviceFwProperties(macAddress, fwProperties);
     }
   }
 

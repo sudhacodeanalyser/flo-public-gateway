@@ -14,6 +14,9 @@ import { SessionService } from '../session/SessionService';
 import { DirectiveService } from './DirectiveService';
 import { PairingResponse } from './PairingService';
 import { MachineLearningService } from '../../machine-learning/MachineLearningService';
+import { injectHttpContext, interfaces } from 'inversify-express-utils';
+import Request from '../api/Request';
+import ForbiddenError from '../api/error/ForbiddenError';
 
 const { isNone, fromNullable } = O;
 type Option<T> = O.Option<T>;
@@ -30,7 +33,8 @@ class DeviceService {
     @inject('DependencyFactoryFactory') depFactoryFactory: DependencyFactoryFactory,
     @inject('InternalDeviceService') private internalDeviceService: InternalDeviceService,
     @inject('EntityActivityService') private entityActivityService: EntityActivityService,
-    @inject('MachineLearningService') private mlService: MachineLearningService
+    @inject('MachineLearningService') private mlService: MachineLearningService,
+    @injectHttpContext private httpContext: interfaces.HttpContext
   ) {
     this.locationServiceFactory = depFactoryFactory<LocationService>('LocationService');
     this.sessionServiceFactory = depFactoryFactory<SessionService>('SessionService');
@@ -38,7 +42,6 @@ class DeviceService {
 
   public async getDeviceById(id: string, expand?: PropExpand): Promise<Option<Device>> {
     const device: Device | null = await this.deviceResolver.get(id, expand);
-
     return fromNullable(device);
   }
 
@@ -84,6 +87,22 @@ class DeviceService {
       );
 
       return updatedProps;
+    }
+
+    if (deviceUpdate.healthTest) {
+      const userId = (this?.httpContext?.request as Request)?.token?.user_id;
+      const healthTestConfig = deviceUpdate.healthTest.config;
+      const fwProperties = !healthTestConfig.enabled || !healthTestConfig.timesPerDay ? 
+        {
+          ht_times_per_day: 0
+        } : 
+        {
+          ht_times_per_day: healthTestConfig.timesPerDay,
+          ht_scheduler_start: healthTestConfig.start,
+          ht_scheduler_end: healthTestConfig.end
+        };
+
+      await this.internalDeviceService.setDeviceFwPropertiesWithMetadata(device.macAddress, { userId }, fwProperties);
     }
 
     await this.entityActivityService.publishEntityActivity(

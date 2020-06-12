@@ -63,13 +63,22 @@ class InternalDeviceService extends MemoizeMixin(HttpService) implements Firesto
         url: `${this.internalDeviceServiceBaseUrl}/devices/${macAddress}`
       };
 
-      const response = await this.sendRequest(request);
+      const response: InternalDevice = await this.sendRequest(request);
 
       if (isLeft(InternalDeviceCodec.decode(response))) {
         throw new Error('Invalid response.');
       }
 
-      return response as InternalDevice;
+      const device: InternalDevice = {
+        ...response,
+        lastKnownFwProperties: response.fwProperties,
+        fwProperties: {
+          ...response.fwProperties,
+          ...(response?.fwPropertiesUpdateReq?.fwProperties || {})
+        }
+      }
+
+      return device;
     } catch (err) {
       if (err instanceof InternalDeviceServiceError && err.statusCode === 404) {
         return null;
@@ -87,6 +96,19 @@ class InternalDeviceService extends MemoizeMixin(HttpService) implements Firesto
     };
 
     await this.sendRequest(request);
+  }
+
+  public async setDeviceFwPropertiesWithMetadata(macAddress: string, metadata: Record<string, any>, data: Record<string, any>): Promise<void> {
+    const request = {
+      method: 'post',
+      url: `${this.internalDeviceServiceBaseUrl}/devices/${macAddress}/fw`,
+      body: {
+        meta: metadata,
+        fwproperties: data
+      },
+    };
+
+    await this.sendRequest(request); 
   }
 
   public async syncDevice(macAddress: string): Promise<void> {
