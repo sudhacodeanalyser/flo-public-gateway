@@ -260,10 +260,23 @@ export interface SupportOption {
   text: string;
 }
 
+interface DeviceStats {
+  count: number;
+  absolute: number;
+}
+
+export interface Stats {
+  count: number;
+  devices: DeviceStats
+}
+
 export interface NotificationCounts {
   criticalCount: number;
   warningCount: number;
   infoCount: number;
+  info: Stats;
+  warning: Stats;
+  critical: Stats;
 }
 
 export interface NotificationStatistics {

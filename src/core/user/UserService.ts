@@ -2,19 +2,20 @@ import { fold, fromNullable, Option } from 'fp-ts/lib/Option';
 import { pipe } from 'fp-ts/lib/pipeable';
 import { inject, injectable } from 'inversify';
 import _ from 'lodash';
-import { PropExpand, UpdateAlarmSettings, User, UserUpdate, UserCreate, UserAccountRole, RetrieveAlarmSettingsFilter, EntityAlarmSettings } from '../api';
+import { PropExpand, UpdateAlarmSettings, User, UserUpdate, UserCreate, UserAccountRole, RetrieveAlarmSettingsFilter, EntityAlarmSettings, DeviceStats } from '../api';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import ValidationError from '../api/error/ValidationError';
 import ConflictError from '../api/error/ConflictError';
 import { UserResolver } from '../resolver';
-import { EntityActivityAction, EntityActivityService, EntityActivityType, AccountService } from '../service';
+import { DeviceService, EntityActivityAction, EntityActivityService, EntityActivityType, AccountService } from '../service';
 
 @injectable()
 class UserService {
   constructor(
     @inject('UserResolver') private userResolver: UserResolver,
     @inject('AccountService') private accountService: AccountService,
-    @inject('EntityActivityService') private entityActivityService: EntityActivityService
+    @inject('EntityActivityService') private entityActivityService: EntityActivityService,
+    @inject('DeviceService') private deviceService: DeviceService
   ) {}
 
   public async updatePartialUser(id: string, userUpdate: UserUpdate): Promise<User> {
@@ -112,6 +113,10 @@ class UserService {
     );
 
     return createdUser;
+  }
+
+  public async retrieveUserStats(id: string): Promise<DeviceStats> {
+    return this.deviceService.getStatsForUser(id);
   }
 }
 
