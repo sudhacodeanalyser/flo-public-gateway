@@ -287,16 +287,12 @@ class DeviceResolver extends Resolver<Device> {
         const end = additionalProperties.fwProperties.ht_scheduler_end;
         const timesPerDay = additionalProperties.fwProperties.ht_times_per_day
         const isEnabled = timesPerDay > 0;
-        const config = isEnabled ? 
-          {
-            enabled: true,
-            timesPerDay,
-            start,
-            end
-          } :
-          {
-            enable: false
-          };
+        const config = {
+          enabled: isEnabled,
+          timesPerDay,
+          start,
+          end
+        };
 
         return {
           ...healthTest,

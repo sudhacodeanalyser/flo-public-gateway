@@ -113,17 +113,12 @@ export const HealthTestTimeCodec = FormattedString((s: string) => {
   return /\d\d:\d\d/.test(s);
 });
 
-export const HealthTestTimeConfigCodec = t.union([
-  t.type({
-    enabled: t.literal(false)
-  }),
-  t.type({
-    enabled: t.literal(true),
-    timesPerDay: t.number,
-    start: HealthTestTimeCodec,
-    end: HealthTestTimeCodec
-  })
-]);
+export const HealthTestTimeConfigCodec = t.type({
+  enabled: t.boolean,
+  timesPerDay: t.number,
+  start: HealthTestTimeCodec,
+  end: HealthTestTimeCodec
+});
 
 export type HealthTestTimeConfig = t.TypeOf<typeof HealthTestTimeConfigCodec>;
 
