@@ -5,7 +5,7 @@ import { inject, injectable } from 'inversify';
 import _ from 'lodash';
 import { PairingService, QrData } from '../../api-v1/pairing/PairingService';
 import { InternalDeviceService } from '../../internal-device-service/InternalDeviceService';
-import { DependencyFactoryFactory, Device, DeviceCreate, DeviceType, DeviceUpdate, PropExpand, ValveState, FirmwareInfo } from '../api';
+import { DependencyFactoryFactory, Device, DeviceCreate, DeviceType, DeviceUpdate, PropExpand, ValveState, FirmwareInfo, DeviceStats, DeviceAlertStats } from '../api';
 import ConflictError from '../api/error/ConflictError';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import { DeviceResolver } from '../resolver';
@@ -16,7 +16,7 @@ import { PairingResponse } from './PairingService';
 import { MachineLearningService } from '../../machine-learning/MachineLearningService';
 import { injectHttpContext, interfaces } from 'inversify-express-utils';
 import Request from '../api/Request';
-import ForbiddenError from '../api/error/ForbiddenError';
+import { NotificationService } from '../notification/NotificationService';
 
 const { isNone, fromNullable } = O;
 type Option<T> = O.Option<T>;
@@ -34,6 +34,7 @@ class DeviceService {
     @inject('InternalDeviceService') private internalDeviceService: InternalDeviceService,
     @inject('EntityActivityService') private entityActivityService: EntityActivityService,
     @inject('MachineLearningService') private mlService: MachineLearningService,
+    @inject('NotificationService') private notificationService: NotificationService,
     @injectHttpContext private httpContext: interfaces.HttpContext
   ) {
     this.locationServiceFactory = depFactoryFactory<LocationService>('LocationService');
@@ -193,6 +194,106 @@ class DeviceService {
     return this.deviceResolver.getAllByLocationId(locationId, expand);
   }
 
+  public async getStatsForUser(userId: string): Promise<DeviceStats> {
+    const getPaginatedStats = async (page: number = 1, processed: number = 0): Promise<DeviceStats[]> => {
+      const locationPage = await this.locationServiceFactory().getByUserIdAndClassWithChildren(userId, ['unit'], { 
+        $select: { id: true },
+      }, undefined, page);
+      
+      const devices = _.flatten(
+        await Promise.all(locationPage.items.map(async l => 
+          this.getAllByLocationId(l.id, { 
+            $select: { id: true, macAddress: true }
+          })
+        ))
+      );
+      
+      const deviceMacAddresses = devices.map(d => d.macAddress);
+      const internalDevices = await this.internalDeviceService.getDevices(deviceMacAddresses);
+      const onlineMacAddresses = new Set(
+        _.flatMap(internalDevices, (d => d.isConnected ? [d.deviceId] : []))
+      );
+      const onlineDeviceIds = _.flatMap(devices, d => onlineMacAddresses.has(d.macAddress) ? [d.id] : []);
+
+      const stats = await this.notificationService.retrieveStatisticsInBatch({
+        deviceIds: onlineDeviceIds
+      });
+
+      const hasMore = locationPage.total > processed + locationPage.items.length;
+
+      return [ 
+        {
+          total: devices.length,
+          offline: {
+            total: devices.length - onlineDeviceIds.length
+          },
+          online: {
+            total: onlineDeviceIds.length,
+            alerts: {
+              info: stats.pending.info,
+              warning: stats.pending.warning,
+              critical: stats.pending.critical
+            }
+          }
+        },
+        ...(hasMore ? await getPaginatedStats(locationPage.page + 1, processed + locationPage.items.length) : [])
+      ]
+    }
+
+    const deviceStatsArray = await getPaginatedStats();
+    
+    return _.reduce(deviceStatsArray, (acc, item) => ({
+      total: acc.total + item.total,
+      offline: {
+        total: acc.offline.total + item.offline.total
+      },
+      online: {
+        total: acc.online.total + item.online.total,
+        alerts: {
+          info: this.sumDeviceAlertStats(acc.online.alerts.info, item.online.alerts.info),
+          warning: this.sumDeviceAlertStats(acc.online.alerts.warning, item.online.alerts.warning),
+          critical: this.sumDeviceAlertStats(acc.online.alerts.critical, item.online.alerts.critical)
+        }
+      }
+    }), this.emptyDeviceStats());
+  }
+
+  private sumDeviceAlertStats(s1: DeviceAlertStats, s2: DeviceAlertStats): DeviceAlertStats {
+    return {
+      count: s1.count + s2.count,
+      devices: {
+        count: s1.devices.count + s2.devices.count,
+        absolute: s1.devices.absolute + s2.devices.absolute
+      }
+    };
+  }
+
+  private emptyDeviceStats(): DeviceStats {
+    return {
+      total: 0,
+      offline: {
+        total: 0
+      },
+      online: {
+        total: 0,
+        alerts: {
+          info: this.emptyDeviceAlertStats(),
+          warning: this.emptyDeviceAlertStats(),
+          critical: this.emptyDeviceAlertStats()
+        }
+      }
+    };
+  }
+
+  private emptyDeviceAlertStats(): DeviceAlertStats {
+    return {
+      count: 0,
+      devices: {
+        count: 0,
+        absolute: 0
+      }
+    };
+  }
 }
 
 export { DeviceService };
