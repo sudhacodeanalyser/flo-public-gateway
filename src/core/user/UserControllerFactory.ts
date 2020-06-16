@@ -4,7 +4,7 @@ import { BaseHttpController, httpDelete, httpGet, httpPost, interfaces, queryPar
 import * as t from 'io-ts';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
-import { UpdateAlarmSettings, UpdateAlarmSettingsCodec, User, UserUpdate, UserUpdateValidator, RetrieveAlarmSettingsFilterCodec, RetrieveAlarmSettingsFilter, EntityAlarmSettings, DeviceStats } from '../api';
+import { UpdateAlarmSettings, UpdateAlarmSettingsCodec, User, UserUpdate, UserUpdateValidator, RetrieveAlarmSettingsFilterCodec, RetrieveAlarmSettingsFilter, EntityAlarmSettings, UserStats } from '../api';
 import { asyncMethod, authorizationHeader, createMethod, deleteMethod, httpController, parseExpand, withResponseType } from '../api/controllerUtils';
 import Request from '../api/Request';
 import * as Responses from '../api/response';
@@ -264,7 +264,7 @@ export function UserControllerFactory(container: Container, apiVersion: number):
         })
       }))
     )
-    private async retrieveUserStats(@requestParam('id') id: string): Promise<DeviceStats> {
+    private async retrieveUserStats(@requestParam('id') id: string): Promise<UserStats> {
       return this.userService.retrieveUserStats(id);
     }
   }
