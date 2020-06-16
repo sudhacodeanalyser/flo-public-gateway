@@ -62,10 +62,20 @@ const InternalDeviceCodec = t.type({
   componentHealth: t.union([
     t.undefined,
     t.record(t.string, t.any)
+  ]),
+  fwPropertiesUpdateReq: t.union([
+    t.type({
+      meta: t.union([t.undefined, t.null, t.record(t.string, t.any)]),
+      fwProperties: t.union([t.undefined, t.null, t.record(t.string, t.any)])
+    }), 
+    t.null, 
+    t.undefined
   ])
 });
 
-type InternalDevice = t.TypeOf<typeof InternalDeviceCodec>;
+interface InternalDevice extends t.TypeOf<typeof InternalDeviceCodec> {
+  lastKnownFwProperties?: null | Record<string, any>;
+}
 type InternalSystemMode = t.TypeOf<typeof InternalSystemModeCodec>;
 type InternalValveState = t.TypeOf<typeof InternalValveStateCodec>;
 type InternalTelemetry = t.TypeOf<typeof InternalTelemetryCodec>;

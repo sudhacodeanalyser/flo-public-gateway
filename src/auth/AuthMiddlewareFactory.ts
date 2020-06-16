@@ -30,32 +30,36 @@ class AuthMiddlewareFactory {
 
   public create(getParams?: GetParams, overrideMethodId?: string): express.Handler {
     return async (req: Request, res: express.Response, next: express.NextFunction): Promise<void> => {
-      const token = req.get('Authorization');
+      try {
+        const token = req.get('Authorization');
 
-      if (_.isEmpty(token) || token === undefined) {
-        return next(new UnauthorizedError('Missing or invalid access token.'));
+        if (_.isEmpty(token) || token === undefined) {
+          return next(new UnauthorizedError('Missing or invalid access token.'));
+        }
+
+        const logger = req.log;
+        const path = overrideMethodId || req.route.path.split('/').map((p: string) => p.replace(/:.+/g, '$')).join('/');
+        const methodId = req.method + path;
+        const params = getParams && (await getParams(req, this.depFactoryFactory));
+        const tokenMetadata = await pipe(
+          await this.checkCache(methodId, token, params, logger),
+          Option.fold(
+            () => async () => this.callAuthService(methodId, token, params),
+            tokenMedata => TaskEither.right(tokenMedata)
+          ),
+          TaskEither.getOrElse((err): TokenMetadata => async () => next(err))
+        )();
+
+
+        if (logger !== undefined) {
+          logger.info({ token: tokenMetadata });
+        } 
+
+        req.token = tokenMetadata;
+        next();
+      } catch (err) {
+        next(err);
       }
-
-      const logger = req.log;
-      const path = overrideMethodId || req.route.path.split('/').map((p: string) => p.replace(/:.+/g, '$')).join('/');
-      const methodId = req.method + path;
-      const params = getParams && (await getParams(req, this.depFactoryFactory));
-      const tokenMetadata = await pipe(
-        await this.checkCache(methodId, token, params, logger),
-        Option.fold(
-          () => async () => this.callAuthService(methodId, token, params),
-          tokenMedata => TaskEither.right(tokenMedata)
-        ),
-        TaskEither.getOrElse((err): TokenMetadata => async () => next(err))
-      )();
-
-
-      if (logger !== undefined) {
-        logger.info({ token: tokenMetadata });
-      } 
-
-      req.token = tokenMetadata;
-      next();
     };
   }
 
