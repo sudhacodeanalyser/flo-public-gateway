@@ -2,7 +2,7 @@ import { fold, fromNullable, Option } from 'fp-ts/lib/Option';
 import { pipe } from 'fp-ts/lib/pipeable';
 import { inject, injectable } from 'inversify';
 import _ from 'lodash';
-import { PropExpand, UpdateAlarmSettings, User, UserUpdate, UserCreate, UserAccountRole, RetrieveAlarmSettingsFilter, EntityAlarmSettings, DeviceStats } from '../api';
+import { PropExpand, UpdateAlarmSettings, User, UserUpdate, UserCreate, RetrieveAlarmSettingsFilter, EntityAlarmSettings, UserStats } from '../api';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import ValidationError from '../api/error/ValidationError';
 import ConflictError from '../api/error/ConflictError';
@@ -115,8 +115,11 @@ class UserService {
     return createdUser;
   }
 
-  public async retrieveUserStats(id: string): Promise<DeviceStats> {
-    return this.deviceService.getStatsForUser(id);
+  public async retrieveUserStats(id: string): Promise<UserStats> {
+    const deviceStats = await this.deviceService.getStatsForUser(id);
+    return {
+      devices: deviceStats
+    };
   }
 }
 
