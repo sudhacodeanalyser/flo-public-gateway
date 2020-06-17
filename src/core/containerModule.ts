@@ -18,6 +18,7 @@ import entityActivityContainerModule from './entity-activity/containerModule';
 import telemetryContainerModule from './telemetry/containerModule';
 import iftttContainerModule from './ifttt/containerModule';
 import deliveryHookContainerModule from './delivery-hook/containerModule';
+import headsUpContainerModule from './heads-up/containerModule';
 
 export default [
   pingContainerModule,
@@ -39,5 +40,6 @@ export default [
   entityActivityContainerModule,
   telemetryContainerModule,
   iftttContainerModule,
-  deliveryHookContainerModule
+  deliveryHookContainerModule,
+  headsUpContainerModule
 ];

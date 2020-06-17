@@ -50,7 +50,8 @@ function getDefaults(): { [key: string]: any } {
         registrationTokenSecret: 'Yt_f&2Y&GCtbxv??@=Rr=9=AhnvEQx$!',
         sendWithUsKey: 'test_eca8b69ac6008b555286914771e9c6dad9632ded',
         floDetectApiUrl: 'http://flo-detect-v2.flocloud.co',
-        weatherApiUrl: 'http://flo-weather.flocloud.co'
+        weatherApiUrl: 'http://flo-weather.flocloud.co',
+        emailGatewayUrl: 'http://email-gateway.flocloud.co'
       };
   }
 }
@@ -117,7 +118,8 @@ const config = {
   sendWithUsKey: process.env.SEND_WITH_US_KEY,
   floDetectApiUrl: process.env.FLO_DETECT_API_URL,
   weatherApiUrl: process.env.WEATHER_API_URL,
-  apiV1Token: process.env.API_V1_TOKEN
+  apiV1Token: process.env.API_V1_TOKEN,
+  emailGatewayUrl: process.env.EMAIL_GATEWAY_URL
 };
 
 export default {
