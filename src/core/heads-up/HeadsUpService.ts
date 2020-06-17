@@ -52,7 +52,7 @@ class HeadsUpService {
 
     const hasSubscription = (device.location.subscription as Subscription).provider.isActive;
     const users = device.location.users as Array<Pick<User, 'email' | 'firstName' | 'lastName' | 'locale'>>;
-
+    const localizedAssetName = `user.auto_health_test_disabled.template.${ hasSubscription ? 'subscriber' : 'nonsubscriber' }`;
     await Promise.all(
       (users || []).map(async user => {
 
@@ -62,7 +62,7 @@ class HeadsUpService {
 
         const { items: [{ value: templateId }]} = await this.localizationService
           .getAssets({ 
-            name: 'user.auto_health_test_disabled.template', 
+            name: localizedAssetName, 
             type: 'email', 
             locale: user.locale
           });
