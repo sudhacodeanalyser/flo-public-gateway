@@ -29,7 +29,7 @@ export function HeadsUpControllerFactory(container: Container, apiVersion: numbe
       super();
     }
 
-    @httpPost('/device',
+    @httpPost('/devices',
       auth,
       reqValidator.create(t.type({
         body: t.type({
