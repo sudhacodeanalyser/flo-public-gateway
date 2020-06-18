@@ -43,7 +43,7 @@ export function HeadsUpControllerFactory(container: Container, apiVersion: numbe
       }))
     )
     @asyncMethod
-    private async handleDeviceUpdate(deviceUpdate: DeviceUpdate): Promise<void> {
+    private async handleDeviceUpdate(@requestBody() deviceUpdate: DeviceUpdate): Promise<void> {
       await this.headsUpService.handleDeviceUpdate(deviceUpdate);
     }
   }
