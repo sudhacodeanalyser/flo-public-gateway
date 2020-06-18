@@ -189,7 +189,8 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
           address2: true,
           city: true,
           state: true, 
-          postalCode: true
+          postalCode: true,
+          userRoles: true
         }
       });
     }
