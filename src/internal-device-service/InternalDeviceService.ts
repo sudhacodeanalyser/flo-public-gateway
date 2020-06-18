@@ -90,7 +90,9 @@ class InternalDeviceService extends MemoizeMixin(HttpService) implements Firesto
 
     const response = await this.sendRequest(request);
 
-    return response.items.map(this.transformFwProperties);
+    return response.items ? 
+      response.items.map(this.transformFwProperties) :
+      [];
   }
 
   public async setDeviceFwProperties(macAddress: string, data: { [prop: string]: any }): Promise<void> {

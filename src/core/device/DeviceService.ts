@@ -205,7 +205,9 @@ class DeviceService {
       );
       
       const deviceMacAddresses = devices.map(d => d.macAddress);
-      const internalDevices = await this.internalDeviceService.getDevices(deviceMacAddresses);
+      const internalDevices = !_.isEmpty(deviceMacAddresses) ? 
+        await this.internalDeviceService.getDevices(deviceMacAddresses) :
+        [];
       const onlineMacAddresses = new Set(
         _.flatMap(internalDevices, (d => d.isConnected ? [d.deviceId] : []))
       );
