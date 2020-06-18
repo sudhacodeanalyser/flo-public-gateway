@@ -181,7 +181,17 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
         });
       }
 
-      return this.alertService.getAlarmEventsByFilter(filters);
+      return this.alertService.getAlarmEventsByFilter(filters, {
+        $select: {
+          id: true,
+          nickname: true,
+          address: true,
+          address2: true,
+          city: true,
+          state: true, 
+          postalCode: true
+        }
+      });
     }
 
     @httpPost('/action',

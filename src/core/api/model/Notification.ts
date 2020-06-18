@@ -1,5 +1,5 @@
 import * as t from 'io-ts';
-import { AlertFeedbackFlow, TimestampedModel } from '../../api';
+import { AlertFeedbackFlow, Location, TimestampedModel } from '../../api';
 import { convertEnumtoCodec } from '../enumUtils';
 import { AlertFeedbackCodec } from './AlertFeedback'; // Necessary otherwise codec is undefined when imported form '../../api'
 
@@ -111,8 +111,9 @@ export interface AlarmEvent extends TimestampedModel {
   snoozeTo?: string;
   locationId: string;
   systemMode: string;
-  userFeedback?: UserFeedback[]
-  feedback?: NewUserFeedbackResponse
+  userFeedback?: UserFeedback[];
+  feedback?: NewUserFeedbackResponse;
+  location?: Partial<Location>;
 }
 
 export interface AlarmEventFilter {
