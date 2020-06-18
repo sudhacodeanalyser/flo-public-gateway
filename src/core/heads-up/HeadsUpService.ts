@@ -18,7 +18,7 @@ class HeadsUpService {
   public async handleDeviceUpdate(deviceUpdate: DeviceUpdate): Promise<void> {
     if (
       deviceUpdate.changeRequest.fwProperties.ht_times_per_day === 0 &&
-      deviceUpdate.prevDeviceInfo?.fwProperties?.ht_times_per_day !== 0
+      deviceUpdate.prevDeviceInfo?.properties?.ht_times_per_day !== 0
     ) {
       await this.triggerAutoHealthTestDisabledEmail(deviceUpdate.macAddress);
     }
