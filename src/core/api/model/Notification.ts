@@ -113,7 +113,7 @@ export interface AlarmEvent extends TimestampedModel {
   systemMode: string;
   userFeedback?: UserFeedback[];
   feedback?: NewUserFeedbackResponse;
-  location?: Location;
+  location?: Partial<Location>;
 }
 
 export interface AlarmEventFilter {

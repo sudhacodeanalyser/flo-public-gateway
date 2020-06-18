@@ -155,7 +155,7 @@ class AlertService {
       .flatMap(location => pipe(location,
         Option.fold(
           () => [],
-          l => [l]
+          l => [_.pickBy(l, v => v !== null)]
         )
       ))
       .keyBy('id')
