@@ -1,8 +1,12 @@
-import { InternalDevice } from '../../internal-device-service/models';
-
 export interface DeviceUpdate {
   macAddress: string;
-  prevDeviceInfo: InternalDevice;
+  prevDeviceInfo: {
+    request_id: string;
+    device_id: string;
+    timestamp: number;
+    reason: string;
+    properties: Record<string, any>
+  };
   changeRequest: {
     meta?: Record<string, any>;
     fwProperties: Record<string, any>;
