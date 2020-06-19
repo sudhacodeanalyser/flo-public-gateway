@@ -174,9 +174,6 @@ class LocationPgTable extends PostgresTable<LocationPgRecordData> {
     const results = await this.pgDbClient.execute(text, values);
     const total = results.rows[0] ? parseInt(results.rows[0].total, 10) : 0;
     const items = results.rows.map(({ total: ignoreTotal, ...item }) => item);
-    
-    // tslint:disable
-    console.log({ text, values })
 
     return {
       page,
