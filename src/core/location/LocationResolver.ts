@@ -520,6 +520,48 @@ class LocationResolver extends Resolver<Location> {
     }
   }
 
+    public async getByUserIdRootOnly(userId: string, expandProps?: PropExpand, size?: number, page?: number, searchText?: string): Promise<LocationPage> {
+    const { items, total } = await this.locationPgTable.getByUserIdRootOnly(userId, size, page, searchText);
+    const locations = await Promise.all(
+      items.map(async item => {
+        const location = LocationPgRecord.toModel(item);
+        const resolved = await this.resolveProps(location, expandProps);
+
+        return {
+          ...location,
+          ...resolved
+        };
+      })
+    );
+
+    return {
+      total,
+      page: page || 1,
+      items: locations
+    }
+  }
+
+  public async getByUserIdAndClassRootOnly(userId: string, locClass: string[], expandProps?: PropExpand, size?: number, page?: number, searchText?: string): Promise<LocationPage> {
+    const { items, total } = await this.locationPgTable.getByUserIdAndClassRootOnly(userId, locClass, size, page, searchText);
+    const locations = await Promise.all(
+      items.map(async item => {
+        const location = LocationPgRecord.toModel(item);
+        const resolved = await this.resolveProps(location, expandProps);
+
+        return {
+          ...location,
+          ...resolved
+        };
+      })
+    );
+
+    return {
+      total,
+      page: page || 1,
+      items: locations
+    }
+  }
+
   public async getByUserIdAndClassWithChildren(userId: string, locClass: string[], expandProps?: PropExpand, size?: number, page?: number, searchText?: string): Promise<LocationPage> {
     const { items, total } = await this.locationPgTable.getByUserIdAndClassWithChildren(userId, locClass, size, page, searchText);
     const locations = await Promise.all(

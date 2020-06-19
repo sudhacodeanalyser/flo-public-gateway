@@ -527,6 +527,14 @@ class LocationService {
     return this.locationResolver.getByUserId(userId, expandProps, size, page, searchText);
   }
 
+  public async getByUserIdAndClassRootOnly(userId: string, locClass: string[], expandProps?: PropExpand, size?: number, page?: number, searchText?: string): Promise<LocationPage> {
+    return this.locationResolver.getByUserIdAndClassRootOnly(userId, locClass, expandProps, size, page, searchText);
+  }
+
+  public async getByUserIdRootOnly(userId: string, expandProps?: PropExpand, size?: number, page?: number, searchText?: string): Promise<LocationPage> {
+    return this.locationResolver.getByUserIdRootOnly(userId, expandProps, size, page, searchText);
+  }
+
   private async getDevices(locationId: string, deviceExpand: PropExpand, shouldCascade?: boolean): Promise<Array<Partial<Device>>> {
     const location = O.toNullable(await this.getLocation(locationId, { 
       $select: { 

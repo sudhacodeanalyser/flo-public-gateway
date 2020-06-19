@@ -57,7 +57,19 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
       });
     },
     a => `${ a }`
-  )
+  );
+
+  const FalseFromString = new t.Type<false, string, unknown>(
+    'FalseFromString',
+    (u): u is false => t.literal(false).is(u),
+    (u, c) => {
+      return either.chain(t.string.validate(u, c), str => {
+        const s = str.toLowerCase();
+        return s !== 'false' ? t.failure(str, c) : t.success(false);
+      });
+    },
+    a => `${ a }`
+  );
 
   interface SystemModeRequestBrand {
     readonly SystemModeRequest: unique symbol;
@@ -143,9 +155,22 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
              expand: t.string,
              size: IntegerFromString,
              page: IntegerFromString,
-             withChildren: BooleanFromString,
              q: t.string
-           })
+           }),
+           t.union([
+             t.type({
+               withChildren: t.union([t.undefined, FalseFromString]),
+               rootOnly: t.union([t.undefined, FalseFromString])
+             }),
+             t.type({
+               withChildren: BooleanFromString,
+               rootOnly: t.union([t.undefined, FalseFromString])
+             }),
+             t.type({
+               withChildren: t.union([t.undefined, FalseFromString]),
+               rootOnly: BooleanFromString
+             })
+           ])
          ])
        }))
     )
@@ -156,15 +181,21 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
       @queryParam('size') size?: number,
       @queryParam('page') page?: number,
       @queryParam('withChildren') withChildren: boolean = true,
+      @queryParam('rootOnly') rootOnly: boolean = false,
       @queryParam('q') searchText?: string
     ): Promise<{ total: number; page: number; items: Responses.Location[] }> {
       const expandProps = parseExpand(expand);
       let locPage: LocationPage;
 
-      if (withChildren) {
+      if (withChildren && !rootOnly) {
         locPage = await (locationClass && !_.isEmpty(locationClass) ? 
             this.locationService.getByUserIdAndClassWithChildren(userId, locationClass, expandProps, size, page, searchText) :
             this.locationService.getByUserIdWithChildren(userId, expandProps, size, page, searchText)
+        );
+      } else if (rootOnly) {
+        locPage = await (locationClass && !_.isEmpty(locationClass) ? 
+          this.locationService.getByUserIdAndClassRootOnly(userId, locationClass, expandProps, size, page, searchText) :
+          this.locationService.getByUserIdRootOnly(userId, expandProps, size, page, searchText)
         );
       } else {
         locPage = await (locationClass && !_.isEmpty(locationClass) ? 
