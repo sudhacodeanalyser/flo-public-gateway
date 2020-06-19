@@ -457,8 +457,8 @@ class LocationResolver extends Resolver<Location> {
     );
   }
 
-  public async getByUserIdWithChildren(userId: string, expandProps?: PropExpand, size?: number, page?: number, searchText?: string): Promise<LocationPage> {
-    const { items, total } = await this.locationPgTable.getByUserIdWithChildren(userId, size, page, searchText);
+  public async getByUserId(userId: string, expandProps?: PropExpand, size?: number, page?: number, filters?: LocationFilters, searchText?: string): Promise<LocationPage> {
+    const { items, total } = await this.locationPgTable.getByUserId(userId, size, page, filters, searchText);
     const locations = await Promise.all(
       items.map(async item => {
         const location = LocationPgRecord.toModel(item);
@@ -478,8 +478,8 @@ class LocationResolver extends Resolver<Location> {
     }
   }
 
-  public async getByUserId(userId: string, expandProps?: PropExpand, size?: number, page?: number, searchText?: string): Promise<LocationPage> {
-    const { items, total } = await this.locationPgTable.getByUserId(userId, size, page, searchText);
+  public async getByUserIdRootOnly(userId: string, expandProps?: PropExpand, size?: number, page?: number, filters?: LocationFilters, searchText?: string): Promise<LocationPage> {
+    const { items, total } = await this.locationPgTable.getByUserIdRootOnly(userId, size, page, filters, searchText);
     const locations = await Promise.all(
       items.map(async item => {
         const location = LocationPgRecord.toModel(item);
@@ -499,71 +499,8 @@ class LocationResolver extends Resolver<Location> {
     }
   }
 
-  public async getByUserIdAndFilters(userId: string, filters: LocationFilters, expandProps?: PropExpand, size?: number, page?: number, searchText?: string): Promise<LocationPage> {
-    const { items, total } = await this.locationPgTable.getByUserIdAndFilters(userId, filters, size, page, searchText);
-    const locations = await Promise.all(
-      items.map(async item => {
-        const location = LocationPgRecord.toModel(item);
-        const resolved = await this.resolveProps(location, expandProps);
-
-        return {
-          ...location,
-          ...resolved
-        };
-      })
-    );
-
-    return {
-      total,
-      page: page || 1,
-      items: locations
-    }
-  }
-
-    public async getByUserIdRootOnly(userId: string, expandProps?: PropExpand, size?: number, page?: number, searchText?: string): Promise<LocationPage> {
-    const { items, total } = await this.locationPgTable.getByUserIdRootOnly(userId, size, page, searchText);
-    const locations = await Promise.all(
-      items.map(async item => {
-        const location = LocationPgRecord.toModel(item);
-        const resolved = await this.resolveProps(location, expandProps);
-
-        return {
-          ...location,
-          ...resolved
-        };
-      })
-    );
-
-    return {
-      total,
-      page: page || 1,
-      items: locations
-    }
-  }
-
-  public async getByUserIdAndFiltersRootOnly(userId: string, filters: LocationFilters, expandProps?: PropExpand, size?: number, page?: number, searchText?: string): Promise<LocationPage> {
-    const { items, total } = await this.locationPgTable.getByUserIdAndFiltersRootOnly(userId, filters, size, page, searchText);
-    const locations = await Promise.all(
-      items.map(async item => {
-        const location = LocationPgRecord.toModel(item);
-        const resolved = await this.resolveProps(location, expandProps);
-
-        return {
-          ...location,
-          ...resolved
-        };
-      })
-    );
-
-    return {
-      total,
-      page: page || 1,
-      items: locations
-    }
-  }
-
-  public async getByUserIdAndFiltersWithChildren(userId: string, filters: LocationFilters, expandProps?: PropExpand, size?: number, page?: number, searchText?: string): Promise<LocationPage> {
-    const { items, total } = await this.locationPgTable.getByUserIdAndFiltersWithChildren(userId, filters, size, page, searchText);
+  public async getByUserIdWithChildren(userId: string, expandProps?: PropExpand, size?: number, page?: number, filters?: LocationFilters, searchText?: string): Promise<LocationPage> {
+    const { items, total } = await this.locationPgTable.getByUserIdWithChildren(userId, size, page, filters, searchText);
     const locations = await Promise.all(
       items
         .map(async locationRecord => {

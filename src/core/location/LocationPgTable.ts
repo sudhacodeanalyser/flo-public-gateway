@@ -37,82 +37,7 @@ class LocationPgTable extends PostgresTable<LocationPgRecordData> {
     };
   }
 
-  public async getByUserId(userId: string, size: number = 100, page: number = 1, searchText: string = ''): Promise<LocationPgPage> {
-    const limit = Math.max(1, size);
-    const queryBuilder = squel.useFlavour('postgres')
-      .select()
-      .field('"l".*')
-      .field('COUNT(*) OVER()', '"total"')
-      .from('"user_location"', '"ul"')
-      .join('"location"', '"l"', '"ul"."location_id" = "l"."id"')
-      .where('"ul"."user_id" = ?', userId);
-   const { text, values } = (
-      searchText.trim() ?
-        queryBuilder
-          .where(
-            'to_tsvector(\'simple\', f_concat_ws(\' \', "address", "address2", "city", "state", "postal_code", "country", "nickname")) @@ plainto_tsquery(\'simple\', ?)', 
-            searchText
-          ) :
-        queryBuilder
-    )
-    .order('"l"."id"')
-    .limit(limit)
-    .offset(limit * Math.max(0, page - 1))
-    .toParam();
-    const results = await this.pgDbClient.execute(text, values);
-    const total = results.rows[0] ? parseInt(results.rows[0].total, 10) : 0;
-    const items = results.rows.map(({ total: ignoreTotal, ...item }) => item);
-
-    return {
-      page,
-      total,
-      items
-    };
-  }
-
-  public async getByUserIdRootOnly(userId: string, size: number = 100, page: number = 1, searchText: string = ''): Promise<LocationPgPage> {
-    const limit = Math.max(1, size);
-    const queryBuilder = squel.useFlavour('postgres')
-      .select()
-      .field('"l".*')
-      .field('COUNT(*) OVER()', '"total"')
-      .from('"user_location"', '"ul"')
-      .join('"location"', '"l"', '"ul"."location_id" = "l"."id"')
-      .where(`
-        NOT EXISTS(
-          SELECT 1 FROM "user_location" AS "ul"
-          LEFT JOIN "location_tree" AS "lt" ON "ul"."location_id" = "lt"."parent_id"
-          WHERE "ul"."user_id" = ?
-          AND "l"."id" = "lt"."child_id"
-          AND "lt"."depth" > 0
-        )
-      `, userId)
-      .where('"ul"."user_id" = ?', userId);
-    const { text, values } = (
-      searchText.trim() ?
-        queryBuilder
-          .where(
-            'to_tsvector(\'simple\', f_concat_ws(\' \', "address", "address2", "city", "state", "postal_code", "country", "nickname")) @@ plainto_tsquery(\'simple\', ?)', 
-            searchText
-          ) :
-        queryBuilder
-    )
-    .order('"l"."id"')
-    .limit(limit)
-    .offset(limit * Math.max(0, page - 1))
-    .toParam();
-    const results = await this.pgDbClient.execute(text, values);
-    const total = results.rows[0] ? parseInt(results.rows[0].total, 10) : 0;
-    const items = results.rows.map(({ total: ignoreTotal, ...item }) => item);
-
-    return {
-      page,
-      total,
-      items
-    };
-  }
-
-  public async getByUserIdAndFiltersRootOnly(userId: string, filters: LocationFilters, size: number = 100, page: number = 1, searchText: string = ''): Promise<LocationPgPage> {
+  public async getByUserIdRootOnly(userId: string, size: number = 100, page: number = 1, filters: LocationFilters = {}, searchText: string = ''): Promise<LocationPgPage> {
     const limit = Math.max(1, size);
     const queryBuilder = this.applyFilters(
       squel.useFlavour('postgres')
@@ -157,7 +82,7 @@ class LocationPgTable extends PostgresTable<LocationPgRecordData> {
     };
   }
 
-  public async getByUserIdAndFilters(userId: string, filters: LocationFilters, size: number = 100, page: number = 1, searchText: string = ''): Promise<LocationPgPage> {
+  public async getByUserId(userId: string, size: number = 100, page: number = 1, filters: LocationFilters = {}, searchText: string = ''): Promise<LocationPgPage> {
     const limit = Math.max(1, size);
     const queryBuilder = this.applyFilters(
       squel.useFlavour('postgres')
@@ -215,51 +140,7 @@ class LocationPgTable extends PostgresTable<LocationPgRecordData> {
     };
   }
 
-  public async getByUserIdWithChildren(userId: string, size: number = 100, page: number = 1, searchText: string = ''): Promise<LocationPgPage> {
-    const limit = Math.max(1, size);
-    const queryBuilder = squel.useFlavour('postgres')
-      .select()
-      .from('"location"', '"l"')
-      .field('"l".*')
-      .field('COUNT(*) OVER()', '"total"');
-    const { text, values } = (
-      searchText ?
-        queryBuilder
-          .where(`
-            EXISTS(
-              SELECT 1 FROM "user_location" AS "ul"
-              LEFT JOIN "location_tree" AS "lt" ON "ul"."location_id" = "lt"."parent_id"
-              WHERE "ul"."user_id" = ?
-              AND "l"."id" = COALESCE("lt"."child_id", "ul"."location_id")
-              AND to_tsvector(\'simple\', f_concat_ws(\' \', "address", "address2", "city", "state", "postal_code", "country", "nickname")) @@ plainto_tsquery(\'simple\', ?)
-            )
-          `, userId, searchText) :
-        queryBuilder
-          .where(`
-            EXISTS(
-              SELECT 1 FROM "user_location" AS "ul"
-              LEFT JOIN "location_tree" AS "lt" ON "ul"."location_id" = "lt"."parent_id"
-              WHERE "ul"."user_id" = ?
-              AND "l"."id" = COALESCE("lt"."child_id", "ul"."location_id")
-            )
-          `, userId)           
-    )
-    .order('"l"."id"')
-    .limit(limit)
-    .offset(limit * Math.max(0, page - 1))
-    .toParam();
-    const results = await this.pgDbClient.execute(text, values);
-    const total = results.rows[0] ? parseInt(results.rows[0].total, 10) : 0;
-    const items = results.rows.map(({ total: ignoreTotal, ...item }) => item);
-
-    return {
-      page,
-      total,
-      items
-    };
-  }
-
-  public async getByUserIdAndFiltersWithChildren(userId: string, filters: LocationFilters, size: number = 100, page: number = 1, searchText: string = ''): Promise<LocationPgPage> {
+  public async getByUserIdWithChildren(userId: string, size: number = 100, page: number = 1, filters: LocationFilters = {}, searchText: string = ''): Promise<LocationPgPage> {
     const limit = Math.max(1, size);
     const queryBuilder = this.applyFilters(
       squel.useFlavour('postgres')

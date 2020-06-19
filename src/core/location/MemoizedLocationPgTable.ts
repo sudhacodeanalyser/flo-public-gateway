@@ -21,11 +21,11 @@ class MemoizedLocationPgTable extends MemoizeMixin(CacheMixin(LocationPgTable)) 
     return super.getByAccountId(accountId, size, page);
   }
 
-  @memoized((args: any[]) => args)
+  @memoized((args: any[]) => args) 
   @cached('LocationPgByUserId', 30)
   public async getByUserId(...args: any[]): Promise<LocationPgPage> {
-    const [[userId, size, page, searchText]] = args;
-    const results = await super.getByUserId(userId, size, page, searchText);
+    const [[userId, size, page, filters, searchText]] = args;
+    const results = await super.getByUserId(userId, size, page, filters, searchText);
 
     results.items
       .forEach(location => {
@@ -36,41 +36,11 @@ class MemoizedLocationPgTable extends MemoizeMixin(CacheMixin(LocationPgTable)) 
     return results;
   }
 
-  @memoized((args: any[]) => args)
+  @memoized((args: any[]) => args) 
   @cached('LocationPgByUserIdWithChildren', 30)
   public async getByUserIdWithChildren(...args: any[]): Promise<LocationPgPage> {
-    const [[userId, size, page, searchText]] = args;
-    const results = await super.getByUserIdWithChildren(userId, size, page, searchText);
-
-    results.items
-      .forEach(location => {
-        this.primeMethodLoader('get', { id: location.id }, location);
-        // this.cache(location, 'LocationPg', JSON.stringify({ id: location.id }));       
-      });
-
-    return results;
-  }
-
-  @memoized((args: any[]) => args) 
-  @cached('LocationPgByUserIdAndFilters', 30)
-  public async getByUserIdAndFilters(...args: any[]): Promise<LocationPgPage> {
-    const [[userId, filters, size, page, searchText]] = args;
-    const results = await super.getByUserIdAndFilters(userId, filters, size, page, searchText);
-
-    results.items
-      .forEach(location => {
-        this.primeMethodLoader('get', { id: location.id }, location);
-        // this.cache(location, 'LocationPg', JSON.stringify({ id: location.id }));       
-      });
-
-    return results;
-  }
-
-  @memoized((args: any[]) => args) 
-  @cached('LocationPgByUserIdAndFiltersWithChildren', 30)
-  public async getByUserIdAndFiltersWithChildren(...args: any[]): Promise<LocationPgPage> {
-    const [[userId, filters, size, page, searchText]] = args;
-    const results = await super.getByUserIdAndFiltersWithChildren(userId, filters, size, page, searchText);
+    const [[userId, size, page, filters, searchText]] = args;
+    const results = await super.getByUserIdWithChildren(userId, size, page, filters, searchText);
 
     results.items
       .forEach(location => {

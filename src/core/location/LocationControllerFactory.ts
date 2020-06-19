@@ -203,20 +203,11 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
       let locPage: LocationPage;
 
       if (withChildren && !rootOnly) {
-        locPage = await (!_.isEmpty(filters) ? 
-            this.locationService.getByUserIdAndFiltersWithChildren(userId, filters, expandProps, size, page, searchText) :
-            this.locationService.getByUserIdWithChildren(userId, expandProps, size, page, searchText)
-        );
+        locPage = await this.locationService.getByUserIdWithChildren(userId, expandProps, size, page, filters, searchText);  
       } else if (rootOnly) {
-        locPage = await (!_.isEmpty(filters) ? 
-          this.locationService.getByUserIdAndFiltersRootOnly(userId, filters, expandProps, size, page, searchText) :
-          this.locationService.getByUserIdRootOnly(userId, expandProps, size, page, searchText)
-        );
+        locPage = await this.locationService.getByUserIdRootOnly(userId, expandProps, size, page, filters, searchText);
       } else {
-        locPage = await (!_.isEmpty(filters) ? 
-          this.locationService.getByUserIdAndFilters(userId, filters, expandProps, size, page, searchText) :
-          this.locationService.getByUserId(userId, expandProps, size, page, searchText)
-        );
+        locPage = await this.locationService.getByUserId(userId, expandProps, size, page, filters, searchText);
       }
 
       return {
