@@ -4,7 +4,7 @@ import { injectHttpContext, interfaces } from 'inversify-express-utils';
 import _ from 'lodash';
 import uuid from 'uuid';
 import { AccessControlService } from '../../auth/AccessControlService';
-import { Areas, DependencyFactoryFactory, Location, LocationUpdate, LocationUserRole, PropExpand, SystemMode, Device, DeviceType, PesThresholds, LocationPage } from '../api';
+import { LocationFilters, Areas, DependencyFactoryFactory, Location, LocationUpdate, LocationUserRole, PropExpand, SystemMode, Device, DeviceType, PesThresholds, LocationPage } from '../api';
 import ConflictError from '../api/error/ConflictError';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import ValidationError from '../api/error/ValidationError';
@@ -511,24 +511,24 @@ class LocationService {
     ))));
   }
 
-  public async getByUserIdAndClassWithChildren(userId: string, locClass: string[], expandProps?: PropExpand, size?: number, page?: number, searchText?: string): Promise<LocationPage> {
-    return this.locationResolver.getByUserIdAndClassWithChildren(userId, locClass, expandProps, size, page, searchText);
+  public async getByUserIdAndFiltersWithChildren(userId: string, filters: LocationFilters, expandProps?: PropExpand, size?: number, page?: number, searchText?: string): Promise<LocationPage> {
+    return this.locationResolver.getByUserIdAndFiltersWithChildren(userId, filters, expandProps, size, page, searchText);
   }
 
   public async getByUserIdWithChildren(userId: string, expandProps?: PropExpand, size?: number, page?: number, searchText?: string): Promise<LocationPage> {
     return this.locationResolver.getByUserIdWithChildren(userId, expandProps, size, page, searchText);
   }
 
-  public async getByUserIdAndClass(userId: string, locClass: string[], expandProps?: PropExpand, size?: number, page?: number, searchText?: string): Promise<LocationPage> {
-    return this.locationResolver.getByUserIdAndClass(userId, locClass, expandProps, size, page, searchText);
+  public async getByUserIdAndFilters(userId: string, filters: LocationFilters, expandProps?: PropExpand, size?: number, page?: number, searchText?: string): Promise<LocationPage> {
+    return this.locationResolver.getByUserIdAndFilters(userId, filters, expandProps, size, page, searchText);
   }
 
   public async getByUserId(userId: string, expandProps?: PropExpand, size?: number, page?: number, searchText?: string): Promise<LocationPage> {
     return this.locationResolver.getByUserId(userId, expandProps, size, page, searchText);
   }
 
-  public async getByUserIdAndClassRootOnly(userId: string, locClass: string[], expandProps?: PropExpand, size?: number, page?: number, searchText?: string): Promise<LocationPage> {
-    return this.locationResolver.getByUserIdAndClassRootOnly(userId, locClass, expandProps, size, page, searchText);
+  public async getByUserIdAndFiltersRootOnly(userId: string, filters: LocationFilters, expandProps?: PropExpand, size?: number, page?: number, searchText?: string): Promise<LocationPage> {
+    return this.locationResolver.getByUserIdAndFiltersRootOnly(userId, filters, expandProps, size, page, searchText);
   }
 
   public async getByUserIdRootOnly(userId: string, expandProps?: PropExpand, size?: number, page?: number, searchText?: string): Promise<LocationPage> {

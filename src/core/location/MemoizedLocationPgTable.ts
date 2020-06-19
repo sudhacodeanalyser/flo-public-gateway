@@ -52,10 +52,10 @@ class MemoizedLocationPgTable extends MemoizeMixin(CacheMixin(LocationPgTable)) 
   }
 
   @memoized((args: any[]) => args) 
-  @cached('LocationPgByUserIdAndClass', 30)
-  public async getByUserIdAndClass(...args: any[]): Promise<LocationPgPage> {
-    const [[userId, locClass, size, page, searchText]] = args;
-    const results = await super.getByUserIdAndClass(userId, locClass, size, page, searchText);
+  @cached('LocationPgByUserIdAndFilters', 30)
+  public async getByUserIdAndFilters(...args: any[]): Promise<LocationPgPage> {
+    const [[userId, filters, size, page, searchText]] = args;
+    const results = await super.getByUserIdAndFilters(userId, filters, size, page, searchText);
 
     results.items
       .forEach(location => {
@@ -67,10 +67,10 @@ class MemoizedLocationPgTable extends MemoizeMixin(CacheMixin(LocationPgTable)) 
   }
 
   @memoized((args: any[]) => args) 
-  @cached('LocationPgByUserIdAndClassWithChildren', 30)
-  public async getByUserIdAndClassWithChildren(...args: any[]): Promise<LocationPgPage> {
-    const [[userId, locClass, size, page, searchText]] = args;
-    const results = await super.getByUserIdAndClassWithChildren(userId, locClass, size, page, searchText);
+  @cached('LocationPgByUserIdAndFiltersWithChildren', 30)
+  public async getByUserIdAndFiltersWithChildren(...args: any[]): Promise<LocationPgPage> {
+    const [[userId, filters, size, page, searchText]] = args;
+    const results = await super.getByUserIdAndFiltersWithChildren(userId, filters, size, page, searchText);
 
     results.items
       .forEach(location => {

@@ -273,3 +273,11 @@ export interface LocationPage {
   page: number;
   items: Location[];
 }
+
+export interface LocationFilters {
+  locClass?: string[];
+  city?: string[];
+  state?: string[];
+  country?: string[];
+  postalCode?: string[];
+}
