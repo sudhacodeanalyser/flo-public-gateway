@@ -192,9 +192,9 @@ class DeviceService {
 
   public async getStatsForUser(userId: string): Promise<DeviceStats> {
     const getPaginatedStats = async (page: number = 1, processed: number = 0): Promise<DeviceStats[]> => {
-      const locationPage = await this.locationServiceFactory().getByUserIdAndClassWithChildren(userId, ['unit'], { 
+      const locationPage = await this.locationServiceFactory().getByUserIdWithChildren(userId, { 
         $select: { id: true },
-      }, undefined, page);
+      }, undefined, page, { locClass: ['unit'] });
       
       const devices = _.flatten(
         await Promise.all(locationPage.items.map(async l => 

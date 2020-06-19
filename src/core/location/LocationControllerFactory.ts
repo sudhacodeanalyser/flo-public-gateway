@@ -57,7 +57,19 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
       });
     },
     a => `${ a }`
-  )
+  );
+
+  const FalseFromString = new t.Type<false, string, unknown>(
+    'FalseFromString',
+    (u): u is false => t.literal(false).is(u),
+    (u, c) => {
+      return either.chain(t.string.validate(u, c), str => {
+        const s = str.toLowerCase();
+        return s !== 'false' ? t.failure(str, c) : t.success(false);
+      });
+    },
+    a => `${ a }`
+  );
 
   interface SystemModeRequestBrand {
     readonly SystemModeRequest: unique symbol;
@@ -140,37 +152,62 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
            }),
            t.partial({
              class: t.union([t.array(t.string), t.string]),
+             city: t.union([t.array(t.string), t.string]),
+             state: t.union([t.array(t.string), t.string]),
+             country: t.union([t.array(t.string), t.string]),
+             postalCode: t.union([t.array(t.string), t.string]),
              expand: t.string,
              size: IntegerFromString,
              page: IntegerFromString,
-             withChildren: BooleanFromString,
              q: t.string
-           })
+           }),
+           t.union([
+             t.type({
+               withChildren: t.union([t.undefined, FalseFromString]),
+               rootOnly: t.union([t.undefined, FalseFromString])
+             }),
+             t.type({
+               withChildren: BooleanFromString,
+               rootOnly: t.union([t.undefined, FalseFromString])
+             }),
+             t.type({
+               withChildren: t.union([t.undefined, FalseFromString]),
+               rootOnly: BooleanFromString
+             })
+           ])
          ])
        }))
     )
     private async getLocations(
       @queryParam('userId') userId: string, 
-      @queryParamArray('class') locationClass?: string[], 
+      @queryParamArray('class') locClass?: string[], 
+      @queryParamArray('city') city?: string[],
+      @queryParamArray('state') state?: string[],
+      @queryParamArray('country') country?: string[],
+      @queryParamArray('postalCode') postalCode?: string[],
       @queryParam('expand') expand?: string,
       @queryParam('size') size?: number,
       @queryParam('page') page?: number,
       @queryParam('withChildren') withChildren: boolean = true,
+      @queryParam('rootOnly') rootOnly: boolean = false,
       @queryParam('q') searchText?: string
     ): Promise<{ total: number; page: number; items: Responses.Location[] }> {
       const expandProps = parseExpand(expand);
+      const filters = {
+        locClass,
+        city,
+        state,
+        country,
+        postalCode
+      };
       let locPage: LocationPage;
 
-      if (withChildren) {
-        locPage = await (locationClass && !_.isEmpty(locationClass) ? 
-            this.locationService.getByUserIdAndClassWithChildren(userId, locationClass, expandProps, size, page, searchText) :
-            this.locationService.getByUserIdWithChildren(userId, expandProps, size, page, searchText)
-        );
+      if (withChildren && !rootOnly) {
+        locPage = await this.locationService.getByUserIdWithChildren(userId, expandProps, size, page, filters, searchText);  
+      } else if (rootOnly) {
+        locPage = await this.locationService.getByUserIdRootOnly(userId, expandProps, size, page, filters, searchText);
       } else {
-        locPage = await (locationClass && !_.isEmpty(locationClass) ? 
-          this.locationService.getByUserIdAndClass(userId, locationClass, expandProps, size, page, searchText) :
-          this.locationService.getByUserId(userId, expandProps, size, page, searchText)
-        );
+        locPage = await this.locationService.getByUserId(userId, expandProps, size, page, filters, searchText);
       }
 
       return {
