@@ -49,10 +49,9 @@ class LocationPgTable extends PostgresTable<LocationPgRecordData> {
         .where(`
           NOT EXISTS(
             SELECT 1 FROM "user_location" AS "ul"
-            LEFT JOIN "location_tree" AS "lt" ON "ul"."location_id" = "lt"."parent_id"
+            JOIN "location" as "ll" on "ul"."location_id" = "ll"."id"
             WHERE "ul"."user_id" = ?
-            AND "l"."id" = "lt"."child_id"
-            AND "lt"."depth" > 0
+            AND "l"."parent_location_id" = "ll"."id"
           )
         `, userId)
         .where('"ul"."user_id" = ?', userId),
@@ -74,7 +73,7 @@ class LocationPgTable extends PostgresTable<LocationPgRecordData> {
     const results = await this.pgDbClient.execute(text, values);
     const total = results.rows[0] ? parseInt(results.rows[0].total, 10) : 0;
     const items = results.rows.map(({ total: ignoreTotal, ...item }) => item);
-
+    
     return {
       page,
       total,
