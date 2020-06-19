@@ -188,7 +188,8 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
           address: true,
           address2: true,
           city: true,
-          state: true, 
+          state: true,
+          country: true,
           postalCode: true,
           timezone: true,
           userRoles: true
