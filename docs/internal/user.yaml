@@ -402,6 +402,35 @@ paths:
         403:
           description: 'Unauthorized client'
 
+  /api/v2/users/{id}/stats:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: User ID
+    get:
+      summary: Retrieves User stats.
+      tags:
+        - Users
+      produces:
+        - application/json
+      responses:
+        200:
+          description: User stats.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserStats'
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        403:
+          $ref: '#/components/responses/ForbiddenError'
+        404:
+          $ref: '#/components/responses/NotFoundError'
+
 components:
   schemas:
     UserRegistration:
@@ -553,3 +582,49 @@ components:
           type: boolean
         isMuted:
           type: boolean
+    
+    UserStats:
+      type: object
+      properties:
+        devices:
+          type: array
+          items:
+            $ref: '#/components/schemas/DeviceStats'
+
+    DeviceStats:
+      type: object
+      properties:
+        total: 
+          type: integer
+        offline: 
+          type: object
+          properties:
+            total:
+              type: integer
+        online:
+          type: object
+          properties:
+            total:
+              type: integer
+            alerts: 
+              type: object
+              properties:
+                info:
+                  $ref: '#/components/schemas/DeviceAlertStats'
+                warning:
+                  $ref: '#/components/schemas/DeviceAlertStats'
+                critical:
+                  $ref: '#/components/schemas/DeviceAlertStats'
+    
+  DeviceAlertStats:
+    type: object
+    properties:
+      count: 
+        type: integer
+      devices:
+        type: object
+        properties:
+          count: 
+            type: integer
+          absolute:
+            type: integer

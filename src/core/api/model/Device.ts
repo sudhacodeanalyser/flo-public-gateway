@@ -294,3 +294,26 @@ export type DeviceActionRule = t.TypeOf<typeof DeviceActionsRuleTypeCodec>;
 export type DeviceActionRulesCreate = t.TypeOf<typeof DeviceActionRulesCreateCodec>;
 
 export type DeviceActionRules = t.TypeOf<typeof DeviceActionRulesCodec>;
+
+export interface DeviceAlertStats {
+  count: number;
+  devices: {
+    count: number;
+    absolute: number;
+  };
+}
+
+export interface DeviceStats {
+  total: number;
+  offline: {
+    total: number;
+  };
+  online: {
+    total: number;
+    alerts: {
+      info: DeviceAlertStats;
+      warning: DeviceAlertStats;
+      critical: DeviceAlertStats; 
+    }
+  };
+}

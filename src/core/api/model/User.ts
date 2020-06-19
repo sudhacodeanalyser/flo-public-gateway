@@ -1,5 +1,5 @@
 import * as t from 'io-ts';
-import { Account, DeviceAlarmSettings, Expandable, Location, TimestampedModel } from '../../api';
+import { Account, DeviceAlarmSettings, DeviceStats, Expandable, Location, TimestampedModel } from '../../api';
 import { NonEmptyString } from '../../api/validator/NonEmptyString';
 import { PhoneNumber } from '../../api/validator/PhoneNumber';
 import { Email } from '../../api/validator/Email';
@@ -108,3 +108,7 @@ export const UserInviteCodec = t.type({
 });
 
 export interface UserInvite extends t.TypeOf<typeof UserInviteCodec> {}
+
+export interface UserStats {
+  devices: DeviceStats;
+}
