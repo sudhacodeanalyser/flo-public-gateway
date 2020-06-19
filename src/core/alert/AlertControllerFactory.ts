@@ -190,6 +190,7 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
           city: true,
           state: true, 
           postalCode: true,
+          timezone: true,
           userRoles: true
         }
       });
