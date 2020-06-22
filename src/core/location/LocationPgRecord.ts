@@ -198,3 +198,10 @@ export interface LocationPgPage {
   page: number;
   items: LocationPgRecordData[]
 }
+
+export interface LocationFacetPgPage {
+  name: string;
+  total: number;
+  page: number;
+  items: string[];
+}

@@ -3,7 +3,7 @@ import { injectHttpContext, interfaces } from 'inversify-express-utils';
 import _ from 'lodash';
 import uuid from 'uuid';
 import { fromPartialRecord } from '../../database/Patch';
-import { LocationFilters, DependencyFactoryFactory, Device, Location, LocationUserRole, LookupItem, PropExpand, SystemMode, LocationPage } from '../api';
+import { LocationFacetPage, LocationFilters, DependencyFactoryFactory, Device, Location, LocationUserRole, LookupItem, PropExpand, SystemMode, LocationPage } from '../api';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import LocationTable from '../location/LocationTable';
 import { NotificationService } from '../notification/NotificationService';
@@ -543,6 +543,20 @@ class LocationResolver extends Resolver<Location> {
         )
       )
     )
+  }
+
+  public async getFacetsByUserId(userId: string, facets: string[], size?: number, page?: number, contains?: string): Promise<LocationFacetPage> {
+    const facetPages = await Promise.all(
+      facets
+        .map(async facet => {
+          return this.locationPgTable.getFacetByUserId(userId, facet, size, page, contains);
+        })
+    );
+
+    return {
+      page: facetPages[0]?.page || 1,
+      items: facetPages
+    };
   }
 
   // The DynamoDB Location table has account_id as a hash key on the primary

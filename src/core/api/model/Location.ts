@@ -281,3 +281,13 @@ export interface LocationFilters {
   country?: string[];
   postalCode?: string[];
 }
+
+export interface LocationFacetPage {
+  page: number;
+  items: Array<{
+    name: string;
+    total: number;
+    page: number;
+    items: string[];
+  }>;
+}
