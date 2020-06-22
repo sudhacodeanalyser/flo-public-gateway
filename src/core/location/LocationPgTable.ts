@@ -252,7 +252,7 @@ class LocationPgTable extends PostgresTable<LocationPgRecordData> {
 
       const column = (filterMap as any)[key] as string;
 
-      return query.where(`("${ alias }"."${ column }" IN ? OR "${ alias }"."${ column }" IN ?)`, value, value.map(val => val.toLowerCase()));
+      return query.where(`"${ alias }"."${ column }" IN ?`, value);
     }, queryBuilder);
   }
 }
