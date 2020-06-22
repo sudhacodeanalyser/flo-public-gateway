@@ -204,8 +204,8 @@ class LocationPgTable extends PostgresTable<LocationPgRecordData> {
     const queryBuilder = squel.useFlavour('postgres')
       .select()
       .from('"location"', '"l"')
-      .field(`DISTINCT "l"."${ column }"`)
-      .field('COUNT(*) OVER()', '"total"')
+      .field(`"l"."${ column }"`)
+      .field(`COUNT(*) OVER()`, '"total"')
       .where(`
         EXISTS(
           SELECT 1 FROM "user_location" AS "ul"
@@ -220,6 +220,7 @@ class LocationPgTable extends PostgresTable<LocationPgRecordData> {
           .where(`"l"."${ column }" ILIKE '%${ contains.trim() }%'`) :
         queryBuilder
     )
+    .group(`"l"."${ column }"`)
     .order(`"l"."${ column }"`)
     .limit(limit)
     .offset(limit * Math.max(0, page - 1))
