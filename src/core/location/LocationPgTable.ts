@@ -2,7 +2,7 @@ import { inject, injectable, targetName } from 'inversify';
 import squel from 'squel';
 import { PostgresDbClient } from '../../database/pg/PostgresDbClient';
 import { PostgresTable } from '../../database/pg/PostgresTable';
-import { LocationPgRecordData, LocationPgPage } from './LocationPgRecord';
+import { LocationPgRecordData, LocationPgPage, LocationFacetPgPage } from './LocationPgRecord';
 import _ from 'lodash';
 import { LocationFilters } from '../api';
 
@@ -181,6 +181,61 @@ class LocationPgTable extends PostgresTable<LocationPgRecordData> {
     };
   }
 
+  public async getFacetByUserId(userId: string, facet: string, size: number = 100, page: number = 1, contains?: string): Promise<LocationFacetPgPage> {
+    const facetColumnMap: Record<string, string> = {
+      'class': 'location_class',
+      postalCode: 'postal_code',
+      city: 'city',
+      state: 'state',
+      country: 'country'
+    };
+    const column = facetColumnMap[facet];
+
+    if (!column) {
+      return {
+        name: facet,
+        total: 0,
+        page: 1,
+        items: []
+      };
+    }
+
+    const limit = Math.max(1, size);
+    const queryBuilder = squel.useFlavour('postgres')
+      .select()
+      .from('"location"', '"l"')
+      .field(`DISTINCT "l"."${ column }"`)
+      .field('COUNT(*) OVER()', '"total"')
+      .where(`
+        EXISTS(
+          SELECT 1 FROM "user_location" AS "ul"
+          LEFT JOIN "location_tree" AS "lt" ON "ul"."location_id" = "lt"."parent_id"
+          WHERE "ul"."user_id" = ?
+          AND "l"."id" = COALESCE("lt"."child_id", "ul"."location_id")
+        )
+      `, userId);
+    const { text, values } = (
+      contains && contains.trim() ?
+        queryBuilder
+          .where(`"l"."${ column }" ILIKE '%${ contains.trim() }%'`) :
+        queryBuilder
+    )
+    .order(`"l"."${ column }"`)
+    .limit(limit)
+    .offset(limit * Math.max(0, page - 1))
+    .toParam();
+    const results = await this.pgDbClient.execute(text, values);
+    const total = results.rows[0] ? parseInt(results.rows[0].total, 10) : 0;
+    const items = _.flatMap(results.rows, (({ total: ignoreTotal, ...item }) => _.values(item)));
+
+    return {
+      name: facet,
+      page,
+      total,
+      items
+    };
+  }
+
   private applyFilters(queryBuilder: squel.PostgresSelect, filters: LocationFilters, alias: string = 'l'): squel.PostgresSelect {
     const filterMap = {
       locClass: 'location_class',
@@ -197,7 +252,7 @@ class LocationPgTable extends PostgresTable<LocationPgRecordData> {
 
       const column = (filterMap as any)[key] as string;
 
-      return query.where(`"${ alias }"."${ column }" IN ?`, value);
+      return query.where(`("${ alias }"."${ column }" IN ? OR "${ alias }"."${ column }" IN ?)`, value, value.map(val => val.toLowerCase()));
     }, queryBuilder);
   }
 }

@@ -5,7 +5,7 @@ import * as t from 'io-ts';
 import _ from 'lodash';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
-import { DependencyFactoryFactory, AreaName, AreaNameCodec, Areas, Location, LocationCreateValidator, LocationUpdate, LocationUpdateValidator, LocationUserRole, SystemMode, SystemModeCodec, PesThresholdsCodec, PesThresholds, LocationPage } from '../api';
+import { LocationFacetPage, DependencyFactoryFactory, AreaName, AreaNameCodec, Areas, Location, LocationCreateValidator, LocationUpdate, LocationUpdateValidator, LocationUserRole, SystemMode, SystemModeCodec, PesThresholdsCodec, PesThresholds, LocationPage } from '../api';
 import { createMethod, deleteMethod, httpController, parseExpand, withResponseType, httpMethod, queryParamArray, asyncMethod } from '../api/controllerUtils';
 import Request from '../api/Request';
 import * as Responses from '../api/response';
@@ -214,6 +214,34 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
         ...locPage,
         items: locPage.items.map(loc => Responses.Location.fromModel(loc))
       };
+    }
+
+    @httpMethod(
+      'get',
+      '/facets',
+      authMiddlewareFactory.create(async ({ query: { userId } }) => ({ user_id: userId })),
+      reqValidator.create(t.type({
+        query: t.intersection([
+          t.type({
+            userId: t.string,
+            name: t.union([t.string, t.array(t.string)])
+          }),
+          t.partial({
+            size: IntegerFromString,
+            page: IntegerFromString,
+            contains: t.string
+          })
+        ])
+      }))
+    )
+    private async getFacets(
+      @queryParam('userId') userId: string,
+      @queryParamArray('name') facetNames: string[],
+      @queryParam('size') size?: number,
+      @queryParam('page') page?: number,
+      @queryParam('contains') contains?: string
+    ): Promise<LocationFacetPage> {
+      return this.locationService.getFacetsByUserId(userId, facetNames, size, page, contains);
     }
 
     @httpGet(
