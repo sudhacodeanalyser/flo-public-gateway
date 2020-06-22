@@ -226,7 +226,7 @@ class LocationPgTable extends PostgresTable<LocationPgRecordData> {
     .toParam();
     const results = await this.pgDbClient.execute(text, values);
     const total = results.rows[0] ? parseInt(results.rows[0].total, 10) : 0;
-    const items = results.rows.map(({ total: ignoreTotal, ...item }) => item);
+    const items = _.flatMap(results.rows, (({ total: ignoreTotal, ...item }) => _.values(item)));
 
     return {
       name: facet,
@@ -252,7 +252,7 @@ class LocationPgTable extends PostgresTable<LocationPgRecordData> {
 
       const column = (filterMap as any)[key] as string;
 
-      return query.where(`"${ alias }"."${ column }" IN ?`, value);
+      return query.where(`("${ alias }"."${ column }" IN ? OR "${ alias }"."${ column }" IN ?)`, value, value.map(val => val.toLowerCase()));
     }, queryBuilder);
   }
 }
