@@ -17,6 +17,7 @@ import { MachineLearningService } from '../../machine-learning/MachineLearningSe
 import { injectHttpContext, interfaces } from 'inversify-express-utils';
 import Request from '../api/Request';
 import { NotificationService } from '../notification/NotificationService';
+import ForbiddenError from '../api/error/ForbiddenError';
 
 const { isNone, fromNullable } = O;
 type Option<T> = O.Option<T>;
@@ -88,6 +89,18 @@ class DeviceService {
       );
 
       return updatedProps;
+    }
+
+    if (deviceUpdate.healthTest) {
+      const userId = (this?.httpContext?.request as Request)?.token?.user_id;
+      const healthTestConfig = deviceUpdate.healthTest.config;
+      const fwProperties = {
+        ht_times_per_day: healthTestConfig.timesPerDay,
+        ht_scheduler_start: healthTestConfig.start,
+        ht_scheduler_end: healthTestConfig.end
+      };
+
+      await this.internalDeviceService.setDeviceFwPropertiesWithMetadata(device.macAddress, { userId }, fwProperties);
     }
 
     if (deviceUpdate.healthTest) {
