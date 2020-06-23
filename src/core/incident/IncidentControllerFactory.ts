@@ -9,7 +9,7 @@ import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddle
 import { AlarmEvent, PaginatedResult } from '../api';
 import { httpController } from '../api/controllerUtils';
 import Request from '../api/Request';
-import { NotificationServiceFactory } from '../notification/NotificationService';
+import { NotificationService } from '../notification/NotificationService';
 import { AlertService, UserService } from '../service';
 
 
@@ -21,7 +21,7 @@ export function IncidentControllerFactory(container: Container, apiVersion: numb
   @httpController({ version: apiVersion }, '/incidents')
   class EventController extends BaseHttpController {
     constructor(
-      @inject('NotificationServiceFactory') private notificationServiceFactory: NotificationServiceFactory,
+      @inject('NotificationService') private notificationService: NotificationService,
       @inject('AlertService') private alertService: AlertService,
       @inject('UserService') private userService: UserService,
     ) {
@@ -31,8 +31,7 @@ export function IncidentControllerFactory(container: Container, apiVersion: numb
     @httpPost('/raw', auth)
     private async createIncidentRaw(@request() req: Request, @requestBody() incidentInfo: any): Promise<string> {
       return this
-        .notificationServiceFactory
-        .create(req)
+        .notificationService
         .sendAlarm(incidentInfo);
     }
 

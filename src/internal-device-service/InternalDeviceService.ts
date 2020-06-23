@@ -3,7 +3,7 @@ import { isLeft } from 'fp-ts/lib/Either';
 import { inject, injectable } from 'inversify';
 import { HttpService, HttpError } from '../http/HttpService'
 import { FirestoreAssests, FirestoreAuthService, FirestoreTokenResponse } from '../core/session/FirestoreAuthService';
-import { DeviceActionRules, DeviceActionRulesCreate, DeviceCreate, HardwareThresholds, DeviceUpdate } from '../core/api';
+import { DeviceActionRules, DeviceActionRulesCreate, DeviceCreate, DeviceUpdate } from '../core/api';
 import { memoized, MemoizeMixin } from '../memoize/MemoizeMixin';
 import { InternalDevice, InternalDeviceCodec } from './models';
 import ResourceDoesNotExistError from '../core/api/error/ResourceDoesNotExistError';
@@ -69,16 +69,7 @@ class InternalDeviceService extends MemoizeMixin(HttpService) implements Firesto
         throw new Error('Invalid response.');
       }
 
-      const device: InternalDevice = {
-        ...response,
-        lastKnownFwProperties: response.fwProperties,
-        fwProperties: {
-          ...response.fwProperties,
-          ...(response?.fwPropertiesUpdateReq?.fwProperties || {})
-        }
-      }
-
-      return device;
+      return this.transformFwProperties(response);
     } catch (err) {
       if (err instanceof InternalDeviceServiceError && err.statusCode === 404) {
         return null;
@@ -86,6 +77,22 @@ class InternalDeviceService extends MemoizeMixin(HttpService) implements Firesto
         throw err;
       }
     }
+  }
+
+  public async getDevices(macAddresses: string[]): Promise<InternalDevice[]> {
+    const request = {
+      method: 'post',
+      url: `${this.internalDeviceServiceBaseUrl}/devices/_get`,
+      body: {
+        deviceIds: macAddresses
+      }
+    };
+
+    const response = await this.sendRequest(request);
+
+    return response.items ? 
+      response.items.map(this.transformFwProperties) :
+      [];
   }
 
   public async setDeviceFwProperties(macAddress: string, data: { [prop: string]: any }): Promise<void> {
@@ -180,6 +187,17 @@ class InternalDeviceService extends MemoizeMixin(HttpService) implements Firesto
       }
       throw err;
     }
+  }
+
+  private transformFwProperties(internalDevice: InternalDevice): InternalDevice {
+    return {
+      ...internalDevice,
+      lastKnownFwProperties: internalDevice.fwProperties,
+      fwProperties: {
+        ...internalDevice.fwProperties,
+        ...(internalDevice?.fwPropertiesUpdateReq?.fwProperties || {})
+      }
+    };
   }
 }
 

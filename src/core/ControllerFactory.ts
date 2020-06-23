@@ -20,6 +20,7 @@ import { AlertControllerFactory } from './alert/AlertControllerFactory';
 import { TelemetryControllerFactory } from './telemetry/TelemetryControllerFactory';
 import { IFTTTControllerFactory } from './ifttt/IFTTTControllerFactory';
 import { DeliveryHookControllerFactory } from './delivery-hook/DeliveryHookControllerFactory';
+import { HeadsUpControllerFactory } from './heads-up/HeadsUpControllerFactory';
 
 export default function ControllerFactory(container: Container, apiVersion: number = 2): interfaces.Controller[] {
   return [
@@ -41,7 +42,8 @@ export default function ControllerFactory(container: Container, apiVersion: numb
     AlertControllerFactory,
     TelemetryControllerFactory,
     IFTTTControllerFactory,
-    DeliveryHookControllerFactory
+    DeliveryHookControllerFactory,
+    HeadsUpControllerFactory
   ]
   .map(controllerFactory => controllerFactory(container, apiVersion));
 }

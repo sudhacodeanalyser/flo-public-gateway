@@ -6,7 +6,7 @@ import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddle
 import { Alarm, AlarmListResult } from '../api';
 import { httpController } from '../api/controllerUtils';
 import Request from '../api/Request';
-import { NotificationServiceFactory } from '../notification/NotificationService';
+import { NotificationService } from '../notification/NotificationService';
 import { AlarmService } from '../service';
 
 export function AlarmControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
@@ -17,7 +17,7 @@ export function AlarmControllerFactory(container: Container, apiVersion: number)
   @httpController({ version: apiVersion }, '/alarms')
   class AlarmController extends BaseHttpController {
     constructor(
-      @inject('NotificationServiceFactory') private notificationServiceFactory: NotificationServiceFactory,
+      @inject('NotificationService') private notificationService: NotificationService,
       @inject('AlarmService') private alarmService: AlarmService
     ) {
       super();

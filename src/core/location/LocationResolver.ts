@@ -3,10 +3,10 @@ import { injectHttpContext, interfaces } from 'inversify-express-utils';
 import _ from 'lodash';
 import uuid from 'uuid';
 import { fromPartialRecord } from '../../database/Patch';
-import { DependencyFactoryFactory, Device, Location, LocationUserRole, LookupItem, PropExpand, SystemMode } from '../api';
+import { LocationFacetPage, LocationFilters, DependencyFactoryFactory, Device, Location, LocationUserRole, LookupItem, PropExpand, SystemMode, LocationPage } from '../api';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import LocationTable from '../location/LocationTable';
-import { NotificationService, NotificationServiceFactory } from '../notification/NotificationService';
+import { NotificationService } from '../notification/NotificationService';
 import { AccountResolver, DeviceResolver, PropertyResolverMap, Resolver, SubscriptionResolver, UserResolver } from '../resolver';
 import { LookupService } from '../service';
 import { UserLocationRoleRecord } from '../user/UserLocationRoleRecord';
@@ -17,6 +17,8 @@ import LocationTreeTable from './LocationTreeTable';
 import ConflictError from '../api/error/ConflictError';
 import * as Option from 'fp-ts/lib/Option';
 import { pipe } from 'fp-ts/lib/pipeable';
+import LocationPgTable from './LocationPgTable';
+import { LocationPgRecord } from './LocationPgRecord';
 
 const DEFAULT_LANG = 'en';
 const DEFAULT_AREAS_ID = 'areas.default';
@@ -256,8 +258,7 @@ class LocationResolver extends Resolver<Location> {
       }
 
     },
-    parent: async (location: Location, shouldExpand = false, expandProps?: PropExpand) => {
-
+    parent: async (location: Location, shouldExpand = false, expandProps?: PropExpand) => {      
       if (!location.parent) {
         return location.parent;
       }
@@ -303,16 +304,16 @@ class LocationResolver extends Resolver<Location> {
   private accountResolverFactory: () => AccountResolver;
   private userResolverFactory: () => UserResolver;
   private subscriptionResolverFactory: () => SubscriptionResolver;
-  private notificationService: NotificationService;
   private lookupServiceFactory: () => LookupService;
 
   constructor(
     @inject('LocationTable') private locationTable: LocationTable,
     @inject('UserLocationRoleTable') private userLocationRoleTable: UserLocationRoleTable,
     @inject('DependencyFactoryFactory') depFactoryFactory: DependencyFactoryFactory,
-    @inject('NotificationServiceFactory') notificationServiceFactory: NotificationServiceFactory,
+    @inject('NotificationService') private notificationService: NotificationService,
     @injectHttpContext private readonly httpContext: interfaces.HttpContext,
-    @inject('LocationTreeTable') private locationTreeTable: LocationTreeTable
+    @inject('LocationTreeTable') private locationTreeTable: LocationTreeTable,
+    @inject('LocationPgTable') private locationPgTable: LocationPgTable
   ) {
     super();
 
@@ -321,14 +322,10 @@ class LocationResolver extends Resolver<Location> {
     this.userResolverFactory = depFactoryFactory<UserResolver>('UserResolver');
     this.subscriptionResolverFactory = depFactoryFactory<SubscriptionResolver>('SubscriptionResolver');
     this.lookupServiceFactory = depFactoryFactory<LookupService>('LookupService');
-
-    if (!_.isEmpty(this.httpContext) && this.httpContext.request.get('Authorization')) {
-      this.notificationService = notificationServiceFactory.create(this.httpContext.request);
-    }
   }
 
   public async get(id: string, expandProps?: PropExpand): Promise<Location | null> {
-    const locationRecordData: LocationRecordData | null = await this.locationTable.getByLocationId(id);
+    const locationRecordData = await this.locationTable.getByLocationId(id);
 
     if (locationRecordData === null) {
       return null;
@@ -397,7 +394,6 @@ class LocationResolver extends Resolver<Location> {
 
   public async getAllByAccountId(accountId: string, expandProps?: PropExpand): Promise<Location[]> {
     const locationRecordData = await this.locationTable.getAllByAccountId(accountId);
-
     return Promise.all(
       locationRecordData
         .map(async (datum) => {
@@ -461,6 +457,71 @@ class LocationResolver extends Resolver<Location> {
     );
   }
 
+  public async getByUserId(userId: string, expandProps?: PropExpand, size?: number, page?: number, filters?: LocationFilters, searchText?: string): Promise<LocationPage> {
+    const { items, total } = await this.locationPgTable.getByUserId(userId, size, page, filters, searchText);
+    const locations = await Promise.all(
+      items.map(async item => {
+        const location = LocationPgRecord.toModel(item);
+        const resolved = await this.resolveProps(location, expandProps);
+
+        return {
+          ...location,
+          ...resolved
+        };
+      })
+    );
+
+    return {
+      total,
+      page: page || 1,
+      items: locations
+    }
+  }
+
+  public async getByUserIdRootOnly(userId: string, expandProps?: PropExpand, size?: number, page?: number, filters?: LocationFilters, searchText?: string): Promise<LocationPage> {
+    const { items, total } = await this.locationPgTable.getByUserIdRootOnly(userId, size, page, filters, searchText);
+    const locations = await Promise.all(
+      items.map(async item => {
+        const location = LocationPgRecord.toModel(item);
+        const resolved = await this.resolveProps(location, expandProps);
+
+        return {
+          ...location,
+          ...resolved
+        };
+      })
+    );
+
+    return {
+      total,
+      page: page || 1,
+      items: locations
+    }
+  }
+
+  public async getByUserIdWithChildren(userId: string, expandProps?: PropExpand, size?: number, page?: number, filters?: LocationFilters, searchText?: string): Promise<LocationPage> {
+    const { items, total } = await this.locationPgTable.getByUserIdWithChildren(userId, size, page, filters, searchText);
+    const locations = await Promise.all(
+      items
+        .map(async locationRecord => {
+          const location = LocationPgRecord.toModel(locationRecord);
+          const resolvedProps = await this.resolveProps(location, expandProps);
+
+          return {
+            ...location,
+            ...resolvedProps
+          };
+        })
+    );
+
+    return {
+      total,
+      page: page || 1,
+      items: locations
+    }
+
+  }
+
   public async getAllChildrenUnits(location: Location): Promise<string[]> {
     const childIds = await this.locationTreeTable.getAllChildren(location.account.id, location.id);
     const childLocations = await Promise.all(
@@ -484,28 +545,18 @@ class LocationResolver extends Resolver<Location> {
     )
   }
 
-  public async getAllDevices(location: Location, devicesExpand: PropExpand): Promise<Array<Partial<Device>>> {
-    const childIds = await this.locationTreeTable.getAllChildren(location.account.id, location.id);
-    const childLocations = await Promise.all(
-      childIds.map(({ child_id: childId }) => 
-        this.get(childId, {
-          $select: {
-            id: true,
-            ['class']: true,
-            devices: devicesExpand
-          }
+  public async getFacetsByUserId(userId: string, facets: string[], size?: number, page?: number, contains?: string): Promise<LocationFacetPage> {
+    const facetPages = await Promise.all(
+      facets
+        .map(async facet => {
+          return this.locationPgTable.getFacetByUserId(userId, facet, size, page, contains);
         })
-      )
     );
-    return _.flatMap(childLocations, maybeChildLocation => 
-      pipe(
-        Option.fromNullable(maybeChildLocation),
-        Option.fold(
-          () => [],
-          childLocation => childLocation.devices
-        )
-      )
-    )
+
+    return {
+      page: facetPages[0]?.page || 1,
+      items: facetPages
+    };
   }
 
   // The DynamoDB Location table has account_id as a hash key on the primary
@@ -517,7 +568,8 @@ class LocationResolver extends Resolver<Location> {
     const locationRecordData: LocationRecordData | null = await this.locationTable.getByLocationId(locationId);
 
     return locationRecordData === null ? null : locationRecordData.account_id;
-  }  
+  }
+
 }
 
 export { LocationResolver };

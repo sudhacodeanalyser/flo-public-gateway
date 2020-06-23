@@ -1,17 +1,21 @@
-import { Option, some } from 'fp-ts/lib/Option';
+import * as O from 'fp-ts/lib/Option';
 import { Container, inject } from 'inversify';
 import { BaseHttpController, httpDelete, httpGet, httpPost, httpPut, interfaces, queryParam, request, requestBody, requestParam, all } from 'inversify-express-utils';
 import * as t from 'io-ts';
 import _ from 'lodash';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
-import { DependencyFactoryFactory, AreaName, AreaNameCodec, Areas, Location, LocationCreateValidator, LocationUpdate, LocationUpdateValidator, LocationUserRole, SystemMode, SystemModeCodec, PesThresholdsCodec, PesThresholds } from '../api';
+import { LocationFacetPage, DependencyFactoryFactory, AreaName, AreaNameCodec, Areas, Location, LocationCreateValidator, LocationUpdate, LocationUpdateValidator, LocationUserRole, SystemMode, SystemModeCodec, PesThresholdsCodec, PesThresholds, LocationPage } from '../api';
 import { createMethod, deleteMethod, httpController, parseExpand, withResponseType, httpMethod, queryParamArray, asyncMethod } from '../api/controllerUtils';
 import Request from '../api/Request';
 import * as Responses from '../api/response';
 import { NonEmptyArray } from '../api/validator/NonEmptyArray';
 import { DeviceSystemModeServiceFactory } from '../device/DeviceSystemModeService';
 import { LocationService } from '../service';
+import { either } from 'fp-ts/lib/Either';
+
+const { some } = O;
+type Option<T> = O.Option<T>;
 
 export function LocationControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
@@ -27,6 +31,45 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
       location_id: [locId, ...parentIds]
     };
   });
+
+  type Integer = t.TypeOf<typeof t.Integer>;
+
+  const IntegerFromString = new t.Type<Integer, string, unknown>(
+    'IntegerFromString',
+    (u): u is Integer => t.Integer.is(u),
+    (u, c) => {
+      return either.chain(t.string.validate(u, c), str => {
+        const value = parseInt(str, 10);
+
+        return isNaN(value) ? t.failure(str, c) : t.success(value);
+      });
+    },
+    a => `${ a }`
+  ) 
+
+  const BooleanFromString = new t.Type<boolean, string, unknown>(
+    'BooleanFromString',
+    (u): u is boolean => t.boolean.is(u),
+    (u, c) => {
+      return either.chain(t.string.validate(u, c), str => {
+        const s = str.toLowerCase();
+        return s !== 'true' && s !== 'false' ? t.failure(str, c) : t.success(s === 'true');
+      });
+    },
+    a => `${ a }`
+  );
+
+  const FalseFromString = new t.Type<false, string, unknown>(
+    'FalseFromString',
+    (u): u is false => t.literal(false).is(u),
+    (u, c) => {
+      return either.chain(t.string.validate(u, c), str => {
+        const s = str.toLowerCase();
+        return s !== 'false' ? t.failure(str, c) : t.success(false);
+      });
+    },
+    a => `${ a }`
+  );
 
   interface SystemModeRequestBrand {
     readonly SystemModeRequest: unique symbol;
@@ -96,6 +139,109 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
       const userId = tokenMetadata && tokenMetadata.user_id;
 
       return this.locationService.createLocation(location, userId, roles);
+    }
+
+    @httpMethod(
+      'get',
+      '/',
+      authMiddlewareFactory.create(async ({ query: { userId } }) => ({ user_id: userId })),
+       reqValidator.create(t.type({
+         query: t.intersection([
+           t.type({
+               userId: t.string
+           }),
+           t.partial({
+             class: t.union([t.array(t.string), t.string]),
+             city: t.union([t.array(t.string), t.string]),
+             state: t.union([t.array(t.string), t.string]),
+             country: t.union([t.array(t.string), t.string]),
+             postalCode: t.union([t.array(t.string), t.string]),
+             expand: t.string,
+             size: IntegerFromString,
+             page: IntegerFromString,
+             q: t.string
+           }),
+           t.union([
+             t.type({
+               withChildren: t.union([t.undefined, FalseFromString]),
+               rootOnly: t.union([t.undefined, FalseFromString])
+             }),
+             t.type({
+               withChildren: BooleanFromString,
+               rootOnly: t.union([t.undefined, FalseFromString])
+             }),
+             t.type({
+               withChildren: t.union([t.undefined, FalseFromString]),
+               rootOnly: BooleanFromString
+             })
+           ])
+         ])
+       }))
+    )
+    private async getLocations(
+      @queryParam('userId') userId: string, 
+      @queryParamArray('class') locClass?: string[], 
+      @queryParamArray('city') city?: string[],
+      @queryParamArray('state') state?: string[],
+      @queryParamArray('country') country?: string[],
+      @queryParamArray('postalCode') postalCode?: string[],
+      @queryParam('expand') expand?: string,
+      @queryParam('size') size?: number,
+      @queryParam('page') page?: number,
+      @queryParam('withChildren') withChildren: boolean = true,
+      @queryParam('rootOnly') rootOnly: boolean = false,
+      @queryParam('q') searchText?: string
+    ): Promise<{ total: number; page: number; items: Responses.Location[] }> {
+      const expandProps = parseExpand(expand);
+      const filters = {
+        locClass,
+        city,
+        state,
+        country,
+        postalCode
+      };
+      let locPage: LocationPage;
+
+      if (withChildren && !rootOnly) {
+        locPage = await this.locationService.getByUserIdWithChildren(userId, expandProps, size, page, filters, searchText);  
+      } else if (rootOnly) {
+        locPage = await this.locationService.getByUserIdRootOnly(userId, expandProps, size, page, filters, searchText);
+      } else {
+        locPage = await this.locationService.getByUserId(userId, expandProps, size, page, filters, searchText);
+      }
+
+      return {
+        ...locPage,
+        items: locPage.items.map(loc => Responses.Location.fromModel(loc))
+      };
+    }
+
+    @httpMethod(
+      'get',
+      '/facets',
+      authMiddlewareFactory.create(async ({ query: { userId } }) => ({ user_id: userId })),
+      reqValidator.create(t.type({
+        query: t.intersection([
+          t.type({
+            userId: t.string,
+            name: t.union([t.string, t.array(t.string)])
+          }),
+          t.partial({
+            size: IntegerFromString,
+            page: IntegerFromString,
+            contains: t.string
+          })
+        ])
+      }))
+    )
+    private async getFacets(
+      @queryParam('userId') userId: string,
+      @queryParamArray('name') facetNames: string[],
+      @queryParam('size') size?: number,
+      @queryParam('page') page?: number,
+      @queryParam('contains') contains?: string
+    ): Promise<LocationFacetPage> {
+      return this.locationService.getFacetsByUserId(userId, facetNames, size, page, contains);
     }
 
     @httpGet(

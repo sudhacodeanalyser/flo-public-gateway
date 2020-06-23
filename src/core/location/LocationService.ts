@@ -4,7 +4,7 @@ import { injectHttpContext, interfaces } from 'inversify-express-utils';
 import _ from 'lodash';
 import uuid from 'uuid';
 import { AccessControlService } from '../../auth/AccessControlService';
-import { Areas, DependencyFactoryFactory, Location, LocationUpdate, LocationUserRole, PropExpand, SystemMode, Device, DeviceType, PesThresholds } from '../api';
+import { LocationFacetPage, LocationFilters, Areas, DependencyFactoryFactory, Location, LocationUpdate, LocationUserRole, PropExpand, SystemMode, Device, DeviceType, PesThresholds, LocationPage } from '../api';
 import ConflictError from '../api/error/ConflictError';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import ValidationError from '../api/error/ValidationError';
@@ -509,6 +509,22 @@ class LocationService {
         )
       )
     ))));
+  }
+
+  public async getByUserIdWithChildren(userId: string, expandProps?: PropExpand, size?: number, page?: number, filters?: LocationFilters, searchText?: string): Promise<LocationPage> {
+    return this.locationResolver.getByUserIdWithChildren(userId, expandProps, size, page, filters, searchText);
+  }
+
+  public async getByUserId(userId: string, expandProps?: PropExpand, size?: number, page?: number, filters?: LocationFilters, searchText?: string): Promise<LocationPage> {
+    return this.locationResolver.getByUserId(userId, expandProps, size, page, filters, searchText);
+  }
+
+  public async getByUserIdRootOnly(userId: string, expandProps?: PropExpand, size?: number, page?: number, filters?: LocationFilters, searchText?: string): Promise<LocationPage> {
+    return this.locationResolver.getByUserIdRootOnly(userId, expandProps, size, page, filters, searchText);
+  }
+
+  public async getFacetsByUserId(userId: string, facets: string[], size?: number, page?: number, contains?: string): Promise<LocationFacetPage> {
+    return this.locationResolver.getFacetsByUserId(userId, facets, size, page, contains);
   }
 
   private async getDevices(locationId: string, deviceExpand: PropExpand, shouldCascade?: boolean): Promise<Array<Partial<Device>>> {

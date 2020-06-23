@@ -5,7 +5,7 @@ import _ from 'lodash';
 import { fromPartialRecord } from '../../database/Patch';
 import { DependencyFactoryFactory, DeviceAlarmSettings, EntityAlarmSettingsItem, PropExpand, UpdateAlarmSettings, User, UnitSystem, UserCreate, RetrieveAlarmSettingsFilter, EntityAlarmSettings, LocationAlarmSettings, AlarmSettings } from '../api';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
-import { NotificationService, NotificationServiceFactory } from '../notification/NotificationService';
+import { NotificationService } from '../notification/NotificationService';
 import { AccountResolver, DeviceResolver, LocationResolver, PropertyResolverMap, Resolver } from '../resolver';
 import { UserAccountRoleRecord } from './UserAccountRoleRecord';
 import UserAccountRoleTable from './UserAccountRoleTable';
@@ -52,6 +52,14 @@ class UserResolver extends Resolver<User> {
           };
         }
       ));
+
+      // const locations = await this.locationResolverFactory().getByUserIdWithChildren(model.id, shouldExpand ? expandProps : undefined);
+      
+      // if (!shouldExpand) {
+      //   return locations.items.map(({ id }) => ({ id }));
+      // }
+
+      // return locations.items;
     },
     account: async (model: User, shouldExpand = false) => {
       const userAccountRoleRecordData = await this.userAccountRoleTable.getByUserId(model.id);
@@ -117,7 +125,7 @@ class UserResolver extends Resolver<User> {
         .value();
     },
     alarmSettings: async (model: User, shouldExpand = false) => {
-      if (!shouldExpand || !this.notificationServiceFactory) {
+      if (!shouldExpand) {
         return null;
       }
 
@@ -139,6 +147,17 @@ class UserResolver extends Resolver<User> {
                   return location ? location.devices: [];
                 })
         ));
+
+        // const locations = await this.locationResolverFactory().getByUserIdWithChildren(model.id, {
+        //   $select: {
+        //     devices: {
+        //       $select: {
+        //         id: true
+        //       }
+        //     }
+        //   }
+        // });
+        // const devices = _.flatten(locations.items.map(location => location.devices || []));
 
         if (_.isEmpty(devices)) {
           return null;
@@ -162,7 +181,6 @@ class UserResolver extends Resolver<User> {
   private locationResolverFactory: () => LocationResolver;
   private accountResolverFactory: () => AccountResolver;
   private deviceResolverFactory: () => DeviceResolver;
-  private notificationServiceFactory: () => NotificationService;
 
   constructor(
     @inject('UserTable') private userTable: UserTable,
@@ -171,20 +189,16 @@ class UserResolver extends Resolver<User> {
     @inject('UserAccountRoleTable') private userAccountRoleTable: UserAccountRoleTable,
     @inject('DependencyFactoryFactory') depFactoryFactory: DependencyFactoryFactory,
     @inject('DefaultUserLocale') private defaultUserLocale: string,
-    @inject('NotificationServiceFactory') notificationServiceFactory: NotificationServiceFactory,
+    @inject('NotificationService') private notificationService: NotificationService,
     @injectHttpContext private readonly httpContext: interfaces.HttpContext,
     @inject('Logger') private readonly logger: Logger,
-    @inject('LocationTreeTable') private locationTreeTable: LocationTreeTable
+    @inject('LocationTreeTable') private locationTreeTable: LocationTreeTable,
   ) {
     super();
 
     this.locationResolverFactory = depFactoryFactory<LocationResolver>('LocationResolver');
     this.accountResolverFactory = depFactoryFactory<AccountResolver>('AccountResolver');
     this.deviceResolverFactory = depFactoryFactory<DeviceResolver>('DeviceResolver');
-
-    if (!_.isEmpty(this.httpContext)) {
-      this.notificationServiceFactory = () => notificationServiceFactory.create(this.httpContext.request);
-    }
   }
 
   public async updatePartialUser(id: string, partialUser: Partial<User>): Promise<User> {
@@ -258,7 +272,7 @@ class UserResolver extends Resolver<User> {
 
   public async updateAlarmSettings(id: string, settings: UpdateAlarmSettings): Promise<void> {
     const accountType = await this.getAccountType(id);
-    return this.notificationServiceFactory().updateAlarmSettings(id, {
+    return this.notificationService.updateAlarmSettings(id, {
       ...settings,
       accountType
     });
@@ -290,7 +304,7 @@ class UserResolver extends Resolver<User> {
       );
 
       const locationIdSet = hierarchyToSet(locationHierarchyMap);
-      const alarmSettings = await this.notificationServiceFactory().getAlarmSettings(id, { 
+      const alarmSettings = await this.notificationService.getAlarmSettings(id, { 
         locationIds: Array.from(locationIdSet),
         accountType
       });
@@ -305,7 +319,7 @@ class UserResolver extends Resolver<User> {
 
     }
 
-    const deviceSettings = await this.notificationServiceFactory().getAlarmSettings(id, {
+    const deviceSettings = await this.notificationService.getAlarmSettings(id, {
       ...filter,
       accountType
     });
@@ -329,7 +343,7 @@ class UserResolver extends Resolver<User> {
     );
 
     const locationIdSet = hierarchyToSet(locationMapping.locationHierarchy);
-    const locationSettings = await this.notificationServiceFactory().getAlarmSettings(id, { 
+    const locationSettings = await this.notificationService.getAlarmSettings(id, { 
       locationIds: Array.from(locationIdSet),
       accountType
     });

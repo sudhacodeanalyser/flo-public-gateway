@@ -11,7 +11,7 @@ import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddle
 import { DependencyFactoryFactory, AlarmEvent, AlarmSeverityCodec, AlertReportDefinition, AlertReportDefinitionCodec, AlertStatus, AlertStatusCodec, ClearAlertBody, ClearAlertBodyCodec, ClearAlertResponse, IncidentStatusReasonCodec, NotificationStatistics, PaginatedResult, UserFeedback, UserFeedbackCodec, FilterState, FilterStateCodec, NewUserFeedbackRequest, NewUserFeedbackRequestCodec, UnitSystem, PropExpand } from '../api';
 import { httpController, deleteMethod } from '../api/controllerUtils';
 import Request from '../api/Request';
-import { NotificationServiceFactory } from '../notification/NotificationService';
+import { NotificationService } from '../notification/NotificationService';
 import { AlertService, UserService, LocationService, DeviceService } from '../service';
 import UnauthorizedError from '../api/error/UnauthorizedError';
 
@@ -72,7 +72,7 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
   @httpController({ version: apiVersion }, '/alerts')
   class AlertController extends BaseHttpController {
     constructor(
-      @inject('NotificationServiceFactory') private notificationServiceFactory: NotificationServiceFactory,
+      @inject('NotificationService') private notificationService: NotificationService,
       @inject('AlertService') private alertService: AlertService,
       @inject('UserService') private userService: UserService
     ) {
@@ -84,8 +84,7 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
       const filters = req.url.split('?')[1] || '';
 
       return this
-        .notificationServiceFactory
-        .create(req)
+        .notificationService
         .retrieveStatistics(filters);
     }
 
@@ -182,7 +181,20 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
         });
       }
 
-      return this.alertService.getAlarmEventsByFilter(filters);
+      return this.alertService.getAlarmEventsByFilter(filters, {
+        $select: {
+          id: true,
+          nickname: true,
+          address: true,
+          address2: true,
+          city: true,
+          state: true,
+          country: true,
+          postalCode: true,
+          timezone: true,
+          userRoles: true
+        }
+      });
     }
 
     @httpPost('/action',
@@ -199,9 +211,7 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
         return obj.locationId !== undefined;
       };
 
-      const service = this.notificationServiceFactory.create(req);
-
-      const clearResponse = await service.clearAlarms(data.alarmIds, {
+      const clearResponse = await this.notificationService.clearAlarms(data.alarmIds, {
         ...(hasDeviceId(data) && { deviceId: data.deviceId }),
         ...(hasLocationId(data) && { locationId: data.locationId }),
         snoozeSeconds: data.snoozeSeconds
@@ -224,7 +234,7 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
       }))
     )
     private async submitIncidentFeedback(@request() req: Request, @response() res: express.Response, @requestParam('id') incidentId: string, @requestBody() userFeedback: UserFeedback & { deviceId: string, alarmId: number | undefined, systemMode: string | undefined }): Promise<UserFeedback> {
-      const alarmEvent = await this.notificationServiceFactory.create(req).getAlarmEvent(incidentId);
+      const alarmEvent = await this.notificationService.getAlarmEvent(incidentId);
 
       await authMiddlewareFactory.create(async () => ({ icd_id: alarmEvent.deviceId }))(req, res, err => {
         if (err) {
@@ -246,7 +256,7 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
       }))
     )
     private async getFilterStateById(@request() req: Request, @requestParam('id') filterStateId: string): Promise<O.Option<FilterState>> {
-      return this.notificationServiceFactory.create(req).getFilterStateById(filterStateId);
+      return this.notificationService.getFilterStateById(filterStateId);
     }
 
     @httpGet('/filters',
@@ -258,7 +268,7 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
       }))
     )
     private async getFilterState(@request() req: Request): Promise<FilterState[]> {
-      return this.notificationServiceFactory.create(req).getFilterState(req.query);
+      return this.notificationService.getFilterState(req.query);
     }
 
     @httpDelete('/filters/:id',
@@ -271,7 +281,7 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
     )
     @deleteMethod
     private async deleteFilterState(@request() req: Request, @requestParam('id') filterStateId: string): Promise<void> {
-      return this.notificationServiceFactory.create(req).deleteFilterState(filterStateId);
+      return this.notificationService.deleteFilterState(filterStateId);
     }
 
     @httpPost('/filters',
@@ -284,7 +294,7 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
       }))
     )
     private async createFilterState(@request() req: Request, @requestBody() filterState: FilterState): Promise<FilterState> {
-      return this.notificationServiceFactory.create(req).createFilterState(filterState);
+      return this.notificationService.createFilterState(filterState);
     }
 
     @httpGet('/:id',
