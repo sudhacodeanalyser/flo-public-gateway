@@ -118,19 +118,6 @@ class InternalDeviceService extends MemoizeMixin(HttpService) implements Firesto
     await this.sendRequest(request); 
   }
 
-  public async setDeviceFwPropertiesWithMetadata(macAddress: string, metadata: Record<string, any>, data: Record<string, any>): Promise<void> {
-    const request = {
-      method: 'post',
-      url: `${this.internalDeviceServiceBaseUrl}/devices/${macAddress}/fw`,
-      body: {
-        meta: metadata,
-        fwproperties: data
-      },
-    };
-
-    await this.sendRequest(request); 
-  }
-
   public async syncDevice(macAddress: string): Promise<void> {
     const request = {
       method: 'post',
