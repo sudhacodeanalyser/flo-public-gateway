@@ -53,6 +53,7 @@ secrets:
     FLO_DETECT_API_URL: "${FLO_DETECT_API_URL}"
     WEATHER_API_URL: "${WEATHER_API_URL}"
     API_V1_TOKEN: "${API_V1_TOKEN}"
+    EMAIL_GATEWAY_URL: "${EMAIL_GATEWAY_URL}"
 internalIngress:
   host: internal-ingress.flocloud.co
 routingIngress:
