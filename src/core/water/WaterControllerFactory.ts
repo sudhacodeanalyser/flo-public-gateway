@@ -58,8 +58,8 @@ export function WaterControllerFactory(container: Container, apiVersion: number)
     ) {}
 
     @httpGet('/consumption',
-      authWithParents,
-      reqValidator.create(ReqValidator.getConsumption)
+      reqValidator.create(ReqValidator.getConsumption),
+      authWithParents
     )
     private async getConsumption(
       @queryParam('startDate') startDate: ReqValidator.ISODateString,

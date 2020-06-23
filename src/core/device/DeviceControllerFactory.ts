@@ -127,13 +127,13 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     }
 
     @httpGet('/',
-      authWithParents,
       reqValidator.create(t.type({
         query: t.type({
           macAddress: t.string,
           expand: t.union([t.undefined, t.string])
         })
-      }))
+      })),
+      authWithParents
     )
     @withResponseType<Device, Responses.Device>(Responses.Device.fromModel)
     private async getDeviceByMacAdress(@queryParam('macAddress') macAddress: string, @queryParam('expand') expand?: string): Promise<Option<Device>> {
@@ -170,7 +170,6 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     }
 
     @httpGet('/:id',
-      authUnion(authWithParents, puckAuthMiddleware.handler.bind(puckAuthMiddleware)),
       reqValidator.create(t.type({
         params: t.type({
           id: t.string
@@ -178,7 +177,8 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
         query: t.partial({
           expand: t.string
         })
-      }))
+      })),
+      authUnion(authWithParents, puckAuthMiddleware.handler.bind(puckAuthMiddleware))
     )
     @withResponseType<Device, Responses.Device>(Responses.Device.fromModel)
     private async getDevice(@requestParam('id') id: string, @queryParam('expand') expand?: string): Promise<Option<Device>> {
@@ -187,14 +187,14 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     }
 
     @httpPost('/:id',
-      authWithParents,
       reqValidator.create(t.type({
         params: t.type({
           id: t.string
         }),
         // TODO Do not allow empty
         body: DeviceUpdateValidator
-      }))
+      })),
+      authWithParents
     )
     @withResponseType<Device, Responses.Device>(Responses.Device.fromModel)
     private async updatePartialDevice(@request() req: Request, @requestParam('id') id: string, @requestBody() deviceUpdate: DeviceUpdate): Promise<Option<Device>> {
