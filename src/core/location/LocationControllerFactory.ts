@@ -246,7 +246,6 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
 
     @httpGet(
       '/:id',
-      authWithParents,
       reqValidator.create(t.type({
         params: t.type({
           id: t.string
@@ -254,7 +253,8 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
         query: t.partial({
           expand: t.string
         })
-      }))
+      })),
+      authWithParents
     )
     @withResponseType<Location, Responses.Location>(Responses.Location.fromModel)
     private async getLocation(@requestParam('id') id: string, @queryParam('expand') expand?: string): Promise<Option<Location>> {
@@ -265,13 +265,13 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
 
     @httpPost(
       '/:id',
-      authWithParents,
       reqValidator.create(t.type({
         params: t.type({
           id: t.string
         }),
         body: LocationUpdateValidator
-      }))
+      })),
+      authWithParents
     )
     @withResponseType<Location, Responses.Location>(Responses.Location.fromModel)
     private async updatePartialLocation(@request() req: Request, @requestParam('id') id: string, @requestBody() locationUpdate: LocationUpdate): Promise<Option<Location>> {
@@ -296,7 +296,6 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
 
     @httpPut(
       '/:locationId/user-roles/:userId',
-      authWithParents,
       reqValidator.create(t.type({
         params: t.type({
           locationId: t.string,
@@ -305,7 +304,8 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
         body: t.strict({
           roles: NonEmptyArray(t.string)
         })
-      }))
+      })),
+      authWithParents
     )
     @createMethod
     private async addLocationUserRole(@requestParam('locationId') locationId: string, @requestParam('userId') userId: string, @requestBody() { roles }: Pick<LocationUserRole, 'roles'>): Promise<LocationUserRole> {
@@ -314,13 +314,13 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
 
     @httpDelete(
       '/:locationId/user-roles/:userId',
-      authWithParents,
       reqValidator.create(t.type({
         params: t.type({
           locationId: t.string,
           userId: t.string
         })
-      }))
+      })),
+      authWithParents
     )
     @deleteMethod
     private async removeLocationUserRole(@requestParam('locationId') locationId: string, @requestParam('userId') userId: string): Promise<void> {
@@ -329,13 +329,13 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
 
     @httpPost(
       '/:id/systemMode',
-      authWithParents,
       reqValidator.create(t.type({
         params: t.type({
           id: t.string
         }),
         body: SystemModeRequestCodec
-      }))
+      })),
+      authWithParents
     )
     private async setSystemMode(@request() req: Request, @requestParam('id') id: string, @requestBody() data: SystemModeRequest): Promise<void> {
       const deviceSystemModeService = this.deviceSystemModeServiceFactory.create(req);
@@ -345,13 +345,13 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
 
     @httpPost(
       '/:locationId/areas',
-      authWithParents,
       reqValidator.create(t.type({
         params: t.type({
           locationId: t.string
         }),
         body: AreaNameCodec
-      }))
+      })),
+      authWithParents
     )
     @createMethod
     private async addArea(@requestParam('locationId') locationId: string, @requestBody() { name }: AreaName): Promise<Areas> {
@@ -360,14 +360,14 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
 
     @httpPost(
       '/:locationId/areas/:areaId',
-      authWithParents,
       reqValidator.create(t.type({
         params: t.type({
           locationId: t.string,
           areaId: t.string
         }),
         body: AreaNameCodec
-      }))
+      })),
+      authWithParents
     )
     private async renameArea(@requestParam('locationId') locationId: string, @requestParam('areaId') areaId: string, @requestBody() { name }: AreaName): Promise<Areas> {
       return this.locationService.renameArea(locationId, areaId, name);
@@ -375,13 +375,13 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
 
     @httpDelete(
       '/:locationId/areas/:areaId',
-      authWithParents,
       reqValidator.create(t.type({
         params: t.type({
           locationId: t.string,
           areaId: t.string
         })
-      }))
+      })),
+      authWithParents
     )
     @deleteMethod
     private async removeArea(@requestParam('locationId') locationId: string, @requestParam('areaId') areaId: string): Promise<Areas> {
@@ -390,13 +390,13 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
 
     @httpPost(
       '/:id/floSense',
-      authWithParents,
       reqValidator.create(t.type({
         params: t.type({
           id: t.string
         }),
         body: PesThresholdsCodec
-      }))
+      })),
+      authWithParents
     )
     @asyncMethod
     private async overridePes(@requestParam('id') id: string, @requestBody() pesThresholds: PesThresholds): Promise<void> {
