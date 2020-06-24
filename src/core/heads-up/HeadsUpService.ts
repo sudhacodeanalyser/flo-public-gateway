@@ -50,7 +50,8 @@ class HeadsUpService {
       throw new NotFoundError('Device not found.');
     }
 
-    const hasSubscription = !!(device.location.subscription as Subscription)?.provider?.isActive;
+    const subscription = device.location.subscription as Subscription | undefined;
+    const hasSubscription = subscription?.provider?.isActive;
     const users = device.location.users as Array<Pick<User, 'email' | 'firstName' | 'lastName' | 'locale'>>;
     const localizedAssetName = `user.auto_health_test_disabled.template.${ hasSubscription ? 'subscriber' : 'nonsubscriber' }`;
     await Promise.all(
