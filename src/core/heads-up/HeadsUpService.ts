@@ -68,14 +68,12 @@ class HeadsUpService {
             locale: user.locale
           });
         const emailData = {
-         data: {
-           date: moment().locale(user.locale || 'en-us').tz(device.location.timezone || 'Etc/UTC').format('LL'),
-           time: moment().locale(user.locale || 'en-us').tz(device.location.timezone || 'Etc/UTC').format('LT')
-         },
           user: {
             device_nickname: device.nickname,
             firstname: user.firstName,
-            location_nickname: device.location.nickname
+            location_nickname: device.location.nickname,
+            date: moment().locale(user.locale || 'en-us').tz(device.location.timezone || 'Etc/UTC').format('LL'),
+            time: moment().locale(user.locale || 'en-us').tz(device.location.timezone || 'Etc/UTC').format('LT')
           }
         };
 
