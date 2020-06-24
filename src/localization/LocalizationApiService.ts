@@ -20,7 +20,20 @@ class LocalizationApiService extends HttpService implements LocalizationService 
       }
     };
 
-    return this.sendRequest(request);
+    const result: AssetsResponse = await this.sendRequest(request);
+
+    if (!result || !result.items || !result.items.length) {
+      return this.sendRequest({
+        method: 'GET',
+        url: `${ this.localizationApiUrl }/assets`,
+        params: {
+          ...filter,
+          locale: 'en-us'
+        }
+      });
+    }
+
+    return result;
   }
 
   public async createAsset(asset: Asset): Promise<void> {
