@@ -50,7 +50,8 @@ class HeadsUpService {
       throw new NotFoundError('Device not found.');
     }
 
-    const hasSubscription = (device.location.subscription as Subscription).provider.isActive;
+    const subscription = device.location.subscription as Subscription | undefined;
+    const hasSubscription = subscription?.provider?.isActive;
     const users = device.location.users as Array<Pick<User, 'email' | 'firstName' | 'lastName' | 'locale'>>;
     const localizedAssetName = `user.auto_health_test_disabled.template.${ hasSubscription ? 'subscriber' : 'nonsubscriber' }`;
     await Promise.all(
@@ -60,18 +61,20 @@ class HeadsUpService {
           return;
         }
 
-        const { items: [{ value: templateId }]} = await this.localizationService
-          .getAssets({ 
+        const { localizedValue: templateId } = await this.localizationService
+          .getLocalizedValue({ 
             name: localizedAssetName, 
             type: 'email', 
             locale: user.locale
           });
         const emailData = {
-          firstName: user.firstName,
-          lastName: user.lastName,
-          deviceName: device.nickname,
-          locationName: device.location.nickname,
-          dateTime: moment.tz(device.location.timezone || 'Etc/UTC').format()
+          user: {
+            device_nickname: device.nickname,
+            firstname: user.firstName,
+            location_nickname: device.location.nickname,
+            date: moment().locale(user.locale || 'en-us').tz(device.location.timezone || 'Etc/UTC').format('LL'),
+            time: moment().locale(user.locale || 'en-us').tz(device.location.timezone || 'Etc/UTC').format('LT')
+          }
         };
 
         await this.emailGatewayService.queue(user.email, templateId, emailData);

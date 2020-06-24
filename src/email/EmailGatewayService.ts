@@ -13,14 +13,16 @@ class EmailGatewayService extends HttpService {
     const request = {
       method: 'POST',
       url: `${ this.url }/queue`,
-      data: {
+      body: {
         client_app_name: 'Public Gateway',
         time_stamp: new Date().toISOString(),
         recipients: [{
           email_address: emailAddress,
           data: {
             template_id: templateId,
-            email_template_data: data
+            email_template_data: {
+              data
+            }
           }
         }]
       }
