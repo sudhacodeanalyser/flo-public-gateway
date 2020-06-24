@@ -61,8 +61,8 @@ class HeadsUpService {
           return;
         }
 
-        const { items: [{ value: templateId }]} = await this.localizationService
-          .getAssets({ 
+        const { localizedValue: templateId } = await this.localizationService
+          .getLocalizedValue({ 
             name: localizedAssetName, 
             type: 'email', 
             locale: user.locale
