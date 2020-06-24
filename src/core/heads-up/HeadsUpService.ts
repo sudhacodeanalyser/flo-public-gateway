@@ -68,11 +68,15 @@ class HeadsUpService {
             locale: user.locale
           });
         const emailData = {
-          firstName: user.firstName,
-          lastName: user.lastName,
-          deviceName: device.nickname,
-          locationName: device.location.nickname,
-          dateTime: moment.tz(device.location.timezone || 'Etc/UTC').format()
+         data: {
+           date: moment().locale(user.locale || 'en-us').tz(device.location.timezone || 'Etc/UTC').format('LL'),
+           time: moment().locale(user.locale || 'en-us').tz(device.location.timezone || 'Etc/UTC').format('LT')
+         },
+          user: {
+            device_nickname: device.nickname,
+            firstname: user.firstName,
+            location_nickname: device.location.nickname
+          }
         };
 
         await this.emailGatewayService.queue(user.email, templateId, emailData);
