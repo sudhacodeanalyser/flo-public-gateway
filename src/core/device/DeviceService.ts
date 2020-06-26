@@ -178,6 +178,8 @@ class DeviceService {
     }
 
     await this.internalDeviceService.upsertDevice(createdDevice.macAddress, deviceCreate);
+    this.internalDeviceService.syncDevice(createdDevice.macAddress);
+
     await this.entityActivityService.publishEntityActivity(
       EntityActivityType.DEVICE,
       EntityActivityAction.CREATED,
