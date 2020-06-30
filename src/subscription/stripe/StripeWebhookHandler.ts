@@ -8,6 +8,7 @@ import * as Option from 'fp-ts/lib/Option';
 import * as AsyncOption from 'fp-ts-contrib/lib/TaskOption';
 import { pipe } from 'fp-ts/lib/pipeable';
 import StripeSubscriptionProvider from './StripeSubscriptionProvider';
+import Logger from 'bunyan';
 
 type GetSubscription = (subcription: Stripe.subscriptions.ISubscription) => Promise<Option.Option<Subscription>>;
 type EventData = Stripe.events.IEvent['data'];
@@ -21,17 +22,32 @@ class StripeWebhookHandler implements SubscriptionProviderWebhookHandler {
   constructor(
     @inject('StripeClient') private stripeClient: Stripe,
     @inject('SubscriptionService') private subscriptionService: SubscriptionService,
-    @inject('StripeSubscriptionProvider') private stripeSubscriptionProvider: StripeSubscriptionProvider
+    @inject('StripeSubscriptionProvider') private stripeSubscriptionProvider: StripeSubscriptionProvider,
+    @inject('Logger') private readonly logger: Logger
   ) {
     this.eventMap = {
       'customer.subscription.created': this.handleSubscriptionCreated.bind(this),
       'customer.subscription.updated': this.handleSubscriptionUpdated.bind(
         this, 
-        sub => this.subscriptionService.getSubscriptionByRelatedEntityId(sub.metadata.location_id)
+        async sub => {
+
+          if (!sub?.metadata?.location_id) {
+            return Option.none;
+          }
+
+          return this.subscriptionService.getSubscriptionByRelatedEntityId(sub.metadata.location_id)
+        }
       ),
       'customer.subscription.deleted': this.handleSubscriptionUpdated.bind(
         this,
-        sub => this.subscriptionService.getSubscriptionByRelatedEntityId(sub.metadata.location_id)
+        async sub => {
+          
+          if (!sub?.metadata?.location_id) {
+            return Option.none;
+          }
+
+          return this.subscriptionService.getSubscriptionByRelatedEntityId(sub.metadata.location_id)
+        }
       )
     }
   }
@@ -103,6 +119,19 @@ class StripeWebhookHandler implements SubscriptionProviderWebhookHandler {
 
     await pipe(
       await getSubscription(stripeSubscription),
+      Option.chain(subscription => {
+        // Don't allow webhook to override data for an active subscription whose ID does not match
+        if (
+          subscription?.provider.isActive && 
+          subscription?.provider?.data?.subscriptionId &&
+          subscription?.provider?.data?.subscriptionId !== stripeSubscription.id
+        ) {
+          this.logger.info(data, 'Duplicate subscription');
+          return Option.none;
+        } 
+
+        return Option.some(subscription);
+      }),
       Option.fold(
         async () => Promise.resolve(),
         async subscription => {
