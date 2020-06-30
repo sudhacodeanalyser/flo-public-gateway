@@ -29,11 +29,25 @@ class StripeWebhookHandler implements SubscriptionProviderWebhookHandler {
       'customer.subscription.created': this.handleSubscriptionCreated.bind(this),
       'customer.subscription.updated': this.handleSubscriptionUpdated.bind(
         this, 
-        sub => this.subscriptionService.getSubscriptionByRelatedEntityId(sub.metadata.location_id)
+        async sub => {
+
+          if (!sub?.metadata?.location_id) {
+            return Option.none;
+          }
+
+          return this.subscriptionService.getSubscriptionByRelatedEntityId(sub.metadata.location_id)
+        }
       ),
       'customer.subscription.deleted': this.handleSubscriptionUpdated.bind(
         this,
-        sub => this.subscriptionService.getSubscriptionByRelatedEntityId(sub.metadata.location_id)
+        async sub => {
+          
+          if (!sub?.metadata?.location_id) {
+            return Option.none;
+          }
+
+          return this.subscriptionService.getSubscriptionByRelatedEntityId(sub.metadata.location_id)
+        }
       )
     }
   }
