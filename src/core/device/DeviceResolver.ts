@@ -302,13 +302,13 @@ class DeviceResolver extends Resolver<Device> {
             .format('HH:mm');
         const end = additionalProperties.fwProperties.ht_scheduler_end &&
             moment
-            .tz(
-              additionalProperties.fwProperties.ht_scheduler_end,
-              'HH:mm',
-              'Etc/UTC'
-            )
-            .tz(timezone)
-            .format('HH:mm');
+              .tz(
+                additionalProperties.fwProperties.ht_scheduler_end,
+                'HH:mm',
+                'Etc/UTC'
+              )
+              .tz(timezone)
+              .format('HH:mm');
         const timesPerDay = additionalProperties.fwProperties.ht_times_per_day
         const isEnabled = timesPerDay > 0;
         const config = {
