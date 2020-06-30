@@ -26,6 +26,7 @@ import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import { MachineLearningService } from '../../machine-learning/MachineLearningService';
 import { PuckTokenService } from './PuckTokenService';
 import ConflictError from '../api/error/ConflictError';
+import moment from 'moment-timezone';
 
 const defaultHwThresholds = (deviceModel: string) => {
   const minZero = {
@@ -283,8 +284,31 @@ class DeviceResolver extends Resolver<Device> {
       const additionalProperties = await this.internalDeviceService.getDevice(device.macAddress);
 
       if (additionalProperties && additionalProperties.fwProperties) {
-        const start = additionalProperties.fwProperties.ht_scheduler_start;
-        const end = additionalProperties.fwProperties.ht_scheduler_end;
+        const location = await this.locationResolverFactory().get(device.location.id, {
+          $select: {
+            timezone: true
+          }
+        });
+
+        const timezone = location?.timezone || 'Etc/UTC';
+        const start = additionalProperties.fwProperties.ht_scheduler_start &&
+          moment
+            .tz(
+              additionalProperties.fwProperties.ht_scheduler_start,
+              'HH:mm',
+              'Etc/UTC'
+            )
+            .tz(timezone)
+            .format('HH:mm');
+        const end = additionalProperties.fwProperties.ht_scheduler_end &&
+            moment
+            .tz(
+              additionalProperties.fwProperties.ht_scheduler_end,
+              'HH:mm',
+              'Etc/UTC'
+            )
+            .tz(timezone)
+            .format('HH:mm');
         const timesPerDay = additionalProperties.fwProperties.ht_times_per_day
         const isEnabled = timesPerDay > 0;
         const config = {

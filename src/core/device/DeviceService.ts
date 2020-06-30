@@ -18,6 +18,7 @@ import { injectHttpContext, interfaces } from 'inversify-express-utils';
 import Request from '../api/Request';
 import { NotificationService } from '../notification/NotificationService';
 import ForbiddenError from '../api/error/ForbiddenError';
+import moment from 'moment-timezone';
 
 const { isNone, fromNullable } = O;
 type Option<T> = O.Option<T>;
@@ -92,12 +93,26 @@ class DeviceService {
     }
 
     if (deviceUpdate.healthTest) {
-      const userId = (this?.httpContext?.request as Request)?.token?.user_id;
+      const location = await this.locationServiceFactory().getLocation(device.location.id, {
+        $select: {
+          timezone: true
+        }
+      });
+
+      if (O.isNone(location)) {
+        throw new ResourceDoesNotExistError('Location does not exist');
+      }
+
       const healthTestConfig = deviceUpdate.healthTest.config;
+      const timezone = location.value.timezone || 'Etc/UTC';
+      const startTime = moment.tz(healthTestConfig.start, 'HH:mm', timezone).utc().format('HH:mm');
+      const endTime = moment.tz(healthTestConfig.end, 'HH:mm', timezone).utc().format('HH:mm');
+
+      const userId = (this?.httpContext?.request as Request)?.token?.user_id;
       const fwProperties = {
         ht_times_per_day: healthTestConfig.timesPerDay,
-        ht_scheduler_start: healthTestConfig.start,
-        ht_scheduler_end: healthTestConfig.end
+        ht_scheduler_start: startTime,
+        ht_scheduler_end: endTime
       };
 
       await this.internalDeviceService.setDeviceFwPropertiesWithMetadata(device.macAddress, { userId }, fwProperties);
