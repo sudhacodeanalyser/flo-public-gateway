@@ -1,27 +1,19 @@
 import { injectable, inject } from 'inversify';
 import {
   PropExpand,
-  Subscription, 
   Device, 
   DeviceType, 
   DependencyFactoryFactory, 
   FloDetectResponseFlowEvent,
-  FloDetectResponseEventItem,
   FloDetectResponseEventPage,
   FloDetectResponseFixtures
 } from '../api';
 import * as Option from 'fp-ts/lib/Option';
-import * as TaskEitherOption from '../../util/TaskEitherOption';
-import { pipe } from 'fp-ts/lib/pipeable';
 import moment from 'moment-timezone';
 import { DeviceService, LocationService } from '../service';
-import * as TaskOption from 'fp-ts-contrib/lib/TaskOption';
-import { fromPartialRecord } from '../../database/Patch';
-import { morphism, StrictSchema } from 'morphism';
-import { FloDetectApi, FloDetectApiEventPage, FloDetectApiFlowEvent, FloDetectApiEventItem, FloDetectApiFixtures } from './FloDetectApi';
+import { FloDetectApi } from './FloDetectApi';
 import _ from 'lodash';
 import NotFoundError from '../api/error/NotFoundError';
-import ForbiddenError from '../api/error/ForbiddenError';
 import { FloDetectResolver } from '../resolver';
 
 @injectable()
@@ -57,8 +49,6 @@ class FloDetectService {
 
     if (!data) {
       throw new NotFoundError(isMacAddress(idData) ? 'Device not found.' : 'Location not found.');
-    } else if (!data.hasActiveSubscription) {
-      throw new ForbiddenError('FloDetect subscription required.');
     }
 
     const { macAddresses, timezone: locationTimezone } = data;
@@ -106,8 +96,6 @@ class FloDetectService {
 
     if (!data) {
       throw new NotFoundError(isMacAddress(idData) ? 'Device not found.' : 'Location not found.');
-    } else if (!data.hasActiveSubscription) {
-      throw new ForbiddenError('FloDetect subscription required.');
     }
 
     const { macAddresses, timezone: locationTimezone } = data;
@@ -139,23 +127,13 @@ class FloDetectService {
     return this.floDetectResolver.getEventById(eventId, expand);
   }
 
-  private async getLocationDataByMacAddress(macAddress: string): Promise<{ locationId: string, timezone: string, macAddresses: string[], hasActiveSubscription: boolean } | null> {
+  private async getLocationDataByMacAddress(macAddress: string): Promise<{ locationId: string, timezone: string, macAddresses: string[] } | null> {
     const device = await this.deviceServiceFactory().getByMacAddress(macAddress, {
       $select: {
         location: {
           $select: {
             id: true,
-            timezone: true,
-            subscription: {
-              $select: {
-                provider: {
-                  $select: {
-                    isActive: true,
-                    data: true
-                  }
-                }
-              }
-            }
+            timezone: true
           }
         }
       }
@@ -165,18 +143,14 @@ class FloDetectService {
       return null;
     }
 
-    const subscription = device.value.location.subscription as Subscription;
-    const hasActiveSubscription = !!subscription && subscription.provider.isActive;
-
     return { 
       locationId: device.value.location.id, 
       timezone: device.value.location.timezone || 'Etc/Utc', 
-      macAddresses: [macAddress],
-      hasActiveSubscription
+      macAddresses: [macAddress]
     };
   }
 
-  private async getLocationDataByLocationId(locationId: string): Promise<{ locationId: string, timezone: string, macAddresses: string[], hasActiveSubscription: boolean } | null> {
+  private async getLocationDataByLocationId(locationId: string): Promise<{ locationId: string, timezone: string, macAddresses: string[] } | null> {
     const location = await this.locationServiceFactory().getLocation(locationId, {
       $select: {
         id: true,
@@ -186,16 +160,6 @@ class FloDetectService {
             id: true,
             macAddress: true,
             deviceType: true
-          }
-        },
-        subscription: {
-          $select: {
-            provider: {
-              $select: {
-                isActive: true,
-                data: true
-              }
-            }
           }
         }
       }
@@ -208,14 +172,11 @@ class FloDetectService {
     const macAddresses = (location.value.devices as Device[])
       .filter(({ deviceType }) => deviceType !== DeviceType.PUCK) 
       .map(({ macAddress }) => macAddress);
-    const subscription = location.value.subscription as Subscription;
-    const hasActiveSubscription = !!subscription && subscription.provider.isActive;
 
     return { 
       locationId: location.value.id, 
       timezone: location.value.timezone || 'Etc/Utc', 
-      macAddresses,
-      hasActiveSubscription
+      macAddresses
     };
   }
 }
