@@ -340,8 +340,11 @@ class LocationResolver extends Resolver<Location> {
     };
   }
 
-  public async createLocation(location: Location): Promise<Location | null> {
-    const locationRecordData = LocationRecord.fromModel(location);
+  public async createLocation(location: Omit<Location, 'id'> & { id?: string }): Promise<Location | null> {
+    const locationRecordData = LocationRecord.fromModel({
+      ...location,
+      id: location.id || uuid.v4()
+    });
     const locationId = locationRecordData.location_id = uuid.v4();
 
     const createdLocationRecordData = await this.locationTable.put(locationRecordData);

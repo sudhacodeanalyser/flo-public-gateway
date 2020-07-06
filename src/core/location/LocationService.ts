@@ -4,7 +4,7 @@ import { injectHttpContext, interfaces } from 'inversify-express-utils';
 import _ from 'lodash';
 import uuid from 'uuid';
 import { AccessControlService } from '../../auth/AccessControlService';
-import { LocationFacetPage, LocationFilters, Areas, DependencyFactoryFactory, Location, LocationUpdate, LocationUserRole, PropExpand, SystemMode, Device, DeviceType, PesThresholds, LocationPage } from '../api';
+import { Subscription, LocationFacetPage, LocationFilters, Areas, DependencyFactoryFactory, Location, LocationUpdate, LocationUserRole, PropExpand, SystemMode, Device, DeviceType, PesThresholds, LocationPage } from '../api';
 import ConflictError from '../api/error/ConflictError';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import ValidationError from '../api/error/ValidationError';
@@ -42,7 +42,7 @@ class LocationService {
     this.subscriptionServiceFactory = depFactoryFactory<SubscriptionService>('SubscriptionService');
   }
 
-  public async createLocation(location: Location, userId?: string, roles: string[] = ['write', 'valve-open', 'valve-close']): Promise<Option<Location>> {
+  public async createLocation(location: Omit<Location, 'id'> & { id?: string }, userId?: string, roles: string[] = ['write', 'valve-open', 'valve-close']): Promise<Option<Location>> {
     const createdLocation: Location | null = await this.locationResolver.createLocation(location);
     const accountId = location.account.id;
     const account = await this.accountServiceFactory().getAccountById(accountId);
@@ -525,6 +525,71 @@ class LocationService {
 
   public async getFacetsByUserId(userId: string, facets: string[], size?: number, page?: number, contains?: string): Promise<LocationFacetPage> {
     return this.locationResolver.getFacetsByUserId(userId, facets, size, page, contains);
+  }
+
+  public async transferLocation(destAccountId: string, srcLocationId: string): Promise<Location> {
+    const srcLocation = O.toNullable(await this.getLocation(srcLocationId));
+
+    if (!srcLocation) {
+      throw new ResourceDoesNotExistError('Location does not exist.');
+    }
+
+    if (srcLocation?.parent?.id || srcLocation?.children?.length) {
+      throw new ConflictError('Cannot transfer location with parent or children.');
+    } 
+
+    const subscription = srcLocation.subscription as Subscription | undefined;
+
+    if (subscription && subscription?.provider?.isActive) {
+      throw new ConflictError('Cannot transfer location with subscription.');
+    }
+
+    const {
+      id,
+      account,
+      ...locationData
+    } = srcLocation;
+    const clonedLocation = O.toNullable(await this.createLocation({
+      ...locationData,
+      account: { id: destAccountId }
+    }));
+
+    if (!clonedLocation) {
+      throw new Error(`Failed to copy location ${ srcLocationId }`);
+    }
+
+    await this.transferDevices(clonedLocation.id, srcLocationId);
+
+    await this.updatePartialLocation(srcLocationId, { _mergedIntoLocationId: clonedLocation.id });
+
+    return clonedLocation;
+  }
+
+  public async transferDevices(destLocationId: string, srcLocationId: string): Promise<void> {
+    const srcLocation = O.toNullable(await this.getLocation(srcLocationId, {
+      $select: {
+        devices: {
+          $select: {
+            id: true
+          }
+        }
+      }
+    }));
+
+    if (!srcLocation) {
+      throw new ResourceDoesNotExistError('Location not found.');
+    }
+
+    const deviceService = this.deviceServiceFactory();
+
+    await Promise.all(
+      srcLocation.devices
+        .map(({ id }) => 
+          deviceService.transferDevice(id, destLocationId)
+        )
+    );
+
+    await this.updatePartialLocation(srcLocationId, { _mergedIntoLocationId: destLocationId });
   }
 
   private async getDevices(locationId: string, deviceExpand: PropExpand, shouldCascade?: boolean): Promise<Array<Partial<Device>>> {

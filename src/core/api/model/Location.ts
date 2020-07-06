@@ -201,7 +201,10 @@ const mutableProps = {
   ...LocationMutableCodec.types[3].props
 };
 export const LocationUpdateValidator = t.exact(t.partial(mutableProps));
-export type LocationUpdate = t.TypeOf<typeof LocationUpdateValidator>;
+export interface LocationUpdate extends t.TypeOf<typeof LocationUpdateValidator> {
+  _mergedIntoLocationId?: string;
+}
+
 
 const ExpandableCodec = t.type({
   id: t.string
@@ -258,6 +261,7 @@ export interface Location extends t.TypeOf<typeof LocationCodec>, TimestampedMod
   notifications?: NotificationStatistics;
   parent?: Expandable<Location> | null;
   children: Array<Expandable<Location>>;
+  _mergedIntoLocationId?: string;
 }
 
 export const PesThresholdsCodec = t.type({

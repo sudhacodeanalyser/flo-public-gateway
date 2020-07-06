@@ -1,8 +1,8 @@
 import { injectable, inject } from 'inversify';
-import { AccountMutable, Account, AccountUserRole, UserInvite, UserCreate, PropExpand, DependencyFactoryFactory, User, InviteAcceptData } from '../api';
+import { AccountMerge, AccountMutable, Account, AccountUserRole, UserInvite, UserCreate, PropExpand, DependencyFactoryFactory, User, InviteAcceptData } from '../api';
 import { UserInviteService, InviteTokenData } from '../user/UserRegistrationService';
 import { AccountResolver } from '../resolver';
-import { Option, fromNullable } from 'fp-ts/lib/Option';
+import { Option, fromNullable, toNullable } from 'fp-ts/lib/Option';
 import NotFoundError from '../api/error/NotFoundError';
 import UnauthorizedError from '../api/error/UnauthorizedError';
 import ConflictError from '../api/error/ConflictError';
@@ -11,6 +11,7 @@ import { UserService, LocationService } from '../service';
 import Logger from 'bunyan';
 import { NonEmptyStringFactory } from '../api/validator/NonEmptyString';
 import { EmailFactory } from '../api/validator/Email';
+import _ from 'lodash';
 
 const sevenDays = 604800;
 
@@ -142,6 +143,53 @@ class AccountService {
 
   public async updateAccount(id: string, accountUpdate: AccountMutable): Promise<Account> {
     return this.accountResolver.updatePartial(id, accountUpdate);
+  }
+
+  public async mergeAccounts({ destAccountId, sourceAccountId, locationMerge }: AccountMerge): Promise<Account> {
+    const srcAccount = toNullable(await this.getAccountById(sourceAccountId));
+    const destAccount = toNullable(await this.getAccountById(destAccountId));
+
+    if (!srcAccount || !destAccount) {
+      throw new NotFoundError('Account not found.');
+    }
+
+    const ownerUserId = srcAccount.owner.id;
+    const locationService = this.locationServiceFactory();
+
+    const { items: locations } = await locationService.getByUserId(ownerUserId, {
+      $select: {
+        id: true
+      }
+    });
+
+    if (locationMerge) {
+      const invalidLocations = locationMerge
+        .filter(({ sourceLocationId }) => !_.find(locations, { id: sourceLocationId }));
+
+      if (invalidLocations.length) {
+        throw new ConflictError('Location does not belong to account.');
+      }
+
+      await Promise.all(
+        locationMerge
+          .map(({ sourceLocationId, destLocationId }) => locationService.transferDevices(destLocationId, sourceLocationId))
+      );
+    }
+
+    await Promise.all(
+      locations
+        .filter(({ id }) => !locationMerge || !_.find(locationMerge, { sourceLocationId: id }))
+        .map(({ id }) => locationService.transferLocation(destAccountId, id))
+    );
+
+    const updatedDestAccount = toNullable(await this.getAccountById(destAccountId));
+
+    // If the account has disappeared, something has gone terribly wrong
+    if (!updatedDestAccount) {
+      throw new Error('Destination account not found.');
+    }
+
+    return updatedDestAccount; 
   }
 }
 

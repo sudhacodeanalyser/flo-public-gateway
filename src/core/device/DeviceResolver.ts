@@ -619,7 +619,6 @@ class DeviceResolver extends Resolver<Device> {
       deviceType: DeviceType.FLO_DEVICE_V2,
       deviceModel: DeviceModelType.FLO_0_75,
       id: uuid.v4(),
-      ...deviceCreate,
       additionalProps: null,
       isPaired,
       systemMode: {
@@ -628,13 +627,33 @@ class DeviceResolver extends Resolver<Device> {
       },
       installStatus: {
         isInstalled: false
-      }
+      },
+      ...deviceCreate
     };
     const deviceRecordData = DeviceRecord.fromModel(device);
     const createdDeviceRecordData = await this.deviceTable.put(deviceRecordData);
 
     return this.toModel(createdDeviceRecordData);
   }
+
+  public async transferDevice(deviceId: string, destLocationId: string): Promise<Device> {
+    const deviceRecord = await this.deviceTable.get({ id: deviceId });
+
+    if (!deviceRecord) {
+      throw new ResourceDoesNotExistError('Device not found.');
+    }
+
+    await this.deviceTable.remove({ id: deviceId });
+
+    const transferredDeviceRecord = await this.deviceTable.put({
+      ...deviceRecord,
+      location_id: destLocationId
+    });
+ 
+
+    return this.toModel(transferredDeviceRecord);
+  }
+
 
   protected async resolveProp<K extends keyof Device>(model: Device, prop: K, shouldExpand: boolean = false, expandProps?: PropExpand): Promise<{ [prop: string]: Device[K] }> {
     // Don't resolve these properties for the Puck
