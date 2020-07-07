@@ -5,37 +5,20 @@ import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
 import { 
   FloDetectResponseEventPage, 
-  FloDetectResponseFixtures 
+  FloDetectResponseFixtures, 
+  FloDetectResponseTrendsPage
 } from '../api';
 import { httpController, httpGet, queryParamArray, parseExpand } from '../api/controllerUtils';
 import Request from '../api/Request';
 import { FloDetectService } from '../service';
-import NotFoundError from '../api/error/NotFoundError'
-import * as Option from 'fp-ts/lib/Option';
-import { pipe } from 'fp-ts/lib/pipeable';
 import { either } from 'fp-ts/lib/Either';
 import UnauthorizedError from '../api/error/UnauthorizedError';
-import ForbiddenError from '../api/error/ForbiddenError';
 import express from 'express';
 import GoneError from '../api/error/GoneError';
 
 export function FloDetectControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
   const authMiddlewareFactory = container.get<AuthMiddlewareFactory>('AuthMiddlewareFactory');
-  const auth = authMiddlewareFactory.create();
-
-  const DateFromURIEncodedISOString = new t.Type<Date, string, unknown>(
-    'DateFromISOString',
-    (u): u is Date => u instanceof Date,
-    (u, c) => {
-      return either.chain(t.string.validate(u, c), str => {
-        const decoded = decodeURIComponent(str);
-        const date = new Date(decoded);
-        return isNaN(date.getTime()) ? t.failure(str, c) : t.success(date);
-      });
-    },
-    a => a.toISOString()
-  );
 
   const DateStringFromURIEncodedString = new t.Type<string, string, unknown>(
     'DateFromISOString',
@@ -263,6 +246,51 @@ export function FloDetectControllerFactory(container: Container, apiVersion: num
           }
         },
         202
+      );
+    }
+
+    @httpGet('/trends',
+      authMiddlewareFactory.create(
+        async ({ query: { macAddress, locationId } }) => ({ device_id: macAddress, location_id: locationId })
+      ),
+      reqValidator.create(t.type({
+        query: t.intersection([
+          t.union([
+            t.type({
+              macAddress: t.string
+            }),
+            t.type({
+              locationId: t.string
+            })
+          ]),
+          t.partial({
+            from: DateStringFromURIEncodedString,
+            to: DateStringFromURIEncodedString,
+            offset: IntegerFromString,
+            limit: IntegerFromString,
+            tz: t.string
+          })
+        ])
+      }))
+    )
+    private async getTrends(
+      @queryParam('macAddress') macAddress?: string,
+      @queryParam('locationId') locationId?: string,
+      @queryParam('from') from?: string,
+      @queryParam('to') to?: string,
+      @queryParam('limit') limit?: number,
+      @queryParam('offset') offset?: number,
+      @queryParam('tz') tz?: string
+    ): Promise<FloDetectResponseTrendsPage> {
+      return this.floDetectService.getTrends( 
+        macAddress ? { macAddress } : { locationId: locationId || '' },
+        {
+          from,
+          to,
+          limit,
+          offset,
+          tz
+        }
       );
     }
   }

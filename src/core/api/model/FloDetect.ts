@@ -62,3 +62,31 @@ export interface FloDetectResponseFixtures {
     }>
   }>
 }
+
+export interface FloDetectResponseTrendsEvent {
+  id: string;
+  startAt: string;
+  endAt: string;
+  duration: number;
+  totalGallons: number;
+  incidentId?: string;
+  macAddress: string;
+}
+
+export interface FloDetectResponseTrendItem {
+  macAddress: string;
+  error?: string;
+  events: FloDetectResponseTrendsEvent[];
+}
+
+export interface FloDetectResponseTrendsPage {
+  params: {
+    macAddress?: string;
+    locationId?: string;
+    from: string;
+    to: string;
+    tz: string;
+    minGallons: number;
+  },
+  items: FloDetectResponseTrendItem[];
+}
