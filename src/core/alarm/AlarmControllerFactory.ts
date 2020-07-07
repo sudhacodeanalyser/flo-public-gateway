@@ -44,6 +44,7 @@ export function AlarmControllerFactory(container: Container, apiVersion: number)
     private async getAlarms(@request() req: Request): Promise<AlarmListResult> {
       const queryParams = {
         userId: req.token && req.token.user_id,
+        enabled: true,
         ...req.query
       };
       return this.alarmService.getAlarms(queryParams);

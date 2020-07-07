@@ -26,3 +26,17 @@ export interface Account extends TimestampedModel, AccountMutable {
   userRoles: AccountUserRole[];
   groups: Array<Expandable<AccountGroup>>;
 }
+
+export const AccountMergeValidator = t.type({
+  sourceAccountId: t.string,
+  destAccountId: t.string,
+  locationMerge: t.union([
+    t.undefined,
+    t.array(t.type({
+      sourceLocationId: t.string,
+      destLocationId: t.string
+    }))
+  ])
+});
+
+export interface AccountMerge extends t.TypeOf<typeof AccountMergeValidator> {}
