@@ -4,7 +4,7 @@ import { inject, Container } from 'inversify';
 import { AccountService, UserService } from '../service';
 import { parseExpand, httpController, deleteMethod, withResponseType } from '../api/controllerUtils';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
-import { AccountMutable, AccountMutableCodec, Account, AccountUserRole, UserInviteCodec, UserCreate, InviteAcceptValidator, InviteAcceptData, User } from '../api';
+import { AccountMergeValidator, AccountMerge, AccountMutable, AccountMutableCodec, Account, AccountUserRole, UserInviteCodec, UserCreate, InviteAcceptValidator, InviteAcceptData, User } from '../api';
 import { InviteTokenData } from '../user/UserRegistrationService';
 import { NonEmptyArray } from '../api/validator/NonEmptyArray';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
@@ -138,6 +138,19 @@ export function AccountControllerFactory(container: Container, apiVersion: numbe
       return tokenData;
     }
 
+
+    // Warning this operation is NOT ATOMIC, if there is any failure mid-operation, then there is a high
+    // likelihood of data loss or corruption. Ensure all data is backed up before performing this operation.
+    @httpPost('/merge',
+      auth,
+      reqValidator.create(t.type({
+        body: AccountMergeValidator
+      }))
+    )
+    private async mergeAccounts(@requestBody() merge: AccountMerge): Promise<Account> {
+
+      return this.accountService.mergeAccounts(merge);
+    }
 
     @httpGet('/:id',
       authWithId,

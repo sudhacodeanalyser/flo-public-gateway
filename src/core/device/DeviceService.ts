@@ -274,6 +274,10 @@ class DeviceService {
     }), this.emptyDeviceStats());
   }
 
+  public async transferDevice(id: string, destLocationId: string): Promise<Device> {
+    return this.deviceResolver.transferDevice(id, destLocationId);
+  }
+
   private sumDeviceAlertStats(s1: DeviceAlertStats, s2: DeviceAlertStats): DeviceAlertStats {
     return {
       count: s1.count + s2.count,
