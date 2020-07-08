@@ -404,8 +404,8 @@ class WaterService {
     const stats = this.aggregateAverageConsumptionResults(results, [{ startDate, endDate }], timezone, WaterConsumptionInterval.ONE_MONTH);
 
     return {
-     startDate: moment(startDate),
-     endDate: moment(endDate),
+      startDate: moment(startDate),
+      endDate: moment(endDate),
       ...stats
     };
   }
