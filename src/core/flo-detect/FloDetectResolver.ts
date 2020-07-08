@@ -121,7 +121,7 @@ const ApiToResponseTrends: StrictSchema<FloDetectResponseTrendsPage, FloDetectAp
         startAt: event.startAt,
         endAt: event.endAt,
         duration: event.duration,
-        totalGallons: event.totalGal,
+        totalGal: event.totalGal,
         incidentId: event.incidentId,
         macAddress: event.deviceId
       }))
