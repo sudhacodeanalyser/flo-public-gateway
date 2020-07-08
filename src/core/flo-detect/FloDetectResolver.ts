@@ -7,7 +7,9 @@ import {
   FloDetectApiEventItem, 
   FloDetectApiFixtures, 
   FloDetectApiEventFilters, 
-  FloDetectApiFixtureFilters 
+  FloDetectApiFixtureFilters, 
+  FloDetectApiTrendsFilters,
+  FloDetectApiTrendsPage
 } from './FloDetectApi';
 import { morphism, StrictSchema } from 'morphism';
 import { 
@@ -16,7 +18,8 @@ import {
   FloDetectResponseFlowEvent,
   FloDetectResponseEventItem,
   FloDetectResponseEventPage,
-  FloDetectResponseFixtures
+  FloDetectResponseFixtures,
+  FloDetectResponseTrendsPage
 } from '../api';
 import { AlertService } from '../service';
 
@@ -100,6 +103,32 @@ const ApiToResponseFixtures: StrictSchema<FloDetectResponseFixtures, FloDetectAp
   }
 };
 
+const ApiToResponseTrends: StrictSchema<FloDetectResponseTrendsPage, FloDetectApiTrendsPage> = {
+  params: {
+    macAddress: () => undefined,
+    locationId: () => undefined,
+    from: 'params.from',
+    to: 'params.to',
+    tz: () => 'Etc/UTC',
+    minGallons: 'params.minGallons'
+  },
+  items: (input: FloDetectApiTrendsPage) => {
+    return input.items.map(apiItem => ({
+      macAddress: apiItem.deviceId,
+      error: apiItem.error,
+      events: (apiItem.events || []).map(event => ({
+        id: event.id,
+        startAt: event.startAt,
+        endAt: event.endAt,
+        duration: event.duration,
+        totalGallons: event.totalGal,
+        incidentId: event.incidentId,
+        macAddress: event.deviceId
+      }))
+    }));
+  }
+};
+
 @injectable()
 class FloDetectResolver extends Resolver<FloDetectResponseFlowEvent> {
   protected propertyResolverMap: PropertyResolverMap<FloDetectResponseFlowEvent> = {
@@ -161,6 +190,12 @@ class FloDetectResolver extends Resolver<FloDetectResponseFlowEvent> {
     const result = await this.floDetectApi.getFixtures(macAddresses, filters);
     
     return morphism(ApiToResponseFixtures, result);
+  }
+
+  public async getTrends(macAddresses: string[], filters?: FloDetectApiTrendsFilters): Promise<FloDetectResponseTrendsPage> {
+    const result = await this.floDetectApi.getTrends(macAddresses, filters);
+    
+    return morphism(ApiToResponseTrends, result);
   }
 }
 

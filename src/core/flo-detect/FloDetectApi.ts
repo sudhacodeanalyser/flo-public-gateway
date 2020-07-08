@@ -83,10 +83,39 @@ export interface FloDetectApiIrrigationSchedule {
   };
 }
 
+// Trends =====================================
+
+export interface FloDetectApiTrendsEvent {
+  id: string;
+  startAt: string;
+  endAt: string;
+  totalGal: number;
+  incidentId?: string;
+  duration: number;
+  deviceId: string;
+}
+
+export interface FloDetectApiTrendsItem {
+  deviceId: string;
+  error?: string;
+  events: null | FloDetectApiTrendsEvent[];
+}
+
+export interface FloDetectApiTrendsPage {
+  params: {
+    deviceId: string[];
+    from: string;
+    to: string;
+    minGallons: number;
+  },
+  items: FloDetectApiTrendsItem[]
+}
+
 // ============================================
 
 export type FloDetectApiEventFilters = { from?: Date, to?: Date, limit?: number, offset?: number, lang?: string };
 export type FloDetectApiFixtureFilters = { from?: Date, to?: Date, lang?: string };
+export type FloDetectApiTrendsFilters = { from?: Date, to?: Date, limit?: number, offset?: number };
 
 @injectable()
 class FloDetectApi extends HttpService {
@@ -94,7 +123,7 @@ class FloDetectApi extends HttpService {
 
   public async getEvents(
     macAddresses: string[], 
-    opts?: { from?: Date, to?: Date, limit?: number, offset?: number, lang?: string }
+    opts?: FloDetectApiEventFilters
   ): Promise<FloDetectApiEventPage> {
     return this.sendRequest({
       method: 'GET',
@@ -124,6 +153,24 @@ class FloDetectApi extends HttpService {
     return this.sendRequest({
       method: 'GET',
       url: `${ this.serviceUrl }/fixtures`,
+      params: {
+        deviceId: macAddresses.join(','),
+        ...(opts && {
+          ...opts,
+          from: opts.from && opts.from.toISOString(),
+          to: opts.to && opts.to.toISOString()
+        })
+      }
+    });
+  }
+
+  public async getTrends(
+    macAddresses: string[], 
+    opts?: FloDetectApiTrendsFilters
+  ): Promise<FloDetectApiTrendsPage> {
+    return this.sendRequest({
+      method: 'GET',
+      url: `${ this.serviceUrl }/trends`,
       params: {
         deviceId: macAddresses.join(','),
         ...(opts && {

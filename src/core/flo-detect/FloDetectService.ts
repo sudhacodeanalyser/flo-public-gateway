@@ -6,7 +6,8 @@ import {
   DependencyFactoryFactory, 
   FloDetectResponseFlowEvent,
   FloDetectResponseEventPage,
-  FloDetectResponseFixtures
+  FloDetectResponseFixtures,
+  FloDetectResponseTrendsPage
 } from '../api';
 import * as Option from 'fp-ts/lib/Option';
 import moment from 'moment-timezone';
@@ -115,6 +116,54 @@ class FloDetectService {
         ...idData,
         tz: timezone
       }
+    };
+  }
+
+  public async getTrends(
+    idData: ({ macAddress: string } | { locationId: string }),
+    { from, to, limit, offset, tz }: {
+      from?: string,
+      to?: string,
+      limit?: number,
+      offset?: number,
+      tz?: string
+    }
+  ): Promise<FloDetectResponseTrendsPage> {
+    const data = await (isMacAddress(idData) ?
+      this.getLocationDataByMacAddress(idData.macAddress) :
+      this.getLocationDataByLocationId(idData.locationId));
+
+    if (!data) {
+      throw new NotFoundError(isMacAddress(idData) ? 'Device not found.' : 'Location not found.');
+    }
+
+    const { macAddresses, timezone: locationTimezone } = data;
+    const timezone = tz || locationTimezone;
+    const fromDate = from && !_.isEmpty(from) ?
+      hasUTCOffset(from) ? new Date(from) : moment.tz(from, tz || data.timezone || 'Etc/UTC').toDate() :
+      undefined;
+    const toDate = to && !_.isEmpty(to) ?
+      hasUTCOffset(to) ? new Date(to) : moment.tz(to, tz || data.timezone || 'Etc/UTC').toDate() :
+      undefined; 
+    const rawResponse = await this.floDetectResolver.getTrends(macAddresses, { from: fromDate, to: toDate, limit, offset });
+
+    return {
+      params: {
+        ...rawResponse.params,
+        ...idData,
+        tz: timezone
+      },
+      items: rawResponse.items
+        .map(deviceData => {
+          return {
+            ...deviceData,
+            events: deviceData.events.map(event => ({
+              ...event,
+              startAt: moment(event.startAt).tz(timezone).format(),
+              endAt: moment(event.endAt).tz(timezone).format()
+            }))
+          }
+        })
     };
   }
 
