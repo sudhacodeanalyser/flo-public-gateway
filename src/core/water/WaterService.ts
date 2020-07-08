@@ -29,7 +29,7 @@ interface WaterMeterDeviceReportWithWeather extends WaterMeterDeviceReport {
 class WaterService {
   private static readonly MIN_DAY_OF_WEEK_AVG_NUM_HOURS = Math.floor(72 * 0.8); // Must be > 80% of 3 days of hourly data
   private static readonly MIN_WEEKLY_AVG_NUM_HOURS = Math.floor(168 * 0.8); // Must be > 80% of 7 days of hourly data
-  private static readonly MIN_MONTHLY_AVG_NUM_HOURS = Math.floor(28 * 24 * 0.3); // Must be > 30% of a 28 days month worth of data
+  private static readonly MIN_MONTHLY_AVG_NUM_HOURS = Math.floor(7 * 24); // Must be >= 7 days month worth of data
   private deviceServiceFactory: () => DeviceService;
   private locationServiceFactory: () => LocationService;
 
