@@ -68,7 +68,7 @@ export interface FloDetectResponseTrendsEvent {
   startAt: string;
   endAt: string;
   duration: number;
-  totalGallons: number;
+  totalGal: number;
   incidentId?: string;
   macAddress: string;
 }
