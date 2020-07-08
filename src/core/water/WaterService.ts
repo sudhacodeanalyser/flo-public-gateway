@@ -322,8 +322,8 @@ class WaterService {
 
     // Estimated monthly average fix. SEE: https://flotechnologies-jira.atlassian.net/browse/CLOUD-3453
     if (interval === WaterConsumptionInterval.ONE_MONTH) {
-      const dailyAvg = _.meanBy(aggregations, 'sum')
-      const daysInMonth = moment().tz(timezone).daysInMonth()
+      const dailyAvg = _.meanBy(aggregations, 'sum');
+      const daysInMonth = moment().tz(timezone).daysInMonth();
       return {
         averageConsumption: dailyAvg * daysInMonth,
         numRecords: _.sumBy(aggregations, 'numRecords')
