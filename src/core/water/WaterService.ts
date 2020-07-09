@@ -29,7 +29,7 @@ interface WaterMeterDeviceReportWithWeather extends WaterMeterDeviceReport {
 class WaterService {
   private static readonly MIN_DAY_OF_WEEK_AVG_NUM_HOURS = Math.floor(72 * 0.8); // Must be > 80% of 3 days of hourly data
   private static readonly MIN_WEEKLY_AVG_NUM_HOURS = Math.floor(168 * 0.8); // Must be > 80% of 7 days of hourly data
-  private static readonly MIN_MONTHLY_AVG_NUM_HOURS = 7 * 24; // Must have >= 7 days of data to generate estimated monthly average
+  private static readonly MIN_MONTHLY_AVG_NUM_HOURS = 6 * 24; // Must have > 6 days of data to generate estimated monthly average
   private deviceServiceFactory: () => DeviceService;
   private locationServiceFactory: () => LocationService;
 
@@ -213,9 +213,9 @@ class WaterService {
     const end = this.formatDate(endDate, timezone);
     const waterReport = await this.getWaterMeterReport([macAddress], start, end, interval, timezone);
     const weatherData = await this.weatherApi.getTemperatureByAddress(
-      address, 
-      new Date(start), 
-      new Date(end), 
+      address,
+      new Date(start),
+      new Date(end),
       '1h'
     );
     const results = this.joinWeatherData(waterReport, weatherData, new Date(end));
@@ -271,13 +271,13 @@ class WaterService {
     macAddress?: string,
     locationId?: string
   ): any {
-   return {
-     params: {
-       macAddress,
-       locationId,
-       timezone
-     },
-     aggregations: {
+    return {
+      params: {
+        macAddress,
+        locationId,
+        timezone
+      },
+      aggregations: {
         dayOfWeekAvg: dayOfTheWeekAverage === null || _.isEmpty(dayOfTheWeekAverage) || dayOfTheWeekAverage.numRecords < WaterService.MIN_DAY_OF_WEEK_AVG_NUM_HOURS ?
           null :
           {
@@ -358,7 +358,7 @@ class WaterService {
     const startDate = _.get(_.minBy(dates, 'startDate'), 'startDate', now.toISOString());
     const endDate = _.get(_.maxBy(dates, 'endDate'), 'endDate', now.toISOString());
     const results = await this.waterMeterService.getReport(macAddresses, startDate, endDate, '1h', timezone);
-    const stats =  this.aggregateAverageConsumptionResults(results, dates, timezone);
+    const stats = this.aggregateAverageConsumptionResults(results, dates, timezone);
 
     return {
       startDate: now,
@@ -382,8 +382,8 @@ class WaterService {
     const stats = this.aggregateAverageConsumptionResults(results, [{ startDate, endDate }], timezone);
 
     return {
-     startDate: moment(startDate),
-     endDate: moment(endDate),
+      startDate: moment(startDate),
+      endDate: moment(endDate),
       ...stats
     };
   }
@@ -414,9 +414,9 @@ class WaterService {
     const items = _.zip(...results.items.map(({ items: deviceItems }) => deviceItems || []))
       .map(data =>
         data.reduce(({ time, sum }, item) => ({
-            time: time || (item && item.date),
-            sum: sum + ((item && item.used) || 0)
-          }), { sum: 0, time: undefined as undefined | string | Date }
+          time: time || (item && item.date),
+          sum: sum + ((item && item.used) || 0)
+        }), { sum: 0, time: undefined as undefined | string | Date }
         )
       );
 
@@ -473,10 +473,10 @@ class WaterService {
           .sortBy('date')
           .value();
 
-          return {
-            ...deviceItems,
-            items
-          };
+        return {
+          ...deviceItems,
+          items
+        };
       });
 
     return {
@@ -492,10 +492,10 @@ class WaterService {
       if (!deviceItems.items || !deviceItems.items.length) {
         return deviceItems as WaterMeterDeviceReportWithWeather;
       }
-   
+
       const firstDate = deviceItems.items[0].date;
       let startIndex = _.findIndex(
-        weatherData.items, 
+        weatherData.items,
         ({ time }) => moment(time).isSameOrAfter(firstDate)
       );
       const items: WaterMeterDeviceDataWithWeather[] = deviceItems.items
@@ -503,7 +503,7 @@ class WaterService {
           const nextItem = (deviceItems.items || [])[i + 1];
           const endIndex = _.findIndex(
             weatherData.items,
-            ({ time }) => moment(time).isSameOrAfter(nextItem ? nextItem.date : endDate), 
+            ({ time }) => moment(time).isSameOrAfter(nextItem ? nextItem.date : endDate),
             startIndex
           );
           const averageWeatherTempF = !weatherData.items.length || endIndex === undefined ?
@@ -539,7 +539,7 @@ class WaterService {
       city: location.city,
       postCode: location.postalCode,
       region: location.state,
-      country: location.country      
+      country: location.country
     };
   }
 }
