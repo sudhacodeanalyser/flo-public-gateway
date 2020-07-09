@@ -54,6 +54,7 @@ secrets:
     WEATHER_API_URL: "${WEATHER_API_URL_PROD}"
     API_V1_TOKEN: "${API_V1_TOKEN_PROD}"
     EMAIL_GATEWAY_URL: "${EMAIL_GATEWAY_URL_PROD}"
+    WATER_METER_SERVICE_URL: "${WATER_METER_SERVICE_URL_PROD}"
 internalIngress:
   host: internal-ingress.flosecurecloud.com
 routingIngress:
