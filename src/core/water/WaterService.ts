@@ -29,7 +29,7 @@ interface WaterMeterDeviceReportWithWeather extends WaterMeterDeviceReport {
 class WaterService {
   private static readonly MIN_DAY_OF_WEEK_AVG_NUM_HOURS = Math.floor(72 * 0.8); // Must be > 80% of 3 days of hourly data
   private static readonly MIN_WEEKLY_AVG_NUM_HOURS = Math.floor(168 * 0.8); // Must be > 80% of 7 days of hourly data
-  private static readonly MIN_MONTHLY_AVG_NUM_DAYS = 28 * 24;
+  private static readonly MIN_MONTHLY_AVG_NUM_HOURS = 7 * 24; // Must have >= 7 days of data to generate estimated monthly average
   private deviceServiceFactory: () => DeviceService;
   private locationServiceFactory: () => LocationService;
 
@@ -290,8 +290,8 @@ class WaterService {
             value: lastWeekDailyAverageConsumption.averageConsumption,
             startDate: lastWeekDailyAverageConsumption.startDate.format(),
             endDate: lastWeekDailyAverageConsumption.endDate && lastWeekDailyAverageConsumption.endDate.format()
-        },
-        monthlyAvg: monthlyAverageConsumption === null || _.isEmpty(monthlyAverageConsumption) || monthlyAverageConsumption.numRecords < WaterService.MIN_MONTHLY_AVG_NUM_DAYS ?
+          },
+        monthlyAvg: monthlyAverageConsumption === null || _.isEmpty(monthlyAverageConsumption) || monthlyAverageConsumption.numRecords < WaterService.MIN_MONTHLY_AVG_NUM_HOURS ?
           null :
           {
             value: monthlyAverageConsumption.averageConsumption,
@@ -311,9 +311,7 @@ class WaterService {
       .groupBy(({ date }) =>
         interval === WaterConsumptionInterval.ONE_HOUR ?
           moment(date).tz(timezone).format('YYYY-MM-DDTHH:00:00:00') :
-          interval === WaterConsumptionInterval.ONE_DAY ?
-            moment(date).tz(timezone).format('YYYY-MM-DD') :
-            moment(date).tz(timezone).format('YYYY-MM')
+          moment(date).tz(timezone).format('YYYY-MM-DD')
       )
       .mapValues(day => ({
         sum: _.sumBy(day, 'used'),
@@ -322,6 +320,15 @@ class WaterService {
       .values()
       .value();
 
+    // Estimated monthly average fix. SEE: https://flotechnologies-jira.atlassian.net/browse/CLOUD-3453
+    if (interval === WaterConsumptionInterval.ONE_MONTH) {
+      const dailyAvg = _.meanBy(aggregations, 'sum');
+      const daysInMonth = (moment().tz(timezone).isLeapYear() ? 366 : 365) / 12;
+      return {
+        averageConsumption: dailyAvg * daysInMonth,
+        numRecords: _.sumBy(aggregations, 'numRecords')
+      };
+    }
     return {
       averageConsumption: _.meanBy(aggregations, 'sum'),
       numRecords: _.sumBy(aggregations, 'numRecords')
