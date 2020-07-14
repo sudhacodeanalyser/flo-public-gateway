@@ -7,6 +7,7 @@ import NotFoundError from '../api/error/NotFoundError';
 import UnauthorizedError from '../api/error/UnauthorizedError';
 import ConflictError from '../api/error/ConflictError';
 import ForbiddenError from '../api/error/ForbiddenError';
+import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import { UserService, LocationService } from '../service';
 import Logger from 'bunyan';
 import { NonEmptyStringFactory } from '../api/validator/NonEmptyString';
@@ -57,6 +58,28 @@ class AccountService {
     if (user) {
       throw new ConflictError('User already exists.');
     }
+
+    const locationService = this.locationServiceFactory();
+
+    await Promise.all(
+      userInvite.locationRoles.map(async ({ locationId }) => {
+        const location = toNullable(await locationService.getLocation(locationId, {
+          $select: {
+            account: {
+              $select: {
+                id: true
+              }
+            }
+          }
+        }));
+
+        if (!location) {
+          throw new ResourceDoesNotExistError('Location not found.');
+        } else if (location.account.id !== userInvite.accountId) {
+          throw new ForbiddenError('Forbidden.');
+        }
+      })
+    );
 
     const tokenData = await this.userInviteService.issueToken(
       userInvite.email, 
