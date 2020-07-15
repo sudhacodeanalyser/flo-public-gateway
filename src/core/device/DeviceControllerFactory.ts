@@ -596,6 +596,24 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
 
       return this.mlService.forward(req.method, path, body);
     }
+
+    // For admins only. Allows transfering devices across accounts.
+    @httpPost(
+      '/:id/transfer',
+      auth,
+      reqValidator.create(t.type({
+        params: t.type({
+          id: t.string
+        }),
+        body: t.type({
+          locationId: t.string
+        })
+      }))
+    )
+    @withResponseType<Device, Responses.Device>(Responses.Device.fromModel)
+    private async transferDevice(@requestParam('id') id: string, @requestBody() { locationId }: { locationId: string }): Promise<Option<Device>> {
+      return some(await this.deviceService.transferDevice(id, locationId));
+    }
   }
 
   return DeviceController;
