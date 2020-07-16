@@ -76,7 +76,7 @@ class LocationService {
     await Promise.all(aclPromises.map(thunk => thunk()));
 
     if (createdLocation.parent && createdLocation.parent.id) {
-      await this.locationTreeTable.updateParent(account.value.id, createdLocation.id, createdLocation.parent.id, false);
+      await this.updateParent(account.value.id, createdLocation.id, createdLocation.parent.id, false);
     }
 
     await this.entityActivityService.publishEntityActivity(
@@ -115,7 +115,7 @@ class LocationService {
 
       // Noop if parent is not changing to avoid expensive SQL queries
       if ((location.parent && location.parent.id) !== (locationUpdate.parent && locationUpdate.parent.id)) {
-        await this.locationTreeTable.updateParent(
+        await this.updateParent(
           location.account.id, 
           id, 
           locationUpdate.parent && locationUpdate.parent.id, 
@@ -656,6 +656,38 @@ class LocationService {
     if (authToken) {
       await this.accessControlService.refreshUser(authToken, userId);
     }
+  }
+
+  private async updateParent(accountId: string, id: string, parentId: string | null, hasNewParent: boolean): Promise<void> {
+    // Validate parent
+    if (parentId) {
+      const child = O.toNullable(await this.getLocation(id, {
+        $select: {
+          account: {
+            $select: {
+              id: true
+            }
+          }
+        }
+      }));
+      const parent = O.toNullable(await this.getLocation(id, {
+        $select: {
+          account: {
+            $select: {
+              id: true
+            }
+          }
+        }
+      }));
+
+      if (!child || !parent) {
+        throw new ResourceDoesNotExistError('Location not found.');
+      } else if (accountId !== child.account.id || accountId !== parent.account.id || child.account.id !== parent.account.id) {
+        throw new ForbiddenError('Forbidden.');
+      }
+    }
+
+    return this.locationTreeTable.updateParent(accountId, id, parentId, hasNewParent);
   }
 }
 
