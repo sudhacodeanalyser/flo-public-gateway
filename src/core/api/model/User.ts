@@ -96,13 +96,25 @@ export const InviteAcceptValidator = t.intersection([
 
 export type InviteAcceptData = t.TypeOf<typeof InviteAcceptValidator>;
 
+interface ValidInviteRoleBrand {
+  readonly ValidInviteRole: unique symbol;
+}
+
+const ValidInviteRole = t.brand(
+  t.string,
+  (s): s is t.Branded<string, ValidInviteRoleBrand> => s.trim().toLowerCase() !== 'owner',
+  'ValidInviteRole'
+);
+
+type ValidInviteRole = t.TypeOf<typeof ValidInviteRole>;
+
 export const UserInviteCodec = t.type({
   email: Email,
   accountId: t.string,
-  accountRoles: t.array(t.string),
+  accountRoles: t.array(ValidInviteRole),
   locationRoles: t.array(t.type({
     locationId: t.string,
-    roles: t.array(t.string)
+    roles: t.array(ValidInviteRole)
   })),
   locale: t.union([t.undefined, t.string])
 });
