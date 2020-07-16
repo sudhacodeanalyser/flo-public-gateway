@@ -165,6 +165,45 @@ class SubscriptionService {
     return subscription;
   }
 
+  public async getSubscriptionsByUserId(userId: string, expand?: PropExpand): Promise<Subscription[]> {
+    const { items: locations } = await this.locationService.getByUserId(userId, {
+      $select: {
+        subscription: expand || { $expand: true }
+      }
+    });
+
+    return locations.map(({ subscription }) => subscription as Subscription);
+  }
+
+  public async updateUserData(userId: string, userUpdate: Partial<User>): Promise<Subscription[]> {
+    const user = await this.userService.getUserById(userId, {
+      $select: {
+        accountRole: true
+      }
+    });
+
+    if (isNone(user)) {
+      throw new ResourceDoesNotExistError('User does not exist.');
+    } else if (!(await this.userService.isUserAccountOwner(user.value))) {
+      throw new ValidationError('User is not account owner.');
+    }
+
+    const subscriptions: Subscription[] = await this.getSubscriptionsByUserId(userId);
+
+    await Promise.all(
+      _.chain(subscriptions)
+      .uniqBy('provider.name')
+      .map(async subscription => {
+        const provider = this.getProvider(subscription.provider.name);
+
+        return provider.updateUserData(subscription, userUpdate)
+      })
+      .value()
+    );
+
+    return subscriptions;
+  }
+
   public async getSubscriptionByRelatedEntityId(id: string): Promise<Option<Subscription>> {
     const subscription: Subscription | null = await this.subscriptionResolver.getByRelatedEntityId(id);
 

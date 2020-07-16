@@ -33,6 +33,18 @@ class StripeSubscriptionProvider implements SubscriptionProvider {
     return this.formatProviderData(stripeSubscription);
   }
 
+  public async updateUserData(subscription: Subscription, userUpdate: Partial<User>): Promise<SubscriptionProviderInfo> {
+    const stripeSubscription = await this.retrieveSubscription(subscription);
+
+    if (userUpdate.email) {
+      const customerId = stripeSubscription.data.customerId;
+
+      await this.stripeClient.customers.update(customerId, { email: userUpdate.email });
+    }
+
+    return stripeSubscription;
+  }
+
   public async retrieveSubscription(subscription: Subscription): Promise<SubscriptionProviderInfo> {
     const customer = await this.stripeClient.customers.retrieve(subscription.provider.data.customerId);
     const stripeSubscription = await this.stripeClient.subscriptions.retrieve(subscription.provider.data.subscriptionId);

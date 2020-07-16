@@ -19,6 +19,8 @@ export interface SubscriptionProvider {
   updatePaymentSource(user: User, paymentSource: string): Promise<CreditCardInfo[]>;
 
   getCanceledSubscriptions(user: User): Promise<SubscriptionProviderInfo[]>;
+
+  updateUserData(subscription: Subscription, userUpdate: Partial<User>): Promise<SubscriptionProviderInfo>;
 }
 
 export interface SubscriptionProviderWebhookHandler {

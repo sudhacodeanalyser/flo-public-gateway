@@ -2,24 +2,39 @@ import { fold, fromNullable, Option } from 'fp-ts/lib/Option';
 import { pipe } from 'fp-ts/lib/pipeable';
 import { inject, injectable } from 'inversify';
 import _ from 'lodash';
-import { PropExpand, UpdateAlarmSettings, User, UserUpdate, UserCreate, RetrieveAlarmSettingsFilter, EntityAlarmSettings, UserStats } from '../api';
+import { PropExpand, UpdateAlarmSettings, User, UserUpdate, UserCreate, RetrieveAlarmSettingsFilter, EntityAlarmSettings, UserStats, DependencyFactoryFactory } from '../api';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import ValidationError from '../api/error/ValidationError';
 import ConflictError from '../api/error/ConflictError';
 import { UserResolver } from '../resolver';
-import { DeviceService, EntityActivityAction, EntityActivityService, EntityActivityType, AccountService } from '../service';
+import { DeviceService, EntityActivityAction, EntityActivityService, EntityActivityType, AccountService, SubscriptionService } from '../service';
 
 @injectable()
 class UserService {
+  private subscriptionServiceFactory: () => SubscriptionService;
+
   constructor(
     @inject('UserResolver') private userResolver: UserResolver,
     @inject('AccountService') private accountService: AccountService,
     @inject('EntityActivityService') private entityActivityService: EntityActivityService,
-    @inject('DeviceService') private deviceService: DeviceService
-  ) {}
+    @inject('DeviceService') private deviceService: DeviceService,
+    @inject('DependencyFactoryFactory') depFactoryFactory: DependencyFactoryFactory
+  ) {
+    this.subscriptionServiceFactory = depFactoryFactory('SubscriptionService');
+  }
 
   public async updatePartialUser(id: string, userUpdate: UserUpdate): Promise<User> {
     const updatedUser = await this.userResolver.updatePartialUser(id, userUpdate);
+
+    if (userUpdate?.email?.trim()) {
+      const account = await this.accountService.getAccountByOwnerUserId(id);
+
+      if (!_.isEmpty(account)) {
+        const subscriptionService = this.subscriptionServiceFactory();
+        
+        await subscriptionService.updateUserData(id, userUpdate);
+      }
+    }
 
     await this.entityActivityService.publishEntityActivity(
       EntityActivityType.USER,
@@ -61,7 +76,7 @@ class UserService {
     return this.userResolver.removeUser(id);
   }
 
-  public isUserAccountOwner(user: User): boolean {
+  public isUserAccountOwner(user: Pick<User, 'accountRole'>): boolean {
     return _.includes(user.accountRole.roles, 'owner');
   }
 
