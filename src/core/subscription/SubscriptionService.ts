@@ -168,7 +168,7 @@ class SubscriptionService {
   public async getSubscriptionsByUserId(userId: string, expand?: PropExpand): Promise<Subscription[]> {
     const { items: locations } = await this.locationService.getByUserId(userId, {
       $select: {
-        subscription: expand || true
+        subscription: expand || { $expand: true }
       }
     });
 
@@ -190,14 +190,16 @@ class SubscriptionService {
 
     const subscriptions: Subscription[] = await this.getSubscriptionsByUserId(userId);
 
-    await _.chain(subscriptions)
+    await Promise.all(
+      _.chain(subscriptions)
       .uniqBy('provider.name')
       .map(async subscription => {
         const provider = this.getProvider(subscription.provider.name);
 
         return provider.updateUserData(subscription, userUpdate)
       })
-      .value();
+      .value()
+    );
 
     return subscriptions;
   }
