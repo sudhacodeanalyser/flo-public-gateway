@@ -115,7 +115,7 @@ export interface FloDetectApiTrendsPage {
 
 export type FloDetectApiEventFilters = { from?: Date, to?: Date, limit?: number, offset?: number, lang?: string };
 export type FloDetectApiFixtureFilters = { from?: Date, to?: Date, lang?: string };
-export type FloDetectApiTrendsFilters = { from?: Date, to?: Date, limit?: number, offset?: number };
+export type FloDetectApiTrendsFilters = { from?: Date, to?: Date, minDuration?: number, limit?: number, offset?: number };
 
 @injectable()
 class FloDetectApi extends HttpService {

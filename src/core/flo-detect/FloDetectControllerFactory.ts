@@ -266,6 +266,7 @@ export function FloDetectControllerFactory(container: Container, apiVersion: num
           t.partial({
             from: DateStringFromURIEncodedString,
             to: DateStringFromURIEncodedString,
+            minDuration: IntegerFromString,
             offset: IntegerFromString,
             limit: IntegerFromString,
             tz: t.string
@@ -278,6 +279,7 @@ export function FloDetectControllerFactory(container: Container, apiVersion: num
       @queryParam('locationId') locationId?: string,
       @queryParam('from') from?: string,
       @queryParam('to') to?: string,
+      @queryParam('minDuration') minDuration?: number,
       @queryParam('limit') limit?: number,
       @queryParam('offset') offset?: number,
       @queryParam('tz') tz?: string
@@ -287,6 +289,7 @@ export function FloDetectControllerFactory(container: Container, apiVersion: num
         {
           from,
           to,
+          minDuration,
           limit,
           offset,
           tz
