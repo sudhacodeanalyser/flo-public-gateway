@@ -121,9 +121,10 @@ class FloDetectService {
 
   public async getTrends(
     idData: ({ macAddress: string } | { locationId: string }),
-    { from, to, limit, offset, tz }: {
+    { from, to, minDuration, limit, offset, tz }: {
       from?: string,
       to?: string,
+      minDuration?: number,
       limit?: number,
       offset?: number,
       tz?: string
@@ -145,7 +146,7 @@ class FloDetectService {
     const toDate = to && !_.isEmpty(to) ?
       hasUTCOffset(to) ? new Date(to) : moment.tz(to, tz || data.timezone || 'Etc/UTC').toDate() :
       undefined; 
-    const rawResponse = await this.floDetectResolver.getTrends(macAddresses, { from: fromDate, to: toDate, limit, offset });
+    const rawResponse = await this.floDetectResolver.getTrends(macAddresses, { from: fromDate, to: toDate, minDuration, limit, offset });
 
     return {
       params: {
