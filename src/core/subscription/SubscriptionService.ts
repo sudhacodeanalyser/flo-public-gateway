@@ -192,6 +192,7 @@ class SubscriptionService {
 
     await Promise.all(
       _.chain(subscriptions)
+      .filter(subscription => subscription?.provider?.isActive)
       .uniqBy('provider.name')
       .map(async subscription => {
         const provider = this.getProvider(subscription.provider.name);

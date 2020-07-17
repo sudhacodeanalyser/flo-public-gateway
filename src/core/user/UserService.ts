@@ -24,9 +24,14 @@ class UserService {
   }
 
   public async updatePartialUser(id: string, userUpdate: UserUpdate): Promise<User> {
+    const user = await this.userResolver.getUserById(id, {
+      $select: {
+        email: true
+      }
+    });
     const updatedUser = await this.userResolver.updatePartialUser(id, userUpdate);
 
-    if (userUpdate?.email?.trim()) {
+    if (user && userUpdate?.email?.trim() && user.email !== updatedUser?.email?.trim()) {
       const account = await this.accountService.getAccountByOwnerUserId(id);
 
       if (!_.isEmpty(account)) {
