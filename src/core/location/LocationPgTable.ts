@@ -57,9 +57,9 @@ class LocationPgTable extends PostgresTable<LocationPgRecordData> {
         .where('"ul"."user_id" = ?', userId),
       filters
     );
-    const queryTerms = searchText.split(' ').filter(term => term).map(term => `${term}:*`).join(' & ');
+    const queryTerms = searchText.split(/\s+/g).filter(term => term).map(term => `${term}:*`).join(' & ');
     const { text, values } = (
-      searchText.trim() ?
+      queryTerms.trim() ?
         queryBuilder
           .where(
             'to_tsvector(\'simple\', f_concat_ws(\' \', "address", "address2", "city", "state", "postal_code", "country", "nickname")) @@ to_tsquery(\'simple\', ?)',
@@ -94,12 +94,13 @@ class LocationPgTable extends PostgresTable<LocationPgRecordData> {
         .where('"ul"."user_id" = ?', userId),
       filters
     );
+    const queryTerms = searchText.split(/\s+/g).filter(term => term).map(term => `${term}:*`).join(' & ');
     const { text, values } = (
-        searchText.trim() ?
+        queryTerms.trim() ?
           queryBuilder
             .where(
-              'to_tsvector(\'simple\', f_concat_ws(\' \', "address", "address2", "city", "state", "postal_code", "country", "nickname")) @@ plainto_tsquery(\'simple\', ?)', 
-              searchText
+              'to_tsvector(\'simple\', f_concat_ws(\' \', "address", "address2", "city", "state", "postal_code", "country", "nickname")) @@ to_tsquery(\'simple\', ?)',
+              queryTerms
             ) :
           queryBuilder
       )
@@ -158,12 +159,13 @@ class LocationPgTable extends PostgresTable<LocationPgRecordData> {
         `, userId),
       filters
     );
+    const queryTerms = searchText.split(/\s+/g).filter(term => term).map(term => `${term}:*`).join(' & ');
     const { text, values } = (
-      searchText.trim() ?
+      queryTerms.trim() ?
         queryBuilder
           .where(
-            'to_tsvector(\'simple\', f_concat_ws(\' \', "address", "address2", "city", "state", "postal_code", "country", "nickname")) @@ plainto_tsquery(\'simple\', ?)', 
-            searchText
+            'to_tsvector(\'simple\', f_concat_ws(\' \', "address", "address2", "city", "state", "postal_code", "country", "nickname")) @@ to_tsquery(\'simple\', ?)',
+            queryTerms
           ) :
         queryBuilder
     )
