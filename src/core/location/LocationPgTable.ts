@@ -57,12 +57,13 @@ class LocationPgTable extends PostgresTable<LocationPgRecordData> {
         .where('"ul"."user_id" = ?', userId),
       filters
     );
+    const queryTerms = searchText.split(' ').filter(term => term).map(term => `${term}:*`).join(' & ');
     const { text, values } = (
       searchText.trim() ?
         queryBuilder
           .where(
-            'to_tsvector(\'simple\', f_concat_ws(\' \', "address", "address2", "city", "state", "postal_code", "country", "nickname")) @@ plainto_tsquery(\'simple\', ?)', 
-            searchText
+            'to_tsvector(\'simple\', f_concat_ws(\' \', "address", "address2", "city", "state", "postal_code", "country", "nickname")) @@ to_tsquery(\'simple\', ?)',
+            queryTerms
           ) :
         queryBuilder
     )
@@ -73,7 +74,7 @@ class LocationPgTable extends PostgresTable<LocationPgRecordData> {
     const results = await this.pgDbClient.execute(text, values);
     const total = results.rows[0] ? parseInt(results.rows[0].total, 10) : 0;
     const items = results.rows.map(({ total: ignoreTotal, ...item }) => item);
-    
+
     return {
       page,
       total,
