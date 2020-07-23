@@ -55,7 +55,7 @@ class AuthMiddlewareFactory {
 
           }));
 
-        const leftResult = _.find(results, result => Either.isRight(result)) as Either.Left<Error> | undefined;
+        const leftResult = _.find(results, result => Either.isLeft(result)) as Either.Left<Error> | undefined;
 
         if (leftResult) {
           throw leftResult.left;
