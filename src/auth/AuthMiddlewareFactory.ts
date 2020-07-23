@@ -55,8 +55,10 @@ class AuthMiddlewareFactory {
 
           }));
 
-        if (Either.isLeft(results[0]) && results.every(result => Either.isLeft(result))) {
-          throw results[0].left;
+        const leftResult = _.find(results, result => Either.isRight(result)) as Either.Left<Error> | undefined;
+
+        if (leftResult) {
+          throw leftResult.left;
         } 
 
         const tokenMetadata = _.find(results, result => Either.isRight(result)) as Either.Right<TokenMetadata> | undefined;
