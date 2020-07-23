@@ -5,6 +5,7 @@ import _ from 'lodash';
 export interface WeatherData {
   params: any; 
   location: any;
+  current: number;
   items: Array<{
     time: string;
     temp: number;

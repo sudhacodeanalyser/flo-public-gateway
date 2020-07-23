@@ -19,6 +19,7 @@ import * as Option from 'fp-ts/lib/Option';
 import { pipe } from 'fp-ts/lib/pipeable';
 import LocationPgTable from './LocationPgTable';
 import { LocationPgRecord } from './LocationPgRecord';
+import { WeatherApi } from '../water/WeatherApi';
 
 const DEFAULT_LANG = 'en';
 const DEFAULT_AREAS_ID = 'areas.default';
@@ -297,7 +298,26 @@ class LocationResolver extends Resolver<Location> {
        );
 
       return children.filter(child => child) as Array<Location | { id: string, nickname: string }>;
-    }
+    },
+    metrics: async (location: Location, shouldExpand = false) => {
+      if (!shouldExpand) {
+        return null;
+      }
+      const currentAreaTempF = (await this.weatherApi.getTemperatureByAddress({
+          street: location.address,
+          city: location.city,
+          postCode: location.postalCode,
+          region: location.state,
+          country: location.country
+        }, 
+        moment().subtract(1, 'hour').toDate(), 
+        moment().toDate()
+      )).current;
+      
+      return {
+        currentAreaTempF
+      }
+    },
   };
 
   private deviceResolverFactory: () => DeviceResolver;
@@ -313,7 +333,8 @@ class LocationResolver extends Resolver<Location> {
     @inject('NotificationService') private notificationService: NotificationService,
     @injectHttpContext private readonly httpContext: interfaces.HttpContext,
     @inject('LocationTreeTable') private locationTreeTable: LocationTreeTable,
-    @inject('LocationPgTable') private locationPgTable: LocationPgTable
+    @inject('LocationPgTable') private locationPgTable: LocationPgTable,
+    @inject('WeatherApi') private weatherApi: WeatherApi
   ) {
     super();
 
