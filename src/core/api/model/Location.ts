@@ -228,6 +228,10 @@ export const AreaNameCodec = t.type({
 
 export type AreaName = t.TypeOf<typeof AreaNameCodec>;
 
+interface LocationMetrics {
+  currentAreaTempF: number;
+}
+
 export const LocationCodec = t.intersection([
   AddressCodec,
   LocationProfileWithLegacyCodec,
@@ -259,6 +263,7 @@ export const LocationCodec = t.intersection([
 
 export interface Location extends t.TypeOf<typeof LocationCodec>, TimestampedModel {
   notifications?: NotificationStatistics;
+  metrics?: LocationMetrics;
   parent?: Expandable<Location> | null;
   children: Array<Expandable<Location>>;
   _mergedIntoLocationId?: string;

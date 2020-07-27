@@ -372,7 +372,8 @@ const RecordToModelSchema: StrictSchema<Location, LocationRecordData> = {
   class: (input: LocationRecordData) => ({
     key: input.location_class || '',
     level: -1
-  })
+  }),
+  metrics: () => undefined
 };
 
 const ModelToRecordSchema: StrictSchema<LocationRecordData, Location> = {
@@ -505,4 +506,3 @@ export class LocationRecord {
     return morphism(RecordToModelSchema, this.data);
   }
 }
-

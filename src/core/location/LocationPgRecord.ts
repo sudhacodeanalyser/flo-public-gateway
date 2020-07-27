@@ -157,7 +157,8 @@ const RecordToModelSchema: StrictSchema<Location, LocationPgRecordData> = {
   class: (input: LocationPgRecordData) => ({
     key: input.location_class || '',
     level: -1
-  })
+  }),
+  metrics: () => undefined
 };
 
 export class LocationPgRecord {
