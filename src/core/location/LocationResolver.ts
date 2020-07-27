@@ -406,10 +406,6 @@ class LocationResolver extends Resolver<Location> {
 
         // ...(await this.deviceResolverFactory().getAllByLocationId(id))
         //   .map(async ({ id: icdId }) => this.deviceResolverFactory().remove(icdId)),
-
-        this.subscriptionResolverFactory().getByRelatedEntityId(id).then<false | void>(subscription =>
-          subscription !== null && this.subscriptionResolverFactory().remove(subscription.id)
-        )
       ]);
     } else {
       throw new ResourceDoesNotExistError();
