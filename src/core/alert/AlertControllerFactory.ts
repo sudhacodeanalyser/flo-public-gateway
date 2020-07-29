@@ -89,7 +89,6 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
     }
 
     @httpGet('/',
-      authMiddlewareFactory.create(),
       reqValidator.create(t.type({
         query: t.partial({
           userId: t.string,
@@ -106,9 +105,51 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
           lang: t.string,
           unitSystem: t.string
         })
-      }))
+      })),
+      authMiddlewareFactory.create(async ({ query }: Request, depFactoryFactory: DependencyFactoryFactory) => {
+        const {
+          userId,
+          locationId,
+          deviceId,
+          accountId,
+          groupId
+        } = query;
+
+        const locationService = depFactoryFactory<LocationService>('LocationService')();
+        const deviceService = deviceId && depFactoryFactory<DeviceService>('DeviceService')();
+
+        const devices = !_.isEmpty(deviceId) && (await Promise.all((_.isArray(deviceId) ? deviceId : [deviceId])
+          .map(async did => 
+            O.toNullable((await deviceService.getDeviceById(did, { $select: { location: { $select: { id: true } } } })))
+          )));
+        const deviceParents = devices && !_.isEmpty(devices) && (await Promise.all(
+          devices
+            .filter(device => device)
+            .map(async device => [
+              ...(device ? [device.location.id] : []),
+              ...(device ? (await locationService.getAllParentIds(device.location.id)) : [])
+            ])
+        ));
+        const locationsAndParents = !_.isEmpty(locationId) && (await Promise.all((_.isArray(locationId) ? locationId : [locationId])
+          .map(async (locId) => [
+            locId,
+            ...(await locationService.getAllParentIds(locationId))
+          ])
+        ));
+
+        return [
+          ...(userId ? [{ user_id: userId }] : []),
+          ...(accountId ? [{ account_id: accountId }] : []),
+          ...(groupId ? [{ group_id: groupId }] : []),
+          ...(devices && !_.isEmpty(devices) ? devices.filter(device => device).map(device => ({ icd_id: device?.id })) : []),
+          ...((deviceParents && !_.isEmpty(deviceParents)) ? deviceParents.map(dp => ({ location_id: dp })) : []),
+          ...((locationsAndParents && !_.isEmpty(locationsAndParents)) ? locationsAndParents.map(lp => ({ location_id: lp })) : [])
+        ]; 
+      }),
+
     )
     private async getAlarmEventsByFilter(@request() req: Request): Promise<PaginatedResult<AlarmEvent>> {
+
       const defaultLang = 'en-us';
       const tokenUserId = req.token && req.token.user_id;
 

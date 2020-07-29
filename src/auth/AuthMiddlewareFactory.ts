@@ -18,7 +18,7 @@ import config from '../config/config';
 import { DependencyFactoryFactory } from '../core/api';
 
 type Params = { [param: string]: any };
-type GetParams = (req: Request, depFactoryFactory: DependencyFactoryFactory) => Promise<Params>;
+type GetParams = (req: Request, depFactoryFactory: DependencyFactoryFactory) => Promise<Params | Params[]>;
 
 
 @injectable()
@@ -40,16 +40,28 @@ class AuthMiddlewareFactory {
         const logger = req.log;
         const path = overrideMethodId || req.route.path.split('/').map((p: string) => p.replace(/:.+/g, '$')).join('/');
         const methodId = req.method + path;
-        const params = getParams && (await getParams(req, this.depFactoryFactory));
-        const tokenMetadata = await pipe(
-          await this.checkCache(methodId, token, params, logger),
-          Option.fold(
-            () => async () => this.callAuthService(methodId, token, params),
-            tokenMedata => TaskEither.right(tokenMedata)
-          ),
-          TaskEither.getOrElse((err): TokenMetadata => async () => next(err))
-        )();
+        const rawParams = getParams && (await getParams(req, this.depFactoryFactory));
+        const paramArray = rawParams && (_.isArray(rawParams) ? rawParams : [rawParams]);
 
+        const results = await Promise.all((!paramArray || _.isEmpty(paramArray) ? [{}] : paramArray)
+          .map(async params => {
+            return pipe(
+              await this.checkCache(methodId, token, params, logger),
+              Option.fold(
+                () => async () => this.callAuthService(methodId, token, _.isEmpty(params) ? undefined : params),
+                tokenMedata => TaskEither.right(tokenMedata)
+              )
+            )();
+
+          }));
+
+        const leftResult = _.find(results, result => Either.isLeft(result)) as Either.Left<Error> | undefined;
+
+        if (leftResult) {
+          throw leftResult.left;
+        } 
+
+        const tokenMetadata = _.find(results, result => Either.isRight(result)) as Either.Right<TokenMetadata> | undefined;
 
         if (logger !== undefined) {
           logger.info({ token: tokenMetadata });
