@@ -258,7 +258,7 @@ class DeviceResolver extends Resolver<Device> {
       try {
         const maybeOnboardingLog = await this.onboardingLogTable.getOutOfForcedSleepEvent(device.id);
 
-        const mlData = await this.mlService.forward('GET', `${device.macAddress}/floSense/learning`);
+        const mlData = await this.mlService.getLearning(device.macAddress);
 
         return {
           outOfLearningDate: pipe(
@@ -267,7 +267,7 @@ class DeviceResolver extends Resolver<Device> {
             Option.toUndefined
           ),
           enabled: mlData.enabled || pipe(maybeOnboardingLog, Option.isNone),
-          learningExpiresAt: mlData.learningExpiresAt,
+          expiresOnOrAfter: mlData.expiresOnOrAfter,
         }
       } catch (err) {
         this.logger.error({ err });

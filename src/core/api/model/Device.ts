@@ -54,7 +54,8 @@ const DeviceMutableCodec = t.type({
   audio: t.type({
     snoozeTo: t.string
   }),
-  componentHealth: t.record(t.string, t.any)
+  componentHealth: t.record(t.string, t.any),
+  learning: t.record(t.string, t.any),
 });
 
 const MutableSystemModeCodec = t.type({
