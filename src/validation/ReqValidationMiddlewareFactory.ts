@@ -89,8 +89,18 @@ class ReqValidationMiddlewareFactory {
         next();
       } else {
         const message = PathReporter.report(result).join(', ');
+        const allInvalidFields = _.chain(result.left)
+          .map(error => error.context)
+          .flatten()
+          .map(entry => entry.key)
+          .value();
 
-        next(new ReqValidationError(message));
+        const invalidFields = _.intersectionWith(
+          allInvalidFields,
+          _.keys(getProps(reqType.props.body)),
+          _.isEqual
+        );
+        next(new ReqValidationError(message, invalidFields));
       }
     };
   }
