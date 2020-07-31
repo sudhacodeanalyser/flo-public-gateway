@@ -27,6 +27,15 @@ class MachineLearningService extends MemoizeMixin(HttpService) {
   public async get(macAddress: string): Promise<{ pes: any, floSense: any }> {
     return this.forward('GET', macAddress);
   }
+
+  @memoized()
+  public async getLearning(macAddress: string): Promise<{ expiresOnOrAfter?: string, enabled: boolean }> {
+    return this.forward('GET', `${macAddress}/learning`);
+  }
+
+  public async updateLearning(macAddress: string, payload: { learning: any }): Promise<any> {
+    return this.forward('POST', `${macAddress}/learning`, { ...payload });
+  }
 }
 
 export { MachineLearningService };
