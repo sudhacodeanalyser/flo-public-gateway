@@ -255,22 +255,31 @@ class DeviceResolver extends Resolver<Device> {
       };
     },
     learning: async (device: Device, shouldExpand = false) => {
-      const maybeOnboardingLog = await this.onboardingLogTable.getOutOfForcedSleepEvent(device.id);
+      try {
+        const maybeOnboardingLog = await this.onboardingLogTable.getOutOfForcedSleepEvent(device.id);
 
-      return pipe(
-        maybeOnboardingLog,
-        Option.map(({ created_at }) => ({
-          outOfLearningDate: created_at
-        })),
-        Option.toNullable
-      );
+        const mlData = await this.mlService.getLearning(device.macAddress);
+
+        return {
+          outOfLearningDate: pipe(
+            maybeOnboardingLog,
+            Option.map(({ created_at }) => created_at),
+            Option.toUndefined
+          ),
+          enabled: mlData.enabled || pipe(maybeOnboardingLog, Option.isNone),
+          expiresOnOrAfter: mlData.expiresOnOrAfter,
+        }
+      } catch (err) {
+        this.logger.error({ err });
+        return null;
+      }
     },
     notifications: async (device: Device, shouldExpand = false) => {
 
       if (!this.notificationService) {
         return null;
       }
-      
+
 
       return this.notificationService.retrieveStatistics(`deviceId=${device.id}`);
     },

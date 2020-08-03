@@ -93,11 +93,7 @@ export function WaterControllerFactory(container: Container, apiVersion: number)
     }
 
     @httpGet('/metrics',
-      authMiddlewareFactory.create(
-        async ({ query: { macAddress } }: Request) => ({
-          device_id: macAddress
-        })
-      ),
+      authWithParents,
       reqValidator.create(ReqValidator.getMetrics)
     )
     private async getMetrics(

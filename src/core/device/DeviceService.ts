@@ -63,13 +63,26 @@ class DeviceService {
 
     // TODO: Make all these operations parallel
     await this.internalDeviceService.upsertDevice(device.macAddress, deviceUpdate);
-    const updatedDevice = await this.deviceResolver.updatePartial(id, deviceUpdate);
+    let updatedDevice = await this.deviceResolver.updatePartial(id, deviceUpdate);
 
     if (directiveService && deviceUpdate.valve) {
       if (deviceUpdate.valve.target === ValveState.OPEN) {
         await directiveService.openValve(id);
       } else if (deviceUpdate.valve.target === ValveState.CLOSED) {
         await directiveService.closeValve(id);
+      }
+    }
+
+    if (deviceUpdate.learning) {
+      const updatedMLProps = await this.mlService.updateLearning(device.macAddress, {
+        learning: deviceUpdate.learning
+      });
+      updatedDevice = {
+        ...updatedDevice,
+        learning: {
+          ...updatedDevice.learning,
+          ...updatedMLProps.learning
+        }
       }
     }
 
