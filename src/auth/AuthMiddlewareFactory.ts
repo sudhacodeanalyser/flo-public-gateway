@@ -61,11 +61,11 @@ class AuthMiddlewareFactory {
           throw leftResult.left;
         } 
 
-        const tokenMetadata = _.find(results, result => Either.isRight(result)) as Either.Right<TokenMetadata> | undefined;
+        const tokenMetadata = (_.find(results, result => Either.isRight(result)) as Either.Right<TokenMetadata> | undefined)?.right;
 
         if (logger !== undefined) {
           logger.info({ token: tokenMetadata });
-        } 
+        }
 
         req.token = tokenMetadata;
         next();
