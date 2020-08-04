@@ -51,7 +51,7 @@ export function UserControllerFactory(container: Container, apiVersion: number):
           id: t.string
         }),
         body: t.type({
-          oldPassword: Password,
+          oldPassword: t.string,
           newPassword: Password
         })
       }))
