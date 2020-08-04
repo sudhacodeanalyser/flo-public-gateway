@@ -1,4 +1,4 @@
-import { Option, some } from 'fp-ts/lib/Option';
+import { Option, some, fromNullable } from 'fp-ts/lib/Option';
 import { Container, inject } from 'inversify';
 import { BaseHttpController, httpDelete, httpGet, httpPost, interfaces, queryParam, requestBody, requestParam, request } from 'inversify-express-utils';
 import * as t from 'io-ts';
@@ -12,6 +12,7 @@ import { UserService } from '../service';
 import { PasswordResetService } from './PasswordResetService';
 import { EmailAvailability, EmailVerification, EmailVerificationCodec, OAuth2Response, UserRegistrationData, UserRegistrationDataCodec, UserRegistrationService, RegistrationTokenResponse } from './UserRegistrationService';
 import UnauthorizedError from '../api/error/UnauthorizedError';
+import { Password } from '../api/validator/Password';
 
 export function UserControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
@@ -51,7 +52,7 @@ export function UserControllerFactory(container: Container, apiVersion: number):
         }),
         body: t.type({
           oldPassword: t.string,
-          newPassword: t.string
+          newPassword: Password
         })
       }))
     )
@@ -70,6 +71,27 @@ export function UserControllerFactory(container: Container, apiVersion: number):
     @createMethod
     private async acceptTermsAndVerifyEmail(@requestBody() data: UserRegistrationData): Promise<void> {
       return this.userRegistrationService.acceptTermsAndVerifyEmail(data);
+    }
+
+    @httpGet(
+      '/',
+      auth,
+      reqValidator.create(t.type({
+        query: t.intersection([
+          t.type({
+            email: t.string
+          }),
+          t.partial({
+            expand: t.string
+          })
+       ])
+      }))
+    )
+    @withResponseType<User, Responses.UserResponse>(Responses.User.fromModel)
+    private async getByEmail(@queryParam('email') email: string, @queryParam('expand') expand?: string): Promise<Option<User>> {
+      const expandProps = parseExpand(expand);
+
+      return fromNullable(await this.userService.getUserByEmail(email, expandProps));
     }
 
     @httpGet(
