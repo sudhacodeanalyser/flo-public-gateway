@@ -9,21 +9,32 @@ import { isRight } from 'fp-ts/lib/Either';
 
 type RequestValidator = t.TypeC<any>;
 
-function getProps(validator: any): t.Props {
+function getPropsLeaves(validator: any): t.Props {
+  return _.reduce(validator.props, (acc: t.Props, prop: any, key: string) => {
+    if (prop.props || prop.types || prop.type) {
+      const props = getProps(prop, true);
+      return { ...acc, ...(_.isEmpty(props) ? {[key]: props } : props) };
+    } else {
+      return { ...acc, ...{[key]: prop }};
+    }
+  }, {});
+}
+
+function getProps(validator: any, onlyLeaves: boolean = false): t.Props {
 
   if (_.isEmpty(validator)) {
     return {};
   } else if (validator.props) {
-    return validator.props;
+    return onlyLeaves ? getPropsLeaves(validator) : validator.props;
   } else if (validator.types) {
     // Handle intersection types
     return validator.types.reduce(
-      (acc: t.Props, type: any) => ({ ...acc, ...getProps(type) }), 
+      (acc: t.Props, type: any) => ({ ...acc, ...getProps(type, onlyLeaves) }),
       {}
     );
   } else if (validator.type) {
     // Handle refinement types
-    return getProps(validator.type);
+    return getProps(validator.type, onlyLeaves);
   } else {
     return {};
   }
@@ -89,8 +100,18 @@ class ReqValidationMiddlewareFactory {
         next();
       } else {
         const message = PathReporter.report(result).join(', ');
+        const fieldsWithErrors = _.chain(result.left)
+          .map(error => error.context)
+          .flatten()
+          .map(entry => entry.key)
+          .value();
 
-        next(new ReqValidationError(message));
+        const invalidProperties = _.intersectionWith(
+          fieldsWithErrors,
+          _.keys(getProps(reqType, true)),
+          _.isEqual
+        );
+        next(new ReqValidationError(message, invalidProperties));
       }
     };
   }
