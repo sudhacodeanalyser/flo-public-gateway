@@ -3,6 +3,7 @@ import { Account, DeviceAlarmSettings, DeviceStats, Expandable, Location, Timest
 import { NonEmptyString } from '../../api/validator/NonEmptyString';
 import { PhoneNumber } from '../../api/validator/PhoneNumber';
 import { Email } from '../../api/validator/Email';
+import { Password } from '../../api/validator/Password';
 
 export interface UserLocationRole {
   locationId: string;
@@ -57,7 +58,7 @@ export const UserCreateCodec = t.intersection([
     account: t.type({
       id: t.string
     }),
-    password: t.string
+    password: Password
   }),
   t.partial({
     ...optionalProps,
