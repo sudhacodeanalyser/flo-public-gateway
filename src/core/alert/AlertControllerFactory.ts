@@ -1,5 +1,4 @@
 import express from 'express';
-import * as Either from 'fp-ts/lib/Either';
 import * as O from 'fp-ts/lib/Option';
 import { Container, inject } from 'inversify';
 import { BaseHttpController, httpGet, httpPost, interfaces, request, requestBody, requestParam, response, httpDelete, queryParam, httpPut } from 'inversify-express-utils';
@@ -14,15 +13,12 @@ import Request from '../api/Request';
 import { NotificationService } from '../notification/NotificationService';
 import { AlertService, UserService, LocationService, DeviceService } from '../service';
 import UnauthorizedError from '../api/error/UnauthorizedError';
+import { BooleanFromString } from '../api/validator/BooleanFromString';
+import { PositiveIntegerFromString } from '../api/validator/PositiveIntegerFromString';
 
 export function AlertControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
   const authMiddlewareFactory = container.get<AuthMiddlewareFactory>('AuthMiddlewareFactory');
-  const authWithIcdIdOrLocationId = authMiddlewareFactory.create(
-    async ({ body: { deviceId, locationId } }: Request) => ({
-      icd_id: deviceId, location_id: locationId
-    })
-  );
 
   const authWithIcdIdOrLocationIdOrParents = authMiddlewareFactory.create(async ({ body: { deviceId, locationId } }: Request, depFactoryFactory: DependencyFactoryFactory) => {
     const locationService = depFactoryFactory<LocationService>('LocationService')();
@@ -39,35 +35,6 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
       icd_id: deviceId
     };
   });
-
-
-  type Integer = t.TypeOf<typeof t.Integer>;
-
-  const IntegerFromString = new t.Type<Integer, string, unknown>(
-    'IntegerFromString',
-    (u): u is Integer => t.Integer.is(u),
-    (u, c) => {
-      return Either.either.chain(t.string.validate(u, c), str => {
-        const value = parseInt(str, 10);
-
-        return isNaN(value) ? t.failure(str, c) : t.success(value);
-      });
-    },
-    a => `${ a }`
-  );
-
-  type BooleanType = t.TypeOf<typeof t.boolean>;
-
-  const BooleanFromString = new t.Type<BooleanType, string, unknown>(
-    'BooleanFromString',
-    (u): u is BooleanType => t.boolean.is(u),
-    (u, c) => {
-      return Either.either.chain(t.string.validate(u, c), str => {
-        return !str ? t.failure(str, c) : t.success(str === 'true');
-      });
-    },
-    a => `${ a }`
-  );
 
   @httpController({ version: apiVersion }, '/alerts')
   class AlertController extends BaseHttpController {
@@ -100,8 +67,8 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
           severity: t.union([t.string, t.array(AlarmSeverityCodec)]),
           reason: t.union([t.string, t.array(IncidentStatusReasonCodec)]),
           isInternalAlarm: BooleanFromString,
-          page: IntegerFromString,
-          size: IntegerFromString,
+          page: PositiveIntegerFromString,
+          size: PositiveIntegerFromString,
           lang: t.string,
           unitSystem: t.string
         })

@@ -15,6 +15,7 @@ import { either } from 'fp-ts/lib/Either';
 import UnauthorizedError from '../api/error/UnauthorizedError';
 import express from 'express';
 import GoneError from '../api/error/GoneError';
+import { IntegerFromString } from '../api/validator/IntegerFromString';
 
 export function FloDetectControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
@@ -32,21 +33,6 @@ export function FloDetectControllerFactory(container: Container, apiVersion: num
     },
     a => a
   );
-
-  type Integer = t.TypeOf<typeof t.Integer>;
-
-  const IntegerFromString = new t.Type<Integer, string, unknown>(
-    'IntegerFromString',
-    (u): u is Integer => t.Integer.is(u),
-    (u, c) => {
-      return either.chain(t.string.validate(u, c), str => {
-        const value = parseInt(str, 10);
-
-        return isNaN(value) ? t.failure(str, c) : t.success(value);
-      });
-    },
-    a => `${ a }`
-  ) 
 
   @httpController({ version: apiVersion }, '/flodetect')
   class FloDetectController extends BaseHttpController {
