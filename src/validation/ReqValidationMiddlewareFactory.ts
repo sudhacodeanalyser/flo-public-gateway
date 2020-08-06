@@ -100,6 +100,11 @@ class ReqValidationMiddlewareFactory {
         next();
       } else {
         const message = PathReporter.report(result).join(', ');
+        const logger = req.log;
+        if (logger) {
+          logger.warn(message);
+        }
+
         const fieldsWithErrors = _.chain(result.left)
           .map(error => error.context)
           .flatten()
@@ -111,7 +116,7 @@ class ReqValidationMiddlewareFactory {
           _.keys(getProps(reqType, true)),
           _.isEqual
         );
-        next(new ReqValidationError(message, invalidProperties));
+        next(new ReqValidationError('Invalid property values', invalidProperties));
       }
     };
   }
