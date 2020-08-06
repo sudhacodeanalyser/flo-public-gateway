@@ -303,16 +303,17 @@ class LocationResolver extends Resolver<Location> {
       if (!shouldExpand) {
         return null;
       }
-      const currentAreaTempF = (await this.weatherApi.getTemperatureByAddress({
-          street: location.address,
-          city: location.city,
-          postCode: location.postalCode,
-          region: location.state,
-          country: location.country
-        }, 
-        moment().subtract(1, 'hour').toDate(), 
-        moment().toDate()
-      )).current;
+      const weatherData = await this.weatherApi.getTemperatureByAddress({
+        street: location.address,
+        city: location.city,
+        postCode: location.postalCode,
+        region: location.state,
+        country: location.country
+      }, 
+      moment().subtract(1, 'hour').toDate(), 
+      moment().toDate()
+      );
+      const currentAreaTempF = weatherData.current;
       
       return {
         currentAreaTempF
