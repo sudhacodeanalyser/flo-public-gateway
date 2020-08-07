@@ -13,6 +13,8 @@ import { NonEmptyArray } from '../api/validator/NonEmptyArray';
 import { DeviceSystemModeServiceFactory } from '../device/DeviceSystemModeService';
 import { LocationService } from '../service';
 import { either } from 'fp-ts/lib/Either';
+import { IntegerFromString } from '../api/validator/IntegerFromString';
+import { BooleanFromString } from '../api/validator/BooleanFromString';
 
 const { some } = O;
 type Option<T> = O.Option<T>;
@@ -31,33 +33,6 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
       location_id: [locId, ...parentIds]
     };
   });
-
-  type Integer = t.TypeOf<typeof t.Integer>;
-
-  const IntegerFromString = new t.Type<Integer, string, unknown>(
-    'IntegerFromString',
-    (u): u is Integer => t.Integer.is(u),
-    (u, c) => {
-      return either.chain(t.string.validate(u, c), str => {
-        const value = parseInt(str, 10);
-
-        return isNaN(value) ? t.failure(str, c) : t.success(value);
-      });
-    },
-    a => `${ a }`
-  ) 
-
-  const BooleanFromString = new t.Type<boolean, string, unknown>(
-    'BooleanFromString',
-    (u): u is boolean => t.boolean.is(u),
-    (u, c) => {
-      return either.chain(t.string.validate(u, c), str => {
-        const s = str.toLowerCase();
-        return s !== 'true' && s !== 'false' ? t.failure(str, c) : t.success(s === 'true');
-      });
-    },
-    a => `${ a }`
-  );
 
   const FalseFromString = new t.Type<false, string, unknown>(
     'FalseFromString',

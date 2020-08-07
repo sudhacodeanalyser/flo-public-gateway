@@ -11,10 +11,10 @@ import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import * as Responses from '../api/response';
 import { SubscriptionService } from '../service';
 import Request from '../api/Request';
-import { either } from 'fp-ts/lib/Either';
 import ValidationError from '../api/error/ValidationError';
 import * as express from 'express';
 import UnauthorizedError from '../api/error/UnauthorizedError';
+import { IntegerFromString } from '../api/validator/IntegerFromString';
 
 export function SubscriptionControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
@@ -23,20 +23,6 @@ export function SubscriptionControllerFactory(container: Container, apiVersion: 
   // to authorize subscription requests. This currently will only require a valid token, regardless
   // of which location or account for which you are creating the subscription.
   const auth = authMiddlewareFactory.create(undefined, 'ALL/api/v2/subscriptions');
-  type Integer = t.TypeOf<typeof t.Integer>;
-
-  const IntegerFromString = new t.Type<Integer, string, unknown>(
-    'IntegerFromString',
-    (u): u is Integer => t.Integer.is(u),
-    (u, c) => {
-      return either.chain(t.string.validate(u, c), str => {
-        const value = parseInt(str, 10);
-
-        return isNaN(value) ? t.failure(str, c) : t.success(value);
-      });
-    },
-    a => `${ a }`
-  ) 
 
   @httpController({ version: apiVersion }, '/subscriptions')
   class SubscriptionController extends BaseHttpController {
