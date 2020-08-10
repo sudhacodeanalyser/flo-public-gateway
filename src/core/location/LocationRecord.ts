@@ -177,6 +177,7 @@ export interface LocationRecordData extends Partial<LegacyLocationProfile>, Time
   areas: AreaRecord[];
   parent_location_id?: string;
   location_class?: string;
+  _merged_into_location_id?: string;
 }
 
 const RecordToModelSchema: StrictSchema<Location, LocationRecordData> = {
@@ -373,7 +374,8 @@ const RecordToModelSchema: StrictSchema<Location, LocationRecordData> = {
     key: input.location_class || '',
     level: -1
   }),
-  metrics: () => undefined
+  metrics: () => undefined,
+  _mergedIntoLocationId: '_merged_into_location_id'
 };
 
 const ModelToRecordSchema: StrictSchema<LocationRecordData, Location> = {
@@ -426,7 +428,8 @@ const ModelToRecordSchema: StrictSchema<LocationRecordData, Location> = {
     };
   },
   areas: (input: Partial<Location>) => _.get(input, 'areas.custom', undefined),
-  location_class: 'class.key'
+  location_class: 'class.key',
+  _merged_into_location_id: '_mergedIntoLocationId'
 };
 
 export type PartialLocationRecordData = Omit<LocationRecordData, 'profile'> & Record<'profile', Partial<LocationRecordData['profile']>>;
@@ -481,7 +484,8 @@ const PartialModelToPartialRecordSchema: StrictSchema<PartialLocationRecordData,
     };
   },
   areas: (input: Partial<Location>) => _.get(input, 'areas.custom', undefined),
-  location_class: 'class.key'
+  location_class: 'class.key',
+  _merged_into_location_id: '_mergedIntoLocationId'
 };
 
 
