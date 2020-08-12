@@ -127,8 +127,7 @@ class SubscriptionService {
         id: subscriptionId,
         ...subscriptionCreate
       };
-      const allowTrial = !maybeExistingSubscription || !!(await subscriptionProvider.getCanceledSubscriptions(user.value)).length;
-      const providerInfo = await subscriptionProvider.createSubscription(user.value, providerSubscription, allowTrial);
+      const providerInfo = await subscriptionProvider.createSubscription(user.value, providerSubscription, false);
       const subscription = {
         ...subscriptionData,
         plan,
