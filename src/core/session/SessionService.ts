@@ -5,14 +5,17 @@ import ForbiddenError from '../api/error/ForbiddenError';
 import { FirestoreAuthService, FirestoreTokenResponse, FirestoreAssests } from './FirestoreAuthService';
 import * as Option from 'fp-ts/lib/Option';
 import _ from 'lodash';
-
+import { AuthCache } from '../../auth/AuthCache';
+import { ApiV1LogoutService } from '../../api-v1/logout/ApiV1LogoutService';
 @injectable()
 class SessionService {
   private userServiceFactory: () => UserService;
 
   constructor(
     @inject('DependencyFactoryFactory') depFactoryFactory: DependencyFactoryFactory,
-    @inject('FirestoreAuthService') private firestoreAuthService: FirestoreAuthService
+    @inject('FirestoreAuthService') private firestoreAuthService: FirestoreAuthService,
+    @inject('AuthCache') private authCache: AuthCache,
+    @inject('ApiV1LogoutService') private logoutService: ApiV1LogoutService
   ) {
     this.userServiceFactory = depFactoryFactory<UserService>('UserService');
   }
@@ -49,6 +52,15 @@ class SessionService {
       locations: [...locationsAsset, ..._.get(additionalAssets, 'locations', [])],
       users: [userId, ..._.get(additionalAssets, 'users', [])]
     });
+  }
+
+  public async logout(token: string): Promise<void> {
+
+    await Promise.all([
+      this.authCache.dropCache(token),
+      this.logoutService.logout()
+    ]);
+
   }
 }
 

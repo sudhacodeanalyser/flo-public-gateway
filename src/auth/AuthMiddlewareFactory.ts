@@ -5,17 +5,15 @@ import _ from 'lodash';
 import Request from '../core/api/Request';
 import ForbiddenError from './ForbiddenError';
 import UnauthorizedError from './UnauthorizedError';
-import Redis from 'ioredis';
-import jwt from 'jsonwebtoken';
 import * as Either from 'fp-ts/lib/Either';
 import * as Option from 'fp-ts/lib/Option';
 import { pipe } from 'fp-ts/lib/pipeable';
 import * as TaskEither from 'fp-ts/lib/TaskEither';
-import { TokenMetadata, OAuth2TokenCodec, LegacyAuthTokenCodec } from './Token';
+import { TokenMetadata } from './Token';
 import Logger from 'bunyan';
-import crypto from 'crypto';
 import config from '../config/config';
 import { DependencyFactoryFactory } from '../core/api';
+import { AuthCache } from './AuthCache';
 
 type Params = { [param: string]: any };
 type GetParams = (req: Request, depFactoryFactory: DependencyFactoryFactory) => Promise<Params | Params[]>;
@@ -24,7 +22,7 @@ type GetParams = (req: Request, depFactoryFactory: DependencyFactoryFactory) => 
 @injectable()
 class AuthMiddlewareFactory {
   @inject('AuthUrl') private authUrl: string;
-  @inject('RedisClient') private redisClient: Redis.Redis;
+  @inject('AuthCache') private authCache: AuthCache;
   @inject('HttpClient') private httpClient: AxiosInstance;
   @inject('DependencyFactoryFactory') private depFactoryFactory: DependencyFactoryFactory;
 
@@ -46,7 +44,7 @@ class AuthMiddlewareFactory {
         const results = await Promise.all((!paramArray || _.isEmpty(paramArray) ? [{}] : paramArray)
           .map(async params => {
             return pipe(
-              await this.checkCache(methodId, token, params, logger),
+              await this.authCache.checkCache(methodId, token, params, logger),
               Option.fold(
                 () => async () => this.callAuthService(methodId, token, _.isEmpty(params) ? undefined : params),
                 tokenMedata => TaskEither.right(tokenMedata)
@@ -75,55 +73,6 @@ class AuthMiddlewareFactory {
     };
   }
 
-  private formatCacheKey(methodId: string, token: string, params?: Params): string | null {
-    const tokenData = jwt.decode(_.last(token.split('Bearer ')) || '');
-    const cacheKeyPrefix = pipe(
-      LegacyAuthTokenCodec.decode(tokenData),
-      Either.fold(
-        () => pipe(
-          OAuth2TokenCodec.decode(tokenData),
-          Either.map(({ jti }) => jti)
-        ),
-        ({ user: { user_id }, iat }) => Either.right(`${ user_id }_${ iat }`)
-      ),
-      Either.getOrElse((): string | null => null)
-    );
-    const formattedParams = !params ?
-      [] :
-      _.chain(params)
-        .map((value, key) => `${ key }_${ _.isString(value) ? value : JSON.stringify(value) }`)
-        .sortBy()
-        .value();
-
-    return cacheKeyPrefix && [cacheKeyPrefix, methodId, ...formattedParams].join(':');
-  }
-
-  private async checkCache(methodId: string, token: string, params?: Params, logger?: Logger): Promise<Option.Option<TokenMetadata>> {
-    try {
-      const cacheKey = this.formatCacheKey(methodId, token, params);
-      const cacheResult = cacheKey && (await this.redisClient.get(cacheKey));
-
-      if (cacheResult == null) {
-        return Option.none;
-      } else {
-        const tokenMetadata = JSON.parse(cacheResult);
-
-        if (!tokenMetadata._token_hash || tokenMetadata._token_hash !== this.hashToken(token)) {
-          return Option.none;
-        }
-        
-        return Option.some(tokenMetadata);
-      }
-    } catch (err) {
-      
-      if (logger) {
-        logger.error({ err });
-      }
-
-      return Option.none;
-    }
-  }
-
   private async callAuthService(methodId: string, token: string, params?: Params): Promise<Either.Either<Error, TokenMetadata>> {
       try {
         const authResponse = await this.httpClient.request({
@@ -142,7 +91,7 @@ class AuthMiddlewareFactory {
 
         if (authResponse.status === 200) {
           // Do not block on cache write
-          this.writeToCache(authResponse.data, methodId, token, params);
+          this.authCache.writeToCache(authResponse.data, methodId, token, params);
 
           return Either.right(authResponse.data);
         } else {
@@ -161,18 +110,5 @@ class AuthMiddlewareFactory {
       }   
   }
 
-  private hashToken(token:string): string {
-    return crypto.createHash('sha1').update(token).digest('base64');
-  }
-
-  private async writeToCache(tokenMetadata: TokenMetadata, methodId: string, token: string, params?: Params): Promise<void> {
-    const cacheKey = this.formatCacheKey(methodId, token, params);
-    const tokenHash = this.hashToken(token);
-
-    if (cacheKey !== null) {
-      // TTL 1 hour, this means that a token can live max 1 hour after its true expiration in the cache
-      await this.redisClient.setex(cacheKey, 3600, JSON.stringify({ ...tokenMetadata, _token_hash: tokenHash }));
-    }
-  }
 }
 export default AuthMiddlewareFactory;
