@@ -13,6 +13,7 @@ import { IrrigationScheduleService } from '../core/device/IrrigationScheduleServ
 import { ApiV1IrrigationScheduleService } from './irrigation-schedule/ApiV1IrrigationScheduleService';
 import { ApiV1DeviceSystemModeService } from './device-system-mode/ApiV1DeviceSystemModeService';
 import { ApiV1DirectiveService } from './directive/ApiV1DirectiveService';
+import { ApiV1LogoutService } from './logout/ApiV1LogoutService';
 
 export default new ContainerModule((bind: interfaces.Bind) => {
   bind<string>('ApiV1Token').toConstantValue(config.apiV1Token);
@@ -24,6 +25,7 @@ export default new ContainerModule((bind: interfaces.Bind) => {
   bind<DirectiveServiceFactory>('DirectiveServiceFactory').to(ApiV1DirectiveServiceFactory);
   bind<ApiV1IrrigationScheduleService>('ApiV1IrrigationScheduleService').to(ApiV1IrrigationScheduleService);
   bind<ApiV1DeviceSystemModeService>('ApiV1DeviceSystemModeService').to(ApiV1DeviceSystemModeService);
+  bind<ApiV1LogoutService>('ApiV1LogoutService').to(ApiV1LogoutService);
   bind<(apiV1Url: string, authToken: string) => DeviceSystemModeService>('Factory<DeviceSystemModeService>').toFactory((context: interfaces.Context) => {
     return (apiV1Url: string, authToken: string, customHeaders: any) => {
       const deviceSystemModeService = context.container.get<ApiV1DeviceSystemModeService>('ApiV1DeviceSystemModeService');

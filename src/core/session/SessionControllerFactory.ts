@@ -32,6 +32,18 @@ export function SessionControllerFactory(container: Container, apiVersion: numbe
       }
       return this.sessionService.issueFirestoreToken(token.user_id);
     }
+
+    @httpPost('/logout',
+      auth
+    )
+    private async logout(@request() req: Request): Promise<void> {
+      const token = req.get('Authorization');
+
+      if (token) {
+        await this.sessionService.logout(token);
+      }
+
+    }
   }
   return SessionController;
 }
