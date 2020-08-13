@@ -33,14 +33,20 @@ export function UserControllerFactory(container: Container, apiVersion: number):
     @httpPost(
       '/password/request-reset',
       reqValidator.create(t.type({
-        body: t.type({
-          email: t.string
-        })
+        body: t.intersection([
+          t.type({
+            email: t.string
+          }),
+          t.partial({
+            locale: t.string,
+            app: t.string
+          })
+        ])
       }))
     )
     @asyncMethod
-    private async requestPasswordReset(@requestBody() { email }: { email: string }): Promise<void> {
-      return this.passwordResetService.requestReset(email);
+    private async requestPasswordReset(@requestBody() { email, locale, app }: { email: string, locale?: string, app?: string }): Promise<void> {
+      return this.passwordResetService.requestReset(email, locale, app);
     }
 
     @httpPost(
