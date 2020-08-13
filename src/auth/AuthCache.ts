@@ -74,8 +74,7 @@ class AuthCache {
 
   private formatTokenKey(token: string): string | null {
     const tokenData = jwt.decode(_.last(token.split('Bearer ')) || '');
-    
-    return pipe(
+    const key = pipe(
       LegacyAuthTokenCodec.decode(tokenData),
       Either.fold(
         () => pipe(
@@ -86,6 +85,8 @@ class AuthCache {
       ),
       Either.getOrElse((): string | null => null)
     );
+
+    return key && `{${ key }}`;
   }
 
   private formatMethodKey(methodId: string, token: string, params?: Params): string | null {
