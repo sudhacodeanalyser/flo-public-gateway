@@ -10,15 +10,22 @@ class ApiV1LogoutService extends HttpService {
     super();
   }
 
-  public async logout(): Promise<void> {    
+  public async logout(): Promise<void> {   
     const authToken = this.httpContext?.request?.get('Authorization');
-    const request = {
-      method: 'POST',
-      url: `${ this.apiV1Url }/logout`,
-      authToken
-    };
+
+
     
-    await this.sendRequest(request);
+    if (authToken) {
+       const request = {
+          method: 'POST',
+          url: authToken.toLowerCase().includes('bearer') ? 
+            `${ this.apiV1Url }/logout` : 
+            `${ this.apiV1Url }/users/logout`,
+          authToken
+      };
+
+      await this.sendRequest(request);
+    }
   }
 
 }
