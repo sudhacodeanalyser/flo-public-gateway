@@ -158,7 +158,7 @@ class StripeSubscriptionProvider implements SubscriptionProvider {
     return this.stripeClient.customers.update(stripeCustomerId, { default_source: source.id });
   }
 
-  private async doCreateSubscription(customer: Stripe.customers.ICustomer, subscription: SubscriptionData, allowTrial: boolean = true): Promise<Stripe.subscriptions.ISubscription> {
+  private async doCreateSubscription(customer: Stripe.customers.ICustomer, subscription: SubscriptionData, allowTrial: boolean = false): Promise<Stripe.subscriptions.ISubscription> {
 
     if (!subscription.plan) {
      throw new ValidationError('A plan must be specified.');
