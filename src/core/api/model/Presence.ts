@@ -4,6 +4,8 @@ import {Expandable, TimestampedModel, Location, DeviceUpdate, DeviceType, Device
 const PresenceRequestCodec = t.type({
     appName: t.string,
     appVersion: t.union([t.string, t.undefined]),
+    locationIds: t.union([t.array(t.string), t.undefined]),
+    deviceIds: t.union([t.array(t.string), t.undefined])
 });
 
 const PresenceDataCodec = t.intersection([

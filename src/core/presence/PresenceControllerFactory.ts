@@ -8,6 +8,7 @@ import { PresenceData, PresenceRequest, PresenceRequestValidator } from '../api/
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
 import * as t from 'io-ts';
 import _ from 'lodash';
+import ForbiddenError from '../api/error/ForbiddenError';
 
 export function PresenceControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
@@ -33,6 +34,18 @@ export function PresenceControllerFactory(container: Container, apiVersion: numb
         throw new Error('No token defined.');
       }
 
+      if (
+        (!_.isEmpty(presencePostRequest.locationIds) || !_.isEmpty(presencePostRequest.deviceIds)) &&
+        !await this.presenceService.validateLocations(
+          _.uniq([
+            ...presencePostRequest.locationIds || [],
+            ...(await this.presenceService.getLocationsFromDevices(presencePostRequest.deviceIds || []))
+          ]),
+          tokenMetadata.user_id
+        )
+      ) {
+        throw new ForbiddenError();
+      }
       // TODO: Fill in with real data based on auth token
       const ipAddress = this.extractIpAddress(req);
       const userId = tokenMetadata.user_id;
