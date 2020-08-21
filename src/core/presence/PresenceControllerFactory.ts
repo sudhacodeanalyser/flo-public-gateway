@@ -4,16 +4,37 @@ import PresenceService from './PresenceService';
 import { httpController } from '../api/controllerUtils';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import Request from '../api/Request';
-import { PresenceData, PresenceRequest, PresenceRequestValidator } from '../api/model/Presence';
+import {
+  PresenceDataValidatorCodec,
+  PresenceRequest, PresenceRequestCodec,
+} from '../api/model/Presence';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
 import * as t from 'io-ts';
 import _ from 'lodash';
-import ForbiddenError from '../api/error/ForbiddenError';
+import { DependencyFactoryFactory } from '../api';
+import { LocationService } from '../location/LocationService';
+import ReqValidationError from '../../validation/ReqValidationError';
 
 export function PresenceControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
   const authMiddlewareFactory = container.get<AuthMiddlewareFactory>('AuthMiddlewareFactory');
   const auth = authMiddlewareFactory.create();
+  const authWithParents = authMiddlewareFactory.create(async ({ body: { locationIds, deviceIds }}: Request, depFactoryFactory: DependencyFactoryFactory) => {
+    const locationService = depFactoryFactory<LocationService>('LocationService')();
+    const allLocationIds = (!_.isEmpty(locationIds) || !_.isEmpty(deviceIds)) ? _.uniq([
+      ...locationIds || [],
+      ...(deviceIds?.length ?
+        (await locationService.getLocationsFromDevices(deviceIds || [])) :
+        [])
+    ]): [];
+
+    return Promise.all(allLocationIds.map(async (locId: string) => {
+      const parentIds = await locationService.getAllParentIds(locId);
+      return {
+        location_id: [locId, ...parentIds]
+      }
+    }));
+  });
 
   @httpController({ version: apiVersion }, '/presence')
   class PresenceController implements interfaces.Controller {
@@ -24,7 +45,7 @@ export function PresenceControllerFactory(container: Container, apiVersion: numb
     @httpPost('/me', 
       auth,
       reqValidator.create(t.type({
-        body: PresenceRequestValidator
+        body: t.exact(t.partial(PresenceRequestCodec.props))
       }))
     )
     private async reportSelf(@request() req: Request, @requestBody() presencePostRequest: PresenceRequest): Promise<{ [key: string]: any }> {
@@ -34,18 +55,6 @@ export function PresenceControllerFactory(container: Container, apiVersion: numb
         throw new Error('No token defined.');
       }
 
-      if (
-        (!_.isEmpty(presencePostRequest.locationIds) || !_.isEmpty(presencePostRequest.deviceIds)) &&
-        !await this.presenceService.validateLocations(
-          _.uniq([
-            ...presencePostRequest.locationIds || [],
-            ...(await this.presenceService.getLocationsFromDevices(presencePostRequest.deviceIds || []))
-          ]),
-          tokenMetadata.user_id
-        )
-      ) {
-        throw new ForbiddenError();
-      }
       // TODO: Fill in with real data based on auth token
       const ipAddress = this.extractIpAddress(req);
       const userId = tokenMetadata.user_id;
@@ -55,17 +64,12 @@ export function PresenceControllerFactory(container: Container, apiVersion: numb
       return this.presenceService.report(presenceData);
     }
     @httpPost('/',
-      auth,
       reqValidator.create(t.type({
-        body: t.intersection([
-          PresenceRequestValidator,
-          t.type({
-            userId: t.string
-          })
-        ])
-      }))
+        body: PresenceDataValidatorCodec
+      })),
+      authWithParents
     )
-    private async report(@request() req: Request, @requestBody() presencePostRequest: PresenceRequest & { userId: string}): Promise<{ [key: string]: any }> {
+    private async report(@request() req: Request, @requestBody() presencePostRequest: PresenceRequest & { userId?: string, deviceIds?: string[], locationIds?: string[] }): Promise<{ [key: string]: any }> {
       const tokenMetadata = req.token;
 
       if (tokenMetadata === undefined) {
@@ -74,7 +78,12 @@ export function PresenceControllerFactory(container: Container, apiVersion: numb
 
       const ipAddress = this.extractIpAddress(req);
       const clientId = tokenMetadata.client_id || 'legacy';
-      const presenceData = await this.presenceService.formatPresenceData(presencePostRequest, ipAddress, presencePostRequest.userId, clientId);
+
+      const userId = (tokenMetadata.roles.includes('system.admin')) ? presencePostRequest.userId : tokenMetadata.user_id;
+      if (!userId) {
+        throw new ReqValidationError('User id not found')
+      }
+      const presenceData = await this.presenceService.formatPresenceData(presencePostRequest, ipAddress, userId, clientId);
 
       return this.presenceService.report(presenceData);
     }

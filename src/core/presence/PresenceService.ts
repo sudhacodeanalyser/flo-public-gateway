@@ -9,6 +9,7 @@ import { pipe } from 'fp-ts/lib/pipeable';
 import { LocationService } from '../location/LocationService';
 import { DeviceService } from '../device/DeviceService';
 import NotFoundError from '../api/error/NotFoundError';
+import { LocationFilters, PropExpand } from '../api';
 
 @injectable()
 class PresenceService implements ExternalPresenceService {
@@ -32,31 +33,17 @@ class PresenceService implements ExternalPresenceService {
     return this.externalPresenceService.getByUserId(userId);
   }
 
-  public async validateLocations(locationIds: string[], userId: string): Promise<boolean> {
-    const locationRoles = await Promise.all(locationIds.map(locationId => this.locationService.getAllLocationUserRoles(locationId)));
-    return locationRoles.every(locationRole => locationRole.find(role => role.userId === userId))
-  }
-
-  public async getLocationsFromDevices(deviceIds: string[]): Promise<string[]> {
-    const maybeDevices = await Promise.all(deviceIds.map(deviceId => this.deviceService.getDeviceById(deviceId)));
-    if (maybeDevices.some(mayBeADevice => Option.isNone(mayBeADevice))) {
-      throw new NotFoundError('Device not found');
-    }
-
-    return maybeDevices.map(mayBeADevice => pipe(mayBeADevice, Option.map(({ location: { id } }) => id), Option.toUndefined)) as string[];
-  }
-
   public async formatPresenceData(payload: PresenceRequest, ipAddress: string, userId: string, clientId: string): Promise<PresenceData> {
     // TODO: If cheap, resolve the accountId and list of devices (mac address)
     // that this user has access to at the time of the presence call
     const mayBeUserData = await this.userService.getUserById(userId, {
-        $select: {
-            account: {
-                $select: {
-                    type: true
-                }
-            }
+      $select: {
+        account: {
+          $select: {
+            type: true
+          }
         }
+      }
     });
     const accountType = pipe(mayBeUserData, Option.map(({ account }) => account.type), Option.toUndefined);
     return {
