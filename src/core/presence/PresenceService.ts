@@ -50,13 +50,14 @@ class PresenceService implements ExternalPresenceService {
       ipAddress,
       userId,
       action: 'report',
-      type: accountType || 'personal',
+      type: 'user',
       appName: payload.appName === undefined || payload.appName === '' ? clientId : payload.appName,
       appVersion: payload.appVersion,
       accountId: undefined,
       deviceId: undefined,
       locationIds: payload.locationIds,
-      deviceIds: payload.deviceIds
+      deviceIds: payload.deviceIds,
+      userData: { account: { type: accountType || 'personal' }}
     };
   }
 

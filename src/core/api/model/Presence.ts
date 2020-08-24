@@ -1,5 +1,4 @@
 import * as t from 'io-ts';
-import {Expandable, TimestampedModel, Location, DeviceUpdate, DeviceType, DeviceModelType} from '../../api';
 
 const PresenceLocationData = t.type({
     locationIds: t.union([t.array(t.string), t.undefined]),
@@ -20,7 +19,12 @@ const PresenceDataCodec = t.intersection([
         accountId: t.union([t.string, t.undefined]),
         deviceId: t.union([t.array(t.string), t.undefined]),
         type: t.string,
-        ipAddress: t.string
+        ipAddress: t.string,
+        userData: t.partial({
+            account: t.partial({
+                type: t.string
+            })
+        })
     })
 ]);
 
@@ -41,5 +45,3 @@ export const PresenceDataValidatorCodec = t.intersection([
     t.partial(PresenceRequestCodec.props),
     PresenceAdditionalDataCodec,
 ]);
-
-export type PresenceAdditionalData = t.TypeOf<typeof PresenceAdditionalDataCodec>;
