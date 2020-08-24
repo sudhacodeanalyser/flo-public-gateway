@@ -69,7 +69,7 @@ export function PresenceControllerFactory(container: Container, apiVersion: numb
       })),
       authWithParents
     )
-    private async report(@request() req: Request, @requestBody() presencePostRequest: PresenceRequest & { userId?: string, deviceIds?: string[], locationIds?: string[] }): Promise<{ [key: string]: any }> {
+    private async report(@request() req: Request, @requestBody() presencePostRequest: PresenceRequest & { userId?: string }): Promise<{ [key: string]: any }> {
       const tokenMetadata = req.token;
 
       if (tokenMetadata === undefined) {
