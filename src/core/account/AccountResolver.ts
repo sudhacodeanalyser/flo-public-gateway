@@ -23,7 +23,7 @@ class AccountResolver extends Resolver<Account> {
       }
     },
     locations: async (account: Account, shouldExpand: boolean = false, expandProps?: PropExpand) => {
-      const hasPrivilege = this.hasPrivilege(account.id);
+      const hasPrivilege = await this.hasPrivilege(account.id);
       const req = this.httpContext.request as Request;
       const currentUserId = req?.token?.user_id;
       const locations = hasPrivilege ?
