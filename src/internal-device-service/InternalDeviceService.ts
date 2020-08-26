@@ -7,6 +7,8 @@ import { DeviceActionRules, DeviceActionRulesCreate, DeviceCreate, DeviceUpdate 
 import { memoized, MemoizeMixin } from '../memoize/MemoizeMixin';
 import { InternalDevice, InternalDeviceCodec } from './models';
 import ResourceDoesNotExistError from '../core/api/error/ResourceDoesNotExistError';
+import { PathReporter } from 'io-ts/lib/PathReporter'
+
 
 const InternalDeviceServiceError = HttpError;
 
@@ -65,7 +67,11 @@ class InternalDeviceService extends MemoizeMixin(HttpService) implements Firesto
 
       const response: InternalDevice = await this.sendRequest(request);
 
-      if (isLeft(InternalDeviceCodec.decode(response))) {
+      const result = InternalDeviceCodec.decode(response);
+
+      if (isLeft(result)) {
+        this.logger.debug({ validationError: PathReporter.report(result) });
+        
         throw new Error('Invalid response.');
       }
 
