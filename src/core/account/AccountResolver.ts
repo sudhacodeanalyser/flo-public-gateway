@@ -23,7 +23,14 @@ class AccountResolver extends Resolver<Account> {
       }
     },
     locations: async (account: Account, shouldExpand: boolean = false, expandProps?: PropExpand) => {
-      const locations = await this.locationResolverFactory().getAllByAccountId(account.id, expandProps);
+      const hasPrivilege = this.hasPrivilege(account.id);
+      const req = this.httpContext.request as Request;
+      const currentUserId = req?.token?.user_id;
+      const locations = hasPrivilege ?
+        (await this.locationResolverFactory().getAllByAccountId(account.id, expandProps)) :
+        currentUserId ? 
+          (await this.locationResolverFactory().getByUserIdRootOnly(currentUserId, expandProps)).items :
+          [];
 
       return locations.filter(({ parent }) => !parent);
     },
