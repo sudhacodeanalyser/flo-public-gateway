@@ -54,11 +54,11 @@ const InternalDeviceCodec = t.type({
     snoozeTo: t.string,
     snoozeSeconds: t.number
   })]),
-  latestFwInfo: t.type({
+  latestFwInfo: t.union([t.type({
     version: t.string,
     sourceType: t.string,
     sourceLocation: t.string
-  }),
+  }), t.undefined]),
   componentHealth: t.union([
     t.undefined,
     t.record(t.string, t.any)
