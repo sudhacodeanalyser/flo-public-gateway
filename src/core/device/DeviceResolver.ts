@@ -514,7 +514,11 @@ class DeviceResolver extends Resolver<Device> {
           current: {
             version: additionProperties.fwVersion
           },
-          latest: additionProperties.latestFwInfo
+          latest: additionProperties.latestFwInfo || {
+            version: '',
+            sourceType: '',
+            sourceLocation: ''
+          }
         };
       } catch (err) {
         if (this.logger) {
