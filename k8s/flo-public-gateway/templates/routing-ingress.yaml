@@ -17,13 +17,6 @@ metadata:
   {{- with .Values.routingIngress.annotations }}
     {{- toYaml . | trim | nindent 4 }}
   {{- end }}
-  {{- if eq $env "production" }}
-    nginx.ingress.kubernetes.io/upstream-vhost: "{{ .Values.internalIngressHosts.production }}"
-  {{- else if eq $env "rc" }}
-    nginx.ingress.kubernetes.io/upstream-vhost: "{{ .Values.internalIngressHosts.rc }}"
-  {{- else  }}
-    nginx.ingress.kubernetes.io/upstream-vhost: "{{ .Values.internalIngressHosts.development }}"
-  {{-  end }}
 spec:
 {{- if .Values.routingIngress.tls }}
   tls:
@@ -67,8 +60,8 @@ spec:
         paths:
         {{- range $.Values.routingPaths }}
           - backend:
-              serviceName: {{ .servicePrefix }}-{{ $fullName }}
-              servicePort: 443
+              serviceName: {{ .servicePrefix | default "" }}{{ $fullName }}
+              servicePort: {{ .Values.service.type }}
             path: {{ .name }}
         {{- end }}
   {{- end }}
