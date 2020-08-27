@@ -28,6 +28,6 @@ spec:
       targetPort: http
       protocol: TCP
       name: http
-    selector:
-      app.kubernetes.io/name: {{ include "flo-public-gateway.name" . }}
-      app.kubernetes.io/instance: {{ .Release.Name }}
+  selector:
+    app.kubernetes.io/name: {{ include "flo-public-gateway.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
