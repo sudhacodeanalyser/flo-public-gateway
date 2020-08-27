@@ -11,7 +11,7 @@ spec:
       protocol: TCP
       targetPort: 443
   type: ExternalName
-  externalName: {{ .Values.floApiUrl }}
+  externalName: {{ .Values.floApiUrl | quote }}
 
 
 ---
