@@ -2,7 +2,7 @@
 kind: Service
 apiVersion: v1
 metadata:
-  name: proxy-flo-api-{{ include "flo-public-gateway.fullname" . }}
+  name: {{ template "flo-public-gateway.proxy-to-flo-api-name" . }}
   annotations:
     kubernetes.io/ingress.class: "nginx"
 spec:

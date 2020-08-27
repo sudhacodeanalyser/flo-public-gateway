@@ -30,3 +30,6 @@ Create chart name and version as used by the chart label.
 {{- define "flo-public-gateway.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
+{{- define "flo-public-gateway.proxy-to-flo-api-name" -}}
+{{- printf "proxy-flo-api-%s" (include "flo-public-gateway.fullname" .) -}}
+{{- end -}}
