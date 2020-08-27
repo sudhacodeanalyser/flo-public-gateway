@@ -171,7 +171,7 @@ class AccountResolver extends Resolver<Account> {
     
     return currentUserRoles && (
       req?.token?.isAdmin() || // Is Flo system admin
-      (currentUserId && _.chain(accountUserRoles)
+      (currentUserId && !_.chain(accountUserRoles)
         .filter({ userId: currentUserId })
         .map('roles')
         .flatten()
