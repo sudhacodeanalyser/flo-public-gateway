@@ -20,6 +20,7 @@ import { pipe } from 'fp-ts/lib/pipeable';
 import LocationPgTable from './LocationPgTable';
 import { LocationPgRecord } from './LocationPgRecord';
 import { WeatherApi } from '../water/WeatherApi';
+import Request from '../api/Request';
 
 const DEFAULT_LANG = 'en';
 const DEFAULT_AREAS_ID = 'areas.default';
@@ -259,9 +260,20 @@ class LocationResolver extends Resolver<Location> {
       }
 
     },
-    parent: async (location: Location, shouldExpand = false, expandProps?: PropExpand) => {      
+    parent: async (location: Location, shouldExpand = false, expandProps?: PropExpand) => {
+
       if (!location.parent) {
         return location.parent;
+      }
+
+      const req = this.httpContext.request as Request;
+      const currentUserId = req?.token?.user_id;
+      const currentClientId = req?.token?.client_id;
+      const isAppOrAdmin = (!currentUserId && currentClientId) && req?.token?.isAdmin();
+      const hasPrivilege = isAppOrAdmin || (await this.hasAccess(currentUserId, location.parent.id));
+
+      if (!hasPrivilege) {
+        return null;
       }
 
       if (shouldExpand) {
@@ -590,6 +602,31 @@ class LocationResolver extends Resolver<Location> {
 
     return locationRecordData === null ? null : locationRecordData.account_id;
   }
+
+  private async hasAccess(userId: string, locationId: string, pageSize: number = 50, pageNum: number = 0): Promise<boolean> {
+    const { total, items } = await this.getByUserIdWithChildren(
+      userId, 
+      {
+        $select: {
+          id: true
+        }
+      }, 
+      pageSize, 
+      pageNum
+    );
+
+    if (_.find(items, { id: locationId })) {
+      return false;
+    }
+
+    if (((pageNum - 1) * pageSize) + items.length < total) {
+      return this.hasAccess(userId, locationId, pageSize, pageNum + 1);
+    }
+
+    return true;
+  }
+
+
 
 }
 
