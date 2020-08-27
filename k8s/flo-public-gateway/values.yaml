@@ -26,7 +26,7 @@ service:
     successThreshold: 2
     timeoutSeconds: 3
 
-floApiUrl: "http://flo-api.flo-api.svc.cluster.local"
+floApiUrl: "flo-api.flo-api.svc.cluster.local"
 
 routingIngress:
   enabled: true
