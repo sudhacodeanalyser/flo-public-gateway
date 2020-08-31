@@ -17,7 +17,7 @@ class AccountResolver extends Resolver<Account> {
       const hasPrivilege = await this.hasPrivilege(account.id);
 
 
-      if (hasPrivilege) {
+      if (!hasPrivilege) {
         return null;
       } else if (shouldExpand && account?.owner?.id) {
         return this.userResolverFactory().getUserById(account.owner.id, expandProps);
