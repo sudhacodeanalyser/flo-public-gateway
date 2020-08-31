@@ -17,6 +17,7 @@ import moment from 'moment';
 import LocationTreeTable, { LocationTreeRow } from './LocationTreeTable'
 import { pipe } from 'fp-ts/lib/pipeable';
 import { MachineLearningService } from '../../machine-learning/MachineLearningService';
+import NotFoundError from '../api/error/NotFoundError';
 
 const { fromNullable, isNone } = O;
 type Option<T> = O.Option<T>;
@@ -52,7 +53,7 @@ class LocationService {
     const accountId = location.account.id;
     const account = await this.accountServiceFactory().getAccountById(accountId);
 
-    if (createdLocation === null || isNone(account)) {
+    if (createdLocation === null || isNone(account) || !account.value?.owner?.id) {
       return O.none;
     }
 
@@ -595,6 +596,26 @@ class LocationService {
     );
 
     await this.updatePartialLocation(srcLocationId, { _mergedIntoLocationId: destLocationId });
+  }
+
+  public async getLocationsFromDevices(deviceIds: string[]): Promise<string[]> {
+    const deviceService = this.deviceServiceFactory();
+    const maybeDevices = await Promise.all(deviceIds.map(deviceId => deviceService.getDeviceById(deviceId, {
+        $select: {
+          location: {
+            $select: {
+              id: true
+            }
+          }
+        }
+      }
+    )));
+
+    if (maybeDevices.some(mayBeADevice => O.isNone(mayBeADevice))) {
+      throw new NotFoundError('Device not found');
+    }
+
+    return maybeDevices.map(mayBeADevice => pipe(mayBeADevice, O.map(({ location: { id } }) => id), O.toUndefined)) as string[];
   }
 
   private async getDevices(locationId: string, deviceExpand: PropExpand, shouldCascade?: boolean): Promise<Array<Partial<Device>>> {
