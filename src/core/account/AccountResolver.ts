@@ -164,7 +164,7 @@ class AccountResolver extends Resolver<Account> {
     return new AccountRecord(updatedAccountRecordData).toModel();
   }
 
-  private async hasPrivilege(accountId: string): Promise<boolean> {
+  public async hasPrivilege(accountId: string): Promise<boolean> {
     const req = this.httpContext.request as Request;
     const currentUserRoles = req?.token?.roles;
     const currentUserId = req?.token?.user_id;
