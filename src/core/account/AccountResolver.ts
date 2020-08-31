@@ -16,9 +16,8 @@ class AccountResolver extends Resolver<Account> {
     owner: async (account: Account, shouldExpand: boolean = false, expandProps?: PropExpand) => {
       const hasPrivilege = await this.hasPrivilege(account.id);
 
-
       if (!hasPrivilege) {
-        return null;
+        return { id: '' };
       } else if (shouldExpand && account?.owner?.id) {
         return this.userResolverFactory().getUserById(account.owner.id, expandProps);
       } else {
