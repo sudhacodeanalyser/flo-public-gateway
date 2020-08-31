@@ -20,7 +20,7 @@ export type AccountMutable = t.TypeOf<typeof AccountMutableCodec>;
 
 export interface Account extends TimestampedModel, AccountMutable {
   id: string;
-  owner: Expandable<User>;
+  owner?: Expandable<User>;
   locations: Array<Expandable<Location>>;
   users: Array<Expandable<User>>;
   userRoles: AccountUserRole[];
