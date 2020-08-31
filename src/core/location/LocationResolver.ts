@@ -44,6 +44,13 @@ class LocationResolver extends Resolver<Location> {
       });
     },
     users: async (location: Location, shouldExpand = false, expandProps?: PropExpand) => {
+      const hasAccountPrivilege = await this.accountResolverFactory().hasPrivilege(location.account.id);
+      const currentUserId = (this.httpContext.request as Request)?.token?.user_id;
+
+      if (!hasAccountPrivilege && !currentUserId) {
+        return null;
+      }
+
       const locationUserRoles = await this.getAllUserRolesByLocationId(location.id);
       const parents = await this.locationTreeTable.getAllParents(location.account.id, location.id);
       const parentUsers = _.flatten(await Promise.all(
@@ -52,10 +59,12 @@ class LocationResolver extends Resolver<Location> {
         )
       ))
       .map(({ userId }) => userId);
+
       const userIds = _.uniq([
         ...parentUsers,
         ...locationUserRoles.map(({ userId }) => userId)
-      ]);
+      ])
+      .filter(userId => hasAccountPrivilege || userId === currentUserId);
 
       if (shouldExpand) {
         return Promise.all(
@@ -73,6 +82,13 @@ class LocationResolver extends Resolver<Location> {
       }
     },
     userRoles: async (location: Location, shouldExpand = false) => {
+      const hasAccountPrivilege = await this.accountResolverFactory().hasPrivilege(location.account.id);
+      const currentUserId = (this.httpContext.request as Request)?.token?.user_id;
+
+      if (!hasAccountPrivilege && !currentUserId) {
+        return null;
+      }
+
       const explicitUserRoles = await this.getAllUserRolesByLocationId(location.id);
       const parents = await this.locationTreeTable.getAllParents(location.account.id, location.id);
       const parentUserRoles = _.flatten(await Promise.all(
@@ -84,6 +100,7 @@ class LocationResolver extends Resolver<Location> {
       )) as Array<{ userId: string, locationId: string, roles: string[] }>;
 
       return _.chain([...explicitUserRoles, ...parentUserRoles])
+        .filter(({ userId }) => hasAccountPrivilege || userId === currentUserId)
         .groupBy('userId')
         .map((userRoles, userId) => {
            return {
