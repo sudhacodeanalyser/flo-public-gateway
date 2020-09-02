@@ -55,6 +55,7 @@ routingPaths:
   - name: /legacy
   - name: /swagger
   - name: /api/v1
+    port: 8000
     servicePrefix: proxy-flo-api-
 
 
