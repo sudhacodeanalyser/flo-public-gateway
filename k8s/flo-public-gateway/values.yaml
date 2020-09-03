@@ -44,6 +44,7 @@ routingIngress:
       - flo-public-gateway-prod.flosecurecloud.com
     development:
       - api-gw-dev.flocloud.co
+      - api-dev.flocloud.co
       - flo-public-gateway-k8s.flocloud.co
     rc:
       - api-gw-rc.flosecurecloud.com
