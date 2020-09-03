@@ -8,6 +8,7 @@ import OnboardingLogTable from './OnboardingLogTable';
 import MemoizedOnboardingLogTable from './MemoizedOnboardingLogTable';
 import PuckTokenMetadataTable from './PuckTokenMetadataTable';
 import config from '../../config/config';
+import PairInitTable from './PairInitTable';
 
 export default new ContainerModule((bind: interfaces.Bind) => {
   bind<DeviceService>('DeviceService').to(DeviceService);
@@ -19,4 +20,6 @@ export default new ContainerModule((bind: interfaces.Bind) => {
   bind<PuckTokenMetadataTable>('PuckTokenMetadataTable').to(PuckTokenMetadataTable);
   bind<number>('PuckPairingTokenTTL').toConstantValue(7200); // Two hours
   bind<string>('PuckTokenSecret').toConstantValue(config.puckTokenSecret);
+  bind<PairInitTable>('PairInitTable').to(PairInitTable);
+  bind<number>('PairInitTTL').toConstantValue(config.pairInitTTL);
 });
