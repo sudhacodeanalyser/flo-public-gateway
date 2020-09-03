@@ -51,7 +51,8 @@ function getDefaults(): { [key: string]: any } {
         sendWithUsKey: 'test_eca8b69ac6008b555286914771e9c6dad9632ded',
         floDetectApiUrl: 'http://flo-detect-v2.flocloud.co',
         weatherApiUrl: 'http://flo-weather.flocloud.co',
-        emailGatewayUrl: 'http://email-gateway.flocloud.co'
+        emailGatewayUrl: 'http://email-gateway.flocloud.co',
+        pairInitTTL: 604800
       };
   }
 }
