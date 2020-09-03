@@ -202,7 +202,7 @@ class DeviceService {
       })
     ]);
 
-    const location = pipe(locationOpt, O.toUndefined);
+    const location = O.toUndefined(locationOpt);
 
     if (device !== null && !_.isEmpty(device) && device.isPaired) {
       throw new ConflictError('Device already paired.');
