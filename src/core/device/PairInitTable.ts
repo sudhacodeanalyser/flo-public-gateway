@@ -19,8 +19,8 @@ class PairInitTable extends DatabaseTable<PairInitRecordData> {
     super(dbClient, 'PairInit');
   }
 
-  public async getByMacAddress(macAddress: string): Promise<PairInitRecordData | null> {
-    const devices = await this.query<DynamoDbQuery>({
+  public async getByMacAddress(macAddress: string): Promise<PairInitRecordData[]> {
+    return this.query<DynamoDbQuery>({
       IndexName: 'MacAddressIndex',
       KeyConditionExpression: '#mac_address = :mac_address',
       ExpressionAttributeNames: {
@@ -30,8 +30,6 @@ class PairInitTable extends DatabaseTable<PairInitRecordData> {
         ':mac_address': macAddress
       }
     });
-
-    return _.isEmpty(devices) ? null : devices[0];
   }
 }
 
