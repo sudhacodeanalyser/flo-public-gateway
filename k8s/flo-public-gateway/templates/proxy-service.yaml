@@ -2,40 +2,14 @@
 kind: Service
 apiVersion: v1
 metadata:
-  name: proxy-eb-{{ include "flo-public-gateway.fullname" . }}
+  name: {{ template "flo-public-gateway.proxy-to-flo-api-name" . }}
   annotations:
     kubernetes.io/ingress.class: "nginx"
 spec:
   ports:
-    - port: 443
+    - port: 8000
       protocol: TCP
-      targetPort: 443
+      targetPort: 8000
   type: ExternalName
-{{- if eq .Values.environment "production" }}
-  externalName: {{ .Values.v1ProxyService.production }}
-{{- else if eq .Values.environment "rc" }}
-  externalName: {{ .Values.v1ProxyService.rc }}
-{{- else  }}
-  externalName: {{ .Values.v1ProxyService.development }}
-{{- end }}
+  externalName: {{ .Values.floApiUrl | quote }}
 
----
-kind: Service
-apiVersion: v1
-metadata:
-  name: proxy-k8s-{{ include "flo-public-gateway.fullname" . }}
-  annotations:
-    kubernetes.io/ingress.class: "nginx"
-spec:
-  ports:
-  - port: 443
-    protocol: TCP
-    targetPort: 443
-  type: ExternalName
-{{- if eq .Values.environment "production" }}
-  externalName: {{ .Values.internalIngressHosts.production }}
-{{- else if eq .Values.environment "rc" }}
-  externalName: {{ .Values.internalIngressHosts.rc }}
-{{- else  }}
-  externalName: {{ .Values.internalIngressHosts.development }}
-{{- end }}
