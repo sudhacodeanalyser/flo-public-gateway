@@ -172,7 +172,7 @@ class AccountService {
     const srcAccount = toNullable(await this.getAccountById(sourceAccountId));
     const destAccount = toNullable(await this.getAccountById(destAccountId));
 
-    if (!srcAccount || !destAccount) {
+    if (!srcAccount || !destAccount || !srcAccount?.owner?.id) {
       throw new NotFoundError('Account not found.');
     }
 

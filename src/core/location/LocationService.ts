@@ -53,7 +53,7 @@ class LocationService {
     const accountId = location.account.id;
     const account = await this.accountServiceFactory().getAccountById(accountId);
 
-    if (createdLocation === null || isNone(account)) {
+    if (createdLocation === null || isNone(account) || !account.value?.owner?.id) {
       return O.none;
     }
 

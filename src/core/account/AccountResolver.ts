@@ -1,33 +1,53 @@
 import { inject, injectable } from 'inversify';
+import { injectHttpContext, interfaces } from 'inversify-express-utils';
 import { AccountRecordData, AccountRecord } from './AccountRecord';
+import Request from '../api/Request';
 import { AccountMutable, Account, AccountUserRole, DependencyFactoryFactory, PropExpand } from '../api';
 import { Resolver, PropertyResolverMap, LocationResolver, UserResolver } from '../resolver';
 import AccountTable from './AccountTable';
 import UserAccountRoleTable from '../user/UserAccountRoleTable';
 import { UserAccountRoleRecord } from '../user/UserAccountRoleRecord';
 import { fromPartialRecord } from '../../database/Patch';
+import _ from 'lodash';
 
 @injectable()
 class AccountResolver extends Resolver<Account> {
   protected propertyResolverMap: PropertyResolverMap<Account> = {
     owner: async (account: Account, shouldExpand: boolean = false, expandProps?: PropExpand) => {
-      if (shouldExpand) {
+      const hasPrivilege = await this.hasPrivilege(account.id);
+
+      if (!hasPrivilege) {
+        return { id: '' };
+      } else if (shouldExpand && account?.owner?.id) {
         return this.userResolverFactory().getUserById(account.owner.id, expandProps);
       } else {
         return account.owner;
       }
     },
     locations: async (account: Account, shouldExpand: boolean = false, expandProps?: PropExpand) => {
-      const locations = await this.locationResolverFactory().getAllByAccountId(account.id, expandProps);
+      const hasPrivilege = await this.hasPrivilege(account.id);
+      const req = this.httpContext.request as Request;
+      const currentUserId = req?.token?.user_id;
+      const locations = hasPrivilege ?
+        (await this.locationResolverFactory().getAllByAccountId(account.id, expandProps)) :
+        currentUserId ? 
+          (await this.locationResolverFactory().getByUserIdRootOnly(currentUserId, expandProps)).items :
+          [];
 
       return locations.filter(({ parent }) => !parent);
     },
     users: async (account: Account, shouldExpand: boolean = false, expandProps?: PropExpand) => {
+      const req = this.httpContext.request as Request;
+      const currentUserId = req?.token?.user_id;
+      const hasPrivilege = await this.hasPrivilege(account.id);
       const accountUserRoles = await this.getAllAccountUserRolesByAccountId(account.id);
+      const visibleAccountUserRoles = hasPrivilege ?
+        accountUserRoles :
+        _.filter(accountUserRoles, ({ userId: currentUserId }));
 
       if (shouldExpand) {
         return Promise.all(
-          accountUserRoles.map(async (accountUserRole) => {
+          visibleAccountUserRoles.map(async (accountUserRole) => {
             const user = await this.userResolverFactory().getUserById(accountUserRole.userId, expandProps);
 
             return {
@@ -37,11 +57,18 @@ class AccountResolver extends Resolver<Account> {
           })
         );
       } else {
-        return accountUserRoles.map(({ userId }) => ({ id: userId }));
+        return visibleAccountUserRoles.map(({ userId }) => ({ id: userId }));
       }
     },
     userRoles: async (account: Account, shouldExpand: boolean = false) => {
-      return this.getAllAccountUserRolesByAccountId(account.id);
+      const req = this.httpContext.request as Request;
+      const currentUserId = req?.token?.user_id;
+      const hasPrivilege = await this.hasPrivilege(account.id);
+      const userAccountRoles = await this.getAllAccountUserRolesByAccountId(account.id);
+
+      return hasPrivilege ?
+        userAccountRoles :
+        _.filter(userAccountRoles, { userId: currentUserId });
     },
     type: async (account: Account, shouldExpand: boolean = false) => {
       return account.type || 'personal';
@@ -53,7 +80,8 @@ class AccountResolver extends Resolver<Account> {
   constructor(
     @inject('AccountTable') private accountTable: AccountTable,
     @inject('UserAccountRoleTable') private userAccountRoleTable: UserAccountRoleTable,
-    @inject('DependencyFactoryFactory') depFactoryFactory: DependencyFactoryFactory
+    @inject('DependencyFactoryFactory') depFactoryFactory: DependencyFactoryFactory,
+    @injectHttpContext private readonly httpContext: interfaces.HttpContext
   ) {
     super();
 
@@ -134,6 +162,27 @@ class AccountResolver extends Resolver<Account> {
     const updatedAccountRecordData = await this.accountTable.update({ id }, patch);
 
     return new AccountRecord(updatedAccountRecordData).toModel();
+  }
+
+  public async hasPrivilege(accountId: string): Promise<boolean> {
+    const req = this.httpContext.request as Request;
+    const currentUserRoles = req?.token?.roles;
+    const currentUserId = req?.token?.user_id;
+    const currentClientId = req?.token?.client_id;
+    const accountUserRoles = await this.getAllAccountUserRolesByAccountId(accountId);
+    
+    return currentUserRoles && (
+      req?.token?.isAdmin() || // Is Flo system admin
+      (currentUserId && !_.chain(accountUserRoles)
+        .filter({ userId: currentUserId })
+        .map('roles')
+        .flatten()
+        .intersection(['owner', 'write'])
+        .isEmpty()
+        .value()
+      ) || // Has owner or write permissions on account
+      (!currentUserId && currentClientId) // Is a client (i.e. non-user) token
+    );
   }
 }
 

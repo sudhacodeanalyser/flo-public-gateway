@@ -65,7 +65,13 @@ class AuthMiddlewareFactory {
           logger.info({ token: tokenMetadata });
         }
 
-        req.token = tokenMetadata;
+        req.token = {
+          ...tokenMetadata,
+          isAdmin(): boolean {
+            return !!this.roles && this.roles.indexOf('system.admin') >= 0;
+          }
+        };
+
         next();
       } catch (err) {
         next(err);
