@@ -9,7 +9,7 @@ import { DependencyFactoryFactory, Device, DeviceCreate, DeviceType, DeviceUpdat
 import ConflictError from '../api/error/ConflictError';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import { DeviceResolver } from '../resolver';
-import { EntityActivityAction, EntityActivityService, EntityActivityType, LocationService } from '../service';
+import { EntityActivityAction, EntityActivityService, EntityActivityType, LocationService, UserService } from '../service';
 import { SessionService } from '../session/SessionService';
 import { DirectiveService } from './DirectiveService';
 import { PairingResponse } from './PairingService';
@@ -19,6 +19,7 @@ import Request from '../api/Request';
 import { NotificationService } from '../notification/NotificationService';
 import ForbiddenError from '../api/error/ForbiddenError';
 import moment from 'moment-timezone';
+import PairInitTable from './PairInitTable';
 
 const { isNone, fromNullable } = O;
 type Option<T> = O.Option<T>;
@@ -27,6 +28,7 @@ type Option<T> = O.Option<T>;
 class DeviceService {
   private locationServiceFactory: () => LocationService;
   private sessionServiceFactory: () => SessionService;
+  private userServiceFactory: () => UserService;
 
   constructor(
     @inject('DeviceResolver') private deviceResolver: DeviceResolver,
@@ -37,10 +39,13 @@ class DeviceService {
     @inject('EntityActivityService') private entityActivityService: EntityActivityService,
     @inject('MachineLearningService') private mlService: MachineLearningService,
     @inject('NotificationService') private notificationService: NotificationService,
+    @inject('PairInitTable') private pairInitTable: PairInitTable,
+    @inject('PairInitTTL') private pairInitTTL: number,
     @injectHttpContext private httpContext: interfaces.HttpContext
   ) {
     this.locationServiceFactory = depFactoryFactory<LocationService>('LocationService');
     this.sessionServiceFactory = depFactoryFactory<SessionService>('SessionService');
+    this.userServiceFactory = depFactoryFactory<UserService>('UserService');
   }
 
   public async getDeviceById(id: string, expand?: PropExpand): Promise<Option<Device>> {
@@ -164,6 +169,7 @@ class DeviceService {
     const pairingData = await this.apiV1PairingService.initPairing(authToken, qrData);
     const { deviceId } = pairingData;
 
+    await this.markPairInit(pairingData.deviceId);
     await this.internalDeviceService.upsertDevice(deviceId, {});
 
     const { token } = await this.sessionServiceFactory().issueFirestoreToken(userId, { devices: [deviceId] });
@@ -177,14 +183,30 @@ class DeviceService {
   }
 
   public async pairDevice(authToken: string, deviceCreate: DeviceCreate & { id?: string }): Promise<Device> {
-    const [device, location] = await Promise.all([
-      this.deviceResolver.getByMacAddress(deviceCreate.macAddress),
-      this.locationServiceFactory().getLocation(deviceCreate.location.id)
+    const [device, locationOpt] = await Promise.all([
+      this.deviceResolver.getByMacAddress(deviceCreate.macAddress, {
+        $select: {
+          macAddress: true,
+          isPaired: true
+        }
+      }),
+      this.locationServiceFactory().getLocation(deviceCreate.location.id, {
+        $select: {
+          account: {
+            $select: {
+              id: true
+            }
+          },
+          timezone: true
+        }
+      })
     ]);
+
+    const location = locationOpt && O.toUndefined(locationOpt);
 
     if (device !== null && !_.isEmpty(device) && device.isPaired) {
       throw new ConflictError('Device already paired.');
-    } else if (!location || isNone(location)) {
+    } else if (!location) {
       throw new ResourceDoesNotExistError('Location does not exist');
     }
 
@@ -196,7 +218,7 @@ class DeviceService {
       try {
         await this.apiV1PairingService.completePairing(authToken, createdDevice.id, {
           macAddress: createdDevice.macAddress,
-          timezone: location.value.timezone
+          timezone: location.timezone
         });
       } catch (err) {
         // Failure to complete the pairing process should not cause the pairing to completely fail.
@@ -289,6 +311,34 @@ class DeviceService {
 
   public async transferDevice(id: string, destLocationId: string): Promise<Device> {
     return this.deviceResolver.transferDevice(id, destLocationId);
+  }
+
+  public async markPairInit(macAddress: string): Promise<void> {
+    const currentUserId = (this.httpContext.request as Request)?.token?.user_id;
+
+    if (!currentUserId) {
+      return;
+    }
+
+    const accountId = pipe(
+      await this.userServiceFactory().getUserById(currentUserId), 
+      O.fold(
+        () => undefined, 
+        user => user.account.id
+      )
+    );
+
+    if (!accountId) {
+      return;
+    }
+
+    await this.pairInitTable.put({
+      account_id: accountId,
+      mac_address: macAddress,
+      user_id: currentUserId,
+      created_at: new Date().toISOString(),
+      _ttl: this.pairInitTTL * 4
+    });
   }
 
   private sumDeviceAlertStats(s1: DeviceAlertStats, s2: DeviceAlertStats): DeviceAlertStats {
