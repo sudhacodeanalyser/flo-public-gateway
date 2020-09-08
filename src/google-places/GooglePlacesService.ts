@@ -1,5 +1,5 @@
 import { inject, injectable } from 'inversify';
-import { Client, PlaceInputType } from '@googlemaps/google-maps-services-js';
+import { Client as GoogleClient, PlaceInputType } from '@googlemaps/google-maps-services-js';
 import { GeoLocationQuery, GeoLocationService } from '../core/location/GeoLocationService';
 import Logger from 'bunyan';
 import { GeoLocation } from '../core/api';
@@ -7,14 +7,11 @@ import { GeoLocation } from '../core/api';
 @injectable()
 class GooglePlacesService implements GeoLocationService {
 
-  private client: Client;
-
   constructor(
     @inject('GoogleMapsApiKey') private readonly googleMapsApiKey: string,
-    @inject('Logger') private readonly logger: Logger
-  ) {
-    this.client = new Client();
-  }
+    @inject('Logger') private readonly logger: Logger,
+    @inject('GoogleClient') private readonly client: GoogleClient,
+  ) {}
 
   public async getCoordinatesFromQuery(query: GeoLocationQuery): Promise<GeoLocation> {
 
