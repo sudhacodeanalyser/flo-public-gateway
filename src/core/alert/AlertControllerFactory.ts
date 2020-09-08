@@ -200,7 +200,8 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
           country: true,
           postalCode: true,
           timezone: true,
-          userRoles: true
+          userRoles: true,
+          geoLocation: true,
         }
       });
     }

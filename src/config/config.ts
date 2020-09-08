@@ -120,7 +120,8 @@ const config = {
   floDetectApiUrl: process.env.FLO_DETECT_API_URL,
   weatherApiUrl: process.env.WEATHER_API_URL,
   apiV1Token: process.env.API_V1_TOKEN,
-  emailGatewayUrl: process.env.EMAIL_GATEWAY_URL
+  emailGatewayUrl: process.env.EMAIL_GATEWAY_URL,
+  googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY,
 };
 
 export default {

@@ -22,6 +22,7 @@
   },
   "author": "Flo Technologies",
   "dependencies": {
+    "@googlemaps/google-maps-services-js": "^3.1.6",
     "@instana/collector": "1.72.0",
     "@instana/core": "1.72.0",
     "@types/bcrypt": "^3.0.0",
