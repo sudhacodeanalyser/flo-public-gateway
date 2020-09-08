@@ -210,6 +210,18 @@ class DeviceService {
       throw new ResourceDoesNotExistError('Location does not exist');
     }
 
+    if (deviceCreate.deviceType !== DeviceType.PUCK) { 
+      const pairInit = await this.pairInitTable.get({ mac_address: deviceCreate.macAddress, account_id: location.account.id });
+
+      // TODO: Define error types
+      if (!pairInit) {
+        throw new ResourceDoesNotExistError('Pairing uninitialized.');
+      } else if (moment().diff(pairInit.created_at, 'seconds') > this.pairInitTTL) {
+        throw new ConflictError('Pairing expired.');
+      }
+
+    }
+
     const createdDevice = (device !== null && !_.isEmpty(device)) ?
       device :
       await this.deviceResolver.createDevice(deviceCreate, true);
