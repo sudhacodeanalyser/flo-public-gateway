@@ -100,7 +100,7 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
         const locationsAndParents = !_.isEmpty(locationId) && (await Promise.all((_.isArray(locationId) ? locationId : [locationId])
           .map(async (locId) => [
             locId,
-            ...(await locationService.getAllParentIds(locationId))
+            ...(await locationService.getAllParentIds(locId))
           ])
         ));
 
