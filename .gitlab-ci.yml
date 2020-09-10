@@ -158,6 +158,7 @@ ReleaseCandidate:
     SENSOR_METER_URL_PROD: "https://flo-puck-service.flosecurecloud.com"
   image: kloiadocker/kloiahelm:0.0.1
   stage: deploy-rc
+  allow_failure: true
   dependencies:
     - Compile
   only:
