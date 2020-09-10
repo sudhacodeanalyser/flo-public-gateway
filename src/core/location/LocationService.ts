@@ -18,6 +18,7 @@ import LocationTreeTable, { LocationTreeRow } from './LocationTreeTable'
 import { pipe } from 'fp-ts/lib/pipeable';
 import { MachineLearningService } from '../../machine-learning/MachineLearningService';
 import NotFoundError from '../api/error/NotFoundError';
+import { GeoLocationService } from './GeoLocationService';
 
 const { fromNullable, isNone } = O;
 type Option<T> = O.Option<T>;
@@ -36,7 +37,8 @@ class LocationService {
     @inject('LocationTreeTable') private locationTreeTable: LocationTreeTable,
     @inject('IrrigationScheduleService') private irrigationScheduleService: IrrigationScheduleService,
     @inject('EntityActivityService') private entityActivityService: EntityActivityService,
-    @inject('MachineLearningService') private mlService: MachineLearningService
+    @inject('MachineLearningService') private mlService: MachineLearningService,
+    @inject('GeoLocationService') private geoLocationService: GeoLocationService,
   ) {
     this.deviceServiceFactory = depFactoryFactory<DeviceService>('DeviceService');
     this.accountServiceFactory = depFactoryFactory<AccountService>('AccountService');
@@ -47,6 +49,19 @@ class LocationService {
 
     if (location.parent?.id) {
       await this.validateParent(location.account.id, location.parent.id);
+    }
+
+    if (!location.geoLocation?.coordinates) {
+      const geoLocationData = await this.geoLocationService.getCoordinatesFromQuery({
+        address: location.address as string,
+        city: location.city,
+        state: location.state,
+        country: location.country,
+      });
+      location.geoLocation = {
+        ...location.geoLocation,
+        ...geoLocationData,
+      }
     }
 
     const createdLocation: Location | null = await this.locationResolver.createLocation(location);
@@ -127,6 +142,19 @@ class LocationService {
           locationUpdate.parent && locationUpdate.parent.id, 
           !!(location && location.parent && location.parent.id)
         );
+      }
+    }
+
+    if (!locationUpdate.geoLocation?.coordinates && locationUpdate.address) {
+      const geoLocationData = await this.geoLocationService.getCoordinatesFromQuery({
+        address: locationUpdate.address as string,
+        city: locationUpdate.city,
+        state: locationUpdate.state,
+        country: locationUpdate.country,
+      });
+      locationUpdate.geoLocation = {
+        ...locationUpdate.geoLocation,
+        ...geoLocationData,
       }
     }
 

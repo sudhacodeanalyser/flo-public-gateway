@@ -55,6 +55,7 @@ secrets:
     API_V1_TOKEN: "${API_V1_TOKEN}"
     EMAIL_GATEWAY_URL: "${EMAIL_GATEWAY_URL}"
     WATER_METER_SERVICE_URL: "${WATER_METER_SERVICE_URL}"
+    GOOGLE_MAPS_API_KEY: "${GOOGLE_MAPS_API_KEY}"
 internalIngress:
   host: internal-ingress.flocloud.co
 routingIngress:

@@ -26,16 +26,12 @@ service:
     successThreshold: 2
     timeoutSeconds: 3
 
-v1ProxyService:
-  production: "not-for-public-use-api-gw.meetflo.com"
-  development: "api-dev.flocloud.co"
-  rc: "not-for-public-use-api-gw.meetflo.com"
+floApiUrl: "flo-api.flo-api.svc.cluster.local"
 
 routingIngress:
   enabled: true
   annotations:
     kubernetes.io/ingress.class: nginx
-    nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
   hosts:
     production:
       - api.meetflo.com
@@ -44,6 +40,7 @@ routingIngress:
       - flo-public-gateway-prod.flosecurecloud.com
     development:
       - api-gw-dev.flocloud.co
+      - api-dev.flocloud.co
       - flo-public-gateway-k8s.flocloud.co
     rc:
       - api-gw-rc.flosecurecloud.com
@@ -55,26 +52,13 @@ routingIngress:
 
 routingPaths:
   - name: /api/v2
-    servicePrefix: proxy-k8s
   - name: /docs
-    servicePrefix: proxy-k8s
   - name: /legacy
-    servicePrefix: proxy-k8s
   - name: /swagger
-    servicePrefix: proxy-k8s
   - name: /api/v1
-    servicePrefix: proxy-eb
+    port: 8000
+    servicePrefix: proxy-flo-api-
 
-internalIngress:
-  enabled: true
-  path: /
-  annotations:
-    kubernetes.io/ingress.class: nginx
-
-internalIngressHosts:
-  production: "internal-ingress.flosecurecloud.com"
-  development: "internal-ingress.flocloud.co"
-  rc: "internal-ingress-rc.flosecurecloud.com"
 
 nodeSelector:
   kops.k8s.io/instancegroup: nodes

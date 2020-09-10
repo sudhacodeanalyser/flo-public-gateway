@@ -133,6 +133,15 @@ export enum SystemMode {
 
 export const SystemModeCodec = convertEnumtoCodec(SystemMode);
 
+const GeoLocationPropsCodec = t.partial({
+  coordinates: t.type({
+    latitude: t.number,
+    longitude: t.number,
+  })
+});
+
+export type GeoLocation = t.TypeOf<typeof GeoLocationPropsCodec>;
+
 const AdditionalPropsCodec = t.partial({
   nickname: t.string,
   irrigationSchedule: t.type({
@@ -140,8 +149,10 @@ const AdditionalPropsCodec = t.partial({
   }),
   parent: t.union([t.null, t.type({
     id: t.string
-  })])
+  })]),
+  geoLocation: GeoLocationPropsCodec
 });
+
 
 const SystemModeProps = t.type({
   systemMode: t.union([t.undefined, t.partial({
