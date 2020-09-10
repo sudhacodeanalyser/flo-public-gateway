@@ -230,6 +230,7 @@ K8sProd:
     RS_ENV: "afe789b6-72d2-4270-a03e-44ea3562150d"
     RUNSCOPE_TRIGGER_URL: "https://api.runscope.com/radar/68e4a198-9132-4560-bb08-a2e746c8c3e6/trigger?runscope_environment=${RS_ENV}"
   stage: verify-rc
+  allow_failure: true
   dependencies:
     - Compile
   only:
