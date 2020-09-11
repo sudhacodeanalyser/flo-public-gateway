@@ -36,8 +36,8 @@ spec:
         paths:
         {{- range $.Values.routingPaths }}
           - backend:
-              serviceName: {{ .servicePrefix }}-{{ $fullName }}
-              servicePort: 443
+              serviceName: {{ .servicePrefix | default "" }}-{{ $fullName }}
+              servicePort: {{ .port | default $.Values.service.port }}
             path: {{ .name }}
         {{- end }}
   {{- end }}
