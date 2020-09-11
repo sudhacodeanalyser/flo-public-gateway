@@ -36,7 +36,7 @@ spec:
         paths:
         {{- range $.Values.routingPaths }}
           - backend:
-              serviceName: {{ .servicePrefix | default "" }}-{{ $fullName }}
+              serviceName: {{ .servicePrefix | default "" }}{{ $fullName }}
               servicePort: {{ .port | default $.Values.service.port }}
             path: {{ .name }}
         {{- end }}
