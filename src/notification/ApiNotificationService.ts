@@ -231,6 +231,19 @@ class ApiNotificationService extends HttpService {
     });
   }
 
+  public async moveEvents(srcAccountId: string, destAccountId: string, srcLocationId: string, destLocationId: string): Promise<void> {
+    return this.sendRequest({
+      method: 'put',
+      url: '/events/move',
+      body: {
+        srcAccountId,
+        destAccountId,
+        srcLocationId,
+        destLocationId
+      }
+    })
+  }
+
   private toLowerCamelCaseObject(obj: any): any {
     if(_.isArray(obj)) {
       return obj.map(x => this.toLowerCamelCaseObject(x))
