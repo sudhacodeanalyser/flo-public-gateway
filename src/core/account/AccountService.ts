@@ -1,5 +1,5 @@
 import { injectable, inject } from 'inversify';
-import { AccountMerge, AccountMutable, Account, AccountUserRole, UserInvite, UserCreate, PropExpand, DependencyFactoryFactory, User, InviteAcceptData } from '../api';
+import { AccountMerge, AccountMutable, Account, AccountUserRole, UserInvite, PropExpand, DependencyFactoryFactory, User, InviteAcceptData } from '../api';
 import { UserInviteService, InviteTokenData } from '../user/UserRegistrationService';
 import { AccountResolver } from '../resolver';
 import { Option, fromNullable, toNullable } from 'fp-ts/lib/Option';
@@ -13,6 +13,7 @@ import Logger from 'bunyan';
 import { NonEmptyStringFactory } from '../api/validator/NonEmptyString';
 import { EmailFactory } from '../api/validator/Email';
 import _ from 'lodash';
+import { NotificationService } from '../notification/NotificationService';
 
 const sevenDays = 604800;
 
@@ -24,6 +25,7 @@ class AccountService {
   constructor(
     @inject('AccountResolver') private accountResolver: AccountResolver,
     @inject('UserInviteService') private userInviteService: UserInviteService,
+    @inject('NotificationService') private notificationService: NotificationService,
     @inject('Logger') private logger: Logger,
     @inject('DependencyFactoryFactory') depFactoryFactory: DependencyFactoryFactory,
   ) {
@@ -195,15 +197,34 @@ class AccountService {
 
       await Promise.all(
         locationMerge
-          .map(({ sourceLocationId, destLocationId }) => locationService.transferDevices(destLocationId, sourceLocationId))
+          .map(({ sourceLocationId, destLocationId }) => 
+            locationService.transferDevices(destLocationId, sourceLocationId)
+          )
+      );
+
+      await Promise.all(
+        locationMerge
+          .map(({ sourceLocationId, destLocationId }) => 
+            this.notificationService.moveEvents(sourceAccountId, destAccountId, sourceLocationId, destLocationId)
+          )
       );
     }
 
-    await Promise.all(
+    const locationMappingPairs = await Promise.all(
       locations
         .filter(({ id }) => !locationMerge || !_.find(locationMerge, { sourceLocationId: id }))
-        .map(({ id }) => locationService.transferLocation(destAccountId, id))
+        .map(async ({ id }) => {
+          const l = await locationService.transferLocation(destAccountId, id)
+          return [id, l.id]
+        })
     );
+
+    await Promise.all(
+      locationMappingPairs
+        .map(([sourceLocationId, destLocationId]: string[]) => 
+          this.notificationService.moveEvents(sourceAccountId, destAccountId, sourceLocationId, destLocationId)
+        )
+    )
 
     const updatedDestAccount = toNullable(await this.getAccountById(destAccountId));
 
