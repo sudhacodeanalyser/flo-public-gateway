@@ -620,7 +620,7 @@ class LocationResolver extends Resolver<Location> {
     return locationRecordData === null ? null : locationRecordData.account_id;
   }
 
-  private async hasAccess(userId: string, locationId: string, pageSize: number = 50, pageNum: number = 0): Promise<boolean> {
+  private async hasAccess(userId: string, locationId: string, pageSize: number = 50, pageNum: number = 1): Promise<boolean> {
     const { total, items } = await this.getByUserIdWithChildren(
       userId, 
       {
@@ -633,14 +633,14 @@ class LocationResolver extends Resolver<Location> {
     );
 
     if (_.find(items, { id: locationId })) {
-      return false;
+      return true;
     }
 
     if (((pageNum - 1) * pageSize) + items.length < total) {
       return this.hasAccess(userId, locationId, pageSize, pageNum + 1);
     }
 
-    return true;
+    return false;
   }
 
 
