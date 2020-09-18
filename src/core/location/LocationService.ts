@@ -646,6 +646,27 @@ class LocationService {
     return maybeDevices.map(mayBeADevice => pipe(mayBeADevice, O.map(({ location: { id } }) => id), O.toUndefined)) as string[];
   }
 
+  public async validateLocations(locationIds: string[], userId: string, filters?: LocationFilters): Promise<boolean> {
+    const selection: PropExpand = {
+      $select: {
+        id: true
+      }
+    };
+
+    const pageThruLocations = async (notValidLocationIds: string[] = [], pageNum: number = 1, pageSize: number = 100): Promise<boolean> => {
+      const { total, items } = await this.getByUserIdWithChildren(userId, selection, pageSize, pageNum, filters);
+      const difference = _.difference(notValidLocationIds, items.map(({ id }) => id));
+      if (_.isEmpty(difference)) {
+        return true;
+      }
+      if (((pageNum - 1) * pageSize) + items.length < total) {
+        return pageThruLocations(difference, pageNum + 1, pageSize);
+      }
+      return false;
+    }
+    return pageThruLocations(locationIds);
+  }
+
   private async getDevices(locationId: string, deviceExpand: PropExpand, shouldCascade?: boolean): Promise<Array<Partial<Device>>> {
     const location = O.toNullable(await this.getLocation(locationId, { 
       $select: { 

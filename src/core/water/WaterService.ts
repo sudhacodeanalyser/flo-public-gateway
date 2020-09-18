@@ -42,14 +42,19 @@ class WaterService {
     this.locationServiceFactory = depFactoryFactory<LocationService>('LocationService');
   }
 
-  public async getLocationConsumption(locationId: string, startDate: string, endDate: string = new Date().toISOString(), interval: WaterConsumptionInterval = WaterConsumptionInterval.ONE_HOUR, timezone?: string): Promise<WaterConsumptionReport> {
-    const devices = await this.deviceServiceFactory().getAllByLocationId(locationId, {
-      $select: {
-        macAddress: true
-      }
-    });
-    const tz = timezone || pipe(
-      await this.locationServiceFactory().getLocation(locationId, {
+  public async getLocationConsumption(locationId: string[], startDate: string, endDate: string = new Date().toISOString(), interval: WaterConsumptionInterval = WaterConsumptionInterval.ONE_HOUR, timezone?: string): Promise<WaterConsumptionReport> {
+    const allUnitIds = await this.locationServiceFactory().getUnitLocations(locationId);
+
+    const devices = _.flatten(await Promise.all(
+      _.map(allUnitIds, async u => this.deviceServiceFactory().getAllByLocationId(u, {
+        $select: {
+          macAddress: true
+        }
+      }))
+    ));
+
+    const tz = timezone || !_.isEmpty(locationId) ? pipe(
+      await this.locationServiceFactory().getLocation(locationId[0], {
         $select: {
           timezone: true
         }
@@ -58,7 +63,7 @@ class WaterService {
         () => 'Etc/UTC',
         location => location.timezone || 'Etc/UTC'
       )
-    );
+    ): 'Etc/UTC';
     const start = this.formatDate(startDate, tz);
     const end = this.formatDate(endDate, tz);
     const macAddresses = devices.map(({ macAddress }) => macAddress);
@@ -410,7 +415,7 @@ class WaterService {
     };
   }
 
-  private formatConsumptionReport(startDate: string, endDate: string, interval: string, timezone: string, results: WaterMeterReport, locationId?: string, macAddress?: string): WaterConsumptionReport {
+  private formatConsumptionReport(startDate: string, endDate: string, interval: string, timezone: string, results: WaterMeterReport, locationId?: string[], macAddress?: string): WaterConsumptionReport {
     const items = _.zip(...results.items.map(({ items: deviceItems }) => deviceItems || []))
       .map(data =>
         data.reduce(({ time, sum }, item) => ({
