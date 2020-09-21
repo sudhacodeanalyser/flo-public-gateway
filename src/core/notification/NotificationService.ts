@@ -44,4 +44,5 @@ export interface NotificationService {
   deleteFilterState(id: string): Promise<void>;
   createFilterState(filterState: FilterState): Promise<FilterState>;
   saveUserFeedback(incidentId: string, userFeedback: NewUserFeedback, force?: boolean): Promise<void>
+  moveEvents(srcAccountId: string, destAccountId: string, srcLocationId: string, destLocationId: string): Promise<void>
 }
