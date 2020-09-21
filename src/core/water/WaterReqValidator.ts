@@ -72,7 +72,7 @@ export const getConsumption = t.type({
         macAddress: t.string
       }),
       t.type({
-        locationId: t.string
+        locationId: t.union([t.array(t.string), t.string])
       })
     ])
   ])
