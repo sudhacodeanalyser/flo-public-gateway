@@ -174,25 +174,39 @@ class AccountService {
     const srcAccount = toNullable(await this.getAccountById(sourceAccountId));
     const destAccount = toNullable(await this.getAccountById(destAccountId));
 
-    if (!srcAccount || !destAccount || !srcAccount?.owner?.id) {
+    if (!srcAccount || !destAccount || !srcAccount?.owner?.id || !destAccount?.owner?.id) {
       throw new NotFoundError('Account not found.');
     }
 
-    const ownerUserId = srcAccount.owner.id;
+    const sourceOwnerUserId = srcAccount.owner.id;
     const locationService = this.locationServiceFactory();
 
-    const { items: locations } = await locationService.getByUserId(ownerUserId, {
+    const { items: locations } = await locationService.getByUserId(sourceOwnerUserId, {
       $select: {
         id: true
       }
     });
 
-    if (locationMerge) {
-      const invalidLocations = locationMerge
-        .filter(({ sourceLocationId }) => !_.find(locations, { id: sourceLocationId }));
+    if (locationMerge) {     
+      const sourceLocationIds = new Set(locations.map(l => l.id))
+      const invalidSourceLocations = locationMerge
+        .filter(({ sourceLocationId }) => !sourceLocationIds.has(sourceLocationId));
 
-      if (invalidLocations.length) {
-        throw new ConflictError('Location does not belong to account.');
+      if (invalidSourceLocations.length) {
+        throw new ConflictError(`Some source locations do not belong to source account ${sourceAccountId}: [${invalidSourceLocations}]`);
+      }
+
+      const { items: destLocations } = await locationService.getByUserId(destAccount.owner.id, {
+        $select: {
+          id: true
+        }
+      });
+      const destLocationIds = new Set(destLocations.map(l => l.id))
+      const invalidDestLocations = locationMerge
+        .filter(({ destLocationId }) => !destLocationIds.has(destLocationId));
+
+      if (invalidDestLocations.length) {
+        throw new ConflictError(`Some destination locations do not belong to destination account ${destAccountId}: [${invalidDestLocations}]`);
       }
 
       await Promise.all(
@@ -208,23 +222,22 @@ class AccountService {
             this.notificationService.moveEvents(sourceAccountId, destAccountId, sourceLocationId, destLocationId)
           )
       );
+    } else {
+      const locationMappingPairs = await Promise.all(
+        locations
+          .map(async ({ id }) => {
+            const l = await locationService.transferLocation(destAccountId, id)
+            return [id, l.id]
+          })
+      );
+  
+      await Promise.all(
+        locationMappingPairs
+          .map(([sourceLocationId, destLocationId]: string[]) => 
+            this.notificationService.moveEvents(sourceAccountId, destAccountId, sourceLocationId, destLocationId)
+          )
+      )
     }
-
-    const locationMappingPairs = await Promise.all(
-      locations
-        .filter(({ id }) => !locationMerge || !_.find(locationMerge, { sourceLocationId: id }))
-        .map(async ({ id }) => {
-          const l = await locationService.transferLocation(destAccountId, id)
-          return [id, l.id]
-        })
-    );
-
-    await Promise.all(
-      locationMappingPairs
-        .map(([sourceLocationId, destLocationId]: string[]) => 
-          this.notificationService.moveEvents(sourceAccountId, destAccountId, sourceLocationId, destLocationId)
-        )
-    )
 
     const updatedDestAccount = toNullable(await this.getAccountById(destAccountId));
 
