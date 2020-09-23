@@ -318,3 +318,17 @@ export interface DeviceStats {
     }
   };
 }
+
+export interface SsidCredentials {
+  ssid: string;
+  password: string;
+}
+
+export interface Lte {
+  imei: string;
+  iccId: string;
+  randomKey: string;
+  qrCode: string;
+  ssidOffset: number;
+  passwordOffset: number;
+}
