@@ -91,7 +91,10 @@ export function WaterControllerFactory(container: Container, apiVersion: number)
       }
 
       if (locationId) {
-        if (!tokenMetadata.roles.includes('system.admin') && !(await this.locationService.validateLocations(locationId, tokenMetadata.user_id))) {
+        if (
+            !['app.flo-internal-service', 'system.admin'].some(val => tokenMetadata.roles.includes(val)) &&
+            !(await this.locationService.validateLocations(locationId, tokenMetadata.user_id))
+        ) {
           throw new ForbiddenError();
         }
         return this.waterService.getLocationConsumption(locationId, startDate, endDate, interval, timezone);
