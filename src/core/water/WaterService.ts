@@ -431,7 +431,8 @@ class WaterService {
         endDate,
         interval,
         tz: timezone,
-        locationId,
+        locationId: (locationId && locationId.length === 1) ? locationId[0] : undefined,
+        locationIds: (locationId && locationId.length  > 1) ? locationId : undefined,
         macAddress
       },
       aggregations: {
