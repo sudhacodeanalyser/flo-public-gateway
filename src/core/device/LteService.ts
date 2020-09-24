@@ -29,9 +29,9 @@ class LteService {
   }
 
   private extractCredentials(lte: Lte): SsidCredentials {
-    const randomKeyBytes = Buffer.from(lte.randomKey, 'hex')
-    const ssid = this.computeSha256(randomKeyBytes.slice(lte.ssidOffset, 64)).slice(0, 16);
-    const password = this.computeSha256(randomKeyBytes.slice(lte.passwordOffset, 64)).slice(0, 17);
+    const randomKeyBytes = Buffer.from(lte.randomKey, 'hex');
+    const ssid = this.computeSha256(randomKeyBytes.slice(lte.ssidOffset, lte.ssidOffset + 64)).slice(0, 16);
+    const password = this.computeSha256(randomKeyBytes.slice(lte.passwordOffset, lte.passwordOffset + 64)).slice(0, 17);
     return {
       ssid,
       password
