@@ -53,7 +53,7 @@ class WaterService {
       }))
     ));
 
-    const tz = timezone || !_.isEmpty(locationId) ? pipe(
+    const tz = timezone || (!_.isEmpty(locationId) ? pipe(
       await this.locationServiceFactory().getLocation(locationId[0], {
         $select: {
           timezone: true
@@ -63,10 +63,10 @@ class WaterService {
         () => 'Etc/UTC',
         location => location.timezone || 'Etc/UTC'
       )
-    ): 'Etc/UTC';
+    ): 'Etc/UTC');
     const start = this.formatDate(startDate, tz);
     const end = this.formatDate(endDate, tz);
-    const macAddresses = devices.map(({ macAddress }) => macAddress);
+    const macAddresses = _.chain(devices).map(({ macAddress }) => macAddress).uniq().value();
     const results = await this.getWaterMeterReport(macAddresses, start, end, interval, tz);
 
     return this.formatConsumptionReport(start, end, interval, tz, results, locationId);
