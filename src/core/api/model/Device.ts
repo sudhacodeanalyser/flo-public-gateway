@@ -64,7 +64,7 @@ const DeviceMutableCodec = t.type({
   }),
   componentHealth: t.record(t.string, t.any),
   learning: t.record(t.string, t.any),
-  connectivity: t.union([t.undefined, LteCodec])
+  connectivity: OptionalLteCodec
 });
 
 const MutableSystemModeCodec = t.type({
@@ -115,7 +115,7 @@ const DeviceCreateCodec = t.type({
   deviceType: NonEmptyString,
   deviceModel: NonEmptyString,
   hardwareThresholds: t.union([t.undefined, t.exact(t.partial(HardwareThresholdsCodec.props))]),
-  connectivity: t.union([t.undefined, LteCodec])
+  connectivity: OptionalLteCodec
 });
 export const DeviceCreateValidator = t.exact(DeviceCreateCodec);
 export type DeviceCreate = t.TypeOf<typeof DeviceCreateValidator>;
