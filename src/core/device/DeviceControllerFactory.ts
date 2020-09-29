@@ -1,4 +1,5 @@
 import * as O from 'fp-ts/lib/Option';
+import { pipe } from 'fp-ts/lib/pipeable';
 import { Container, inject } from 'inversify';
 import { BaseHttpController, httpDelete, httpGet, httpPost, interfaces, queryParam, request, requestBody, requestParam, all } from 'inversify-express-utils';
 import * as t from 'io-ts';
@@ -7,7 +8,7 @@ import { QrData, QrDataValidator } from '../../api-v1/pairing/PairingService';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import { InternalDeviceService } from '../../internal-device-service/InternalDeviceService';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
-import { DependencyFactoryFactory, Device, DeviceActionRules, DeviceActionRulesCreate, DeviceActionRulesCreateCodec, DeviceCreate, DeviceCreateValidator, DeviceType, DeviceUpdate, DeviceUpdateValidator, SystemMode as DeviceSystemMode, SystemModeCodec as DeviceSystemModeCodec, HardwareThresholdsCodec, HardwareThresholds, FirmwareInfo } from '../api';
+import { DependencyFactoryFactory, Device, DeviceActionRules, DeviceActionRulesCreate, DeviceActionRulesCreateCodec, DeviceCreate, DeviceCreateValidator, DeviceType, DeviceUpdate, DeviceUpdateValidator, SystemMode as DeviceSystemMode, SystemModeCodec as DeviceSystemModeCodec, HardwareThresholdsCodec, HardwareThresholds, FirmwareInfo, SsidCredentials } from '../api';
 import { asyncMethod, authorizationHeader, createMethod, deleteMethod, httpController, parseExpand, withResponseType } from '../api/controllerUtils';
 import { convertEnumtoCodec } from '../api/enumUtils';
 import ForbiddenError from '../api/error/ForbiddenError';
@@ -17,7 +18,7 @@ import ValidationError from '../api/error/ValidationError'
 import UnauthorizedError from '../api/error/UnauthorizedError';
 import Request from '../api/Request';
 import * as Responses from '../api/response';
-import { DeviceService, PuckTokenService, LocationService } from '../service';
+import { DeviceService, PuckTokenService, LocationService, LteService } from '../service';
 import { DeviceSystemModeServiceFactory } from './DeviceSystemModeService';
 import { DirectiveServiceFactory } from './DirectiveService';
 import { HealthTest, HealthTestServiceFactory } from './HealthTestService';
@@ -121,7 +122,8 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       @inject('DirectiveServiceFactory') private directiveServiceFactory: DirectiveServiceFactory,
       @inject('HealthTestServiceFactory') private healthTestServiceFactory: HealthTestServiceFactory,
       @inject('PuckPairingTokenTTL') private readonly puckPairingTokenTTL: number,
-      @inject('MachineLearningService') private mlService: MachineLearningService
+      @inject('MachineLearningService') private mlService: MachineLearningService,
+      @inject('LteService') private lteService: LteService
     ) {
       super();
     }
@@ -167,6 +169,29 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       const expandProps = parseExpand(expand);
 
       return this.deviceService.getDeviceById(tokenMetadata.puckId, expandProps);
+    }
+
+    // Special endpoint for LTE devices
+    @httpPost(
+      '/lte',
+      auth,
+      reqValidator.create(t.type({
+        body: t.type({
+          data: t.string
+        })
+      }))
+    )
+    private async retrieveSsidCredentials(@requestBody() { data }: { data: string }): Promise<SsidCredentials> {
+      const maybeSsidCredentials = await this.lteService.getSsidCredentials(data);
+      return pipe(
+        maybeSsidCredentials,
+        O.fold(
+          () => {
+            throw new NotFoundError('LTE device not found.') 
+          },
+          ssidCredentials => ssidCredentials
+        )
+      );
     }
 
     @httpGet('/:id',

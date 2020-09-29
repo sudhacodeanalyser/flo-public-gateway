@@ -57,7 +57,7 @@ class LocationPgTable extends PostgresTable<LocationPgRecordData> {
         .where('"ul"."user_id" = ?', userId),
       filters
     );
-    const queryTerms = searchText.split(/\s+/g).filter(term => term).map(term => `${term}:*`).join(' & ');
+    const queryTerms = searchText.split(/[\s()|&:*!]+/g).filter(term => term).map(term => `${term}:*`).join(' & ');
     const { text, values } = (
       queryTerms.trim() ?
         queryBuilder
@@ -94,7 +94,7 @@ class LocationPgTable extends PostgresTable<LocationPgRecordData> {
         .where('"ul"."user_id" = ?', userId),
       filters
     );
-    const queryTerms = searchText.split(/\s+/g).filter(term => term).map(term => `${term}:*`).join(' & ');
+    const queryTerms = searchText.split(/[\s()|&:*!]+/g).filter(term => term).map(term => `${term}:*`).join(' & ');
     const { text, values } = (
         queryTerms.trim() ?
           queryBuilder
@@ -159,7 +159,7 @@ class LocationPgTable extends PostgresTable<LocationPgRecordData> {
         `, userId),
       filters
     );
-    const queryTerms = searchText.split(/\s+/g).filter(term => term).map(term => `${term}:*`).join(' & ');
+    const queryTerms = searchText.split(/[\s()|&:*!]+/g).filter(term => term).map(term => `${term}:*`).join(' & ');
     const { text, values } = (
       queryTerms.trim() ?
         queryBuilder

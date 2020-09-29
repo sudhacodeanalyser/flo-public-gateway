@@ -10,6 +10,7 @@ export interface WaterConsumptionReport {
     interval: string;
     tz: string;
     locationId?: string;
+    locationIds?: string[];
     macAddress?: string;
   },
   aggregations?: {

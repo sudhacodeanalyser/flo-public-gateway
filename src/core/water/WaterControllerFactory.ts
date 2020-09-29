@@ -1,8 +1,17 @@
-import { interfaces, controller, httpGet, requestParam, queryParam, httpPost, requestBody } from 'inversify-express-utils';
+import {
+  interfaces,
+  controller,
+  httpGet,
+  requestParam,
+  queryParam,
+  httpPost,
+  requestBody,
+  request,
+} from 'inversify-express-utils';
 import { inject, Container } from 'inversify';
 import { WaterService, LocationService, DeviceService } from '../service';
 import { WaterConsumptionReport, WaterAveragesReport, WaterConsumptionInterval, WaterMetricsReport, DependencyFactoryFactory } from '../api';
-import { httpController } from '../api/controllerUtils';
+import { httpController, httpMethod, queryParamArray } from '../api/controllerUtils';
 import moment from 'moment';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
 import * as t from 'io-ts';
@@ -10,6 +19,8 @@ import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import Request from '../api/Request';
 import * as ReqValidator from './WaterReqValidator';
 import * as O from 'fp-ts/lib/Option';
+import _ from 'lodash';
+import ForbiddenError from '../api/error/ForbiddenError';
 
 export function WaterControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
@@ -24,10 +35,11 @@ export function WaterControllerFactory(container: Container, apiVersion: number)
 
     if (locationId) {
       const locationService = depFactoryFactory<LocationService>('LocationService')();
-      const parentIds = await locationService.getAllParentIds(locationId);
+      const locationIds = Array.isArray(locationId) ? locationId : locationId.split(',');
+      const allParentIds = _.flatten(await Promise.all(_.map(locationIds, async l => locationService.getAllParentIds(l))));
 
       return {
-        location_id: [locationId, ...parentIds]
+        location_id: [...locationIds, ...allParentIds]
       };
 
     } else if (macAddress) {
@@ -54,22 +66,37 @@ export function WaterControllerFactory(container: Container, apiVersion: number)
   @httpController({ version: apiVersion }, '/water')
   class WaterController implements interfaces.Controller {
     constructor(
-      @inject('WaterService') private waterService: WaterService
+      @inject('WaterService') private waterService: WaterService,
+      @inject('LocationService') private locationService: LocationService,
     ) {}
 
-    @httpGet('/consumption',
+    @httpMethod(
+      'get',
+      '/consumption',
       reqValidator.create(ReqValidator.getConsumption),
       authWithParents
     )
     private async getConsumption(
+      @request() req: Request,
       @queryParam('startDate') startDate: ReqValidator.ISODateString,
       @queryParam('endDate') endDate?: ReqValidator.ISODateString,
       @queryParam('macAddress') macAddress?: string,
-      @queryParam('locationId') locationId?: string,
+      @queryParamArray('locationId') locationId?: string[],
       @queryParam('interval') interval?: WaterConsumptionInterval,
       @queryParam('tz') timezone?: string
     ): Promise<WaterConsumptionReport | void> {
+      const tokenMetadata = req.token;
+      if (tokenMetadata === undefined) {
+        throw new Error('No token defined.');
+      }
+
       if (locationId) {
+        if (
+            !['app.flo-internal-service', 'system.admin'].some(val => tokenMetadata.roles.includes(val)) &&
+            !(await this.locationService.validateLocations(locationId, tokenMetadata.user_id))
+        ) {
+          throw new ForbiddenError();
+        }
         return this.waterService.getLocationConsumption(locationId, startDate, endDate, interval, timezone);
       } else if (macAddress) {
         return this.waterService.getDeviceConsumption(macAddress, startDate, endDate, interval, timezone);

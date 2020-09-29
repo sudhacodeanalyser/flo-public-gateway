@@ -1,6 +1,6 @@
 import { ContainerModule, interfaces } from 'inversify';
 import { DeviceResolver } from '../resolver';
-import { DeviceService, PuckTokenService } from '../service';
+import { DeviceService, LteService, PuckTokenService } from '../service';
 import DeviceForcedSystemModeTable from './DeviceForcedSystemModeTable';
 import DeviceTable from './DeviceTable';
 import MemoizedDeviceTable from './MemoizedDeviceTable';
@@ -9,6 +9,7 @@ import MemoizedOnboardingLogTable from './MemoizedOnboardingLogTable';
 import PuckTokenMetadataTable from './PuckTokenMetadataTable';
 import config from '../../config/config';
 import PairInitTable from './PairInitTable';
+import LteTable from './LteTable';
 
 export default new ContainerModule((bind: interfaces.Bind) => {
   bind<DeviceService>('DeviceService').to(DeviceService);
@@ -22,4 +23,6 @@ export default new ContainerModule((bind: interfaces.Bind) => {
   bind<string>('PuckTokenSecret').toConstantValue(config.puckTokenSecret);
   bind<PairInitTable>('PairInitTable').to(PairInitTable);
   bind<number>('PairInitTTL').toConstantValue(config.pairInitTTL);
+  bind<LteService>('LteService').to(LteService);
+  bind<LteTable>('LteTable').to(LteTable);
 });
