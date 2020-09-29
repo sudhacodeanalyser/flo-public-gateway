@@ -28,3 +28,8 @@ export class LteRecord {
     return morphism(RecordToModelSchema, this.data);
   }
 }
+
+export interface DeviceLteRecordData {
+  device_id: string;
+  imei: string;
+}

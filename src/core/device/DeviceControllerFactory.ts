@@ -270,6 +270,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     private async removeDevice(@requestParam('id') id: string): Promise<void> {
       const deviceId = await this.mapIcdToMacAddress(id);
       await this.internalDeviceService.removeDevice(deviceId);
+      await this.lteService.unlinkDevice(deviceId)
       return this.deviceService.removeDevice(id);
     }
 
@@ -335,8 +336,10 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       }
 
       const device = await this.deviceService.pairDevice(authToken, deviceCreate);
-
-
+      if (deviceCreate.connectivity?.lte) {
+        await this.lteService.linkDevice(device.id, deviceCreate.connectivity.lte.qrCode);
+      }
+      
       return some(device);
     }
 
