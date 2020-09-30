@@ -270,7 +270,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     private async removeDevice(@requestParam('id') id: string): Promise<void> {
       const macAddress = await this.mapIcdToMacAddress(id);
       await this.internalDeviceService.removeDevice(macAddress);
-      await this.lteService.unlinkDevice(id)
+      await this.lteService.unlinkDevice(id);
       return this.deviceService.removeDevice(id);
     }
 
