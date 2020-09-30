@@ -268,9 +268,9 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     )
     @deleteMethod
     private async removeDevice(@requestParam('id') id: string): Promise<void> {
-      const deviceId = await this.mapIcdToMacAddress(id);
-      await this.internalDeviceService.removeDevice(deviceId);
-      await this.lteService.unlinkDevice(deviceId)
+      const macAddress = await this.mapIcdToMacAddress(id);
+      await this.internalDeviceService.removeDevice(macAddress);
+      await this.lteService.unlinkDevice(id)
       return this.deviceService.removeDevice(id);
     }
 
