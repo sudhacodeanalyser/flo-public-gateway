@@ -27,6 +27,7 @@ import { MachineLearningService } from '../../machine-learning/MachineLearningSe
 import { PuckTokenService } from './PuckTokenService';
 import ConflictError from '../api/error/ConflictError';
 import moment from 'moment-timezone';
+import LteTable from './LteTable';
 
 const defaultHwThresholds = (deviceModel: string) => {
   const minZero = {
@@ -131,9 +132,27 @@ class DeviceResolver extends Resolver<Device> {
     },
     connectivity: async (device: Device, shouldExpand = false) => {
       try {
-        const additionalProperties = await this.internalDeviceService.getDevice(device.macAddress);
+        const maybeAdditionalProperties = await this.internalDeviceService.getDevice(device.macAddress);
+        const maybeLteData = await this.lteTable.getByDeviceId(device.id);
 
-        return additionalProperties && (additionalProperties.connectivity || null);
+        const lte = pipe(
+          maybeLteData,
+          Option.map(({ qr_code }) => ({ 
+            lte: { qrCode: qr_code }
+          })),
+          Option.toNullable
+        )
+        
+        const additionalProperties = maybeAdditionalProperties && (maybeAdditionalProperties.connectivity || null);
+        
+        if (!additionalProperties && !lte) {
+          return null;
+        }
+
+        return {
+          ...additionalProperties,
+          ...lte
+        }
 
       } catch (err) {
         this.logger.error({ err });
@@ -562,6 +581,7 @@ class DeviceResolver extends Resolver<Device> {
    @inject('LocationTable') private locationTable: LocationTable,
    @inject('MachineLearningService') private mlService: MachineLearningService,
    @inject('PuckTokenService') private puckTokenService: PuckTokenService,
+   @inject('LteTable') private lteTable: LteTable,
    @injectHttpContext private readonly httpContext: interfaces.HttpContext,
    @inject('IrrigationScheduleService') private irrigationScheduleService: IrrigationScheduleService
   ) {
