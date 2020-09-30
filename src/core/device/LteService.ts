@@ -31,7 +31,7 @@ class LteService {
     );
   }
 
-  public async linkDevice(qrCode: string, deviceId: string): Promise<void> {
+  public async linkDevice(deviceId: string, qrCode: string): Promise<void> {
     const maybeLteRecordData = await this.lteTable.get({qr_code: qrCode});
 
     return pipe(
@@ -40,7 +40,7 @@ class LteService {
         async () => { throw new ResourceDoesNotExistError('LTE device not found.') },
         async lteRecordData => {
           const lte = new LteRecord(lteRecordData).toModel();
-          return this.deviceLteTable.linkDevice(lte.imei, deviceId);
+          return this.deviceLteTable.linkDevice(deviceId, lte.imei);
         }
       )
     );

@@ -25,7 +25,7 @@ class DeviceLteTable extends PostgresTable<DeviceLteRecordData> {
     return results.rows.map(r => r.deviceId);
   }
 
-  public async linkDevice(imei: string, deviceId: string): Promise<void> {
+  public async linkDevice(deviceId: string, imei: string): Promise<void> {
     const { text, values } = squel.useFlavour('postgres')
       .insert()
       .into('"device_lte"')
