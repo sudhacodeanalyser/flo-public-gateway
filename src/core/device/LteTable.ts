@@ -11,20 +11,21 @@ type Option<T> = O.Option<T>;
 @injectable()
 class LteTable extends PostgresTable<LteRecordData> {
   constructor(
-    @inject('PostgresDbClient') @targetName('core') pgDbClient: PostgresDbClient
+    @inject('PostgresDbClient') @targetName('core') private pgDbClient: PostgresDbClient
   ) {
     super(pgDbClient, 'lte');
   }
 
   public async getByDeviceId(deviceId: string): Promise<Option<LteRecordData>> {
-    const query = squel.useFlavour('postgres')
+    const { text, values } = squel.useFlavour('postgres')
       .select()
       .from('"lte"')
-      .join('"device_lte"', '"device_lte"."imei" = "lte"."imei"')
-      .where('"device_lte"."device_id" = ?', deviceId);
-
-    const records = await this.query({ query });
-    return O.fromNullable(_.first(records));
+      .join('"device_lte"', undefined, '"device_lte"."imei" = "lte"."imei"')
+      .where('"device_lte"."device_id" = ?', deviceId)
+      .toParam();
+    
+    const records = await this.pgDbClient.execute(text, values);
+    return O.fromNullable(_.first(records.rows));
   }
 }
 
