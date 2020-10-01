@@ -17,7 +17,7 @@ class DeviceLteTable extends PostgresTable<DeviceLteRecordData> {
       .select()
       .from('"device_lte"')
       .field('"device_id"', '"deviceId"')
-      .join('"lte"', '"device_lte"."imei" = "lte"."imei"')
+      .join('"lte"', undefined, '"device_lte"."imei" = "lte"."imei"')
       .where('"lte"."qr_code" = ?', qrCode)
       .toParam();
     
