@@ -57,13 +57,12 @@ class LocationPgTable extends PostgresTable<LocationPgRecordData> {
         .where('"ul"."user_id" = ?', userId),
       filters
     );
-    const queryTerms = searchText.split(/[\s()|&:*!]+/g).filter(term => term).map(term => `${term}:*`).join(' & ');
     const { text, values } = (
-      queryTerms.trim() ?
+      searchText.trim() ?
         queryBuilder
           .where(
             'to_tsvector(\'simple\', f_concat_ws(\' \', "address", "address2", "city", "state", "postal_code", "country", "nickname")) @@ to_tsquery(\'simple\', ?)',
-            queryTerms
+            this.getQueryTerms(searchText)
           ) :
         queryBuilder
     )
@@ -94,13 +93,12 @@ class LocationPgTable extends PostgresTable<LocationPgRecordData> {
         .where('"ul"."user_id" = ?', userId),
       filters
     );
-    const queryTerms = searchText.split(/[\s()|&:*!]+/g).filter(term => term).map(term => `${term}:*`).join(' & ');
     const { text, values } = (
-        queryTerms.trim() ?
+        searchText.trim() ?
           queryBuilder
             .where(
               'to_tsvector(\'simple\', f_concat_ws(\' \', "address", "address2", "city", "state", "postal_code", "country", "nickname")) @@ to_tsquery(\'simple\', ?)',
-              queryTerms
+              this.getQueryTerms(searchText)
             ) :
           queryBuilder
       )
@@ -159,13 +157,12 @@ class LocationPgTable extends PostgresTable<LocationPgRecordData> {
         `, userId),
       filters
     );
-    const queryTerms = searchText.split(/[\s()|&:*!]+/g).filter(term => term).map(term => `${term}:*`).join(' & ');
     const { text, values } = (
-      queryTerms.trim() ?
+      searchText.trim() ?
         queryBuilder
           .where(
             'to_tsvector(\'simple\', f_concat_ws(\' \', "address", "address2", "city", "state", "postal_code", "country", "nickname")) @@ to_tsquery(\'simple\', ?)',
-            queryTerms
+            this.getQueryTerms(searchText)
           ) :
         queryBuilder
     )
@@ -246,7 +243,8 @@ class LocationPgTable extends PostgresTable<LocationPgRecordData> {
       city: 'city',
       country: 'country',
       state: 'state',
-      postalCode: 'postal_code'
+      postalCode: 'postal_code',
+      parentId: 'parent_location_id'
     };
 
     return _.reduce(filters, (query, value, key) => {
@@ -256,8 +254,13 @@ class LocationPgTable extends PostgresTable<LocationPgRecordData> {
 
       const column = (filterMap as any)[key] as string;
 
-      return query.where(`"${ alias }"."${ column }" IN ?`, value);
+      const op = _.isArray(value) ? 'IN' : '=';
+      return query.where(`"${ alias }"."${ column }" ${op} ?`, value);
     }, queryBuilder);
+  }
+
+  private getQueryTerms(searchText: string): string {
+    return searchText.split(/[\s()|&:*!]+/g).filter(term => term).map(term => `${term}:*`).join(' & ');
   }
 }
 
