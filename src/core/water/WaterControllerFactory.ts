@@ -21,6 +21,7 @@ import * as ReqValidator from './WaterReqValidator';
 import * as O from 'fp-ts/lib/Option';
 import _ from 'lodash';
 import ForbiddenError from '../api/error/ForbiddenError';
+import ValidationError from '../api/error/ValidationError';
 
 export function WaterControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
@@ -31,7 +32,7 @@ export function WaterControllerFactory(container: Container, apiVersion: number)
       location_id: locationId, device_id: macAddress
     })
   );
-  const authWithParents = authMiddlewareFactory.create(async ({ query: { locationId, macAddress } }: Request, depFactoryFactory: DependencyFactoryFactory) => {
+  const authWithParents = authMiddlewareFactory.create(async ({ query: { locationId, macAddress, userId } }: Request, depFactoryFactory: DependencyFactoryFactory) => {
 
     if (locationId) {
       const locationService = depFactoryFactory<LocationService>('LocationService')();
@@ -58,6 +59,10 @@ export function WaterControllerFactory(container: Container, apiVersion: number)
       return {
         location_id: [device.location.id, ...parentIds]
       };
+    } else if (userId) {
+      return {
+        user_id: userId
+      }
     } else {
       return {};
     }
@@ -81,6 +86,7 @@ export function WaterControllerFactory(container: Container, apiVersion: number)
       @queryParam('startDate') startDate: ReqValidator.ISODateString,
       @queryParam('endDate') endDate?: ReqValidator.ISODateString,
       @queryParam('macAddress') macAddress?: string,
+      @queryParam('userId') userId?: string,
       @queryParamArray('locationId') locationId?: string[],
       @queryParam('interval') interval?: WaterConsumptionInterval,
       @queryParam('tz') timezone?: string
@@ -90,16 +96,20 @@ export function WaterControllerFactory(container: Container, apiVersion: number)
         throw new Error('No token defined.');
       }
 
-      if (locationId) {
+      if (macAddress) {
+        return this.waterService.getDeviceConsumption(macAddress, startDate, endDate, interval, timezone);
+      } else {
         if (
-            !['app.flo-internal-service', 'system.admin'].some(val => tokenMetadata.roles.includes(val)) &&
-            !(await this.locationService.validateLocations(locationId, tokenMetadata.user_id))
+          !['app.flo-internal-service', 'system.admin'].some(val => tokenMetadata.roles.includes(val)) &&
+          locationId &&
+          !(await this.locationService.validateLocations(locationId, tokenMetadata.user_id))
         ) {
           throw new ForbiddenError();
         }
-        return this.waterService.getLocationConsumption(locationId, startDate, endDate, interval, timezone);
-      } else if (macAddress) {
-        return this.waterService.getDeviceConsumption(macAddress, startDate, endDate, interval, timezone);
+        if (['app.flo-internal-service', 'system.admin'].some(val => tokenMetadata.roles.includes(val)) && !locationId) {
+          throw new ValidationError('Current user is not allowed to fetch consumption for all locations');
+        }
+        return this.waterService.getLocationConsumption(locationId, startDate, endDate, interval, timezone, tokenMetadata.user_id);
       }
     }
 

@@ -42,18 +42,10 @@ class WaterService {
     this.locationServiceFactory = depFactoryFactory<LocationService>('LocationService');
   }
 
-  public async getLocationConsumption(locationId: string[], startDate: string, endDate: string = new Date().toISOString(), interval: WaterConsumptionInterval = WaterConsumptionInterval.ONE_HOUR, timezone?: string): Promise<WaterConsumptionReport> {
-    const allUnitIds = await this.locationServiceFactory().getUnitLocations(locationId);
-
-    const devices = _.flatten(await Promise.all(
-      _.map(allUnitIds, async u => this.deviceServiceFactory().getAllByLocationId(u, {
-        $select: {
-          macAddress: true
-        }
-      }))
-    ));
-
-    const tz = timezone || (!_.isEmpty(locationId) ? pipe(
+  public async getLocationConsumption(
+    locationId: string[] | undefined, startDate: string, endDate: string = new Date().toISOString(), interval: WaterConsumptionInterval = WaterConsumptionInterval.ONE_HOUR, timezone?: string, userId?: string
+  ): Promise<WaterConsumptionReport> {
+    const tz = timezone || (locationId?.length ? pipe(
       await this.locationServiceFactory().getLocation(locationId[0], {
         $select: {
           timezone: true
@@ -66,9 +58,13 @@ class WaterService {
     ): 'Etc/UTC');
     const start = this.formatDate(startDate, tz);
     const end = this.formatDate(endDate, tz);
-    const macAddresses = _.chain(devices).map(({ macAddress }) => macAddress).uniq().value();
-    const results = await this.getWaterMeterReport(macAddresses, start, end, interval, tz);
 
+    const macAddresses = (userId && !locationId) ?
+      await this.locationServiceFactory().getAllDevicesByUserId(userId)
+        :
+      await this.locationServiceFactory().getAllDevicesByLocationIds(locationId || []);
+
+    const results = await this.getWaterMeterReport(macAddresses, start, end, interval, tz);
     return this.formatConsumptionReport(start, end, interval, tz, results, locationId);
   }
 
@@ -449,8 +445,33 @@ class WaterService {
     return (hasUTCOffset(date) ? moment(date) : moment.tz(date, timezone)).toISOString();
   }
 
+  private async batchGetWaterReport(macAddresses: string[], startDate: string, endDate: string, interval: string, timezone: string = 'Etc/UTC'): Promise<WaterMeterReport> {
+    const chunks = _.chunk(macAddresses, 1);
+    const results = await Promise.all(chunks.map(async macAdds => this.waterMeterService.getReport(macAdds, startDate, endDate, '1h', timezone)));
+    return results.reduce((acc, report) => {
+      return {
+        params: {
+          ...acc.params,
+          macAddressList: [ ...acc.params.macAddressList, ...report.params.macAddressList ],
+          startDate: report.params.startDate,
+          endDate: report.params.endDate,
+          interval: report.params.interval
+        },
+        items: [ ...acc.items, ...report.items ]
+      }
+    }, {
+      params: {
+        macAddressList: [],
+        startDate,
+        endDate,
+        interval,
+      },
+      items: []
+    })
+  }
+
   private async getWaterMeterReport(macAddresses: string[], startDate: string, endDate: string, interval: WaterConsumptionInterval, timezone: string = 'Etc/UTC'): Promise<WaterMeterReport> {
-    const results = await this.waterMeterService.getReport(macAddresses, startDate, endDate, '1h', timezone);
+    const results = await this.batchGetWaterReport(macAddresses, startDate, endDate, '1h', timezone);
     const deviceResults = results.items
       .map(deviceItems => {
         const items = _.chain(deviceItems.items || [])

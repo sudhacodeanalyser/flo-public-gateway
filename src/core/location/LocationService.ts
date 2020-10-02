@@ -667,6 +667,49 @@ class LocationService {
     return pageThruLocations(locationIds);
   }
 
+  public async getAllDevicesByUserId(userId: string): Promise<string[]> {
+    const selection: PropExpand = {
+      $select: {
+        id: true,
+        devices: {
+          $select: {
+            macAddress: true
+          }
+        }
+      }
+    };
+
+    const pageThruLocations = async (pageNum: number = 1, pageSize: number = 300): Promise<string[]> => {
+      const { total, items } = await this.getByUserIdWithChildren(userId, selection, pageSize, pageNum, { locClass: ['unit'] });
+      const macAddresses = _.chain(items)
+        .flatMap(l => l.devices)
+        .flatMap(d => d.macAddress ? [d.macAddress] : [])
+        .value();
+
+      if (((pageNum - 1) * pageSize) + items.length < total) {
+        return [
+          ...macAddresses,
+          ...await pageThruLocations(pageNum + 1, pageSize)
+        ]
+      }
+      return macAddresses;
+    }
+
+    return pageThruLocations();
+  }
+
+  public async getAllDevicesByLocationIds(locationIds: string[]): Promise<string[]> {
+    const allUnitIds = await this.getUnitLocations(locationIds);
+    const devices = _.flatten(await Promise.all(
+      _.map(allUnitIds, async u => this.deviceServiceFactory().getAllByLocationId(u, {
+        $select: {
+          macAddress: true
+        }
+      }))
+    ));
+   return _.chain(devices).map(({ macAddress }) => macAddress).uniq().value();
+  }
+
   private async getDevices(locationId: string, deviceExpand: PropExpand, shouldCascade?: boolean): Promise<Array<Partial<Device>>> {
     const location = O.toNullable(await this.getLocation(locationId, { 
       $select: { 
