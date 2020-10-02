@@ -65,16 +65,11 @@ export const getConsumption = t.type({
   query: t.intersection([
     RestrictedDateRangeCodec,
     t.partial({
-      tz: t.string
+      tz: t.string,
+      macAddress: t.string,
+      locationId: t.union([t.array(t.string), t.string]),
+      userId: t.string,
     }),
-    t.union([
-      t.type({
-        macAddress: t.string
-      }),
-      t.type({
-        locationId: t.union([t.array(t.string), t.string])
-      })
-    ])
   ])
 });
 
