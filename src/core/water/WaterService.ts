@@ -446,7 +446,7 @@ class WaterService {
   }
 
   private async batchGetWaterReport(macAddresses: string[], startDate: string, endDate: string, interval: string, timezone: string = 'Etc/UTC'): Promise<WaterMeterReport> {
-    const chunks = _.chunk(macAddresses, 1);
+    const chunks = _.chunk(macAddresses, 50);
     const results = await Promise.all(chunks.map(async macAdds => this.waterMeterService.getReport(macAdds, startDate, endDate, '1h', timezone)));
     return results.reduce((acc, report) => {
       return {
