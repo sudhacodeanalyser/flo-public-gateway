@@ -289,11 +289,7 @@ class LocationResolver extends Resolver<Location> {
       const isAppOrAdmin = (!currentUserId && currentClientId) && req?.token?.isAdmin();
       const hasPrivilege = isAppOrAdmin || (await this.hasAccess(currentUserId, location.parent.id));
 
-      if (!hasPrivilege) {
-        return null;
-      }
-
-      if (shouldExpand) {
+      if (hasPrivilege && shouldExpand) {
         const parent = await this.get(location.parent.id, expandProps); 
         return parent;
       }
