@@ -123,8 +123,10 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
       authMiddlewareFactory.create(async ({ query: { userId } }) => ({ user_id: userId })),
        reqValidator.create(t.type({
          query: t.intersection([
+           t.type({
+             userId: t.string
+           }),
            t.partial({
-             userId: t.string,
              class: t.union([t.array(t.string), t.string]),
              city: t.union([t.array(t.string), t.string]),
              state: t.union([t.array(t.string), t.string]),
