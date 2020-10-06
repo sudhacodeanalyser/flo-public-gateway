@@ -38,6 +38,10 @@ class InternalDeviceService extends MemoizeMixin(HttpService) implements Firesto
       return obj.componentHealth;
     }
 
+    const hasValveMetadata = (obj: any): obj is { valve: { meta: any } } => {
+      return obj.valve && obj.valve.meta;
+    }
+
     const request = {
       method: 'post',
       url: `${this.internalDeviceServiceBaseUrl}/devices/${macAddress}`,
@@ -48,7 +52,8 @@ class InternalDeviceService extends MemoizeMixin(HttpService) implements Firesto
         ...(hasDeviceModel(device) && { model: device.deviceModel}),
         ...(device.hardwareThresholds && { hwThresholds: device.hardwareThresholds }),
         ...(hasAudioSnooze(device) && { audio: device.audio }),
-        ...(hasComponentHealth(device) && { componentHealth: device.componentHealth })
+        ...(hasComponentHealth(device) && { componentHealth: device.componentHealth }),
+        ...(hasValveMetadata(device) && { valveStateMeta: device.valve.meta })
       }
     };
 
