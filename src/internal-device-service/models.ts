@@ -10,6 +10,7 @@ const InternalValveStateCodec = t.partial({
 
 const InternalConnectivityCodec = t.partial({
   rssi: t.number,
+  ssid: t.string,
 });
 
 const InternalDeviceCurrentTelemetryCodec = t.type({

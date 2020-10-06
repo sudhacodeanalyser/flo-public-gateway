@@ -7,7 +7,6 @@ import { NonEmptyString } from '../../api/validator/NonEmptyString';
 import { HealthTest } from '../../device/HealthTestService';
 import { ComputedIrrigationSchedule } from '../../device/IrrigationScheduleService';
 import { FormattedString } from '../../api/validator/FormattedString';
-import { ArrayUpToLength } from '../../api/validator/ArrayUpToLength';
 
 export enum ValveState {
   OPEN = 'open',
@@ -38,6 +37,15 @@ export enum DeviceType {
   PUCK = 'puck_oem'
 }
 
+const LteCodec = t.type({
+  lte: t.type({
+    qrCode: t.string
+  })
+});
+
+const OptionalLteCodec = t.partial(LteCodec.props);
+type OptionalLte = t.TypeOf<typeof OptionalLteCodec>;
+
 const DeviceMutableCodec = t.type({
   installationPoint: NonEmptyString,
   nickname: t.string,
@@ -55,7 +63,7 @@ const DeviceMutableCodec = t.type({
     snoozeTo: t.string
   }),
   componentHealth: t.record(t.string, t.any),
-  learning: t.record(t.string, t.any),
+  learning: t.record(t.string, t.any)
 });
 
 const MutableSystemModeCodec = t.type({
@@ -105,7 +113,8 @@ const DeviceCreateCodec = t.type({
   location: t.strict({ id: NonEmptyString }),
   deviceType: NonEmptyString,
   deviceModel: NonEmptyString,
-  hardwareThresholds: t.union([t.undefined, t.exact(t.partial(HardwareThresholdsCodec.props))])
+  hardwareThresholds: t.union([t.undefined, t.exact(t.partial(HardwareThresholdsCodec.props))]),
+  connectivity: t.union([t.undefined, LteCodec])
 });
 export const DeviceCreateValidator = t.exact(DeviceCreateCodec);
 export type DeviceCreate = t.TypeOf<typeof DeviceCreateValidator>;
@@ -181,7 +190,7 @@ interface Battery {
   updated?: string;
 }
 
-export interface Device extends Omit<DeviceUpdate, 'valve' | 'puckConfig' | 'audio' | 'healthTest'>, TimestampedModel {
+export interface Device extends Omit<DeviceUpdate, 'valve' | 'puckConfig' | 'audio' | 'healthTest' | 'connectivity'>, TimestampedModel {
   id: string;
   macAddress: string;
   location: Expandable<Location>;
@@ -200,7 +209,7 @@ export interface Device extends Omit<DeviceUpdate, 'valve' | 'puckConfig' | 'aud
     target?: ValveState,
     lastKnown?: ValveState
   };
-  connectivity?: InternalConnectivity;
+  connectivity?: InternalConnectivity & OptionalLte;
   telemetry?: InternalTelemetry;
   irrigationSchedule?: {
     isEnabled: boolean,

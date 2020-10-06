@@ -139,7 +139,10 @@ class DeviceService {
     await this.entityActivityService.publishEntityActivity(
       EntityActivityType.DEVICE,
       EntityActivityAction.UPDATED,
-      updatedDevice
+      {
+        ...updatedDevice,
+        ...(deviceUpdate.valve && { valve: deviceUpdate.valve })
+      }
     );
 
     return updatedDevice;

@@ -300,6 +300,7 @@ export interface LocationFilters {
   state?: string[];
   country?: string[];
   postalCode?: string[];
+  parentId?: string;
 }
 
 export interface LocationFacetPage {

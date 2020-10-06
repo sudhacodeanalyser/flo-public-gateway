@@ -10,6 +10,7 @@ import PuckTokenMetadataTable from './PuckTokenMetadataTable';
 import config from '../../config/config';
 import PairInitTable from './PairInitTable';
 import LteTable from './LteTable';
+import DeviceLteTable from './DeviceLteTable';
 
 export default new ContainerModule((bind: interfaces.Bind) => {
   bind<DeviceService>('DeviceService').to(DeviceService);
@@ -25,4 +26,5 @@ export default new ContainerModule((bind: interfaces.Bind) => {
   bind<number>('PairInitTTL').toConstantValue(config.pairInitTTL);
   bind<LteService>('LteService').to(LteService);
   bind<LteTable>('LteTable').to(LteTable);
+  bind<DeviceLteTable>('DeviceLteTable').to(DeviceLteTable);
 });

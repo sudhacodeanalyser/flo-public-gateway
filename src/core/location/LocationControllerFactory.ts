@@ -15,6 +15,7 @@ import { LocationService } from '../service';
 import { either } from 'fp-ts/lib/Either';
 import { IntegerFromString } from '../api/validator/IntegerFromString';
 import { BooleanFromString } from '../api/validator/BooleanFromString';
+import ReqValidationError from '../../validation/ReqValidationError';
 
 const { some } = O;
 type Option<T> = O.Option<T>;
@@ -123,7 +124,7 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
        reqValidator.create(t.type({
          query: t.intersection([
            t.type({
-               userId: t.string
+             userId: t.string
            }),
            t.partial({
              class: t.union([t.array(t.string), t.string]),
@@ -131,6 +132,7 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
              state: t.union([t.array(t.string), t.string]),
              country: t.union([t.array(t.string), t.string]),
              postalCode: t.union([t.array(t.string), t.string]),
+             parentId: t.string,
              expand: t.string,
              size: IntegerFromString,
              page: IntegerFromString,
@@ -154,29 +156,43 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
        }))
     )
     private async getLocations(
-      @queryParam('userId') userId: string, 
+      @request() req: Request,
+      @queryParam('userId') userIdParam: string,
       @queryParamArray('class') locClass?: string[], 
       @queryParamArray('city') city?: string[],
       @queryParamArray('state') state?: string[],
       @queryParamArray('country') country?: string[],
       @queryParamArray('postalCode') postalCode?: string[],
       @queryParam('expand') expand?: string,
+      @queryParam('parentId') parentId?: string,
       @queryParam('size') size?: number,
       @queryParam('page') page?: number,
       @queryParam('withChildren') withChildren: boolean = true,
       @queryParam('rootOnly') rootOnly: boolean = false,
       @queryParam('q') searchText?: string
     ): Promise<{ total: number; page: number; items: Responses.Location[] }> {
+      const tokenMetadata = req.token;
       const expandProps = parseExpand(expand);
       const filters = {
         locClass,
         city,
         state,
         country,
-        postalCode
+        postalCode,
+        parentId,
       };
       let locPage: LocationPage;
 
+      if (tokenMetadata === undefined) {
+        throw new Error('No token defined.');
+      }
+      const userId = (
+        ['app.flo-internal-service', 'system.admin'].some(val => tokenMetadata.roles.includes(val)) ||
+        userIdParam
+      ) ? userIdParam : tokenMetadata.user_id;
+      if (!userId) {
+        throw new ReqValidationError('User id should be provided')
+      }
       if (withChildren && !rootOnly) {
         locPage = await this.locationService.getByUserIdWithChildren(userId, expandProps, size, page, filters, searchText);  
       } else if (rootOnly) {
