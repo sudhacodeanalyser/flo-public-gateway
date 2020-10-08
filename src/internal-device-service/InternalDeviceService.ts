@@ -38,8 +38,8 @@ class InternalDeviceService extends MemoizeMixin(HttpService) implements Firesto
       return obj.componentHealth;
     }
 
-    const hasValveMetadata = (obj: any): obj is { valve: { meta: any } } => {
-      return obj.valve && obj.valve.meta;
+    const hasValveMetadata = (obj: any): obj is { valve: { target: string, meta: any } } => {
+      return obj.valve && obj.valve.target && obj.valve.meta;
     }
 
     const request = {
@@ -53,7 +53,12 @@ class InternalDeviceService extends MemoizeMixin(HttpService) implements Firesto
         ...(device.hardwareThresholds && { hwThresholds: device.hardwareThresholds }),
         ...(hasAudioSnooze(device) && { audio: device.audio }),
         ...(hasComponentHealth(device) && { componentHealth: device.componentHealth }),
-        ...(hasValveMetadata(device) && { valveStateMeta: device.valve.meta })
+        ...(hasValveMetadata(device) && { 
+          valveStateMeta: {
+            target: device.valve.target,
+            ...(device.valve.meta)
+          }
+        })
       }
     };
 
