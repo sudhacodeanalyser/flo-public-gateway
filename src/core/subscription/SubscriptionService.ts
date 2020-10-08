@@ -97,30 +97,29 @@ class SubscriptionService {
     await this.validatePlanExists(subscriptionCreate.plan.id);
     
     const lockKey = `subscription:mutex:${location.id}`;
-    try {
-      const subscriptionId = maybeExistingSubscription ? maybeExistingSubscription.id : this.subscriptionResolver.generateSubscriptionId();
-      // Create stubbed location so race condition with webhook does not create duplicate record
-      const plan = subscriptionData.plan as Record<'id', string>;
-      const subscriptionStub = {
-        ...subscriptionData,
-        id: subscriptionId,
-        plan,
+    const subscriptionId = maybeExistingSubscription ? maybeExistingSubscription.id : this.subscriptionResolver.generateSubscriptionId();
+    // Create stubbed location so race condition with webhook does not create duplicate record
+    const plan = subscriptionData.plan as Record<'id', string>;
+    const subscriptionStub = {
+      ...subscriptionData,
+      id: subscriptionId,
+      plan,
+      isActive: false,
+      provider: {
+        name: subscriptionCreate.provider.name,
+        status: '_PENDING_',
         isActive: false,
-        provider: {
-          name: subscriptionCreate.provider.name,
-          status: '_PENDING_',
-          isActive: false,
-          data: {
-            customerId: '_UNKNOWN_',
-            subscriptionId: '_UNKNOWN_'
-          }
+        data: {
+          customerId: '_UNKNOWN_',
+          subscriptionId: '_UNKNOWN_'
         }
-      };
-
-      if (!(await this.concurrencyService.acquireLock(lockKey, 120))) {
-        throw new ConflictError('Subscription in creation process.');
       }
+    };
 
+    if (!(await this.concurrencyService.acquireLock(lockKey, 120))) {
+      throw new ConflictError('Subscription in creation process.');
+    }
+    try {
       await this.createLocalSubscription(subscriptionStub);
 
       const subscriptionProvider = this.getProvider(subscriptionCreate.provider.name);
@@ -140,14 +139,8 @@ class SubscriptionService {
 
       return subscription;
 
-    } catch (err) {
-
-      throw err;
-
     } finally {
-
       await this.concurrencyService.releaseLock(lockKey);
-
     }
   }
 

@@ -339,10 +339,10 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       }
 
       const lockKey = `pairing:mutex:${deviceCreate.macAddress}`;
+      if (!(await this.concurrencyService.acquireLock(lockKey, 60))) {
+        throw new ConflictError('Device pairing in process.');
+      }
       try {
-        if (!(await this.concurrencyService.acquireLock(lockKey, 60))) {
-          throw new ConflictError('Device pairing in process.');
-        }
         const device = await this.deviceService.pairDevice(authToken, deviceCreate);
         if (deviceCreate.connectivity?.lte) {
           await this.lteService.linkDevice(device.id, deviceCreate.connectivity.lte.qrCode);
