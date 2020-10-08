@@ -27,6 +27,8 @@ import moment from 'moment';
 import { authUnion } from '../../auth/authUnion';
 import { PuckAuthMiddleware } from '../../auth/PuckAuthMiddleware';
 import { MachineLearningService } from '../../machine-learning/MachineLearningService';
+import ConcurrencyService from '../../concurrency/ConcurrencyService';
+import ConflictError from '../api/error/ConflictError';
 
 const { isNone, some  } = O;
 type Option<T> = O.Option<T>;
@@ -123,7 +125,8 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       @inject('HealthTestServiceFactory') private healthTestServiceFactory: HealthTestServiceFactory,
       @inject('PuckPairingTokenTTL') private readonly puckPairingTokenTTL: number,
       @inject('MachineLearningService') private mlService: MachineLearningService,
-      @inject('LteService') private lteService: LteService
+      @inject('LteService') private lteService: LteService,
+      @inject('ConcurrencyService') private concurrencyService: ConcurrencyService
     ) {
       super();
     }
@@ -335,12 +338,19 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
         throw new ValidationError('Cannot pair puck.');
       }
 
-      const device = await this.deviceService.pairDevice(authToken, deviceCreate);
-      if (deviceCreate.connectivity?.lte) {
-        await this.lteService.linkDevice(device.id, deviceCreate.connectivity.lte.qrCode);
+      const lockKey = `pairing:mutex:${deviceCreate.macAddress}`;
+      try {
+        if (!(await this.concurrencyService.acquireLock(lockKey, 60))) {
+          throw new ConflictError('Device pairing in process.');
+        }
+        const device = await this.deviceService.pairDevice(authToken, deviceCreate);
+        if (deviceCreate.connectivity?.lte) {
+          await this.lteService.linkDevice(device.id, deviceCreate.connectivity.lte.qrCode);
+        }
+        return some(device);
+      } finally {
+        await this.concurrencyService.releaseLock(lockKey);
       }
-      
-      return some(device);
     }
 
     @httpPost('/pair/complete/puck',
