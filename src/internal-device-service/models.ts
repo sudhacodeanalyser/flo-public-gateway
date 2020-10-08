@@ -1,7 +1,15 @@
 import * as t from 'io-ts';
+import { convertEnumtoCodec } from '../core/api/enumUtils';
+
+export enum ValveState {
+  OPEN = 'open',
+  CLOSED = 'closed'
+}
+
+const ValveStateCodec = convertEnumtoCodec(ValveState);
 
 const ValveStateMetaCodec = t.type({
-  target: t.string,
+  target: ValveStateCodec,
   cause: t.type({
     type: t.string,
     source: t.union([t.undefined, t.type({

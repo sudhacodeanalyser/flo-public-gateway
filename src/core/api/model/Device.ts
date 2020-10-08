@@ -22,7 +22,7 @@ export enum ValveStateNumeric {
 
 export const ValveStateCodec = convertEnumtoCodec(ValveState);
 
-const ValveStateMetaCodec = t.type({
+const ValveStateMetaCodec = t.partial({
   target: t.keyof(_.pick(ValveStateCodec.keys, ['open', 'closed'])),
   cause: t.type({
     type: t.string,
