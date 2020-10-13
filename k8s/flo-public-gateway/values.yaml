@@ -32,6 +32,7 @@ routingIngress:
   enabled: true
   annotations:
     kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/enable-cors: "true"
   hosts:
     production:
       - api.meetflo.com
