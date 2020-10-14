@@ -22,6 +22,19 @@ export enum ValveStateNumeric {
 
 export const ValveStateCodec = convertEnumtoCodec(ValveState);
 
+const ValveStateMetaCodec = t.partial({
+  target: t.keyof(_.pick(ValveStateCodec.keys, ['open', 'closed'])),
+  cause: t.type({
+    type: t.string,
+    source: t.union([t.undefined, t.type({
+      id: t.string,
+      type: t.string,
+      name: t.union([t.undefined, t.string])
+    })])
+  })
+});
+type ValveStateMeta = t.TypeOf<typeof ValveStateMetaCodec>;
+
 export enum DeviceSystemModeNumeric {
   HOME = 2,
   AWAY = 3,
@@ -52,7 +65,8 @@ const DeviceMutableCodec = t.type({
   prvInstallation: NonEmptyString,
   irrigationType: NonEmptyString,
   valve: t.partial({
-    target: t.keyof(_.pick(ValveStateCodec.keys, ['open', 'closed']))
+    target: t.keyof(_.pick(ValveStateCodec.keys, ['open', 'closed'])),
+    meta: ValveStateMetaCodec
   }),
   area: t.type({
     id: t.string
@@ -207,7 +221,8 @@ export interface Device extends Omit<DeviceUpdate, 'valve' | 'puckConfig' | 'aud
   };
   valve?: {
     target?: ValveState,
-    lastKnown?: ValveState
+    lastKnown?: ValveState,
+    meta?: ValveStateMeta
   };
   connectivity?: InternalConnectivity & OptionalLte;
   telemetry?: InternalTelemetry;

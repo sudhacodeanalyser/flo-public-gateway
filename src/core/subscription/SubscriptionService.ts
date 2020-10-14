@@ -8,7 +8,7 @@ import ConflictError from '../api/error/ConflictError';
 import { LocationService, UserService, EntityActivityService, EntityActivityType, EntityActivityAction } from '../service';
 import { SubscriptionResolver } from '../resolver';
 import { isNone, fromNullable, Option } from 'fp-ts/lib/Option';
-import Redis from 'ioredis';
+import ConcurrencyService from '../../concurrency/ConcurrencyService';
 
 @injectable()
 class SubscriptionService {
@@ -18,7 +18,7 @@ class SubscriptionService {
     @inject('LocationService') private locationService: LocationService,
     @inject('EntityActivityService') private entityActivityService: EntityActivityService,
     @multiInject('SubscriptionProvider') private subscriptionProviders: SubscriptionProvider[],
-    @inject('RedisClient') private redisClient: Redis.Redis
+    @inject('ConcurrencyService') private concurrencyService: ConcurrencyService
   ) {}
 
   public async createSubscription(subscriptionCreate: SubscriptionCreate): Promise<Subscription> {
@@ -95,31 +95,31 @@ class SubscriptionService {
     }
 
     await this.validatePlanExists(subscriptionCreate.plan.id);
-
-    try {
-      const subscriptionId = maybeExistingSubscription ? maybeExistingSubscription.id : this.subscriptionResolver.generateSubscriptionId();
-      // Create stubbed location so race condition with webhook does not create duplicate record
-      const plan = subscriptionData.plan as Record<'id', string>;
-      const subscriptionStub = {
-        ...subscriptionData,
-        id: subscriptionId,
-        plan,
+    
+    const lockKey = `subscription:mutex:${location.id}`;
+    const subscriptionId = maybeExistingSubscription ? maybeExistingSubscription.id : this.subscriptionResolver.generateSubscriptionId();
+    // Create stubbed location so race condition with webhook does not create duplicate record
+    const plan = subscriptionData.plan as Record<'id', string>;
+    const subscriptionStub = {
+      ...subscriptionData,
+      id: subscriptionId,
+      plan,
+      isActive: false,
+      provider: {
+        name: subscriptionCreate.provider.name,
+        status: '_PENDING_',
         isActive: false,
-        provider: {
-          name: subscriptionCreate.provider.name,
-          status: '_PENDING_',
-          isActive: false,
-          data: {
-            customerId: '_UNKNOWN_',
-            subscriptionId: '_UNKNOWN_'
-          }
+        data: {
+          customerId: '_UNKNOWN_',
+          subscriptionId: '_UNKNOWN_'
         }
-      };
-
-      if (!(await this.lockSubscriptionCreate(location.id))) {
-        throw new ConflictError('Subscription in creation process.');
       }
+    };
 
+    if (!(await this.concurrencyService.acquireLock(lockKey, 120))) {
+      throw new ConflictError('Subscription in creation process.');
+    }
+    try {
       await this.createLocalSubscription(subscriptionStub);
 
       const subscriptionProvider = this.getProvider(subscriptionCreate.provider.name);
@@ -139,14 +139,8 @@ class SubscriptionService {
 
       return subscription;
 
-    } catch (err) {
-
-      throw err;
-
     } finally {
-
-      await this.unlockSubscriptionCreate(location.id);
-
+      await this.concurrencyService.releaseLock(lockKey);
     }
   }
 
@@ -283,48 +277,6 @@ class SubscriptionService {
 
   public async scan(limit?: number, expand?: PropExpand, next?: any): Promise<{ items: Subscription[], nextIterator?: any }> {
     return this.subscriptionResolver.scan(limit, expand, next); 
-  }
-
-  private async lockSubscriptionCreate(accountId: string): Promise<boolean> {
-    // Lock algorithm described here: https://redis.io/commands/setnx
-    const key = `subscription:mutex:${ accountId }`;
-    const ttl = 120;
-
-    const hasLock = await this.redisClient.setnx(key, Math.round(new Date().getTime() / 1000) + ttl + 1);
-    
-    if (hasLock) {
-      return true;
-    }
-
-    const oldExpiry = await this.redisClient.get(key);
-
-    // Is the lock expired?
-    if (oldExpiry && new Date(parseInt(oldExpiry, 10) * 1000) > new Date()) {
-      return false;
-    }
-
-    const newExpiry = Math.round(new Date().getTime()) + ttl + 1;
-    const currentExpiry = await this.redisClient.getset(key, newExpiry);
-
-    // Was the lock still expired when we tried to set it?
-    // If not, another process has acquired the lock, so abort.
-    if (currentExpiry && new Date(parseInt(currentExpiry, 10) * 1000) > new Date()) {
-      return false;
-    }
-
-    return true;
-  }
-
-  private async unlockSubscriptionCreate(accountId: string): Promise<void> {
-    const key = `subscription:mutex:${ accountId }`;
-    const expiry = await this.redisClient.get(key);
-
-    // Don't delete an expired lock to prevent race condition
-    if (expiry && new Date() > new Date(parseInt(expiry, 10) * 1000)) {
-      return;
-    }
-
-    await this.redisClient.del(key);
   }
 
   private async validateLocationExists(locationId: string): Promise<Location> {

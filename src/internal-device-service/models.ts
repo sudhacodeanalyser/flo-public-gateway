@@ -1,4 +1,24 @@
 import * as t from 'io-ts';
+import { convertEnumtoCodec } from '../core/api/enumUtils';
+
+export enum ValveState {
+  OPEN = 'open',
+  CLOSED = 'closed'
+}
+
+const ValveStateCodec = convertEnumtoCodec(ValveState);
+
+const ValveStateMetaCodec = t.type({
+  target: ValveStateCodec,
+  cause: t.type({
+    type: t.string,
+    source: t.union([t.undefined, t.type({
+      id: t.string,
+      type: t.string,
+      name: t.union([t.undefined, t.string])
+    })])
+  })
+});
 
 const InternalSystemModeCodec = t.partial({
   lastKnown: t.string,
@@ -50,6 +70,7 @@ const InternalDeviceCodec = t.type({
   telemetry: t.union([InternalTelemetryCodec, t.null, t.undefined]),
   updatedTime: t.string,
   valveState: t.union([InternalValveStateCodec, t.null, t.undefined]),
+  valveStateMeta: t.union([ValveStateMetaCodec, t.null, t.undefined]),
   hwThresholds: t.union([t.record(t.string, t.any), t.null, t.undefined]),
   audio: t.union([t.undefined, t.null, t.type({
     snoozeTo: t.string,

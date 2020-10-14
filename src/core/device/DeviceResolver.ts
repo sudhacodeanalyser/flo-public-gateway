@@ -226,7 +226,8 @@ class DeviceResolver extends Resolver<Device> {
             ValveState,
             ValveStateNumeric,
             _.get(additionalProperties, 'lastKnownFwProperties.valve_state')
-          )
+          ),
+          ...(additionalProperties && additionalProperties.valveStateMeta && { meta: additionalProperties.valveStateMeta })
         };
       } catch (err) {
         this.logger.error({ err });
