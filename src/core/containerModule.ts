@@ -19,6 +19,7 @@ import telemetryContainerModule from './telemetry/containerModule';
 import iftttContainerModule from './ifttt/containerModule';
 import deliveryHookContainerModule from './delivery-hook/containerModule';
 import headsUpContainerModule from './heads-up/containerModule';
+import eventContainerModule from './event/containerModule';
 
 export default [
   pingContainerModule,
@@ -41,5 +42,6 @@ export default [
   telemetryContainerModule,
   iftttContainerModule,
   deliveryHookContainerModule,
-  headsUpContainerModule
+  headsUpContainerModule,
+  eventContainerModule
 ];
