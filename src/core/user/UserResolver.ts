@@ -61,7 +61,7 @@ class UserResolver extends Resolver<User> {
 
       // return locations.items;
     },
-    account: async (model: User, shouldExpand = false) => {
+    account: async (model: User, shouldExpand = false, expandProps?: PropExpand) => {
       const userAccountRoleRecordData = await this.userAccountRoleTable.getByUserId(model.id);
       if (userAccountRoleRecordData === null) {
         return null;
@@ -73,7 +73,7 @@ class UserResolver extends Resolver<User> {
         };
       }
 
-      return this.accountResolverFactory().getAccount(userAccountRoleRecordData.account_id);
+      return this.accountResolverFactory().getAccount(userAccountRoleRecordData.account_id, expandProps);
     },
     accountRole: async (model: User, shouldExpand = false) => {
       const userAccountRoleRecordData = await this.userAccountRoleTable.getByUserId(model.id);
