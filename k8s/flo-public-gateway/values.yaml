@@ -1,5 +1,5 @@
 ---
-replicaCount: 9
+replicaCount: 11
 
 environment: rc
 
@@ -76,5 +76,5 @@ resources:
     cpu: 500m
     memory: 384Mi
   limits:
-    cpu: "1500m"
-    memory: 768Mi
+    cpu: 2
+    memory: 2Gi
