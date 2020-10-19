@@ -568,6 +568,28 @@ class LocationResolver extends Resolver<Location> {
 
   }
 
+  public async getAllByFilters(expandProps?: PropExpand, size?: number, page?: number, filters?: LocationFilters, searchText?: string): Promise<LocationPage> {
+    const { items, total } = await this.locationPgTable.getAllByFilters(size, page, filters, searchText);
+    const locations = await Promise.all(
+      items
+        .map(async locationRecord => {
+          const location = LocationPgRecord.toModel(locationRecord);
+          const resolvedProps = await this.resolveProps(location, expandProps);
+
+          return {
+            ...location,
+            ...resolvedProps
+          };
+        })
+    );
+
+    return {
+      total,
+      page: page || 1,
+      items: locations
+    }
+  }
+
   public async getAllChildrenUnits(location: Location): Promise<string[]> {
     const childIds = await this.locationTreeTable.getAllChildren(location.account.id, location.id);
     const childLocations = await Promise.all(
