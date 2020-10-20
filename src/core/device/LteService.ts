@@ -51,9 +51,12 @@ class LteService {
   }
 
   private extractCredentials(lte: Lte): SsidCredentials {
-    const randomKeyBytes = Buffer.from(lte.randomKey, 'hex');
-    const ssid = this.computeSha256(randomKeyBytes.slice(lte.ssidOffset, lte.ssidOffset + 64)).slice(0, 16);
-    const password = this.computeSha256(randomKeyBytes.slice(lte.passwordOffset, lte.passwordOffset + 64)).slice(0, 17);
+    const ssidStart = lte.ssidOffset - 1;
+    const pwdStart = lte.passwordOffset - 1;
+    // We concatenate the key since (offset + 64) needs to start from the beginning if it exceeds the key length.
+    const randomKeyBytes = Buffer.from(lte.randomKey.concat(lte.randomKey), 'hex');
+    const ssid = this.computeSha256(randomKeyBytes.slice(ssidStart, ssidStart + 64)).slice(0, 16);
+    const password = this.computeSha256(randomKeyBytes.slice(pwdStart, pwdStart + 64)).slice(0, 17);
     return {
       ssid,
       password
