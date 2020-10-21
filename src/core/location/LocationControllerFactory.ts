@@ -123,10 +123,8 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
       authMiddlewareFactory.create(async ({ query: { userId } }) => ({ user_id: userId })),
        reqValidator.create(t.type({
          query: t.intersection([
-           t.type({
-             userId: t.string
-           }),
            t.partial({
+             userId: t.string,
              class: t.union([t.array(t.string), t.string]),
              city: t.union([t.array(t.string), t.string]),
              state: t.union([t.array(t.string), t.string]),
@@ -157,7 +155,7 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
     )
     private async getLocations(
       @request() req: Request,
-      @queryParam('userId') userIdParam: string,
+      @queryParam('userId') userId?: string,
       @queryParamArray('class') locClass?: string[], 
       @queryParamArray('city') city?: string[],
       @queryParamArray('state') state?: string[],
@@ -186,19 +184,18 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
       if (tokenMetadata === undefined) {
         throw new Error('No token defined.');
       }
-      const userId = (
-        ['app.flo-internal-service', 'system.admin'].some(val => tokenMetadata.roles.includes(val)) ||
-        userIdParam
-      ) ? userIdParam : tokenMetadata.user_id;
-      if (!userId) {
+      if (!userId && !tokenMetadata.isAdmin()) {
         throw new ReqValidationError('User id should be provided')
       }
-      if (withChildren && !rootOnly) {
+
+      if (withChildren && !rootOnly && userId) {
         locPage = await this.locationService.getByUserIdWithChildren(userId, expandProps, size, page, filters, searchText);  
-      } else if (rootOnly) {
+      } else if (rootOnly && userId) {
         locPage = await this.locationService.getByUserIdRootOnly(userId, expandProps, size, page, filters, searchText);
-      } else {
+      } else if (userId) {
         locPage = await this.locationService.getByUserId(userId, expandProps, size, page, filters, searchText);
+      } else {
+        locPage = await this.locationService.getAllByFilters(expandProps, size, page, filters, searchText);
       }
 
       return {

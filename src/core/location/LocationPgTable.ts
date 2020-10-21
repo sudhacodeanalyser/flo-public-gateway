@@ -181,6 +181,39 @@ class LocationPgTable extends PostgresTable<LocationPgRecordData> {
     };
   }
 
+  public async getAllByFilters(size: number = 100, page: number = 1, filters: LocationFilters = {}, searchText: string = ''): Promise<LocationPgPage> {
+    const limit = Math.max(1, size);
+    const searchTrim = searchText.trim();
+    const queryBuilder = this.applyFilters(
+      squel.useFlavour('postgres')
+        .select()
+        .from('"location"', '"l"')
+        .field('"l".*')
+        .field('COUNT(*) OVER()', '"total"'),
+      filters
+    );
+    const { text, values } = (
+      searchTrim ?
+        queryBuilder
+          .where('? <% "l"."address"', searchTrim)
+          .order('word_similarity(?, "l"."address")', false, searchTrim) :
+        queryBuilder
+    )
+      .limit(limit)
+      .offset(limit * Math.max(0, page - 1))
+      .toParam();
+    await this.pgDbClient.execute('SET pg_trgm.word_similarity_threshold = 0.8', []);
+    const results = await this.pgDbClient.execute(text, values);
+    const total = results.rows[0] ? parseInt(results.rows[0].total, 10) : 0;
+    const items = results.rows.map(({ total: ignoreTotal, similarity: ignoreSimilarity, ...item }) => item);
+
+    return {
+      page,
+      total,
+      items
+    };
+  }
+
   public async getFacetByUserId(userId: string, facet: string, size: number = 100, page: number = 1, contains?: string): Promise<LocationFacetPgPage> {
     const facetColumnMap: Record<string, string> = {
       'class': 'location_class',

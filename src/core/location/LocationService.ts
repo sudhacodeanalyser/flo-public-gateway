@@ -561,6 +561,10 @@ class LocationService {
     return this.locationResolver.getFacetsByUserId(userId, facets, size, page, contains);
   }
 
+  public async getAllByFilters(expandProps?: PropExpand, size?: number, page?: number, filters?: LocationFilters, searchText?: string): Promise<LocationPage> {
+    return this.locationResolver.getAllByFilters(expandProps, size, page, filters, searchText);
+  }
+
   public async transferLocation(destAccountId: string, srcLocationId: string): Promise<Location> {
     const srcLocation = O.toNullable(await this.getLocation(srcLocationId));
 
