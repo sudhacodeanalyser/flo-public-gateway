@@ -1,5 +1,112 @@
 paths:
   /api/v2/locations:
+    get:
+      summary: Returns a paginated list of locations
+      tags:
+        - Locations
+      produces:
+        - application/json
+      parameters:
+        - in: query
+          name: userId
+          required: false
+          schema:
+            type: string
+            format: uuid
+          description: User ID. Required field unless it's called with a system admin token.
+        - in: query
+          name: class
+          required: false
+          schema:
+            type: string
+            enum:
+              - region
+              - property
+              - unit
+          description: |
+            Location type filter. Multiple filters are allowed.
+            * `unit`
+            * `region`
+            * `property`
+        - in: query
+          name: city
+          required: false
+          schema:
+            type: string
+          description: City filter. Multiple filters are allowed.
+        - in: query
+          name: state
+          required: false
+          schema:
+            type: string
+          description: State filter. Multiple filters are allowed.
+        - in: query
+          name: country
+          required: false
+          schema:
+            type: string
+          description: Country filter. Multiple filters are allowed.
+        - in: query
+          name: postalCode
+          required: false
+          schema:
+            type: string
+          description: Postal Code filter. Multiple filters are allowed.
+        - in: query
+          name: parentId
+          required: false
+          schema:
+            type: string
+            format: uuid
+          description: The parent location Id. If provided, the endpoint will return the children for the specified parent id.
+        - in: query
+          name: size
+          required: false
+          schema:
+            type: number
+          description: Page size. Default value is 100.
+        - in: query
+          name: page
+          required: false
+          schema:
+            type: number
+          description: Page number. Default value is 1.
+        - in: query
+          name: withChildren
+          required: false
+          schema:
+            type: string
+            enum:
+              - true
+              - false
+          description: Whether locations with inherited permissions should be included or not. Default value is "true".
+        - in: query
+          name: rootOnly
+          required: false
+          schema:
+            type: string
+            enum:
+              - true
+              - false
+          description: If set to "true" the results will only include root locations, if "false" or undefined, will include all locations.
+        - in: query
+          name: q
+          required: false
+          schema:
+            type: string
+          description: Search query. Will search results comparing address, address2, nickname, city, state, postal code, country.
+        - $ref: '#/components/parameters/ExpandParam'
+      responses:
+        200:
+          description: A paginated list of locations.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LocationList'
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        403:
+          $ref: '#/components/responses/ForbiddenError'
     post:
       summary: Creates a Location.
       tags:
@@ -464,6 +571,19 @@ components:
         - $ref: '#/components/schemas/LocationProfile'
         - $ref: '#/components/schemas/LocationProfileLegacy'
 
+    LocationList:
+      allOf:
+        - type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/Location'
+            total:
+              type: number
+            page:
+              type: number
+
     Location:
       allOf:
         - $ref: '#/components/schemas/LocationUpdate'
@@ -486,14 +606,25 @@ components:
                         type: string
                         format: uuid
                   - $ref: '#/components/schemas/Roles'
+            class:
+              - type: object
+                properties:
+                  key: string
+                  level: number
             users:
               type: array
               items:
                 $ref: '#/components/schemas/UserExpandable'
-            locations:
+            devices:
               type: array
               items:
                 $ref: '#/components/schemas/DeviceExpandable'
+            children:
+              type: array
+              items:
+                $ref: '#/components/schemas/LocationExpandable'
+            parent:
+              $ref: '#/components/schemas/LocationExpandable'
             subscription:
               $ref: '#/components/schemas/SubscriptionExpandable'
             systemMode:
@@ -526,6 +657,8 @@ components:
             id:
               type: string
               format: uuid
+            nickname:
+              type: string
         - $ref: '#/components/schemas/Location'
     NoYesUnsure:
       type: string
