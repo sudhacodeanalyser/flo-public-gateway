@@ -2,15 +2,7 @@ import { inject, injectable } from 'inversify';
 import { injectHttpContext, interfaces } from 'inversify-express-utils';
 import { AccountRecordData, AccountRecord } from './AccountRecord';
 import Request from '../api/Request';
-import {
-  AccountMutable,
-  Account,
-  AccountUserRole,
-  DependencyFactoryFactory,
-  PropExpand,
-  AccountType,
-  PropSelectRestIntersection,
-} from '../api';
+import { AccountMutable, Account, AccountUserRole, DependencyFactoryFactory, PropExpand, AccountType } from '../api';
 import { Resolver, PropertyResolverMap, LocationResolver, UserResolver } from '../resolver';
 import AccountTable from './AccountTable';
 import UserAccountRoleTable from '../user/UserAccountRoleTable';

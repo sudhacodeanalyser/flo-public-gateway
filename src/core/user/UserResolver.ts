@@ -3,21 +3,8 @@ import { inject, injectable } from 'inversify';
 import { injectHttpContext, interfaces } from 'inversify-express-utils';
 import _ from 'lodash';
 import { fromPartialRecord } from '../../database/Patch';
-import {
-  DependencyFactoryFactory,
-  DeviceAlarmSettings,
-  EntityAlarmSettingsItem,
-  PropExpand,
-  UpdateAlarmSettings,
-  User,
-  UnitSystem,
-  UserCreate,
-  RetrieveAlarmSettingsFilter,
-  EntityAlarmSettings,
-  LocationAlarmSettings,
-  AlarmSettings,
-  AccountType,
-} from '../api';
+import { DependencyFactoryFactory, DeviceAlarmSettings, EntityAlarmSettingsItem, PropExpand, UpdateAlarmSettings, User, UnitSystem, UserCreate, RetrieveAlarmSettingsFilter, EntityAlarmSettings,
+LocationAlarmSettings, AlarmSettings, AccountType } from '../api';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import { NotificationService } from '../notification/NotificationService';
 import { AccountResolver, DeviceResolver, LocationResolver, PropertyResolverMap, Resolver } from '../resolver';
