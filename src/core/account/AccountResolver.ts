@@ -2,7 +2,7 @@ import { inject, injectable } from 'inversify';
 import { injectHttpContext, interfaces } from 'inversify-express-utils';
 import { AccountRecordData, AccountRecord } from './AccountRecord';
 import Request from '../api/Request';
-import { AccountMutable, Account, AccountUserRole, DependencyFactoryFactory, PropExpand } from '../api';
+import { AccountMutable, Account, AccountUserRole, DependencyFactoryFactory, PropExpand, AccountType } from '../api';
 import { Resolver, PropertyResolverMap, LocationResolver, UserResolver } from '../resolver';
 import AccountTable from './AccountTable';
 import UserAccountRoleTable from '../user/UserAccountRoleTable';
@@ -25,6 +25,9 @@ class AccountResolver extends Resolver<Account> {
       }
     },
     locations: async (account: Account, shouldExpand: boolean = false, expandProps?: PropExpand) => {
+      if (account.type === AccountType.ENTERPRISE) {
+        return null;
+      }
       const hasPrivilege = await this.hasPrivilege(account.id);
       const req = this.httpContext.request as Request;
       const currentUserId = req?.token?.user_id;
@@ -61,6 +64,9 @@ class AccountResolver extends Resolver<Account> {
       }
     },
     userRoles: async (account: Account, shouldExpand: boolean = false) => {
+      if (account.type === AccountType.ENTERPRISE && !shouldExpand) {
+        return null;
+      }
       const req = this.httpContext.request as Request;
       const currentUserId = req?.token?.user_id;
       const hasPrivilege = await this.hasPrivilege(account.id);
