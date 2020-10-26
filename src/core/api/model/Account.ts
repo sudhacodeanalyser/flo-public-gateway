@@ -2,6 +2,11 @@ import { Expandable, Location, TimestampedModel, User } from '../../api';
 import * as t from 'io-ts';
 import { Email } from '../../api/validator/Email';
 
+export enum AccountType {
+  ENTERPRISE = 'enterprise',
+  PERSONAL = 'personal',
+}
+
 export interface AccountUserRole {
   userId: string;
   roles: string[];

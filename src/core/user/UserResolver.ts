@@ -3,7 +3,8 @@ import { inject, injectable } from 'inversify';
 import { injectHttpContext, interfaces } from 'inversify-express-utils';
 import _ from 'lodash';
 import { fromPartialRecord } from '../../database/Patch';
-import { DependencyFactoryFactory, DeviceAlarmSettings, EntityAlarmSettingsItem, PropExpand, UpdateAlarmSettings, User, UnitSystem, UserCreate, RetrieveAlarmSettingsFilter, EntityAlarmSettings, LocationAlarmSettings, AlarmSettings } from '../api';
+import { DependencyFactoryFactory, DeviceAlarmSettings, EntityAlarmSettingsItem, PropExpand, UpdateAlarmSettings, User, UnitSystem, UserCreate, RetrieveAlarmSettingsFilter, EntityAlarmSettings,
+LocationAlarmSettings, AlarmSettings, AccountType } from '../api';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import { NotificationService } from '../notification/NotificationService';
 import { AccountResolver, DeviceResolver, LocationResolver, PropertyResolverMap, Resolver } from '../resolver';
@@ -17,6 +18,8 @@ import { UserRecord, UserRecordData } from './UserRecord';
 import UserTable from './UserTable';
 import LocationTreeTable, { LocationTreeRow } from '../location/LocationTreeTable';
 import uuid from 'uuid';
+import { AccountRecord, AccountRecordData } from '../account/AccountRecord';
+import AccountTable from '../account/AccountTable';
 
 @injectable()
 class UserResolver extends Resolver<User> {
@@ -25,6 +28,14 @@ class UserResolver extends Resolver<User> {
       const userAccountRoleRecordData = await this.userAccountRoleTable.getByUserId(model.id);
 
       if (userAccountRoleRecordData == null) {
+        return null;
+      }
+      const accountRecordData: AccountRecordData | null = await this.accountTable.get({ id: userAccountRoleRecordData.account_id });
+      if (accountRecordData == null) {
+        return null;
+      }
+      const account = new AccountRecord(accountRecordData).toModel();
+      if (account.type === AccountType.ENTERPRISE && !shouldExpand) {
         return null;
       }
 
@@ -86,6 +97,14 @@ class UserResolver extends Resolver<User> {
       const userAccountRoleRecordData = await this.userAccountRoleTable.getByUserId(model.id);
 
       if (userAccountRoleRecordData === null) {
+        return null;
+      }
+      const accountRecordData = await this.accountTable.get({ id: userAccountRoleRecordData.account_id });
+      if (accountRecordData == null) {
+        return null;
+      }
+      const account = new AccountRecord(accountRecordData).toModel();
+      if (account.type === AccountType.ENTERPRISE && !shouldExpand) {
         return null;
       }
 
@@ -193,6 +212,7 @@ class UserResolver extends Resolver<User> {
     @injectHttpContext private readonly httpContext: interfaces.HttpContext,
     @inject('Logger') private readonly logger: Logger,
     @inject('LocationTreeTable') private locationTreeTable: LocationTreeTable,
+    @inject('AccountTable') private accountTable: AccountTable,
   ) {
     super();
 
