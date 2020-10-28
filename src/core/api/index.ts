@@ -17,6 +17,7 @@ export * from './model/AlertFeedbackFlow';
 export * from './model/AlertFeedback';
 export * from './model/FloDetect';
 export * from './model/Telemetry';
+export * from './model/Event';
 
 // Utils
 export type DependencyFactoryFactory = <T>(dep: string) => () => T;
