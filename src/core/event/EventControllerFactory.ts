@@ -7,23 +7,30 @@ import {
   request,
   requestParam,
 } from 'inversify-express-utils';
-import * as t from 'io-ts';
 import { asyncMethod, httpController } from '../api/controllerUtils';
 import Request from '../api/Request';
+import { EventService } from './EventService';
+import { toDeviceMake } from '../api';
 
 
 export function EventControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
 
   @httpController({ version: apiVersion }, '/events')
   class EventLogController extends BaseHttpController {
-    constructor() {
+    constructor(
+      @inject('EventService') private eventService: EventService,
+    ) {
       super();
     }
 
     @httpPut('/')
     @asyncMethod
-    private async putEvents(@request() req: Request): Promise<void> {
-      return;
+    private async putEvents(
+      @request() req: Request,
+      @queryParam('date') date?: string,
+      @queryParam('make') make?: string,
+    ): Promise<void> {
+      return this.eventService.createEvent(req.query, toDeviceMake(make), date);
     }
   }
 
