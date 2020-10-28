@@ -11,13 +11,13 @@ class EventTable extends PostgresTable<EventRecordData> {
   constructor(
     @inject('PostgresDbClient') @targetName('core') private pgDbClient: PostgresDbClient
   ) {
-    super(pgDbClient, 'events');
+    super(pgDbClient, 'event');
   }
 
   public async createEvent(event: Event): Promise<void> {
     const { text, values } = squel.useFlavour('postgres')
       .insert()
-      .into('events')
+      .into('event')
       .setFields({
         created_at: event.createdAt,
         ref_id: event.refId,

@@ -1,6 +1,6 @@
 import { inject, injectable } from 'inversify';
 import EventTable from './EventTable';
-import { Event, DeviceMake, RawEvent, getEventPk } from '../api';
+import { Event, DeviceMake, RawEvent, getEventRefIdPropertyName } from '../api';
 import moment from 'moment';
 import Logger from 'bunyan';
 
@@ -23,10 +23,10 @@ class EventService {
       createdAt = moment.unix(value).toISOString();
     }
 
-    const pkParamName = getEventPk(make);
-    const pkValue = pkParamName ? rawEvent[pkParamName] : undefined;
+    const refIdPropertyName = getEventRefIdPropertyName(make);
+    const refId = refIdPropertyName ? rawEvent[refIdPropertyName] : undefined;
     const ev: Event = {
-      refId: pkValue || 'unset',
+      refId: refId || 'unset',
       eventType: rawEvent.type,
       deviceModel: rawEvent.model,
       deviceMake: make,

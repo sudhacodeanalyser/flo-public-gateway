@@ -26,7 +26,7 @@ export function toDeviceMake(value?: string): DeviceMake {
   }
 }
 
-export function getEventPk(make: DeviceMake): string | null {
+export function getEventRefIdPropertyName(make: DeviceMake): string | null {
   switch(make) {
     case DeviceMake.LTE:
       return 'imei';
