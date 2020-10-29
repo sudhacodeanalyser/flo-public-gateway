@@ -200,7 +200,7 @@ class AccountService {
         $select: {
           id: true
         }
-      });
+      }, undefined, undefined, { locClass: ['unit'] });
       const destLocationIds = new Set(destLocations.map(l => l.id))
       const invalidDestLocations = locationMerge
         .filter(({ destLocationId }) => !destLocationIds.has(destLocationId));
