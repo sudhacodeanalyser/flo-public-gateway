@@ -193,20 +193,15 @@ class AccountService {
         .filter(({ sourceLocationId }) => !sourceLocationIds.has(sourceLocationId));
 
       if (invalidSourceLocations.length) {
-        throw new ConflictError(`Some source locations do not belong to source account ${sourceAccountId}: [${invalidSourceLocations}]`);
+        throw new ConflictError(`Some source locations do not belong to source account ${sourceAccountId}: ${JSON.stringify(invalidSourceLocations)}`);
       }
 
-      const { items: destLocations } = await locationService.getByUserId(destAccount.owner.id, {
-        $select: {
-          id: true
-        }
-      }, undefined, undefined, { locClass: ['unit'] });
-      const destLocationIds = new Set(destLocations.map(l => l.id))
+      const destLocationIds = new Set(await this.getAllUnitLocations(destAccount.owner.id));
       const invalidDestLocations = locationMerge
         .filter(({ destLocationId }) => !destLocationIds.has(destLocationId));
 
       if (invalidDestLocations.length) {
-        throw new ConflictError(`Some destination locations do not belong to destination account ${destAccountId}: [${invalidDestLocations}]`);
+        throw new ConflictError(`Some destination locations do not belong to destination account ${destAccountId}: ${JSON.stringify(invalidDestLocations)}`);
       }
 
       await Promise.all(
@@ -247,6 +242,29 @@ class AccountService {
     }
 
     return updatedDestAccount; 
+  }
+
+  private async getAllUnitLocations(userId: string): Promise<string[]> {
+    const locationService = this.locationServiceFactory();
+
+    const pageThruLocations = async (pageNum: number = 1, pageSize: number = 100): Promise<string[]> => {
+      const { total, items } = await locationService.getByUserId(userId, {
+        $select: {
+          id: true
+        }
+      }, undefined, undefined, { locClass: ['unit'] });
+      const locationIds = items.map(l => l.id);
+
+      if (((pageNum - 1) * pageSize) + items.length < total) {
+        return [
+          ...locationIds,
+          ...await pageThruLocations(pageNum + 1, pageSize)
+        ]
+      }
+      return locationIds;
+    } 
+
+    return pageThruLocations();
   }
 }
 
