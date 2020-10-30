@@ -252,7 +252,7 @@ class AccountService {
         $select: {
           id: true
         }
-      }, undefined, undefined, { locClass: ['unit'] });
+      }, pageSize, pageNum, { locClass: ['unit'] });
       const locationIds = items.map(l => l.id);
 
       if (((pageNum - 1) * pageSize) + items.length < total) {
