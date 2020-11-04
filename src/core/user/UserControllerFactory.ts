@@ -13,6 +13,8 @@ import { PasswordResetService } from './PasswordResetService';
 import { EmailAvailability, EmailVerification, EmailVerificationCodec, OAuth2Response, UserRegistrationData, UserRegistrationDataCodec, UserRegistrationService, RegistrationTokenResponse } from './UserRegistrationService';
 import UnauthorizedError from '../api/error/UnauthorizedError';
 import { Password } from '../api/validator/Password';
+import ConcurrencyService from '../../concurrency/ConcurrencyService';
+import LimitReachedError from '../api/error/LimitReachedError';
 
 export function UserControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
@@ -25,7 +27,8 @@ export function UserControllerFactory(container: Container, apiVersion: number):
     constructor(
       @inject('UserService') private userService: UserService,
       @inject('UserRegistrationService') private userRegistrationService: UserRegistrationService,
-      @inject('PasswordResetService') private passwordResetService: PasswordResetService
+      @inject('PasswordResetService') private passwordResetService: PasswordResetService,
+      @inject('ConcurrencyService') private concurrencyService: ConcurrencyService
     ) {
       super();
     }
@@ -46,6 +49,10 @@ export function UserControllerFactory(container: Container, apiVersion: number):
     )
     @asyncMethod
     private async requestPasswordReset(@requestBody() { email, locale, app }: { email: string, locale?: string, app?: string }): Promise<void> {
+      if (!(await this.concurrencyService.acquireLock(`password-reset.${email}`, 60))) {
+        throw new LimitReachedError('Password reset limit reached.');
+      }
+
       return this.passwordResetService.requestReset(email, locale, app);
     }
 
