@@ -18,8 +18,8 @@ class PuckAuthMiddleware extends BaseMiddleware {
       pipe(
         await this.puckTokenService.verifyToken(token),
         E.fold(
-          err => {
-            next(err);
+          () => {
+            next(new UnauthorizedError('Missing or invalid access token.'));
           },
           tokenMetadata => {
             req.token = {
