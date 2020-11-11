@@ -79,7 +79,7 @@ routingIngress:
                   plugins.run()
           }
 
-          limit_req zone=my-zone-2 burst=1 nodelay;
+          limit_req zone=my-zone-2 burst=5 nodelay;
           limit_req_status 429;
           # limit_req_dry_run on;
 
