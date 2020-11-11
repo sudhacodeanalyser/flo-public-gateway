@@ -8,7 +8,7 @@ import { QrData, QrDataValidator } from '../../api-v1/pairing/PairingService';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import { InternalDeviceService } from '../../internal-device-service/InternalDeviceService';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
-import { DependencyFactoryFactory, Device, DeviceActionRules, DeviceActionRulesCreate, DeviceActionRulesCreateCodec, DeviceCreate, DeviceCreateValidator, DeviceType, DeviceUpdate, DeviceUpdateValidator, SystemMode as DeviceSystemMode, SystemModeCodec as DeviceSystemModeCodec, HardwareThresholdsCodec, HardwareThresholds, FirmwareInfo, SsidCredentials } from '../api';
+import { DependencyFactoryFactory, Device, DeviceActionRules, DeviceActionRulesCreate, DeviceActionRulesCreateCodec, DeviceCreate, DeviceCreateValidator, DeviceType, DeviceUpdate, DeviceUpdateValidator, SystemMode as DeviceSystemMode, SystemModeCodec as DeviceSystemModeCodec, HardwareThresholdsCodec, HardwareThresholds, FirmwareInfo, SsidCredentials, BaseLteCodec, BaseLte } from '../api';
 import { asyncMethod, authorizationHeader, createMethod, deleteMethod, httpController, parseExpand, withResponseType } from '../api/controllerUtils';
 import { convertEnumtoCodec } from '../api/enumUtils';
 import ForbiddenError from '../api/error/ForbiddenError';
@@ -174,9 +174,21 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       return this.deviceService.getDeviceById(tokenMetadata.puckId, expandProps);
     }
 
-    // Special endpoint for LTE devices
+    // Special endpoint for LTE device creation - Admins only
     @httpPost(
       '/lte',
+      auth,
+      reqValidator.create(t.type({
+        body: BaseLteCodec
+      }))
+    )
+    private async createLte(@requestBody() lte: BaseLte): Promise<void> {
+      return this.lteService.createLte(lte);
+    }
+
+    // Special endpoint for LTE device credentials - Admins only
+    @httpPost(
+      '/lte/credentials',
       auth,
       reqValidator.create(t.type({
         body: t.type({
