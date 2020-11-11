@@ -3,18 +3,20 @@ import { Lte } from '../api';
 
 export interface LteRecordData {
   imei: string;
-  icc_id: string;
+  iccid: string;
   rnd_key: string;
   qr_code: string;
-  ssid_offset: number;
-  pwd_offset: number;
+  offset_index?: number;
+  ssid_offset?: number;
+  pwd_offset?: number;
 }
 
-const RecordToModelSchema: StrictSchema<Lte, LteRecordData> = {
+const LteRecordToModelSchema: StrictSchema<Lte, LteRecordData> = {
   imei: 'imei',
-  iccId: 'icc_id',
+  iccid: 'iccid',
   randomKey: 'rnd_key',
   qrCode: 'qr_code',
+  offsetIndex: 'offset_index',
   ssidOffset: 'ssid_offset',
   passwordOffset: 'pwd_offset'
 }
@@ -25,7 +27,7 @@ export class LteRecord {
   ) {}
 
   public toModel(): Lte {
-    return morphism(RecordToModelSchema, this.data);
+    return morphism(LteRecordToModelSchema, this.data);
   }
 }
 

@@ -7,6 +7,7 @@ import { NonEmptyString } from '../../api/validator/NonEmptyString';
 import { HealthTest } from '../../device/HealthTestService';
 import { ComputedIrrigationSchedule } from '../../device/IrrigationScheduleService';
 import { FormattedString } from '../../api/validator/FormattedString';
+import { MaxLengthString } from '../validator/MaxLengthString';
 
 export enum ValveState {
   OPEN = 'open',
@@ -348,11 +349,27 @@ export interface SsidCredentials {
   password: string;
 }
 
-export interface Lte {
-  imei: string;
-  iccId: string;
-  randomKey: string;
+const optOffsetIndex = t.partial({
+  offsetIndex: t.number
+})
+
+export const BaseLteCodec = t.intersection([
+  t.type({
+    imei: MaxLengthString(15),
+    iccid: MaxLengthString(20),
+    randomKey: MaxLengthString(512),
+  }),
+  optOffsetIndex
+]);
+
+export interface BaseLte extends t.TypeOf<typeof BaseLteCodec> {}
+
+export interface LteCreate extends BaseLte {
   qrCode: string;
+  offsetIndex: number;
+}
+
+export interface Lte extends LteCreate {
   ssidOffset: number;
   passwordOffset: number;
 }

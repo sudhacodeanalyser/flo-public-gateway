@@ -133,15 +133,15 @@ class DeviceResolver extends Resolver<Device> {
     connectivity: async (device: Device, shouldExpand = false) => {
       try {
         const maybeAdditionalProperties = await this.internalDeviceService.getDevice(device.macAddress);
-        const maybeLteData = await this.lteTable.getByDeviceId(device.id);
+        const maybeLte = await this.lteTable.getByDeviceId(device.id);
 
         const lte = pipe(
-          maybeLteData,
-          Option.map(({ qr_code }) => ({ 
-            lte: { qrCode: qr_code }
+          maybeLte,
+          Option.map(({ qrCode }) => ({ 
+            lte: { qrCode }
           })),
           Option.toNullable
-        )
+        );
         
         const additionalProperties = maybeAdditionalProperties && (maybeAdditionalProperties.connectivity || null);
         
@@ -152,7 +152,7 @@ class DeviceResolver extends Resolver<Device> {
         return {
           ...additionalProperties,
           ...lte
-        }
+        };
 
       } catch (err) {
         this.logger.error({ err });
