@@ -34,7 +34,6 @@ routingIngress:
     kubernetes.io/ingress.class: nginx
     nginx.ingress.kubernetes.io/enable-cors: "false"
     nginx.ingress.kubernetes.io/server-snippet: |
-      location /api/v3/ { limit_req zone=my-zone-3 burst=10 nodelay; }
       location /api/v1/oauth2/token {
 
           set $namespace      "flo-public-gateway";
@@ -76,7 +75,7 @@ routingIngress:
                   plugins.run()
           }
 
-          limit_req zone=my-zone-2 burst=5 nodelay;
+          limit_req zone=my-zone-3 burst=5 nodelay;
           limit_req_status 429;
           # limit_req_dry_run on;
 
