@@ -111,7 +111,7 @@ Dev:
     - Compile
   only:
     - dev
-    - remove-simple-router
+    - dev.rate-limit-5th-try
   environment:
     name: dev
     url: https://flo-public-gateway.flocloud.co/api/v2/ping
