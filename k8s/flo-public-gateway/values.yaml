@@ -43,9 +43,6 @@ routingIngress:
           set $service_port   "8000";
           set $location_path  "/api/v1/oauth2/token";
 
-          opentracing on;
-          opentracing_propagate_context;
-
           rewrite_by_lua_block {
                   lua_ingress.rewrite({
                           force_ssl_redirect = false,
