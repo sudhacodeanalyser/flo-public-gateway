@@ -3,8 +3,7 @@ import _ from 'lodash';
 import * as O from 'fp-ts/lib/Option';
 import LteTable from './LteTable';
 import DeviceLteTable from './DeviceLteTable';
-import { Lte, SsidCredentials } from '../api';
-import { LteRecord } from './LteRecord';
+import { BaseLte, Lte, LteCreate, SsidCredentials } from '../api';
 import { pipe } from 'fp-ts/lib/pipeable';
 import crypto from 'crypto';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
@@ -19,35 +18,43 @@ class LteService {
     @inject('DeviceLteTable') private deviceLteTable: DeviceLteTable,
   ) {}
 
-  public async getSsidCredentials(qrCode: string): Promise<Option<SsidCredentials>> {
-    const maybeLteRecordData = await this.lteTable.get({qr_code: qrCode});
+  public async createLte(lte: BaseLte): Promise<void> {
+    const qrCode = this.generateQrCode(lte);
+    const lteCreate = {
+      offsetIndex: 1,
+      ...lte,
+      qrCode,
+    }
+    return this.lteTable.create(lteCreate);
+  }
 
+  public async getSsidCredentials(qrCode: string): Promise<Option<SsidCredentials>> {
+    const maybeLte = await this.lteTable.getByQrCode(qrCode);
     return pipe(
-      O.fromNullable(maybeLteRecordData),
-      O.map(lteRecordData => {
-        const lte = new LteRecord(lteRecordData).toModel();
-        return this.extractCredentials(lte)
-      })
+      maybeLte,
+      O.map(lte => this.extractCredentials(lte))
     );
   }
 
   public async linkDevice(deviceId: string, qrCode: string): Promise<void> {
-    const maybeLteRecordData = await this.lteTable.get({qr_code: qrCode});
-
+    const maybeLte = await this.lteTable.getByQrCode(qrCode);
     return pipe(
-      O.fromNullable(maybeLteRecordData),
+      maybeLte,
       O.fold(
         async () => { throw new ResourceDoesNotExistError('LTE device not found.') },
-        async lteRecordData => {
-          const lte = new LteRecord(lteRecordData).toModel();
-          return this.deviceLteTable.linkDevice(deviceId, lte.imei);
-        }
+        async lte => this.deviceLteTable.linkDevice(deviceId, lte.imei)
       )
     );
   }
 
   public async unlinkDevice(deviceId: string): Promise<void> {
     return this.deviceLteTable.unlinkDevice(deviceId);
+  }
+
+  private generateQrCode(lte: BaseLte): string {
+    const b = Buffer.from(`${lte.imei}-${lte.iccid}-${lte.randomKey}`, 'utf-8');
+    const sha256 = this.computeSha256(b);
+    return `lte-${sha256}`;
   }
 
   private extractCredentials(lte: Lte): SsidCredentials {
