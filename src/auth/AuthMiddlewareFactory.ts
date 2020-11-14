@@ -31,12 +31,12 @@ class AuthMiddlewareFactory {
   public create(getParams?: GetParams, overrideMethodId?: string): express.Handler {
     return async (req: Request, res: express.Response, next: express.NextFunction): Promise<void> => {
       try {
+        const logger = req.log;
         let authHeader = req.get('Authorization');
         if (_.isEmpty(authHeader) || authHeader === undefined) {
           return next(new UnauthorizedError('Missing or invalid access token.'));
         }
 
-        const logger = req.log;
         if (this.requireExchange(authHeader, logger)) {
           const tradeRes = await this.tradeToken(authHeader, logger)
           if (tradeRes instanceof Error) {
