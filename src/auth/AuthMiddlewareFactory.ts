@@ -68,7 +68,7 @@ class AuthMiddlewareFactory {
 
         if (leftResult) {
           throw leftResult.left;
-        }
+        } 
 
         const tokenMetadata = (_.find(results, result => Either.isRight(result)) as Either.Right<TokenMetadata> | undefined)?.right;
 
@@ -145,40 +145,40 @@ class AuthMiddlewareFactory {
   }
 
   private async callAuthService(methodId: string, token: string, params?: Params): Promise<Either.Either<Error, TokenMetadata>> {
-    try {
-      const authResponse = await this.httpClient.request({
-        method: 'post',
-        url: this.authUrl,
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: token
-        },
-        data: {
-          method_id: methodId,
-          params
-        },
-        timeout: config.authTimeoutMS
-      });
+      try {
+        const authResponse = await this.httpClient.request({
+          method: 'post',
+          url: this.authUrl,
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: token
+          },
+          data: {
+            method_id: methodId,
+            params
+          },
+          timeout: config.authTimeoutMS
+        });
 
-      if (authResponse.status === 200) {
-        // Do not block on cache write
-        this.authCache.writeToCache(authResponse.data, methodId, token, params);
+        if (authResponse.status === 200) {
+          // Do not block on cache write
+          this.authCache.writeToCache(authResponse.data, methodId, token, params);
 
-        return Either.right(authResponse.data);
-      } else {
-        return Either.left(new Error('Unknown response.'));
-      }
-    } catch (err) {
-      const authResponse = err.response;
+          return Either.right(authResponse.data);
+        } else {
+          return Either.left(new Error('Unknown response.'));
+        }
+      } catch (err) {
+        const authResponse = err.response;
 
-      if (authResponse && (authResponse.status === 400 || authResponse.status === 401)) {
-        return Either.left(new UnauthorizedError(authResponse.data.message));
-      } else if (authResponse && authResponse.status === 403) {
-        return Either.left(new ForbiddenError(authResponse.data.message));
-      } else {
-        return Either.left(err);
-      }
-    }
+        if (authResponse && (authResponse.status === 400 || authResponse.status === 401)) {
+          return Either.left(new UnauthorizedError(authResponse.data.message));
+        } else if (authResponse && authResponse.status === 403) {
+          return Either.left(new ForbiddenError(authResponse.data.message));
+        } else {
+          return Either.left(err);
+        }
+      }   
   }
 
 }
