@@ -68,7 +68,7 @@ class AuthMiddlewareFactory {
 
         if (leftResult) {
           throw leftResult.left;
-        } 
+        }
 
         const tokenMetadata = (_.find(results, result => Either.isRight(result)) as Either.Right<TokenMetadata> | undefined)?.right;
 
@@ -91,21 +91,21 @@ class AuthMiddlewareFactory {
   }
 
   // check to see if issuer is aws cognito
-  private requireExchange(token:string,logger:Logger|undefined):boolean {
-    if(!this.internalFloMoenAuthUrl || !/^http/i.test(this.internalFloMoenAuthUrl)) {
+  private requireExchange(token: string, logger: Logger | undefined): boolean {
+    if (!this.internalFloMoenAuthUrl || !/^http/i.test(this.internalFloMoenAuthUrl)) {
       return false;
     }
 
-    const tokenData:any = jwt.decode(_.last(token.split('Bearer ')) || '');
-    const iss:string = tokenData.iss || '';
-    if(/^https:\/\/cognito-.+\.amazonaws\.com/i.test(iss)) {
-      logger?.debug({ tokenExchange:tokenData })
+    const tokenData: any = jwt.decode(_.last(token.split('Bearer ')) || '');
+    const iss: string = tokenData.iss || '';
+    if (/^https:\/\/cognito-.+\.amazonaws\.com/i.test(iss)) {
+      logger?.debug({ tokenExchange: tokenData })
       return true;
     }
     return false;
   }
 
-  private async tradeToken(token:string,logger:Logger|undefined): Promise<Error | string> {
+  private async tradeToken(token: string, logger: Logger | undefined): Promise<Error | string> {
     try {
       const authResponse = await this.httpClient.request({
         method: 'get',
@@ -118,22 +118,22 @@ class AuthMiddlewareFactory {
       });
 
       if (authResponse.status === 200) {
-        const tk:string = authResponse.data && authResponse.data.token || '';
-        if(tk === '') {
-          logger?.error({ tokenExchange:authResponse.data })
+        const tk: string = authResponse.data && authResponse.data.token || '';
+        if (tk === '') {
+          logger?.error({ tokenExchange: authResponse.data })
           return new Error('Token exchange decode failed.');
         }
-        logger?.trace({ tokenExchange:"OK!" })
+        logger?.trace({ tokenExchange: "OK!" })
         return tk; // OK!
       } else {
-        logger?.warn({ tokenExchange:authResponse.data })
+        logger?.warn({ tokenExchange: authResponse.data })
         return new Error('Unknown exchange response.');
       }
     } catch (err) {
-      if(err) {
+      if (err) {
         const authResponse = err.response;
 
-        logger?.info({ tokenExchange:err.response.data })
+        logger?.info({ tokenExchange: err.response.data })
         if (authResponse && (authResponse.status === 400 || authResponse.status === 401)) {
           return new UnauthorizedError(authResponse.data.message);
         } else if (authResponse && authResponse.status === 403) {
@@ -145,40 +145,40 @@ class AuthMiddlewareFactory {
   }
 
   private async callAuthService(methodId: string, token: string, params?: Params): Promise<Either.Either<Error, TokenMetadata>> {
-      try {
-        const authResponse = await this.httpClient.request({
-          method: 'post',
-          url: this.authUrl,
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: token
-          },
-          data: {
-            method_id: methodId,
-            params
-          },
-          timeout: config.authTimeoutMS
-        });
+    try {
+      const authResponse = await this.httpClient.request({
+        method: 'post',
+        url: this.authUrl,
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: token
+        },
+        data: {
+          method_id: methodId,
+          params
+        },
+        timeout: config.authTimeoutMS
+      });
 
-        if (authResponse.status === 200) {
-          // Do not block on cache write
-          this.authCache.writeToCache(authResponse.data, methodId, token, params);
+      if (authResponse.status === 200) {
+        // Do not block on cache write
+        this.authCache.writeToCache(authResponse.data, methodId, token, params);
 
-          return Either.right(authResponse.data);
-        } else {
-          return Either.left(new Error('Unknown response.'));
-        }
-      } catch (err) {
-        const authResponse = err.response;
+        return Either.right(authResponse.data);
+      } else {
+        return Either.left(new Error('Unknown response.'));
+      }
+    } catch (err) {
+      const authResponse = err.response;
 
-        if (authResponse && (authResponse.status === 400 || authResponse.status === 401)) {
-          return Either.left(new UnauthorizedError(authResponse.data.message));
-        } else if (authResponse && authResponse.status === 403) {
-          return Either.left(new ForbiddenError(authResponse.data.message));
-        } else {
-          return Either.left(err);
-        }
-      }   
+      if (authResponse && (authResponse.status === 400 || authResponse.status === 401)) {
+        return Either.left(new UnauthorizedError(authResponse.data.message));
+      } else if (authResponse && authResponse.status === 403) {
+        return Either.left(new ForbiddenError(authResponse.data.message));
+      } else {
+        return Either.left(err);
+      }
+    }
   }
 
 }
