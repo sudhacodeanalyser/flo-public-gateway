@@ -27,6 +27,7 @@ variables:
   INFLUX_SECOND_MEASUREMNT: '"twelve_weeks".telemetry_raw'
   INFLUX_TELEMETRY_DB: "telemetry_dev"
   INFLUX_USERNAME: "telemetry_dev"
+  INTERNAL_FLO_MOEN_AUTH_URL: "http://flo-moen-auth.flocloud.co"
   INTERNAL_DEVICE_SERVICE_BASE_URL: "http://flo-device-service.flo-device-service.svc.cluster.local:3000/v1"
   INSTANA_SERVICE_NAME: "flo-public-gateway"
   KAFKA_HOST: "kafka-cherry-broker-1.dev.flocloud.co:9092,kafka-cherry-broker-2.dev.flocloud.co:9092,kafka-cherry-broker-3.dev.flocloud.co:9092"
@@ -143,6 +144,7 @@ ReleaseCandidate:
     INFLUX_TELEMETRY_DB_PROD: "telemetry_prod"
     INFLUX_USERNAME_PROD: "flo_api_prod"
     INSTANA_SERVICE_NAME: "flo-public-gateway-${ENV}"
+    INTERNAL_FLO_MOEN_AUTH_URL_PROD: ""
     INTERNAL_DEVICE_SERVICE_BASE_URL_PROD: "http://flo-device-service.flo-device-service.svc.cluster.local:3000/v1"
     KAFKA_HOST_PROD: "kafka-cherry-broker-1.prod.flosecurecloud.com:9092,kafka-cherry-broker-2.prod.flosecurecloud.com:9092,kafka-cherry-broker-3.prod.flosecurecloud.com:9092"
     KAFKA_TIMEOUT_MS_PROD: "${KAFKA_TIMEOUT_MS}"
@@ -194,6 +196,7 @@ K8sProd:
     INFLUX_SECOND_MEASUREMNT_PROD: '"twelve_weeks".telemetry_raw'
     INFLUX_TELEMETRY_DB_PROD: "telemetry_prod"
     INFLUX_USERNAME_PROD: "flo_api_prod"
+    INTERNAL_FLO_MOEN_AUTH_URL_PROD: ""
     INTERNAL_DEVICE_SERVICE_BASE_URL_PROD: "http://flo-device-service.flo-device-service.svc.cluster.local:3000/v1"
     KAFKA_HOST_PROD: "kafka-cherry-broker-1.prod.flosecurecloud.com:9092,kafka-cherry-broker-2.prod.flosecurecloud.com:9092,kafka-cherry-broker-3.prod.flosecurecloud.com:9092"
     KAFKA_TIMEOUT_MS_PROD: "${KAFKA_TIMEOUT_MS}"

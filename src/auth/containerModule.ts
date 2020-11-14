@@ -9,6 +9,7 @@ export default new ContainerModule((bind: interfaces.Bind) => {
   bind<AuthMiddlewareFactory>('AuthMiddlewareFactory').to(AuthMiddlewareFactory);
   bind<AccessControlService>('AccessControlService').to(AccessControlService);
   bind<string>('AuthUrl').toConstantValue(config.authUrl);
+  bind<string>('InternalFloMoenAuthUrl').toConstantValue(config.internalFloMoenAuthUrl);
   bind<string>('AclUrl').toConstantValue(config.aclUrl);
   bind<PuckAuthMiddleware>('PuckAuthMiddleware').to(PuckAuthMiddleware);
   bind<AuthCache>('AuthCache').to(AuthCache);
