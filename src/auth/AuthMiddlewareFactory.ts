@@ -36,8 +36,7 @@ class AuthMiddlewareFactory {
         if (_.isEmpty(authHeader) || authHeader === undefined) {
           return next(new UnauthorizedError('Missing or invalid access token.'));
         }
-
-        if (this.requireExchange(authHeader, logger)) {
+        if (this.requireExchange(authHeader, logger)) { // attempt token exchange if enabled and required
           const tradeRes = await this.tradeToken(authHeader, logger)
           if (tradeRes instanceof Error) {
             throw tradeRes as Error;
@@ -98,13 +97,14 @@ class AuthMiddlewareFactory {
 
     const tokenData: any = jwt.decode(_.last(token.split('Bearer ')) || '');
     const iss: string = tokenData.iss || '';
-    if (/^https:\/\/cognito-.+\.amazonaws\.com/i.test(iss)) {
+    if (iss !== '' && /^https:\/\/cognito-.+\.amazonaws\.com/i.test(iss)) {
       logger?.debug({ tokenExchange: tokenData })
       return true;
     }
     return false;
   }
 
+  // exchange a Moen Cognito access JWT for an "impersonated" Flo access JWT
   private async tradeToken(token: string, logger: Logger | undefined): Promise<Error | string> {
     try {
       const authResponse = await this.httpClient.request({
