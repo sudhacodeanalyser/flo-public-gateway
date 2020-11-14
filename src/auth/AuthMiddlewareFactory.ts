@@ -92,9 +92,13 @@ class AuthMiddlewareFactory {
 
   // check to see if issuer is aws cognito
   private requireExchange(token:string,logger:Logger|undefined):boolean {
+    if(!this.internalFloMoenAuthUrl || !/^http/i.test(this.internalFloMoenAuthUrl)) {
+      return false;
+    }
+
     const tokenData:any = jwt.decode(_.last(token.split('Bearer ')) || '');
     const iss:string = tokenData.iss || '';
-    if(/^https:\/\/cognito-.+\.amazonaw\.com/gi.test(iss)) {
+    if(/^https:\/\/cognito-.+\.amazonaws\.com/i.test(iss)) {
       logger?.debug({ tokenExchange:tokenData })
       return true;
     }
@@ -105,7 +109,7 @@ class AuthMiddlewareFactory {
     try {
       const authResponse = await this.httpClient.request({
         method: 'get',
-        url: this.internalFloMoenAuthUrl,
+        url: this.internalFloMoenAuthUrl + "/token/trade",
         headers: {
           'Content-Type': 'application/json',
           Authorization: token
