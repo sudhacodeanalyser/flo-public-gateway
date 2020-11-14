@@ -39,7 +39,7 @@ class AuthMiddlewareFactory {
         if (this.requireExchange(authHeader, logger)) { // attempt token exchange if enabled and required
           const tradeRes = await this.tradeToken(authHeader, logger)
           if (tradeRes instanceof Error) {
-            throw tradeRes as Error;
+            return next(tradeRes as Error);
           } else {
             authHeader = tradeRes as string; // swap auth header
           }
@@ -50,7 +50,6 @@ class AuthMiddlewareFactory {
         const methodId = req.method + path;
         const rawParams = getParams && (await getParams(req, this.depFactoryFactory));
         const paramArray = rawParams && (_.isArray(rawParams) ? rawParams : [rawParams]);
-
         const results = await Promise.all((!paramArray || _.isEmpty(paramArray) ? [{}] : paramArray)
           .map(async params => {
             return pipe(
@@ -64,13 +63,11 @@ class AuthMiddlewareFactory {
           }));
 
         const leftResult = _.find(results, result => Either.isLeft(result)) as Either.Left<Error> | undefined;
-
         if (leftResult) {
-          throw leftResult.left;
+          return next(leftResult.left);
         } 
 
         const tokenMetadata = (_.find(results, result => Either.isRight(result)) as Either.Right<TokenMetadata> | undefined)?.right;
-
         if (logger !== undefined) {
           logger.info({ token: tokenMetadata });
         }
@@ -81,10 +78,9 @@ class AuthMiddlewareFactory {
             return !!this.roles && this.roles.indexOf('system.admin') >= 0;
           }
         };
-
-        next();
+        return next();
       } catch (err) {
-        next(err);
+        return next(err);
       }
     };
   }
@@ -94,7 +90,6 @@ class AuthMiddlewareFactory {
     if (!this.internalFloMoenAuthUrl || !/^http/i.test(this.internalFloMoenAuthUrl)) {
       return false;
     }
-
     const tokenData: any = jwt.decode(_.last(token.split('Bearer ')) || '');
     const iss: string = tokenData.iss || '';
     if (iss !== '' && /^https:\/\/cognito-.+\.amazonaws\.com/i.test(iss)) {
@@ -118,7 +113,7 @@ class AuthMiddlewareFactory {
       });
 
       if (authResponse.status === 200) {
-        const tk: string = authResponse.data && authResponse.data.token || '';
+        const tk: string = authResponse?.data?.token || '';
         if (tk === '') {
           logger?.error({ tokenExchange: authResponse.data })
           return new Error('Token exchange decode failed.');
@@ -130,14 +125,16 @@ class AuthMiddlewareFactory {
         return new Error('Unknown exchange response.');
       }
     } catch (err) {
-      if (err) {
+      if (err?.response) {
         const authResponse = err.response;
+        logger?.info({ tokenExchange: authResponse.data })
 
-        logger?.info({ tokenExchange: err.response.data })
-        if (authResponse && (authResponse.status === 400 || authResponse.status === 401)) {
-          return new UnauthorizedError(authResponse.data.message);
-        } else if (authResponse && authResponse.status === 403) {
-          return new ForbiddenError(authResponse.data.message);
+        switch (authResponse?.status ?? 0) {
+          case 400:
+          case 401:
+            return new UnauthorizedError(authResponse.data?.message ?? 'Token Exchange Unauthorized');
+          case 403:
+            return new ForbiddenError(authResponse.data?.message ?? 'Token Exchange Forbidden');
         }
       }
       return err;
