@@ -16,7 +16,7 @@ type Params = { [param: string]: any };
 class AuthCache {
   constructor(
     @inject('RedisClient') private redisClient: Redis.Redis
-  ) { }
+  ) {}
 
   public async writeToCache(tokenMetadata: TokenMetadata, methodId: string, token: string, params?: Params): Promise<void> {
     const indexKey = this.formatIndexKey(token);
@@ -29,7 +29,7 @@ class AuthCache {
           await this.redisClient.sadd(indexKey, methodKey);
           await this.redisClient.expire(indexKey, 3600);
         })(),
-        this.redisClient.setex(methodKey, 3600, JSON.stringify({ ...tokenMetadata, _token_hash: tokenHash }))
+       this.redisClient.setex(methodKey, 3600, JSON.stringify({ ...tokenMetadata, _token_hash: tokenHash }))
       ]);
     }
   }
@@ -47,11 +47,11 @@ class AuthCache {
         if (!tokenMetadata._token_hash || tokenMetadata._token_hash !== this.hashToken(token)) {
           return Option.none;
         }
-
+        
         return Option.some(tokenMetadata);
       }
     } catch (err) {
-
+      
       if (logger) {
         logger.error({ err });
       }
@@ -81,12 +81,12 @@ class AuthCache {
           OAuth2TokenCodec.decode(tokenData),
           Either.map(({ jti }) => jti)
         ),
-        ({ user: { user_id }, iat }) => Either.right(`${user_id}_${iat}`)
+        ({ user: { user_id }, iat }) => Either.right(`${ user_id }_${ iat }`)
       ),
       Either.getOrElse((): string | null => null)
     );
 
-    return key && `{${key}}`;
+    return key && `{${ key }}`;
   }
 
   private formatMethodKey(methodId: string, token: string, params?: Params): string | null {
@@ -94,7 +94,7 @@ class AuthCache {
     const formattedParams = !params ?
       [] :
       _.chain(params)
-        .map((value, key) => `${key}_${_.isString(value) ? value : JSON.stringify(value)}`)
+        .map((value, key) => `${ key }_${ _.isString(value) ? value : JSON.stringify(value) }`)
         .sortBy()
         .value();
 
@@ -105,10 +105,10 @@ class AuthCache {
     const prefix = this.formatTokenKey(token);
     const suffix = moment(date).format('YYYY-MM-DDTHH:00');
 
-    return `${prefix}_${suffix}`;
+    return `${ prefix }_${ suffix }`;
   }
 
-  private hashToken(token: string): string {
+  private hashToken(token:string): string {
     return crypto.createHash('sha1').update(token).digest('base64');
   }
 }
