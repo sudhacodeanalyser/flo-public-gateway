@@ -42,6 +42,7 @@ class AuthMiddlewareFactory {
             return next(tradeRes as Error);
           } else {
             authHeader = tradeRes as string; // swap auth header
+            req.headers.authorization = authHeader
           }
         }
 
@@ -103,7 +104,7 @@ class AuthMiddlewareFactory {
   private async tradeToken(token: string, logger: Logger | undefined): Promise<Error | string> {
     try {
       const authResponse = await this.httpClient.request({
-        method: 'get',
+        method: 'GET',
         url: this.internalFloMoenAuthUrl + "/token/trade",
         headers: {
           'Content-Type': 'application/json',
