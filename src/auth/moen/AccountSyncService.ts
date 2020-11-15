@@ -9,55 +9,47 @@ class AccountSyncService extends HttpService {
     super();
   }
 
-  public async ping(): Promise<any> {
+  public async getToken(authToken: string): Promise<any> {
     const request = {
       method: 'GET',
-      url: `${ this.url }/ping`,
+      url: `${this.url}/token`,
+      authToken
     };
     return this.sendRequest(request);
   }
 
-  public async getToken(): Promise<any> {
+  public async getTokenTrade(authToken: string): Promise<any> {
     const request = {
       method: 'GET',
-      url: `${ this.url }/token`,
-      authToken: this.authToken
+      url: `${this.url}/token/trade`,
+      authToken
     };
     return this.sendRequest(request);
   }
 
-  public async getTokenTrade(): Promise<any> {
-    const request = {
-      method: 'GET',
-      url: `${ this.url }/token/trade`,
-      authToken: this.authToken
-    };
-    return this.sendRequest(request);
-  }
-
-  public async headSyncMe(): Promise<any> {
+  public async headSyncMe(authToken: string): Promise<any> {
     const request = {
       method: 'HEAD',
-      url: `${ this.url }/sync/me`,
-      authToken: this.authToken
+      url: `${this.url}/sync/me`,
+      authToken
     };
     return this.sendRequest(request);
   }
 
-  public async getSyncMe(): Promise<any> {
+  public async getSyncMe(authToken: string): Promise<any> {
     const request = {
       method: 'GET',
-      url: `${ this.url }/sync/me`,
-      authToken: this.authToken
+      url: `${this.url}/sync/me`,
+      authToken
     };
     return this.sendRequest(request);
   }
 
-  public async postSyncNew(req: any): Promise<any> {
+  public async postSyncNew(authToken: string, req: any): Promise<any> {
     const request = {
       method: 'POST',
-      url: `${ this.url }/sync/new`,
-      authToken: this.authToken,
+      url: `${this.url}/sync/new`,
+      authToken,
       body: req
     };
     return this.sendRequest(request);

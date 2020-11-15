@@ -1,5 +1,5 @@
 import * as t from 'io-ts';
-import { NewUserSyncValidator, HasAuthorizationValidator } from './AccountSync'
+import { NewUserSyncValidator } from './AccountSync'
 import { interfaces, httpHead, httpGet, httpPost, requestBody, request, BaseHttpController } from 'inversify-express-utils';
 import { inject, Container } from 'inversify';
 import { httpController, createMethod } from '../../core/api/controllerUtils';
@@ -20,41 +20,32 @@ export function AccountSyncControllerFactory(container: Container, apiVersion: n
       super();
     }
 
-    @httpGet('/token',
-      reqValidator.create(t.type({ header: HasAuthorizationValidator }))
-    )
+    @httpGet('/token')
     private async getToken(@request() req: Request): Promise<any> {
-      return this.accountSyncService.getToken();
+      return this.accountSyncService.getToken(req.headers.authorization ?? '');
     }
 
-    @httpGet('/token/trade',
-      reqValidator.create(t.type({ header: HasAuthorizationValidator }))
-    )
+    @httpGet('/token/trade')
     private async getTokenTrade(@request() req: Request): Promise<any> {
-      return this.accountSyncService.getTokenTrade();
+      return this.accountSyncService.getTokenTrade(req.headers.authorization ?? '');
     }
 
-    @httpHead('/sync/me',
-      reqValidator.create(t.type({ header: HasAuthorizationValidator }))
-    )
-    private async getSyncMe(@request() req: Request): Promise<any> {
-      return this.accountSyncService.getSyncMe();
-    }
-
-    @httpHead('/sync/me',
-      reqValidator.create(t.type({ header: HasAuthorizationValidator }))
-    )
+    @httpHead('/sync/me')
     private async headSyncMe(@request() req: Request): Promise<any> {
-      return this.accountSyncService.headSyncMe();
+      return this.accountSyncService.headSyncMe(req.headers.authorization ?? '');
+    }
+
+    @httpGet('/sync/me')
+    private async getSyncMe(@request() req: Request): Promise<any> {
+      return this.accountSyncService.getSyncMe(req.headers.authorization ?? '');
     }
 
     @httpPost('/sync/new',
-      reqValidator.create(t.type({ header: HasAuthorizationValidator })),
       reqValidator.create(t.type({ body: NewUserSyncValidator }))
     )
     @createMethod
     private async postSyncNew(@request() req: Request, @requestBody() body: NewUserSyncBody): Promise<any> {
-      return this.accountSyncService.postSyncNew(body);
+      return this.accountSyncService.postSyncNew(req.headers.authorization ?? '', body);
     }
   }
   return AccountSyncControllerFactory;
