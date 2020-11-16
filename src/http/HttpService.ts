@@ -3,7 +3,7 @@ import { AxiosInstance } from 'axios';
 import { injectable, inject } from 'inversify';
 import HttpError from './HttpError';
 import config from '../config/config';
-import { HttpResponseMessage, injectHttpContext, interfaces } from 'inversify-express-utils';
+import { injectHttpContext, interfaces } from 'inversify-express-utils';
 import Logger from 'bunyan';
 import ExtendableError from '../core/api/error/ExtendableError';
 
