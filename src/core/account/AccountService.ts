@@ -91,7 +91,9 @@ class AccountService {
       sevenDays
     );
 
-    await this.userInviteService.sendInvite(userInvite.email, tokenData.token, userInvite.locale);
+    const isOwner = !userInvite.accountId;
+
+    await this.userInviteService.sendInvite(userInvite.email, tokenData.token, userInvite.locale, isOwner);
 
     return tokenData;
   }
@@ -108,8 +110,10 @@ class AccountService {
     if (!tokenData) {
       throw new NotFoundError('Invitation not found.');
     }
+  
+    const isOwner = tokenData.metadata.userAccountRole.roles.includes('owner');
 
-    await this.userInviteService.sendInvite(tokenData.metadata.email, tokenData.token, tokenData.metadata.locale);
+    await this.userInviteService.sendInvite(tokenData.metadata.email, tokenData.token, tokenData.metadata.locale, isOwner);
 
     return tokenData;
   }

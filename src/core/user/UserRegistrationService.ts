@@ -81,8 +81,8 @@ export class UserInviteService {
     @inject('LocalizationService') private localizationService: LocalizationService
   ) {}
 
-  public async sendInvite(email: string, token: string, locale?: string): Promise<void> {
-    const { items: [{ value: templateId }]} = await this.localizationService.getAssets({ name: 'user.invite.template', type: 'email', locale });
+  public async sendInvite(email: string, token: string, locale?: string, isOwner?: boolean): Promise<void> {
+    const { items: [{ value: templateId }]} = await this.localizationService.getAssets({ name: `enterprise.invite${isOwner ? '-owner' : '-user'}.template`, type: 'email', locale });
 
     await this.emailClient.send(email, templateId, { auth: { token } });
   }
