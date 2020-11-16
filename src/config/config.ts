@@ -16,7 +16,7 @@ function getDefaults(): { [key: string]: any } {
         apiVersion: 2,
         authUrl: 'https://api-dev.flocloud.co/api/v1/accesscontrol/authorize',
         aclUrl: 'https://api-dev.flocloud.co/api/v1/accesscontrol/refresh',
-        internalFloMoenAuthUrl: 'http://flo-moen-auth.flocloud.co',
+        internalFloMoenAuthUrl: 'https://flo-moen-auth.flocloud.co',
         internalDeviceServiceBaseUrl: 'https://flo-device-service.flocloud.co/v1',
         apiV1Url: 'https://api-dev.flocloud.co/api/v1',
         defaultUserLocale: 'en-US',

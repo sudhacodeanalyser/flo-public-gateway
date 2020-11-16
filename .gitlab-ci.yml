@@ -27,7 +27,7 @@ variables:
   INFLUX_SECOND_MEASUREMNT: '"twelve_weeks".telemetry_raw'
   INFLUX_TELEMETRY_DB: "telemetry_dev"
   INFLUX_USERNAME: "telemetry_dev"
-  INTERNAL_FLO_MOEN_AUTH_URL: "http://flo-moen-auth.flocloud.co"
+  INTERNAL_FLO_MOEN_AUTH_URL: "https://flo-moen-auth.flocloud.co"
   INTERNAL_DEVICE_SERVICE_BASE_URL: "http://flo-device-service.flo-device-service.svc.cluster.local:3000/v1"
   INSTANA_SERVICE_NAME: "flo-public-gateway"
   KAFKA_HOST: "kafka-cherry-broker-1.dev.flocloud.co:9092,kafka-cherry-broker-2.dev.flocloud.co:9092,kafka-cherry-broker-3.dev.flocloud.co:9092"
