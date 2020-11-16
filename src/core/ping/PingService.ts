@@ -8,7 +8,7 @@ class PingService {
   ) { }
 
   public ping(): { date: string, app: string, env: string } {
-    return { date: new Date().toISOString(), app: this.config.appName, env: this.config.env ?? "unknown" };
+    return { date: new Date().toISOString(), app: this.config.appName, env: this.config.env ?? 'unknown' };
   }
 }
 
