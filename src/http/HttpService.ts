@@ -3,8 +3,9 @@ import { AxiosInstance } from 'axios';
 import { injectable, inject } from 'inversify';
 import HttpError from './HttpError';
 import config from '../config/config';
-import { injectHttpContext, interfaces } from 'inversify-express-utils';
+import { HttpResponseMessage, injectHttpContext, interfaces } from 'inversify-express-utils';
 import Logger from 'bunyan';
+import ExtendableError from '../core/api/error/ExtendableError';
 
 export interface HttpRequest {
   method: string;
@@ -13,7 +14,8 @@ export interface HttpRequest {
   customHeaders?: any;
   body?: any;
   params?: any;
-};
+  proxyError?: boolean | undefined;
+}
 
 @injectable()
 class HttpService {
@@ -44,14 +46,18 @@ class HttpService {
 
     } catch (err) {
       this.httpLogger.error({ err, request });
-      if (!err.response) {
-        throw err;
-      } else if (err.response.status >= 400 && err.response.status < 500) {
-        const message = err.response.data.message || _.head(err.response.data.errors)
-        throw new HttpError(err.response.status, message);
-      } else {
-        throw err;
+      if(err?.response) {
+        if (err.response?.status >= 400 && err.response.status < 500) {
+          const message = err.response.data.message || _.head(err.response.data.errors);
+          if(request.proxyError && err.response?.data) { // proxy error back as is
+            throw new ExtendableError(message, err.response.status, err.response.data);
+          }
+          if(message) {
+            throw new HttpError(err.response.status, message);
+          }
+        }
       }
+      throw err;
     }
   }
 }
