@@ -22,22 +22,22 @@ export function AccountSyncControllerFactory(container: Container, apiVersion: n
 
     @httpGet('/token')
     private async getToken(@request() req: Request): Promise<any> {
-      return this.accountSyncService.getToken(req.headers.authorization ?? '');
+      return this.accountSyncService.getToken(req.headers.authorization as string);
     }
 
     @httpGet('/token/trade')
     private async getTokenTrade(@request() req: Request): Promise<any> {
-      return this.accountSyncService.getTokenTrade(req.headers.authorization ?? '');
+      return this.accountSyncService.getTokenTrade(req.headers.authorization as string);
     }
 
     @httpHead('/sync/me')
     private async headSyncMe(@request() req: Request): Promise<any> {
-      return this.accountSyncService.headSyncMe(req.headers.authorization ?? '');
+      return this.accountSyncService.headSyncMe(req.headers.authorization as string);
     }
 
     @httpGet('/sync/me')
     private async getSyncMe(@request() req: Request): Promise<any> {
-      return this.accountSyncService.getSyncMe(req.headers.authorization ?? '');
+      return this.accountSyncService.getSyncMe(req.headers.authorization as string);
     }
 
     @httpPost('/sync/new',
@@ -45,7 +45,7 @@ export function AccountSyncControllerFactory(container: Container, apiVersion: n
     )
     @createMethod
     private async postSyncNew(@request() req: Request, @requestBody() body: NewUserSyncBody): Promise<any> {
-      return this.accountSyncService.postSyncNew(req.headers.authorization ?? '', body);
+      return this.accountSyncService.postSyncNew(req.headers.authorization as string, body);
     }
   }
   return AccountSyncControllerFactory;

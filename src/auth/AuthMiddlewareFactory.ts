@@ -1,4 +1,4 @@
-import { AxiosInstance } from 'axios';
+import { AxiosInstance, AxiosPromise } from 'axios';
 import express from 'express';
 import { inject, injectable } from 'inversify';
 import _ from 'lodash';
@@ -32,18 +32,14 @@ class AuthMiddlewareFactory {
     return async (req: Request, res: express.Response, next: express.NextFunction): Promise<void> => {
       try {
         const logger = req.log;
-        let authHeader = req.get('Authorization');
-        if (_.isEmpty(authHeader) || authHeader === undefined) {
+        let authHeader:string = req.get('Authorization') ?? '';
+        if (_.isEmpty(authHeader)) {
           return next(new UnauthorizedError('Missing or invalid access token.'));
         }
-        if (this.requireExchange(authHeader, logger)) { // attempt token exchange if enabled and required
-          const tradeRes = await this.tradeToken(authHeader, logger)
-          if (tradeRes instanceof Error) {
-            return next(tradeRes as Error);
-          } else {
-            authHeader = tradeRes as string; // swap auth header
-            req.headers.authorization = authHeader
-          }
+        if (this.requireExchange(authHeader)) { // attempt token exchange if enabled and required
+          authHeader = await this.tradeToken(authHeader)
+          req.headers.authorization = authHeader
+          logger?.debug({ tokenExchange: 'OK' });
         }
 
         const token = authHeader; // seal the value to preserve original logic
@@ -87,59 +83,52 @@ class AuthMiddlewareFactory {
   }
 
   // check to see if issuer is aws cognito
-  private requireExchange(token: string, logger: Logger | undefined): boolean {
+  private requireExchange(token: string): boolean {
     if (!this.internalFloMoenAuthUrl || !/^http/i.test(this.internalFloMoenAuthUrl)) {
       return false;
     }
     const tokenData: any = jwt.decode(_.last(token.split('Bearer ')) || '');
-    const iss: string = tokenData.iss || '';
-    if (iss !== '' && /^https:\/\/cognito-.+\.amazonaws\.com/i.test(iss)) {
-      logger?.debug({ tokenExchange: tokenData })
-      return true;
-    }
-    return false;
+    const iss: string = tokenData?.iss ?? '';
+    return iss !== '' && /^https:\/\/cognito-.+\.amazonaws\.com/i.test(iss)
   }
 
-  // exchange a Moen Cognito access JWT for an "impersonated" Flo access JWT
-  private async tradeToken(token: string, logger: Logger | undefined): Promise<Error | string> {
+  private async tradeTokenReq(token: string): Promise<any> {
     try {
-      const authResponse = await this.httpClient.request({
+      return await this.httpClient.request({
         method: 'GET',
-        url: this.internalFloMoenAuthUrl + "/token/trade",
+        url: this.internalFloMoenAuthUrl + '/token/trade',
         headers: {
           'Content-Type': 'application/json',
           Authorization: token
         },
         timeout: config.authTimeoutMS
       });
-
-      if (authResponse.status === 200) {
-        const tk: string = authResponse?.data?.token || '';
-        if (tk === '') {
-          logger?.error({ tokenExchange: authResponse.data })
-          return new Error('Token exchange decode failed.');
-        }
-        logger?.trace({ tokenExchange: "OK!" })
-        return tk; // OK!
-      } else {
-        logger?.warn({ tokenExchange: authResponse.data })
-        return new Error('Unknown exchange response.');
-      }
     } catch (err) {
       if (err?.response) {
         const authResponse = err.response;
-        logger?.info({ tokenExchange: authResponse.data })
-
         switch (authResponse?.status ?? 0) {
           case 400:
           case 401:
-            return new UnauthorizedError(authResponse.data?.message ?? 'Token Exchange Unauthorized');
+            throw(new UnauthorizedError(authResponse.data?.message ?? 'Token Exchange Unauthorized'));
           case 403:
-            return new ForbiddenError(authResponse.data?.message ?? 'Token Exchange Forbidden');
+            throw(new ForbiddenError(authResponse.data?.message ?? 'Token Exchange Forbidden'));
         }
       }
-      return err;
+      throw(err); // rethrow by default
     }
+  }
+
+  // exchange a Moen Cognito access JWT for an "impersonated" Flo access JWT
+  private async tradeToken(token: string): Promise<string> {
+    const authResponse = await this.tradeTokenReq(token)
+    if (authResponse.status === 200) {
+      const tk: string = authResponse?.data?.token;
+      if (_.isEmpty(tk)) {
+        throw(new Error('Token exchange decode failed.'));
+      }
+      return tk; // OK!
+    }
+    throw(new Error('Unknown exchange response.'));
   }
 
   private async callAuthService(methodId: string, token: string, params?: Params): Promise<Either.Either<Error, TokenMetadata>> {
