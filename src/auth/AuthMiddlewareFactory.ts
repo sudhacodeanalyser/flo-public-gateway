@@ -15,6 +15,8 @@ import Logger from 'bunyan';
 import config from '../config/config';
 import { DependencyFactoryFactory } from '../core/api';
 import { AuthCache } from './AuthCache';
+import ValidationError from '../core/api/error/ValidationError';
+import ConflictError from '../core/api/error/ConflictError';
 
 type Params = { [param: string]: any };
 type GetParams = (req: Request, depFactoryFactory: DependencyFactoryFactory) => Promise<Params | Params[]>;
@@ -108,10 +110,13 @@ class AuthMiddlewareFactory {
         const authResponse = err.response;
         switch (authResponse?.status ?? 0) {
           case 400:
+            throw(new ValidationError(authResponse.data?.message ?? 'Token Exchange Validation Failed'));
           case 401:
             throw(new UnauthorizedError(authResponse.data?.message ?? 'Token Exchange Unauthorized'));
           case 403:
             throw(new ForbiddenError(authResponse.data?.message ?? 'Token Exchange Forbidden'));
+          case 409:
+            throw(new ConflictError(authResponse.data?.message ?? 'Token Exchange Conflict'));
         }
       }
       throw(err); // rethrow by default
