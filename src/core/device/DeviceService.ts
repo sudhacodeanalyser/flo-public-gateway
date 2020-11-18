@@ -214,15 +214,7 @@ class DeviceService {
     } else if (!location) {
       throw new ResourceDoesNotExistError('Location does not exist');
     } else if (location.class.key !== 'unit') {
-      throw new ExtendableError(
-        'Devices should only be paired to locations with location class unit',
-        422,
-        {
-          device: deviceCreate.macAddress,
-          location: deviceCreate.location.id,
-          class: location.class.key
-        }
-      );
+      throw new ConflictError('Devices should only be paired to locations with location class unit');
     }
 
     if (deviceCreate.deviceType !== DeviceType.PUCK) { 
