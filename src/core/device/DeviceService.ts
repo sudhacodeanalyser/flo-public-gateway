@@ -20,6 +20,7 @@ import { NotificationService } from '../notification/NotificationService';
 import ForbiddenError from '../api/error/ForbiddenError';
 import moment from 'moment-timezone';
 import PairInitTable from './PairInitTable';
+import ExtendableError from '../api/error/ExtendableError';
 
 const { isNone, fromNullable } = O;
 type Option<T> = O.Option<T>;
@@ -200,7 +201,8 @@ class DeviceService {
               id: true
             }
           },
-          timezone: true
+          timezone: true,
+          class: true
         }
       })
     ]);
@@ -211,6 +213,16 @@ class DeviceService {
       throw new ConflictError('Device already paired.');
     } else if (!location) {
       throw new ResourceDoesNotExistError('Location does not exist');
+    } else if (location.class.key !== 'unit') {
+      throw new ExtendableError(
+        'Devices should only be paired to locations with location class unit',
+        422,
+        {
+          device: deviceCreate.macAddress,
+          location: deviceCreate.location.id,
+          class: location.class.key
+        }
+      );
     }
 
     if (deviceCreate.deviceType !== DeviceType.PUCK) { 
