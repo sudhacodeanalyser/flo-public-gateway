@@ -190,6 +190,17 @@ class AccountResolver extends Resolver<Account> {
       (!currentUserId && currentClientId) // Is a client (i.e. non-user) token
     );
   }
+
+  public async createAccount(accountId: string, ownerUserId: string): Promise<Account> {
+    const createdAccountRecord = await this.accountTable.put({
+      id: accountId,
+      owner_user_id: ownerUserId
+    });
+
+    const account = new AccountRecord(createdAccountRecord).toModel();
+
+    return account;
+  }
 }
 
 export { AccountResolver };
