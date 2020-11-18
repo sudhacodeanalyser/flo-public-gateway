@@ -121,7 +121,7 @@ paths:
         400:
           description: Invalid request body
         409:
-          description: Device already paired
+          description: Device already paired | Devices should only be paired to locations with location class unit
   /api/v2/devices/pair/init/puck:
     post:
       summary: Begins pairing process
@@ -199,7 +199,7 @@ paths:
         401:
           description: Invalid or expired pairing token
         409:
-          description: Device already paired
+          description: Device already paired | Devices should only be paired to locations with location class unit
   /api/v2/devices:
     get:
       summary: Retrieves a Device by MAC address.
