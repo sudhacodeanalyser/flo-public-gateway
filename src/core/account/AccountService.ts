@@ -14,6 +14,7 @@ import { NonEmptyStringFactory } from '../api/validator/NonEmptyString';
 import { EmailFactory } from '../api/validator/Email';
 import _ from 'lodash';
 import { NotificationService } from '../notification/NotificationService';
+import uuid from 'uuid';
 
 const sevenDays = 604800;
 
@@ -130,16 +131,23 @@ class AccountService {
 
   public async acceptInvitation(token: string, data: InviteAcceptData): Promise<User> {
     const tokenData = await this.userInviteService.redeemToken(token);
+    const accountId = tokenData.userAccountRole.accountId || uuid.v4();
+
     const user = await this.userServiceFactory().createUser({
       locale: tokenData.locale ? NonEmptyStringFactory.create(tokenData.locale) : undefined,
-      account: { id: tokenData.userAccountRole.accountId },
+      account: { id: accountId },
       email: EmailFactory.create(tokenData.email),
       ...data 
     });
+
+    if (!tokenData.userAccountRole.accountId) {
+      await this.createAccount(accountId, user.id);
+    }
+
     const locationService = this.locationServiceFactory();
 
     await Promise.all([
-      this.updateAccountUserRole(tokenData.userAccountRole.accountId, user.id, tokenData.userAccountRole.roles),
+      this.updateAccountUserRole(accountId, user.id, tokenData.userAccountRole.roles),
       ...tokenData.userLocationRoles.map(({ locationId, roles }) => 
         locationService.addLocationUserRole(locationId, user.id, roles, false)
       )
@@ -269,6 +277,10 @@ class AccountService {
     } 
 
     return pageThruLocations();
+  }
+
+  private async createAccount(accountId: string, ownerUserId: string): Promise<Account> {
+    return this.accountResolver.createAccount(accountId, ownerUserId);
   }
 }
 
