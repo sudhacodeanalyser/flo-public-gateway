@@ -11,6 +11,7 @@ import { KafkaProducer } from '../../kafka/KafkaProducer';
 import { LocalizationService } from '../service';
 import EmailClient from '../../email/EmailClient';
 import ConflictError from '../api/error/ConflictError';
+import config from '../../config/config';
 
 export const UserRegistrationDataCodec = t.type({
   email: t.string,
