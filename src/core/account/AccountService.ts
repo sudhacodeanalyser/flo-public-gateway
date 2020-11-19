@@ -303,14 +303,14 @@ class AccountService {
   private async notifyUserInvited(tokenMetadata: InviteTokenData): Promise<void> {
     if (!tokenMetadata.userAccountRole.accountId) {
       const { items: [{ value: templateId }]} = await this.localizationService.getAssets({ name: 'enterprise.account-status.moen.template', type: 'email', locale: 'en-us' });
-      await this.emailClient.send(config.defaultNotifyAccountRegistrationActivityEmail, templateId, { email: tokenMetadata.email, status: AccountStatus.USER_INVITED });
+      await this.emailClient.send(config.defaultNotifyAccountStatusEmail, templateId, { email: tokenMetadata.email, status: AccountStatus.USER_INVITED });
     }
   }
 
   private async notifyAccountCreated(tokenMetadata: InviteTokenData): Promise<void> {
     if(!tokenMetadata.userAccountRole.accountId) {
       const { items: [{ value: templateId }]} = await this.localizationService.getAssets({ name: 'enterprise.account-status.moen.template', type: 'email', locale: 'en-us' });
-      await this.emailClient.send(config.defaultNotifyAccountRegistrationActivityEmail, templateId, { email: tokenMetadata.email, status: AccountStatus.ACCOUNT_CREATED });
+      await this.emailClient.send(config.defaultNotifyAccountStatusEmail, templateId, { email: tokenMetadata.email, status: AccountStatus.ACCOUNT_CREATED });
     }
   }
 }

@@ -54,7 +54,7 @@ function getDefaults(): { [key: string]: any } {
         weatherApiUrl: 'http://flo-weather.flocloud.co',
         emailGatewayUrl: 'http://email-gateway.flocloud.co',
         pairInitTTL: 604800,
-        defaultNotifyAccountRegistrationActivityEmail: 'defaultNotifyAccountRegistrationActivityEmail@flotechnologies.com'
+        defaultNotifyAccountStatusEmail: 'defaultNotifyAccountStatusEmail@flotechnologies.com'
       };
   }
 }
@@ -125,7 +125,7 @@ const config = {
   apiV1Token: process.env.API_V1_TOKEN,
   emailGatewayUrl: process.env.EMAIL_GATEWAY_URL,
   googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY,
-  defaultNotifyAccountRegistrationActivityEmail: process.env.DEFAULT_NOTIFY_ACCOUNT_REGISTRATION_ACTIVITY_EMAIL
+  defaultNotifyAccountStatusEmail: process.env.DEFAULT_NOTIFY_ACCOUNT_STATUS_EMAIL
 };
 
 export default {
