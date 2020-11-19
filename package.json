@@ -47,6 +47,7 @@
     "glob": "^7.1.4",
     "google-libphonenumber": "^3.2.6",
     "helmet": "^3.16.0",
+    "http-status-codes": "^2.1.4",
     "influx": "^5.4.0",
     "inversify": "^5.0.1",
     "inversify-express-utils": "^6.3.2",

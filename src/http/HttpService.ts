@@ -6,6 +6,7 @@ import config from '../config/config';
 import { HttpResponseMessage, injectHttpContext, interfaces } from 'inversify-express-utils';
 import Logger from 'bunyan';
 import ExtendableError from '../core/api/error/ExtendableError';
+import { getReasonPhrase } from 'http-status-codes';
 
 export interface HttpRequest {
   method: string;
@@ -14,7 +15,7 @@ export interface HttpRequest {
   customHeaders?: any;
   body?: any;
   params?: any;
-  proxyError?: boolean | undefined;
+  proxyError?: boolean;
 }
 
 @injectable()
@@ -43,18 +44,16 @@ class HttpService {
       });
 
       return response.data;
-
     } catch (err) {
       this.httpLogger.error({ err, request });
-      if (err?.response?.status >= 400 && err.response.status < 500) {
-        const message = err.response.data?.message || _.head(err.response.data?.errors);
-        if(request.proxyError && err.response?.data) { // proxy error back as is
-          throw new ExtendableError(message, err.response.status, err.response.data);
-        }
-        if(message) {
-          throw new HttpError(err.response.status, message);
-        }
-        throw new HttpResponseMessage(err.response.status);
+
+      const status = err?.response?.status >= 400 ? err.response.status : 500;
+      const message = err.response.data?.message || _.head(err.response.data?.errors) || getReasonPhrase(status);
+      if (request.proxyError) {
+        throw new ExtendableError(message, status, err.response.data); // proxy error back as is
+      }
+      if (status < 500) {
+        throw new HttpError(status, message);
       }
       throw err;
     }
