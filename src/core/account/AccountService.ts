@@ -104,7 +104,7 @@ class AccountService {
       await this.notifyUserInvited(tokenData.metadata);
     } catch (err) {
       // fail with log so that notification does not interrupt user invite experience
-      this.logger.error(`Failed to send notify user invited for user ${tokenData.metadata.email}`, err);
+      this.logger.error(`Failed to send notification for user invitation for user ${tokenData.metadata.email}`, err);
     }
 
     return tokenData;
@@ -157,7 +157,7 @@ class AccountService {
         await this.notifyAccountCreated(tokenData)
       } catch (err) {
         // fail with log so that notification does not interrupt user registration experience
-        this.logger.error(`Failed to send notify user invited for user ${tokenData.email}`, err);
+        this.logger.error(`Failed to send notification for account creation for user ${tokenData.email}`, err);
       }
     }
 
