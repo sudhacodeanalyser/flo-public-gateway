@@ -54,7 +54,7 @@ function getDefaults(): { [key: string]: any } {
         weatherApiUrl: 'http://flo-weather.flocloud.co',
         emailGatewayUrl: 'http://email-gateway.flocloud.co',
         pairInitTTL: 604800,
-        defaultNotifyAccountStatusEmail: 'defaultNotifyAccountStatusEmail@flotechnologies.com'
+        defaultNotifyAccountStatusEmail: 'flotech.runscope.1@gmail.com'
       };
   }
 }
