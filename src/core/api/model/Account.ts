@@ -7,6 +7,11 @@ export enum AccountType {
   PERSONAL = 'personal',
 }
 
+export enum AccountStatus {
+  USER_INVITED = 'user_invited',
+  ACCOUNT_CREATED = 'account_created'
+}
+
 export interface AccountUserRole {
   userId: string;
   roles: string[];
