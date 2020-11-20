@@ -56,6 +56,9 @@ before_script:
   - |
     # TODO: this should be part of the compose image
     apk add --no-cache make bash jq gettext
+    mkdir -pv "${HOME}/.docker/"
+    echo "${DOCKER_AUTH_CONFIG}" > "${HOME}/.docker/config.json"
+    docker login
     docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY
 
 Compile:
