@@ -161,6 +161,7 @@ ReleaseCandidate:
     REDIS_HOST_PROD: "flo-api.k5ahfc.clustercfg.usw2.cache.amazonaws.com"
     TELEMETRY_TAGS_SERVICE_URL_PROD: "https://flo-telemetry-tags.flosecurecloud.com"
     SENSOR_METER_URL_PROD: "https://flo-puck-service.flosecurecloud.com"
+    DEFAULT_NOTIFY_ACCOUNT_STATUS_EMAIL_PROD: "alex@flotechnologies.com"
   image: kloiadocker/kloiahelm:0.0.1
   stage: deploy-rc
   allow_failure: true
@@ -216,6 +217,7 @@ K8sProd:
     SCIENCE_LAB_URL_PROD: "http://flo-science-lab.flo-science-lab.svc.cluster.local"
     WATER_METER_SERVICE_URL_PROD: "http://flo-water-meter.flo-water-meter.svc.cluster.local"
     PUBLIC_GATEWAY_HOST_PROD: "api-gw.meetflo.com"
+    DEFAULT_NOTIFY_ACCOUNT_STATUS_EMAIL_PROD: "alex@flotechnologies.com"
   image: kloiadocker/kloiahelm:0.0.1
   stage: deploy
   dependencies:
