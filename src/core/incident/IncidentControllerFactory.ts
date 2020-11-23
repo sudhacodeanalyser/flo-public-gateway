@@ -8,6 +8,7 @@ import ReqValidationError from '../../validation/ReqValidationError';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
 import { AlarmEvent, PaginatedResult } from '../api';
 import { httpController } from '../api/controllerUtils';
+import { convertToLocalTimeWithOffset } from '../api/dateUtils';
 import Request from '../api/Request';
 import { NotificationService } from '../notification/NotificationService';
 import { AlertService, UserService } from '../service';
@@ -55,10 +56,9 @@ export function IncidentControllerFactory(container: Container, apiVersion: numb
         };
         return this.userService.getUserById(id,  propExpand);
       };
-      
       const user = req.query.userId ? O.toUndefined(await retrieveUser(req.query.userId)) : undefined;
       const lang = req.query.lang || defaultLang;
-        
+
       const queryDeviceIds = req.query.deviceId ?
         _.concat([], req.query.deviceId)
         : [];
@@ -93,7 +93,30 @@ export function IncidentControllerFactory(container: Container, apiVersion: numb
         });
       }
 
-      return this.alertService.getAlarmEventsByFilter(filters);
+      const alarmEvents = await this.alertService.getAlarmEventsByFilter(filters, {
+        $select: {
+          id: true,
+          timezone: true
+        }
+      });
+
+      /* NOTE: for ts-ignore: alarmEvent items returned from the notification service don't fulfill the timestamped type correctly.
+       * The expected properties, createdAt and updatedAt, are returned as createAt and updateAt.
+       * Allow the compiler to ignore this next line that modifies these properties in order to return the correct properties expected by the api.
+       * See https://api-gw-dev.flocloud.co/docs/#/Alerts/get_api_v2_alerts for response details.
+       */
+      alarmEvents.items.forEach(alarmEvent => {
+        Object.assign(
+          alarmEvent,
+          // @ts-ignore
+          alarmEvent.createAt && { createAt: convertToLocalTimeWithOffset(alarmEvent.createAt, alarmEvent.location?.timezone) },
+          // @ts-ignore
+          alarmEvent.updateAt && { updateAt: convertToLocalTimeWithOffset(alarmEvent.updateAt, alarmEvent.location?.timezone) },
+          alarmEvent.resolutionDate && { resolutionDate: convertToLocalTimeWithOffset(alarmEvent.resolutionDate, alarmEvent.location?.timezone) }
+        );
+      });
+
+      return alarmEvents;
     }
 
     @httpGet('/:id',

@@ -111,6 +111,7 @@ export interface AlarmEvent extends TimestampedModel {
   snoozeTo?: string;
   locationId: string;
   systemMode: string;
+  resolutionDate?: string;
   userFeedback?: UserFeedback[];
   feedback?: NewUserFeedbackResponse;
   location?: Partial<Location>;

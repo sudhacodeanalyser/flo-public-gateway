@@ -15,6 +15,7 @@ import { AlertService, UserService, LocationService, DeviceService } from '../se
 import UnauthorizedError from '../api/error/UnauthorizedError';
 import { BooleanFromString } from '../api/validator/BooleanFromString';
 import { PositiveIntegerFromString } from '../api/validator/PositiveIntegerFromString';
+import { convertToLocalTimeWithOffset } from '../api/dateUtils';
 
 export function AlertControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
@@ -189,7 +190,7 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
         });
       }
 
-      return this.alertService.getAlarmEventsByFilter(filters, {
+      const alarmEvents = await this.alertService.getAlarmEventsByFilter(filters, {
         $select: {
           id: true,
           nickname: true,
@@ -204,6 +205,24 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
           geoLocation: true,
         }
       });
+
+      /* NOTE: for ts-ignore: alarmEvent items returned from the notification service don't fulfill the timestamped type correctly.
+       * The expected properties, createdAt and updatedAt, are returned as createAt and updateAt.
+       * Allow the compiler to ignore this next line that modifies these properties in order to return the correct properties expected by the api.
+       * See https://api-gw-dev.flocloud.co/docs/#/Alerts/get_api_v2_alerts for response details.
+       */
+      alarmEvents.items.forEach(alarmEvent => {
+        Object.assign(
+          alarmEvent,
+          // @ts-ignore
+          alarmEvent.createAt && { createAt: convertToLocalTimeWithOffset(alarmEvent.createAt, alarmEvent.location?.timezone) },
+          // @ts-ignore
+          alarmEvent.updateAt && { updateAt: convertToLocalTimeWithOffset(alarmEvent.updateAt, alarmEvent.location?.timezone) },
+          alarmEvent.resolutionDate && { resolutionDate: convertToLocalTimeWithOffset(alarmEvent.resolutionDate, alarmEvent.location?.timezone) }
+        );
+      });
+
+      return alarmEvents;
     }
 
     @httpPost('/action',
