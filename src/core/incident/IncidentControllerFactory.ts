@@ -56,6 +56,7 @@ export function IncidentControllerFactory(container: Container, apiVersion: numb
         };
         return this.userService.getUserById(id,  propExpand);
       };
+
       const user = req.query.userId ? O.toUndefined(await retrieveUser(req.query.userId)) : undefined;
       const lang = req.query.lang || defaultLang;
 
