@@ -9,6 +9,7 @@ import { InviteTokenData } from '../user/UserRegistrationService';
 import { NonEmptyArray } from '../api/validator/NonEmptyArray';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import Request from '../api/Request';
+import { Response, NextFunction } from 'express';
 import * as O from 'fp-ts/lib/Option';
 import * as Responses from '../api/response';
 import _ from 'lodash';
@@ -17,6 +18,7 @@ import ForbiddenError from '../api/error/ForbiddenError';
 import NotFoundError from '../api/error/NotFoundError';
 import { pipe } from 'fp-ts/lib/pipeable';
 import * as TO from 'fp-ts-contrib/lib/TaskOption';
+import ReqValidationError from '../../validation/ReqValidationError'
 
 const { some, none } = O;
 type Option<T> = O.Option<T>;
@@ -28,8 +30,8 @@ const {
 
 const UserInviteValidator = t.type({
   ...userInviteProps,
-  accountId: accountIdValidator, 
-  email: emailValidator 
+  accountId: accountIdValidator,
+  email: emailValidator
 });
 
 type UserInviteBody = t.TypeOf<typeof UserInviteValidator>;

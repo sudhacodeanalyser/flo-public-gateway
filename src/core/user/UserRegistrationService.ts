@@ -11,6 +11,7 @@ import { KafkaProducer } from '../../kafka/KafkaProducer';
 import { LocalizationService } from '../service';
 import EmailClient from '../../email/EmailClient';
 import ConflictError from '../api/error/ConflictError';
+import config from '../../config/config';
 
 export const UserRegistrationDataCodec = t.type({
   email: t.string,
@@ -81,8 +82,8 @@ export class UserInviteService {
     @inject('LocalizationService') private localizationService: LocalizationService
   ) {}
 
-  public async sendInvite(email: string, token: string, locale?: string): Promise<void> {
-    const { items: [{ value: templateId }]} = await this.localizationService.getAssets({ name: 'user.invite.template', type: 'email', locale });
+  public async sendInvite(email: string, token: string, locale?: string, isOwner?: boolean): Promise<void> {
+    const { items: [{ value: templateId }]} = await this.localizationService.getAssets({ name: `enterprise.invite${isOwner ? '-owner' : '-user'}.template`, type: 'email', locale });
 
     await this.emailClient.send(email, templateId, { auth: { token } });
   }

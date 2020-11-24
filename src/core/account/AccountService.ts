@@ -1,5 +1,5 @@
 import { injectable, inject } from 'inversify';
-import { AccountMerge, AccountMutable, Account, AccountUserRole, UserInvite, PropExpand, DependencyFactoryFactory, User, InviteAcceptData } from '../api';
+import { AccountMerge, AccountMutable, Account, AccountUserRole, UserInvite, PropExpand, DependencyFactoryFactory, User, InviteAcceptData, AccountStatus } from '../api';
 import { UserInviteService, InviteTokenData } from '../user/UserRegistrationService';
 import { AccountResolver } from '../resolver';
 import { Option, fromNullable, toNullable } from 'fp-ts/lib/Option';
@@ -8,12 +8,15 @@ import UnauthorizedError from '../api/error/UnauthorizedError';
 import ConflictError from '../api/error/ConflictError';
 import ForbiddenError from '../api/error/ForbiddenError';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
-import { UserService, LocationService } from '../service';
+import { UserService, LocationService, LocalizationService } from '../service';
 import Logger from 'bunyan';
 import { NonEmptyStringFactory } from '../api/validator/NonEmptyString';
 import { EmailFactory } from '../api/validator/Email';
 import _ from 'lodash';
 import { NotificationService } from '../notification/NotificationService';
+import uuid from 'uuid';
+import EmailClient from '../../email/EmailClient';
+import config from '../../config/config';
 
 const sevenDays = 604800;
 
@@ -28,6 +31,8 @@ class AccountService {
     @inject('NotificationService') private notificationService: NotificationService,
     @inject('Logger') private logger: Logger,
     @inject('DependencyFactoryFactory') depFactoryFactory: DependencyFactoryFactory,
+    @inject('EmailClient') private emailClient: EmailClient,
+    @inject('LocalizationService') private localizationService: LocalizationService,
   ) {
     this.userServiceFactory = depFactoryFactory('UserService');
     this.locationServiceFactory = depFactoryFactory('LocationService');
@@ -91,7 +96,16 @@ class AccountService {
       sevenDays
     );
 
-    await this.userInviteService.sendInvite(userInvite.email, tokenData.token, userInvite.locale);
+    const isOwner = !userInvite.accountId;
+
+    await this.userInviteService.sendInvite(userInvite.email, tokenData.token, userInvite.locale, isOwner);
+
+    try {
+      await this.notifyUserInvited(tokenData.metadata);
+    } catch (err) {
+      // fail with log so that notification does not interrupt user invite experience
+      this.logger.error(`Failed to send notification for user invitation for user ${tokenData.metadata.email}`, err);
+    }
 
     return tokenData;
   }
@@ -108,8 +122,10 @@ class AccountService {
     if (!tokenData) {
       throw new NotFoundError('Invitation not found.');
     }
+  
+    const isOwner = tokenData.metadata.userAccountRole.roles.includes('owner');
 
-    await this.userInviteService.sendInvite(tokenData.metadata.email, tokenData.token, tokenData.metadata.locale);
+    await this.userInviteService.sendInvite(tokenData.metadata.email, tokenData.token, tokenData.metadata.locale, isOwner);
 
     return tokenData;
   }
@@ -126,16 +142,29 @@ class AccountService {
 
   public async acceptInvitation(token: string, data: InviteAcceptData): Promise<User> {
     const tokenData = await this.userInviteService.redeemToken(token);
+    const accountId = tokenData.userAccountRole.accountId || uuid.v4();
+
     const user = await this.userServiceFactory().createUser({
       locale: tokenData.locale ? NonEmptyStringFactory.create(tokenData.locale) : undefined,
-      account: { id: tokenData.userAccountRole.accountId },
+      account: { id: accountId },
       email: EmailFactory.create(tokenData.email),
       ...data 
     });
+
+    if (!tokenData.userAccountRole.accountId) {
+      await this.createAccount(accountId, user.id);
+      try {
+        await this.notifyAccountCreated(tokenData)
+      } catch (err) {
+        // fail with log so that notification does not interrupt user registration experience
+        this.logger.error(`Failed to send notification for account creation for user ${tokenData.email}`, err);
+      }
+    }
+
     const locationService = this.locationServiceFactory();
 
     await Promise.all([
-      this.updateAccountUserRole(tokenData.userAccountRole.accountId, user.id, tokenData.userAccountRole.roles),
+      this.updateAccountUserRole(accountId, user.id, tokenData.userAccountRole.roles),
       ...tokenData.userLocationRoles.map(({ locationId, roles }) => 
         locationService.addLocationUserRole(locationId, user.id, roles, false)
       )
@@ -265,6 +294,24 @@ class AccountService {
     } 
 
     return pageThruLocations();
+  }
+
+  private async createAccount(accountId: string, ownerUserId: string): Promise<Account> {
+    return this.accountResolver.createAccount(accountId, ownerUserId);
+  }
+
+  private async notifyUserInvited(tokenMetadata: InviteTokenData): Promise<void> {
+    if (!tokenMetadata.userAccountRole.accountId) {
+      const { items: [{ value: templateId }]} = await this.localizationService.getAssets({ name: 'enterprise.account-status.moen.template', type: 'email', locale: 'en-us' });
+      await this.emailClient.send(config.defaultNotifyAccountStatusEmail, templateId, { email: tokenMetadata.email, status: AccountStatus.USER_INVITED });
+    }
+  }
+
+  private async notifyAccountCreated(tokenMetadata: InviteTokenData): Promise<void> {
+    if(!tokenMetadata.userAccountRole.accountId) {
+      const { items: [{ value: templateId }]} = await this.localizationService.getAssets({ name: 'enterprise.account-status.moen.template', type: 'email', locale: 'en-us' });
+      await this.emailClient.send(config.defaultNotifyAccountStatusEmail, templateId, { email: tokenMetadata.email, status: AccountStatus.ACCOUNT_CREATED });
+    }
   }
 }
 

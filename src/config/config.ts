@@ -16,6 +16,7 @@ function getDefaults(): { [key: string]: any } {
         apiVersion: 2,
         authUrl: 'https://api-dev.flocloud.co/api/v1/accesscontrol/authorize',
         aclUrl: 'https://api-dev.flocloud.co/api/v1/accesscontrol/refresh',
+        internalFloMoenAuthUrl: 'https://flo-moen-auth.flocloud.co',
         internalDeviceServiceBaseUrl: 'https://flo-device-service.flocloud.co/v1',
         apiV1Url: 'https://api-dev.flocloud.co/api/v1',
         defaultUserLocale: 'en-US',
@@ -52,7 +53,8 @@ function getDefaults(): { [key: string]: any } {
         floDetectApiUrl: 'http://flo-detect-v2.flocloud.co',
         weatherApiUrl: 'http://flo-weather.flocloud.co',
         emailGatewayUrl: 'http://email-gateway.flocloud.co',
-        pairInitTTL: 604800
+        pairInitTTL: 604800,
+        defaultNotifyAccountStatusEmail: 'flotech.runscope.1@gmail.com'
       };
   }
 }
@@ -70,6 +72,7 @@ const config = {
   aclUrl: process.env.ACL_URL,
   kafkaHost: process.env.KAFKA_HOST,
   kafkaTimeout: process.env.KAFKA_TIMEOUT_MS,
+  internalFloMoenAuthUrl: process.env.INTERNAL_FLO_MOEN_AUTH_URL,
   internalDeviceServiceBaseUrl: process.env.INTERNAL_DEVICE_SERVICE_BASE_URL,
   apiV1Url: process.env.API_V1_URL,
   docsEndpointUser: process.env.DOCS_ENDPOINT_USER,
@@ -122,6 +125,7 @@ const config = {
   apiV1Token: process.env.API_V1_TOKEN,
   emailGatewayUrl: process.env.EMAIL_GATEWAY_URL,
   googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY,
+  defaultNotifyAccountStatusEmail: process.env.DEFAULT_NOTIFY_ACCOUNT_STATUS_EMAIL
 };
 
 export default {
