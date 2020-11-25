@@ -191,10 +191,11 @@ class AccountResolver extends Resolver<Account> {
     );
   }
 
-  public async createAccount(accountId: string, ownerUserId: string): Promise<Account> {
+  public async createAccount(accountId: string, ownerUserId: string, accountType: string): Promise<Account> {
     const createdAccountRecord = await this.accountTable.put({
       id: accountId,
-      owner_user_id: ownerUserId
+      owner_user_id: ownerUserId,
+      type_v2: accountType
     });
 
     const account = new AccountRecord(createdAccountRecord).toModel();

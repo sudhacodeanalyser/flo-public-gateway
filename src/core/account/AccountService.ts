@@ -1,5 +1,5 @@
 import { injectable, inject } from 'inversify';
-import { AccountMerge, AccountMutable, Account, AccountUserRole, UserInvite, PropExpand, DependencyFactoryFactory, User, InviteAcceptData, AccountStatus } from '../api';
+import { AccountMerge, AccountMutable, Account, AccountUserRole, UserInvite, PropExpand, DependencyFactoryFactory, User, InviteAcceptData, AccountStatus, AccountType } from '../api';
 import { UserInviteService, InviteTokenData } from '../user/UserRegistrationService';
 import { AccountResolver } from '../resolver';
 import { Option, fromNullable, toNullable } from 'fp-ts/lib/Option';
@@ -152,7 +152,7 @@ class AccountService {
     });
 
     if (!tokenData.userAccountRole.accountId) {
-      await this.createAccount(accountId, user.id);
+      await this.createAccount(accountId, user.id, AccountType.ENTERPRISE);
       try {
         await this.notifyAccountCreated(tokenData)
       } catch (err) {
@@ -296,8 +296,8 @@ class AccountService {
     return pageThruLocations();
   }
 
-  private async createAccount(accountId: string, ownerUserId: string): Promise<Account> {
-    return this.accountResolver.createAccount(accountId, ownerUserId);
+  private async createAccount(accountId: string, ownerUserId: string, accountType: string): Promise<Account> {
+    return this.accountResolver.createAccount(accountId, ownerUserId, accountType);
   }
 
   private async notifyUserInvited(tokenMetadata: InviteTokenData): Promise<void> {
