@@ -106,16 +106,14 @@ export function IncidentControllerFactory(container: Container, apiVersion: numb
        * Allow the compiler to ignore this next line that modifies these properties in order to return the correct properties expected by the api.
        * See https://api-gw-dev.flocloud.co/docs/#/Alerts/get_api_v2_alerts for response details.
        */
-      alarmEvents.items.forEach(alarmEvent => {
-        Object.assign(
-          alarmEvent,
-          // @ts-ignore
-          alarmEvent.createAt && { createAt: convertToLocalTimeWithOffset(alarmEvent.createAt, alarmEvent.location?.timezone) },
-          // @ts-ignore
-          alarmEvent.updateAt && { updateAt: convertToLocalTimeWithOffset(alarmEvent.updateAt, alarmEvent.location?.timezone) },
-          alarmEvent.resolutionDate && { resolutionDate: convertToLocalTimeWithOffset(alarmEvent.resolutionDate, alarmEvent.location?.timezone) }
-        );
-      });
+      alarmEvents.items = alarmEvents.items.map(alarmEvent => ({
+        ...alarmEvent,
+        // @ts-ignore
+        ...alarmEvent.createAt && { createAt: convertToLocalTimeWithOffset(alarmEvent.createAt, alarmEvent.location?.timezone) },
+        // @ts-ignore
+        ...alarmEvent.updateAt && { updateAt: convertToLocalTimeWithOffset(alarmEvent.updateAt, alarmEvent.location?.timezone) },
+        ...alarmEvent.resolutionDate && { resolutionDate: convertToLocalTimeWithOffset(alarmEvent.resolutionDate, alarmEvent.location?.timezone) }
+      }));
 
       return alarmEvents;
     }
