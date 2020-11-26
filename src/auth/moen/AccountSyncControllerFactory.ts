@@ -1,6 +1,6 @@
 import * as t from 'io-ts';
 import { NewUserSyncValidator } from './AccountSync'
-import { interfaces, httpHead, httpGet, httpPost, requestBody, request, BaseHttpController } from 'inversify-express-utils';
+import { interfaces, httpHead, httpGet, httpPost, requestBody, request, BaseHttpController, httpPut, httpDelete } from 'inversify-express-utils';
 import { inject, Container } from 'inversify';
 import { httpController, createMethod } from '../../core/api/controllerUtils';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
@@ -20,11 +20,6 @@ export function AccountSyncControllerFactory(container: Container, apiVersion: n
       super();
     }
 
-    @httpGet('/token')
-    private async getToken(@request() req: Request): Promise<any> {
-      return this.accountSyncService.getToken(req.headers.authorization as string);
-    }
-
     @httpGet('/token/trade')
     private async getTokenTrade(@request() req: Request): Promise<any> {
       return this.accountSyncService.getTokenTrade(req.headers.authorization as string);
@@ -38,6 +33,16 @@ export function AccountSyncControllerFactory(container: Container, apiVersion: n
     @httpGet('/sync/me')
     private async getSyncMe(@request() req: Request): Promise<any> {
       return this.accountSyncService.getSyncMe(req.headers.authorization as string);
+    }
+
+    @httpPut('/sync/me')
+    private async putSyncMe(@request() req: Request): Promise<any> {
+      return this.accountSyncService.putSyncMe(req.headers.authorization as string);
+    }
+
+    @httpDelete('/sync/me')
+    private async deleteSyncMe(@request() req: Request): Promise<any> {
+      return this.accountSyncService.deleteSyncMe(req.headers.authorization as string);
     }
 
     @httpPost('/sync/new',
