@@ -45,10 +45,10 @@ export function AccountSyncControllerFactory(container: Container, apiVersion: n
       return this.accountSyncService.deleteSyncMe(req.headers.authorization as string);
     }
 
+    @createMethod
     @httpPost('/sync/new',
       reqValidator.create(t.type({ body: NewUserSyncValidator }))
     )
-    @createMethod
     private async postSyncNew(@request() req: Request, @requestBody() body: NewUserSyncBody): Promise<any> {
       return this.accountSyncService.postSyncNew(req.headers.authorization as string, body);
     }
