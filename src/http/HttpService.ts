@@ -48,7 +48,7 @@ class HttpService {
       this.httpLogger.error({ err, request });
 
       const status = err?.response?.status >= 400 ? err.response.status : 500;
-      const message = err.response.data?.message || _.head(err.response.data?.errors) || getReasonPhrase(status);
+      const message = err?.response?.data?.message || _.head(err?.response?.data?.errors) || getReasonPhrase(status);
       if (request.proxyError) {
         throw new ExtendableError(message, status, err.response.data); // proxy error back as is
       }
