@@ -208,7 +208,7 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
 
       return {
         ...alarmEvents,
-        items: alarmEvents.items.map((alarmEvent: any) => ({
+        items: alarmEvents.items.map((alarmEvent) => ({
           ...alarmEvent,
           ...alarmEvent.createAt && { createAt: convertToLocalTimeWithOffset(alarmEvent.createAt, alarmEvent.location?.timezone) },
           ...alarmEvent.updateAt && { updateAt: convertToLocalTimeWithOffset(alarmEvent.updateAt, alarmEvent.location?.timezone) },
