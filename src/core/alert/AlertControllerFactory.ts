@@ -15,6 +15,7 @@ import { AlertService, UserService, LocationService, DeviceService } from '../se
 import UnauthorizedError from '../api/error/UnauthorizedError';
 import { BooleanFromString } from '../api/validator/BooleanFromString';
 import { PositiveIntegerFromString } from '../api/validator/PositiveIntegerFromString';
+import { convertToLocalTimeWithOffset } from '../api/dateUtils';
 
 export function AlertControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
@@ -189,7 +190,7 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
         });
       }
 
-      return this.alertService.getAlarmEventsByFilter(filters, {
+      const alarmEvents = await this.alertService.getAlarmEventsByFilter(filters, {
         $select: {
           id: true,
           nickname: true,
@@ -204,6 +205,16 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
           geoLocation: true,
         }
       });
+
+      return {
+        ...alarmEvents,
+        items: alarmEvents.items.map((alarmEvent) => ({
+          ...alarmEvent,
+          ...alarmEvent.createAt && { createAt: convertToLocalTimeWithOffset(alarmEvent.createAt, alarmEvent.location?.timezone) },
+          ...alarmEvent.updateAt && { updateAt: convertToLocalTimeWithOffset(alarmEvent.updateAt, alarmEvent.location?.timezone) },
+          ...alarmEvent.resolutionDate && { resolutionDate: convertToLocalTimeWithOffset(alarmEvent.resolutionDate, alarmEvent.location?.timezone) }
+        }))
+      };
     }
 
     @httpPost('/action',
