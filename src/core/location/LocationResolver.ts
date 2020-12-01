@@ -3,7 +3,7 @@ import { injectHttpContext, interfaces } from 'inversify-express-utils';
 import _ from 'lodash';
 import uuid from 'uuid';
 import { fromPartialRecord } from '../../database/Patch';
-import { LocationFacetPage, LocationFilters, DependencyFactoryFactory, Device, Location, LocationUserRole, LookupItem, PropExpand, SystemMode, LocationPage } from '../api';
+import { LocationFacetPage, LocationFilters, DependencyFactoryFactory, Device, Location, LocationUserRole, LookupItem, PropExpand, SystemMode, LocationPage, LocationSortProperties } from '../api';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import LocationTable from '../location/LocationTable';
 import { NotificationService } from '../notification/NotificationService';
@@ -503,8 +503,8 @@ class LocationResolver extends Resolver<Location> {
     );
   }
 
-  public async getByUserId(userId: string, expandProps?: PropExpand, size?: number, page?: number, filters?: LocationFilters, searchText?: string): Promise<LocationPage> {
-    const { items, total } = await this.locationPgTable.getByUserId(userId, size, page, filters, searchText);
+  public async getByUserId(userId: string, expandProps?: PropExpand, size?: number, page?: number, filters?: LocationFilters, searchText?: string, sortProperties?: LocationSortProperties): Promise<LocationPage> {
+    const { items, total } = await this.locationPgTable.getByUserId(userId, size, page, filters, searchText, sortProperties);
     const locations = await Promise.all(
       items.map(async item => {
         const location = LocationPgRecord.toModel(item);
@@ -524,8 +524,8 @@ class LocationResolver extends Resolver<Location> {
     }
   }
 
-  public async getByUserIdRootOnly(userId: string, expandProps?: PropExpand, size?: number, page?: number, filters?: LocationFilters, searchText?: string): Promise<LocationPage> {
-    const { items, total } = await this.locationPgTable.getByUserIdRootOnly(userId, size, page, filters, searchText);
+  public async getByUserIdRootOnly(userId: string, expandProps?: PropExpand, size?: number, page?: number, filters?: LocationFilters, searchText?: string, sortProperties?: LocationSortProperties): Promise<LocationPage> {
+    const { items, total } = await this.locationPgTable.getByUserIdRootOnly(userId, size, page, filters, searchText, sortProperties);
     const locations = await Promise.all(
       items.map(async item => {
         const location = LocationPgRecord.toModel(item);
@@ -545,8 +545,8 @@ class LocationResolver extends Resolver<Location> {
     }
   }
 
-  public async getByUserIdWithChildren(userId: string, expandProps?: PropExpand, size?: number, page?: number, filters?: LocationFilters, searchText?: string): Promise<LocationPage> {
-    const { items, total } = await this.locationPgTable.getByUserIdWithChildren(userId, size, page, filters, searchText);
+  public async getByUserIdWithChildren(userId: string, expandProps?: PropExpand, size?: number, page?: number, filters?: LocationFilters, searchText?: string, sortProperties?: LocationSortProperties): Promise<LocationPage> {
+    const { items, total } = await this.locationPgTable.getByUserIdWithChildren(userId, size, page, filters, searchText, sortProperties);
     const locations = await Promise.all(
       items
         .map(async locationRecord => {
@@ -568,8 +568,8 @@ class LocationResolver extends Resolver<Location> {
 
   }
 
-  public async getAllByFilters(expandProps?: PropExpand, size?: number, page?: number, filters?: LocationFilters, searchText?: string): Promise<LocationPage> {
-    const { items, total } = await this.locationPgTable.getAllByFilters(size, page, filters, searchText);
+  public async getAllByFilters(expandProps?: PropExpand, size?: number, page?: number, filters?: LocationFilters, searchText?: string, sortProperties?: LocationSortProperties): Promise<LocationPage> {
+    const { items, total } = await this.locationPgTable.getAllByFilters(size, page, filters, searchText, sortProperties);
     const locations = await Promise.all(
       items
         .map(async locationRecord => {

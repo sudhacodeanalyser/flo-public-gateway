@@ -5,7 +5,7 @@ import * as t from 'io-ts';
 import _ from 'lodash';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
-import { LocationFacetPage, DependencyFactoryFactory, AreaName, AreaNameCodec, Areas, Location, LocationCreateValidator, LocationUpdate, LocationUpdateValidator, LocationUserRole, SystemMode, SystemModeCodec, PesThresholdsCodec, PesThresholds, LocationPage } from '../api';
+import { LocationFacetPage, DependencyFactoryFactory, AreaName, AreaNameCodec, Areas, Location, LocationCreateValidator, LocationUpdate, LocationUpdateValidator, LocationUserRole, SystemMode, SystemModeCodec, PesThresholdsCodec, PesThresholds, LocationPage, LocationSortProperties } from '../api';
 import { createMethod, deleteMethod, httpController, parseExpand, withResponseType, httpMethod, queryParamArray, asyncMethod } from '../api/controllerUtils';
 import Request from '../api/Request';
 import * as Responses from '../api/response';
@@ -134,7 +134,8 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
              expand: t.string,
              size: IntegerFromString,
              page: IntegerFromString,
-             q: t.string
+             q: t.string,
+             sort: t.string
            }),
            t.union([
              t.type({
@@ -167,7 +168,8 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
       @queryParam('page') page?: number,
       @queryParam('withChildren') withChildren: boolean = true,
       @queryParam('rootOnly') rootOnly: boolean = false,
-      @queryParam('q') searchText?: string
+      @queryParam('q') searchText?: string,
+      @queryParam('sort') sort?: string
     ): Promise<{ total: number; page: number; items: Responses.Location[] }> {
       const tokenMetadata = req.token;
       const expandProps = parseExpand(expand);
@@ -180,7 +182,7 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
         parentId,
       };
       let locPage: LocationPage;
-
+      let sortProperties: LocationSortProperties | undefined;
       if (tokenMetadata === undefined) {
         throw new Error('No token defined.');
       }
@@ -188,14 +190,23 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
         throw new ReqValidationError('User id should be provided')
       }
 
+      if (sort) {
+        sortProperties = sort.split(',').reduce((sortMap, key) => {
+          return {
+            ...sortMap,
+            [key]: true
+          }
+        }, {});
+      }
+
       if (withChildren && !rootOnly && userId) {
-        locPage = await this.locationService.getByUserIdWithChildren(userId, expandProps, size, page, filters, searchText);  
+        locPage = await this.locationService.getByUserIdWithChildren(userId, expandProps, size, page, filters, searchText, sortProperties);
       } else if (rootOnly && userId) {
-        locPage = await this.locationService.getByUserIdRootOnly(userId, expandProps, size, page, filters, searchText);
+        locPage = await this.locationService.getByUserIdRootOnly(userId, expandProps, size, page, filters, searchText, sortProperties);
       } else if (userId) {
-        locPage = await this.locationService.getByUserId(userId, expandProps, size, page, filters, searchText);
+        locPage = await this.locationService.getByUserId(userId, expandProps, size, page, filters, searchText, sortProperties);
       } else {
-        locPage = await this.locationService.getAllByFilters(expandProps, size, page, filters, searchText);
+        locPage = await this.locationService.getAllByFilters(expandProps, size, page, filters, searchText, sortProperties);
       }
 
       return {
