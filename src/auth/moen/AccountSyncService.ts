@@ -69,6 +69,17 @@ class AccountSyncService extends HttpService {
     return this.sendRequest(request);
   }
 
+  public async postSyncAuth(authToken: string, req: any): Promise<any> {
+    const request = {
+      method: 'POST',
+      url: `${this.url}/sync/auth`,
+      authToken,
+      proxyError: true,
+      body: req
+    };
+    return this.sendRequest(request);
+  }
+
 }
 
 export { AccountSyncService };
