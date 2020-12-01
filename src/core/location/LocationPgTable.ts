@@ -313,7 +313,7 @@ class LocationPgTable extends PostgresTable<LocationPgRecordData> {
     }, queryBuilder);
   }
 
-  private applySort(queryBuilder: squel.PostgresSelect, sortProperties: LocationSortProperties = {} as LocationSortProperties, alias: string = 'l'): squel.PostgresSelect {
+  private applySort(queryBuilder: squel.PostgresSelect, sortProperties: LocationSortProperties = {}, alias: string = 'l'): squel.PostgresSelect {
     const sortPropertyMap = {
       id: 'id',
       nickname: 'nickname',
