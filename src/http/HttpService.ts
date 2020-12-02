@@ -38,30 +38,31 @@ class HttpService {
           ...(request.customHeaders),
           ...(httpContextReq && { Referer: httpContextReq.protocol + '://' + httpContextReq.get('host') + httpContextReq.originalUrl }),
         },
-        ...(request.params && { params: request.params }),
         ...(request.body && { data: request.body }),
+        ...(request.params && { params: request.params }),
         timeout: config.externalServiceHttpTimeoutMs
       };
-
       if (request.method === 'HEAD') { // fix gzip empty head response err with axios & some http server for HEAD response
         cfg.headers['accept-encoding'] = 'gzip;q=0,deflate,sdch'; // SEE: https://github.com/axios/axios/issues/1658
       }
-      const response = await this.httpClient.request(cfg);
+
+      const response = await this.httpClient.request({ ...cfg });
       return response.data;
     } catch (err) {
       this.httpLogger.error({ err, request });
-      if (err) {
-        const status = err.response?.status >= 400 ? err.response.status : 500;
-        const message = err.response?.data?.message || _.head(err.response?.data?.errors) || getReasonPhrase(status);
-        if (request.proxyError) {
-          throw new ExtendableError(message, status, err.response?.data); // proxy error back as is
-        }
-        if (status < 500) {
-          throw new HttpError(status, message);
-        }
-        throw err;
+      if (!err) {
+        throw new HttpError(500, "Unhandled Exception.");
       }
-      throw new HttpError(500, "Unhandled Exception.");
+
+      const status = err.response?.status >= 400 ? err.response.status : 500;
+      const message = err.response?.data?.message || _.head(err.response?.data?.errors) || getReasonPhrase(status);
+      if (request.proxyError) {
+        throw new ExtendableError(message, status, err.response?.data); // proxy error back as is
+      }
+      if (status < 500) {
+        throw new HttpError(status, message);
+      }
+      throw err;
     }
   }
 }
