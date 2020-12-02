@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import { AxiosInstance } from 'axios';
+import { AxiosInstance, AxiosRequestConfig } from 'axios';
 import { injectable, inject } from 'inversify';
 import HttpError from './HttpError';
 import config from '../config/config';
@@ -29,14 +29,14 @@ class HttpService {
   public async sendRequest(request: HttpRequest): Promise<any> {
     try {
       const httpContextReq = this.httpContext && this.httpContext.request;
-      const cfg = {
+      const cfg: AxiosRequestConfig = {
         method: request.method,
         url: this.baseUrl ? `${this.baseUrl}${request.url}` : request.url,
         headers: {
           'Content-Type': 'application/json',
           ...((request.authToken || this.authToken) && { Authorization: request.authToken || this.authToken }),
           ...(request.customHeaders),
-          ...(httpContextReq && { Referer: httpContextReq.protocol + '://' + httpContextReq.get('host') + httpContextReq.originalUrl }),
+          ...(httpContextReq && { Referer: httpContextReq.protocol + '://' + httpContextReq.get('host') + httpContextReq.originalUrl })
         },
         ...(request.body && { data: request.body }),
         ...(request.params && { params: request.params }),
@@ -46,7 +46,7 @@ class HttpService {
         cfg.headers['accept-encoding'] = 'gzip;q=0,deflate,sdch'; // SEE: https://github.com/axios/axios/issues/1658
       }
 
-      const response = await this.httpClient.request({ ...cfg });
+      const response = await this.httpClient.request(cfg);
       return response.data;
     } catch (err) {
       this.httpLogger.error({ err, request });
