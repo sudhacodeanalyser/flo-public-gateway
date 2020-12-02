@@ -303,6 +303,11 @@ export interface LocationFilters {
   parentId?: string;
 }
 
+export interface LocationSortProperties {
+  id?: boolean,
+  nickname?: boolean
+}
+
 export interface LocationFacetPage {
   page: number;
   items: Array<{

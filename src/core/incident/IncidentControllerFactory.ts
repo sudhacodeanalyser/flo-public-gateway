@@ -8,6 +8,7 @@ import ReqValidationError from '../../validation/ReqValidationError';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
 import { AlarmEvent, PaginatedResult } from '../api';
 import { httpController } from '../api/controllerUtils';
+import { convertToLocalTimeWithOffset } from '../api/dateUtils';
 import Request from '../api/Request';
 import { NotificationService } from '../notification/NotificationService';
 import { AlertService, UserService } from '../service';
@@ -55,10 +56,10 @@ export function IncidentControllerFactory(container: Container, apiVersion: numb
         };
         return this.userService.getUserById(id,  propExpand);
       };
-      
+
       const user = req.query.userId ? O.toUndefined(await retrieveUser(req.query.userId)) : undefined;
       const lang = req.query.lang || defaultLang;
-        
+
       const queryDeviceIds = req.query.deviceId ?
         _.concat([], req.query.deviceId)
         : [];
@@ -93,7 +94,22 @@ export function IncidentControllerFactory(container: Container, apiVersion: numb
         });
       }
 
-      return this.alertService.getAlarmEventsByFilter(filters);
+      const alarmEvents = await this.alertService.getAlarmEventsByFilter(filters, {
+        $select: {
+          id: true,
+          timezone: true
+        }
+      });
+
+      return {
+        ...alarmEvents,
+        items: alarmEvents.items.map((alarmEvent) => ({
+          ...alarmEvent,
+          ...alarmEvent.createAt && { createAt: convertToLocalTimeWithOffset(alarmEvent.createAt, alarmEvent.location?.timezone) },
+          ...alarmEvent.updateAt && { updateAt: convertToLocalTimeWithOffset(alarmEvent.updateAt, alarmEvent.location?.timezone) },
+          ...alarmEvent.resolutionDate && { resolutionDate: convertToLocalTimeWithOffset(alarmEvent.resolutionDate, alarmEvent.location?.timezone) }
+        }))
+      };
     }
 
     @httpGet('/:id',
