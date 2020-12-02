@@ -29,33 +29,47 @@ class HttpService {
   public async sendRequest(request: HttpRequest): Promise<any> {
     try {
       const httpContextReq = this.httpContext && this.httpContext.request;
-      const response = await this.httpClient.request({
-        method: request.method,
-        url: this.baseUrl ? `${this.baseUrl}${request.url}` : request.url,
+      const url = this.baseUrl ? `${this.baseUrl}${request.url}` : request.url;
+      const cfg = {
         headers: {
           'Content-Type': 'application/json',
           ...((request.authToken || this.authToken) && { Authorization: request.authToken || this.authToken }),
           ...(request.customHeaders),
-          ...(httpContextReq && { Referer: httpContextReq.protocol + '://' + httpContextReq.get('host') + httpContextReq.originalUrl })
+          ...(httpContextReq && { Referer: httpContextReq.protocol + '://' + httpContextReq.get('host') + httpContextReq.originalUrl }),
         },
-        ...(request.body && { data: request.body }),
         ...(request.params && { params: request.params }),
         timeout: config.externalServiceHttpTimeoutMs
-      });
+      };
+
+      let response: any;
+      if (request.method === 'HEAD') {
+        cfg.headers['accept-encoding'] = 'gzip;q=0,deflate,sdch';
+        response = await this.httpClient.head(url, cfg);
+      } else {
+        const fullCfg = {
+          'method': request.method,
+          'url': url,
+          ...cfg,
+          ...(request.body && { data: request.body }),
+        };
+        response = await this.httpClient.request(fullCfg);
+      }
 
       return response.data;
     } catch (err) {
       this.httpLogger.error({ err, request });
-
-      const status = err?.response?.status >= 400 ? err.response.status : 500;
-      const message = err?.response?.data?.message || _.head(err?.response?.data?.errors) || getReasonPhrase(status);
-      if (request.proxyError) {
-        throw new ExtendableError(message, status, err.response.data); // proxy error back as is
+      if (err) {
+        const status = err?.response?.status >= 400 ? err.response.status : 500;
+        const message = err?.response?.data?.message || _.head(err?.response?.data?.errors) || getReasonPhrase(status);
+        if (request.proxyError) {
+          throw new ExtendableError(message, status, err.response?.data); // proxy error back as is
+        }
+        if (status < 500) {
+          throw new HttpError(status, message);
+        }
+        throw err;
       }
-      if (status < 500) {
-        throw new HttpError(status, message);
-      }
-      throw err;
+      throw new HttpError(500, "Unhandled Exception.");
     }
   }
 }
