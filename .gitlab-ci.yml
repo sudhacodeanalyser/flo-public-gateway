@@ -116,7 +116,7 @@ Dev:
   only:
     - dev
     - dev.rate-limit-5th-try
-    - CLOUD-3848-moen-sync3
+    - CLOUD-3972-reg-chk-email-op
   environment:
     name: dev
     url: https://flo-public-gateway.flocloud.co/api/v2/ping
