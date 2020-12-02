@@ -30,8 +30,8 @@ class HttpService {
     try {
       const httpContextReq = this.httpContext && this.httpContext.request;
       const cfg = {
-        'method': request.method,
-        'url': this.baseUrl ? `${this.baseUrl}${request.url}` : request.url,
+        method: request.method,
+        url: this.baseUrl ? `${this.baseUrl}${request.url}` : request.url,
         headers: {
           'Content-Type': 'application/json',
           ...((request.authToken || this.authToken) && { Authorization: request.authToken || this.authToken }),
@@ -43,16 +43,16 @@ class HttpService {
         timeout: config.externalServiceHttpTimeoutMs
       };
 
-      if (request.method === 'HEAD') {
-        cfg.headers['accept-encoding'] = 'gzip;q=0,deflate,sdch';
+      if (request.method === 'HEAD') { // fix gzip empty head response err with axios & some http server for HEAD response
+        cfg.headers['accept-encoding'] = 'gzip;q=0,deflate,sdch'; // SEE: https://github.com/axios/axios/issues/1658
       }
       const response = await this.httpClient.request(cfg);
       return response.data;
     } catch (err) {
       this.httpLogger.error({ err, request });
       if (err) {
-        const status = err?.response?.status >= 400 ? err.response.status : 500;
-        const message = err?.response?.data?.message || _.head(err?.response?.data?.errors) || getReasonPhrase(status);
+        const status = err.response?.status >= 400 ? err.response.status : 500;
+        const message = err.response?.data?.message || _.head(err.response?.data?.errors) || getReasonPhrase(status);
         if (request.proxyError) {
           throw new ExtendableError(message, status, err.response?.data); // proxy error back as is
         }
