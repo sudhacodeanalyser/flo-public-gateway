@@ -20,6 +20,7 @@ export const UserRegistrationDataCodec = t.type({
   lastName: t.string,
   country: t.string,
   phone: t.string,
+  skipEmailSend: t.union([t.undefined, t.boolean]),
   locale: t.union([t.undefined, t.string])
 });
 
@@ -80,15 +81,15 @@ export class UserInviteService {
     @inject('Logger') private logger: Logger,
     @inject('EmailClient') private emailClient: EmailClient,
     @inject('LocalizationService') private localizationService: LocalizationService
-  ) {}
+  ) { }
 
   public async sendInvite(email: string, token: string, locale?: string, isOwner?: boolean): Promise<void> {
-    const { items: [{ value: templateId }]} = await this.localizationService.getAssets({ name: `enterprise.invite${isOwner ? '-owner' : '-user'}.template`, type: 'email', locale });
+    const { items: [{ value: templateId }] } = await this.localizationService.getAssets({ name: `enterprise.invite${isOwner ? '-owner' : '-user'}.template`, type: 'email', locale });
 
     await this.emailClient.send(email, templateId, { auth: { token } });
   }
 
-  public async issueToken(email: string, userAccountRole: UserAccountRole, userLocationRoles: UserLocationRole[], locale?: string, ttl?: number): Promise<{ token:string, metadata: InviteTokenData }> {
+  public async issueToken(email: string, userAccountRole: UserAccountRole, userLocationRoles: UserLocationRole[], locale?: string, ttl?: number): Promise<{ token: string, metadata: InviteTokenData }> {
     const existingToken = await this.getTokenByEmail(email);
 
     if (existingToken) {
@@ -107,19 +108,19 @@ export class UserInviteService {
       token_expires_at: tokenExpiresAt,
       registration_data_expires_at: moment().add(30, 'days').toISOString()
     };
-    const metadata =  await this.userRegistrationTokenMetatadataTable.put(tokenData);
-    const token = await (new Promise<string>((resolve, reject) => 
+    const metadata = await this.userRegistrationTokenMetatadataTable.put(tokenData);
+    const token = await (new Promise<string>((resolve, reject) =>
       jwt.sign(
-        { 
+        {
           ...tokenData.registration_data,
           email,
           iat: moment(metadata.created_at).unix()
-        }, 
+        },
         this.tokenSecret,
-        { 
+        {
           jwtid: tokenId,
           ...(ttl && { expiresIn: ttl })
-        }, 
+        },
         (err, encodedToken) => {
           if (err) {
             reject(err);
@@ -127,9 +128,9 @@ export class UserInviteService {
             resolve(encodedToken);
           }
         })
-      )
+    )
     );
-    
+
     return {
       token,
       metadata: {
@@ -142,7 +143,7 @@ export class UserInviteService {
     };
   }
 
-  public async getTokenByEmail(email: string): Promise<{ token:string, metadata: InviteTokenData } | null> {
+  public async getTokenByEmail(email: string): Promise<{ token: string, metadata: InviteTokenData } | null> {
     const metadata = await this.userRegistrationTokenMetatadataTable.getByEmail(email);
 
     if (!metadata) {
@@ -152,18 +153,18 @@ export class UserInviteService {
     const ttl = metadata.token_expires_at ?
       Math.floor(moment(metadata.token_expires_at).diff(metadata.created_at, 'seconds')) :
       undefined;
-    const token = await new Promise<string>((resolve, reject) => 
+    const token = await new Promise<string>((resolve, reject) =>
       jwt.sign(
-        { 
+        {
           ...metadata.registration_data,
           email,
           iat: moment(metadata.created_at).unix()
-        }, 
+        },
         this.tokenSecret,
-        { 
+        {
           jwtid: metadata.token_id,
           ...(ttl && ttl > 0 ? { expiresIn: ttl } : undefined)
-        }, 
+        },
         (err, encodedToken) => {
           if (err) {
             reject(err);
@@ -186,7 +187,7 @@ export class UserInviteService {
     };
   }
 
-  public async verifyToken(token:string): Promise<InviteTokenData> {
+  public async verifyToken(token: string): Promise<InviteTokenData> {
     try {
       const {
         isExpired,
@@ -204,7 +205,7 @@ export class UserInviteService {
     }
   }
 
-  public async redeemToken(token:string): Promise<InviteTokenData> {
+  public async redeemToken(token: string): Promise<InviteTokenData> {
     const tokenData = await this.verifyToken(token);
 
     await this.userRegistrationTokenMetatadataTable.remove({ token_id: tokenData.tokenId });
@@ -213,7 +214,7 @@ export class UserInviteService {
   }
 
   public async decodeToken(token: string): Promise<InviteTokenData & { isExpired: boolean }> {
-    return (new Promise<InviteTokenData & { isExpired: boolean }>((resolve, reject) => 
+    return (new Promise<InviteTokenData & { isExpired: boolean }>((resolve, reject) =>
       jwt.verify(token, this.tokenSecret, { ignoreExpiration: true }, (err, decodedToken) => {
         if (err) {
           reject(err);
@@ -234,7 +235,7 @@ export class UserInviteService {
 
   }
 
-  public async reissueToken(email: string, ttl?: number): Promise<{ token:string, metadata: InviteTokenData } | null> {
+  public async reissueToken(email: string, ttl?: number): Promise<{ token: string, metadata: InviteTokenData } | null> {
     const data = await this.userRegistrationTokenMetatadataTable.getByEmail(email);
 
     if (!data) {

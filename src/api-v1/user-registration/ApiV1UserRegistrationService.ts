@@ -19,10 +19,10 @@ class ApiV1UserRegistrationService extends HttpService implements UserRegistrati
     try {
       const request = {
         method: 'POST',
-        url: `${ this.apiV1Url }/userregistration`,
+        url: `${this.apiV1Url}/userregistration`,
         body: {
           ..._.pick(
-            data, 
+            data,
             [
               'email',
               'password',
@@ -33,10 +33,11 @@ class ApiV1UserRegistrationService extends HttpService implements UserRegistrati
           lastname: data.lastName,
           password_conf: data.password,
           phone_mobile: data.phone,
-          locale: data.locale
+          locale: data.locale,
+          skipEmailSend: data.skipEmailSend,
         }
       };
-      
+
       await this.sendRequest(request);
     } catch (err) {
       // Translate HTTP 400 'Email already registered.' error into a 409 for consistency
@@ -51,7 +52,7 @@ class ApiV1UserRegistrationService extends HttpService implements UserRegistrati
   public async checkEmailAvailability(email: string): Promise<EmailAvailability> {
     const request = {
       method: 'POST',
-      url: `${ this.apiV1Url }/userregistration/email`,
+      url: `${this.apiV1Url}/userregistration/email`,
       body: {
         email
       }
@@ -69,7 +70,7 @@ class ApiV1UserRegistrationService extends HttpService implements UserRegistrati
   public async resendVerificationEmail(email: string): Promise<void> {
     const request = {
       method: 'POST',
-      url: `${ this.apiV1Url }/userregistration/resend`,
+      url: `${this.apiV1Url}/userregistration/resend`,
       body: {
         email
       }
@@ -81,7 +82,7 @@ class ApiV1UserRegistrationService extends HttpService implements UserRegistrati
   public async verifyEmailAndCreateUser(emailVerification: EmailVerification): Promise<OAuth2Response> {
     const request = {
       method: 'POST',
-      url: `${ this.apiV1Url }/userregistration/verify/oauth2`,
+      url: `${this.apiV1Url}/userregistration/verify/oauth2`,
       body: {
         client_id: emailVerification.clientId,
         client_secret: emailVerification.clientSecret,
@@ -101,7 +102,7 @@ class ApiV1UserRegistrationService extends HttpService implements UserRegistrati
   public async getRegistrationTokenByEmail(authToken: string, email: string): Promise<RegistrationTokenResponse> {
     const request = {
       method: 'GET',
-      url: `${ this.apiV1Url }/userregistration?email=${ encodeURIComponent(email) }`,
+      url: `${this.apiV1Url}/userregistration?email=${encodeURIComponent(email)}`,
       authToken
     };
     const response = await this.sendRequest(request);
