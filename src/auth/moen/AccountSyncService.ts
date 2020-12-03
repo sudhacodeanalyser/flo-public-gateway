@@ -23,7 +23,8 @@ class AccountSyncService extends HttpService {
     const request = {
       method: 'HEAD',
       url: `${this.url}/sync/me`,
-      authToken
+      authToken,
+      proxyError: true
     };
     return this.sendRequest(request);
   }

@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import { AxiosInstance } from 'axios';
+import { AxiosInstance, AxiosRequestConfig } from 'axios';
 import { injectable, inject } from 'inversify';
 import HttpError from './HttpError';
 import config from '../config/config';
@@ -29,7 +29,7 @@ class HttpService {
   public async sendRequest(request: HttpRequest): Promise<any> {
     try {
       const httpContextReq = this.httpContext && this.httpContext.request;
-      const response = await this.httpClient.request({
+      const cfg: AxiosRequestConfig = {
         method: request.method,
         url: this.baseUrl ? `${this.baseUrl}${request.url}` : request.url,
         headers: {
@@ -41,16 +41,23 @@ class HttpService {
         ...(request.body && { data: request.body }),
         ...(request.params && { params: request.params }),
         timeout: config.externalServiceHttpTimeoutMs
-      });
+      };
+      if (request.method?.toUpperCase() === 'HEAD') { // fix gzip empty HEAD response err with axios & some http servers by forcing no compression
+        cfg.headers['accept-encoding'] = 'gzip;q=0,deflate,sdch'; // SEE: https://github.com/axios/axios/issues/1658
+      }
 
+      const response = await this.httpClient.request(cfg);
       return response.data;
     } catch (err) {
       this.httpLogger.error({ err, request });
+      if (!err) {
+        throw new HttpError(500, "Unknown Exception.");
+      }
 
-      const status = err?.response?.status >= 400 ? err.response.status : 500;
-      const message = err?.response?.data?.message || _.head(err?.response?.data?.errors) || getReasonPhrase(status);
+      const status = err.response?.status >= 400 ? err.response.status : 500;
+      const message = err.response?.data?.message || _.head(err.response?.data?.errors) || getReasonPhrase(status);
       if (request.proxyError) {
-        throw new ExtendableError(message, status, err.response.data); // proxy error back as is
+        throw new ExtendableError(message, status, err.response?.data); // proxy error back as is
       }
       if (status < 500) {
         throw new HttpError(status, message);
