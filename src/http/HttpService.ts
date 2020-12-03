@@ -42,7 +42,7 @@ class HttpService {
         ...(request.params && { params: request.params }),
         timeout: config.externalServiceHttpTimeoutMs
       };
-      if (request.method?.toUpperCase() === 'HEAD') { // fix gzip empty head response err with axios & some server for empty HEAD response
+      if (request.method?.toUpperCase() === 'HEAD') { // fix gzip empty HEAD response err with axios & some http servers by forcing no compression
         cfg.headers['accept-encoding'] = 'gzip;q=0,deflate,sdch'; // SEE: https://github.com/axios/axios/issues/1658
       }
 
