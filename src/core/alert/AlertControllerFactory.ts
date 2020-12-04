@@ -67,6 +67,7 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
           status: t.union([t.string, t.array(AlertStatusCodec)]),
           severity: t.union([t.string, t.array(AlarmSeverityCodec)]),
           reason: t.union([t.string, t.array(IncidentStatusReasonCodec)]),
+          alarmId: t.union([PositiveIntegerFromString, t.array(PositiveIntegerFromString)]),
           isInternalAlarm: BooleanFromString,
           page: PositiveIntegerFromString,
           size: PositiveIntegerFromString,
@@ -168,6 +169,7 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
       const status = _.concat([], req.query.status || $enum(AlertStatus).getValues());
       const severity = _.concat([], req.query.severity || []);
       const reason = _.concat([], req.query.reason || []);
+      const alarmId = _.concat([], req.query.alarmId || []);
 
       const filters = {
         ...req.query,
@@ -177,7 +179,8 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
         ...(!_.isEmpty(locationId) && { locationId }),
         ...(!_.isEmpty(status) && { status }),
         ...(!_.isEmpty(severity) && { severity }),
-        ...(!_.isEmpty(reason) && { reason })
+        ...(!_.isEmpty(reason) && { reason }),
+        ...(!_.isEmpty(alarmId) && { alarmId }),
       };
 
       if (_.isEmpty(filters.deviceId) && _.isEmpty(filters.locationId) && noLocationOrDevice) {

@@ -126,6 +126,7 @@ export interface AlarmEventFilter {
   deviceId?: string[];
   status?: string[];
   severity?: string[];
+  alarmId?: number[];
   reason?: string[];
   createdAt?: string[];
   isInternalAlarm?: boolean;
