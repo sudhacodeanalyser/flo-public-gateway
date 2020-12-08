@@ -95,6 +95,16 @@ paths:
           schema:
             type: string
           description: Search query. Will search results comparing address, address2, nickname, city, state, postal code, country.
+        - in: query
+          name: sort
+          required: false
+          schema:
+            type: string
+          description: |
+            Comma delimited list of properties to sort on. When multiple properties are provided, the results will be sorted ascending in order of the properties. Currently supports:
+            * `id`
+            * `address`
+            * `nickname`
         - $ref: '#/components/parameters/ExpandParam'
       responses:
         200:

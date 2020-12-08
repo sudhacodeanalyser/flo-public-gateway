@@ -1,6 +1,6 @@
 import * as t from 'io-ts';
-import { NewUserSyncValidator } from './AccountSync'
-import { interfaces, httpHead, httpGet, httpPost, requestBody, request, BaseHttpController } from 'inversify-express-utils';
+import { NewUserSyncValidator, AuthUserSyncValidator } from './AccountSync'
+import { interfaces, httpHead, httpGet, httpPost, requestBody, request, BaseHttpController, httpPut, httpDelete } from 'inversify-express-utils';
 import { inject, Container } from 'inversify';
 import { httpController, createMethod } from '../../core/api/controllerUtils';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
@@ -8,6 +8,7 @@ import Request from '../../core/api/Request';
 import { AccountSyncService } from './AccountSyncService';
 
 type NewUserSyncBody = t.TypeOf<typeof NewUserSyncValidator>;
+type AuthUserSyncBody = t.TypeOf<typeof AuthUserSyncValidator>;
 
 export function AccountSyncControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
@@ -18,11 +19,6 @@ export function AccountSyncControllerFactory(container: Container, apiVersion: n
       @inject('AccountSyncService') private accountSyncService: AccountSyncService
     ) {
       super();
-    }
-
-    @httpGet('/token')
-    private async getToken(@request() req: Request): Promise<any> {
-      return this.accountSyncService.getToken(req.headers.authorization as string);
     }
 
     @httpGet('/token/trade')
@@ -40,12 +36,29 @@ export function AccountSyncControllerFactory(container: Container, apiVersion: n
       return this.accountSyncService.getSyncMe(req.headers.authorization as string);
     }
 
+    @httpPut('/sync/me')
+    private async putSyncMe(@request() req: Request): Promise<any> {
+      return this.accountSyncService.putSyncMe(req.headers.authorization as string);
+    }
+
+    @httpDelete('/sync/me')
+    private async deleteSyncMe(@request() req: Request): Promise<any> {
+      return this.accountSyncService.deleteSyncMe(req.headers.authorization as string);
+    }
+
+    @createMethod
     @httpPost('/sync/new',
       reqValidator.create(t.type({ body: NewUserSyncValidator }))
     )
-    @createMethod
     private async postSyncNew(@request() req: Request, @requestBody() body: NewUserSyncBody): Promise<any> {
       return this.accountSyncService.postSyncNew(req.headers.authorization as string, body);
+    }
+
+    @httpPost('/sync/auth',
+      reqValidator.create(t.type({ body: AuthUserSyncValidator }))
+    )
+    private async postSyncAuth(@request() req: Request, @requestBody() body: AuthUserSyncBody): Promise<any> {
+      return this.accountSyncService.postSyncAuth(req.headers.authorization as string, body);
     }
   }
   return AccountSyncControllerFactory;

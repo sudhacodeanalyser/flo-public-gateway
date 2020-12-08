@@ -24,8 +24,8 @@ class MemoizedLocationPgTable extends MemoizeMixin(CacheMixin(LocationPgTable)) 
   @memoized((args: any[]) => args) 
   @cached('LocationPgByUserId', 30)
   public async getByUserId(...args: any[]): Promise<LocationPgPage> {
-    const [[userId, size, page, filters, searchText]] = args;
-    const results = await super.getByUserId(userId, size, page, filters, searchText);
+    const [[userId, size, page, filters, searchText, sortProperties]] = args;
+    const results = await super.getByUserId(userId, size, page, filters, searchText, sortProperties);
 
     results.items
       .forEach(location => {
@@ -39,8 +39,8 @@ class MemoizedLocationPgTable extends MemoizeMixin(CacheMixin(LocationPgTable)) 
   @memoized((args: any[]) => args) 
   @cached('LocationPgByUserIdWithChildren', 30)
   public async getByUserIdWithChildren(...args: any[]): Promise<LocationPgPage> {
-    const [[userId, size, page, filters, searchText]] = args;
-    const results = await super.getByUserIdWithChildren(userId, size, page, filters, searchText);
+    const [[userId, size, page, filters, searchText, sortProperties]] = args;
+    const results = await super.getByUserIdWithChildren(userId, size, page, filters, searchText, sortProperties);
 
     results.items
       .forEach(location => {

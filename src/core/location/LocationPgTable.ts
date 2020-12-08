@@ -4,7 +4,7 @@ import { PostgresDbClient } from '../../database/pg/PostgresDbClient';
 import { PostgresTable } from '../../database/pg/PostgresTable';
 import { LocationPgRecordData, LocationPgPage, LocationFacetPgPage } from './LocationPgRecord';
 import _ from 'lodash';
-import { LocationFilters } from '../api';
+import { LocationFilters, LocationSortProperties } from '../api';
 
 @injectable()
 class LocationPgTable extends PostgresTable<LocationPgRecordData> {
@@ -37,9 +37,9 @@ class LocationPgTable extends PostgresTable<LocationPgRecordData> {
     };
   }
 
-  public async getByUserIdRootOnly(userId: string, size: number = 100, page: number = 1, filters: LocationFilters = {}, searchText: string = ''): Promise<LocationPgPage> {
+  public async getByUserIdRootOnly(userId: string, size: number = 100, page: number = 1, filters: LocationFilters = {}, searchText: string = '', sortProperties: LocationSortProperties = { id: true }): Promise<LocationPgPage> {
     const limit = Math.max(1, size);
-    const queryBuilder = this.applyFilters(
+    let queryBuilder = this.applyFilters(
       squel.useFlavour('postgres')
         .select()
         .field('"l".*')
@@ -57,7 +57,8 @@ class LocationPgTable extends PostgresTable<LocationPgRecordData> {
         .where('"ul"."user_id" = ?', userId),
       filters
     );
-    const { text, values } = (
+
+    queryBuilder = (
       searchText.trim() ?
         queryBuilder
           .where(
@@ -65,11 +66,16 @@ class LocationPgTable extends PostgresTable<LocationPgRecordData> {
             this.getQueryTerms(searchText)
           ) :
         queryBuilder
-    )
-    .order('"l"."id"')
-    .limit(limit)
-    .offset(limit * Math.max(0, page - 1))
-    .toParam();
+    );
+
+    queryBuilder = this.applySort(queryBuilder, sortProperties);
+
+    queryBuilder = queryBuilder
+      .limit(limit)
+      .offset(limit * Math.max(0, page - 1))
+
+    const { text, values } = queryBuilder.toParam();
+
     const results = await this.pgDbClient.execute(text, values);
     const total = results.rows[0] ? parseInt(results.rows[0].total, 10) : 0;
     const items = results.rows.map(({ total: ignoreTotal, ...item }) => item);
@@ -81,9 +87,9 @@ class LocationPgTable extends PostgresTable<LocationPgRecordData> {
     };
   }
 
-  public async getByUserId(userId: string, size: number = 100, page: number = 1, filters: LocationFilters = {}, searchText: string = ''): Promise<LocationPgPage> {
+  public async getByUserId(userId: string, size: number = 100, page: number = 1, filters: LocationFilters = {}, searchText: string = '', sortProperties: LocationSortProperties = { id: true }): Promise<LocationPgPage> {
     const limit = Math.max(1, size);
-    const queryBuilder = this.applyFilters(
+    let queryBuilder = this.applyFilters(
       squel.useFlavour('postgres')
         .select()
         .field('"l".*')
@@ -93,23 +99,28 @@ class LocationPgTable extends PostgresTable<LocationPgRecordData> {
         .where('"ul"."user_id" = ?', userId),
       filters
     );
-    const { text, values } = (
-        searchText.trim() ?
-          queryBuilder
-            .where(
-              'to_tsvector(\'simple\', f_concat_ws(\' \', "address", "address2", "city", "state", "postal_code", "country", "nickname")) @@ to_tsquery(\'simple\', ?)',
-              this.getQueryTerms(searchText)
-            ) :
-          queryBuilder
-      )
-      .order('"l"."id"')
+
+    queryBuilder = (
+      searchText.trim() ?
+      queryBuilder
+        .where(
+          'to_tsvector(\'simple\', f_concat_ws(\' \', "address", "address2", "city", "state", "postal_code", "country", "nickname")) @@ to_tsquery(\'simple\', ?)',
+          this.getQueryTerms(searchText)
+        ) :
+      queryBuilder
+    );
+
+    queryBuilder = this.applySort(queryBuilder, sortProperties);
+
+    const { text, values } = queryBuilder
       .limit(limit)
       .offset(limit * Math.max(0, page - 1))
       .toParam();
+
     const results = await this.pgDbClient.execute(text, values);
     const total = results.rows[0] ? parseInt(results.rows[0].total, 10) : 0;
     const items = results.rows.map(({ total: ignoreTotal, ...item }) => item);
-    
+
     return {
       page,
       total,
@@ -139,9 +150,9 @@ class LocationPgTable extends PostgresTable<LocationPgRecordData> {
     };
   }
 
-  public async getByUserIdWithChildren(userId: string, size: number = 100, page: number = 1, filters: LocationFilters = {}, searchText: string = ''): Promise<LocationPgPage> {
+  public async getByUserIdWithChildren(userId: string, size: number = 100, page: number = 1, filters: LocationFilters = {}, searchText: string = '', sortProperties: LocationSortProperties = { id: true }): Promise<LocationPgPage> {
     const limit = Math.max(1, size);
-    const queryBuilder = this.applyFilters(
+    let queryBuilder = this.applyFilters(
       squel.useFlavour('postgres')
         .select()
         .from('"location"', '"l"')
@@ -157,7 +168,7 @@ class LocationPgTable extends PostgresTable<LocationPgRecordData> {
         `, userId),
       filters
     );
-    const { text, values } = (
+    queryBuilder = (
       searchText.trim() ?
         queryBuilder
           .where(
@@ -166,10 +177,14 @@ class LocationPgTable extends PostgresTable<LocationPgRecordData> {
           ) :
         queryBuilder
     )
-    .order('"l"."id"')
-    .limit(limit)
-    .offset(limit * Math.max(0, page - 1))
-    .toParam();
+
+    queryBuilder = this.applySort(queryBuilder, sortProperties);
+
+    const { text, values } = queryBuilder
+      .limit(limit)
+      .offset(limit * Math.max(0, page - 1))
+      .toParam();
+
     const results = await this.pgDbClient.execute(text, values);
     const total = results.rows[0] ? parseInt(results.rows[0].total, 10) : 0;
     const items = results.rows.map(({ total: ignoreTotal, ...item }) => item);
@@ -181,10 +196,10 @@ class LocationPgTable extends PostgresTable<LocationPgRecordData> {
     };
   }
 
-  public async getAllByFilters(size: number = 100, page: number = 1, filters: LocationFilters = {}, searchText: string = ''): Promise<LocationPgPage> {
+  public async getAllByFilters(size: number = 100, page: number = 1, filters: LocationFilters = {}, searchText: string = '', sortProperties: LocationSortProperties | undefined): Promise<LocationPgPage> {
     const limit = Math.max(1, size);
     const searchTrim = searchText.trim();
-    const queryBuilder = this.applyFilters(
+    let queryBuilder = this.applyFilters(
       squel.useFlavour('postgres')
         .select()
         .from('"location"', '"l"')
@@ -192,17 +207,23 @@ class LocationPgTable extends PostgresTable<LocationPgRecordData> {
         .field('COUNT(*) OVER()', '"total"'),
       filters
     );
-    const { text, values } = (
+    queryBuilder = (
       searchTrim ?
         queryBuilder
           .where('? <% "l"."address"', searchTrim)
           .order('word_similarity(?, "l"."address")', false, searchTrim) :
         queryBuilder
     )
+
+    queryBuilder = this.applySort(queryBuilder, sortProperties);
+
+    const { text, values } = queryBuilder
       .limit(limit)
       .offset(limit * Math.max(0, page - 1))
       .toParam();
+
     await this.pgDbClient.execute('SET pg_trgm.word_similarity_threshold = 0.8', []);
+
     const results = await this.pgDbClient.execute(text, values);
     const total = results.rows[0] ? parseInt(results.rows[0].total, 10) : 0;
     const items = results.rows.map(({ total: ignoreTotal, similarity: ignoreSimilarity, ...item }) => item);
@@ -289,6 +310,24 @@ class LocationPgTable extends PostgresTable<LocationPgRecordData> {
 
       const op = _.isArray(value) ? 'IN' : '=';
       return query.where(`"${ alias }"."${ column }" ${op} ?`, value);
+    }, queryBuilder);
+  }
+
+  private applySort(queryBuilder: squel.PostgresSelect, sortProperties: LocationSortProperties = {}, alias: string = 'l'): squel.PostgresSelect {
+    const sortPropertyMap = {
+      id: 'id',
+      nickname: 'nickname',
+      address: 'address'
+    };
+
+    return _.reduce(sortProperties, (query, value, key) => {
+      const column = (sortPropertyMap as any)[key] as string;
+
+      if (!column) {
+        return query;
+      }
+
+      return query.order(`"${alias}"."${column}"`, value);
     }, queryBuilder);
   }
 

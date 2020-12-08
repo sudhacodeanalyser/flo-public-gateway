@@ -103,7 +103,7 @@ export const UserFeedbackCodec = t.type({
 
 export type UserFeedback = t.TypeOf<typeof UserFeedbackCodec>;
 
-export interface AlarmEvent extends TimestampedModel {
+export interface AlarmEvent {
   id: string;
   alarm: SimpleAlarm,
   deviceId: string;
@@ -111,9 +111,12 @@ export interface AlarmEvent extends TimestampedModel {
   snoozeTo?: string;
   locationId: string;
   systemMode: string;
+  resolutionDate?: string;
   userFeedback?: UserFeedback[];
   feedback?: NewUserFeedbackResponse;
   location?: Partial<Location>;
+  createAt: string;
+  updateAt: string;
 }
 
 export interface AlarmEventFilter {
@@ -123,6 +126,7 @@ export interface AlarmEventFilter {
   deviceId?: string[];
   status?: string[];
   severity?: string[];
+  alarmId?: number[];
   reason?: string[];
   createdAt?: string[];
   isInternalAlarm?: boolean;

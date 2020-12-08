@@ -15,6 +15,7 @@ import { AlertService, UserService, LocationService, DeviceService } from '../se
 import UnauthorizedError from '../api/error/UnauthorizedError';
 import { BooleanFromString } from '../api/validator/BooleanFromString';
 import { PositiveIntegerFromString } from '../api/validator/PositiveIntegerFromString';
+import { convertToLocalTimeWithOffset } from '../api/dateUtils';
 
 export function AlertControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
@@ -66,6 +67,7 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
           status: t.union([t.string, t.array(AlertStatusCodec)]),
           severity: t.union([t.string, t.array(AlarmSeverityCodec)]),
           reason: t.union([t.string, t.array(IncidentStatusReasonCodec)]),
+          alarmId: t.union([PositiveIntegerFromString, t.array(PositiveIntegerFromString)]),
           isInternalAlarm: BooleanFromString,
           page: PositiveIntegerFromString,
           size: PositiveIntegerFromString,
@@ -167,6 +169,7 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
       const status = _.concat([], req.query.status || $enum(AlertStatus).getValues());
       const severity = _.concat([], req.query.severity || []);
       const reason = _.concat([], req.query.reason || []);
+      const alarmId = _.concat([], req.query.alarmId || []);
 
       const filters = {
         ...req.query,
@@ -176,7 +179,8 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
         ...(!_.isEmpty(locationId) && { locationId }),
         ...(!_.isEmpty(status) && { status }),
         ...(!_.isEmpty(severity) && { severity }),
-        ...(!_.isEmpty(reason) && { reason })
+        ...(!_.isEmpty(reason) && { reason }),
+        ...(!_.isEmpty(alarmId) && { alarmId }),
       };
 
       if (_.isEmpty(filters.deviceId) && _.isEmpty(filters.locationId) && noLocationOrDevice) {
@@ -189,7 +193,7 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
         });
       }
 
-      return this.alertService.getAlarmEventsByFilter(filters, {
+      const alarmEvents = await this.alertService.getAlarmEventsByFilter(filters, {
         $select: {
           id: true,
           nickname: true,
@@ -204,6 +208,16 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
           geoLocation: true,
         }
       });
+
+      return {
+        ...alarmEvents,
+        items: alarmEvents.items.map((alarmEvent) => ({
+          ...alarmEvent,
+          ...alarmEvent.createAt && { createAt: convertToLocalTimeWithOffset(alarmEvent.createAt, alarmEvent.location?.timezone) },
+          ...alarmEvent.updateAt && { updateAt: convertToLocalTimeWithOffset(alarmEvent.updateAt, alarmEvent.location?.timezone) },
+          ...alarmEvent.resolutionDate && { resolutionDate: convertToLocalTimeWithOffset(alarmEvent.resolutionDate, alarmEvent.location?.timezone) }
+        }))
+      };
     }
 
     @httpPost('/action',

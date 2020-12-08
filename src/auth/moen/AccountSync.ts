@@ -11,3 +11,10 @@ const NewUserSyncCodec = t.type({
 })
 
 export const NewUserSyncValidator = t.partial(NewUserSyncCodec.props);
+
+const AuthUserSyncCodec = t.type({
+  username: t.union([Email, t.undefined]),
+  password: t.union([t.string, t.undefined]),
+})
+
+export const AuthUserSyncValidator = t.partial(AuthUserSyncCodec.props);
