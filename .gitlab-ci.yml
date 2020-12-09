@@ -116,7 +116,7 @@ Dev:
   only:
     - dev
     - dev.rate-limit-5th-try
-    - CLOUD-3972-reg-chk-email-op
+    - rm-validator
   environment:
     name: dev
     url: https://flo-public-gateway.flocloud.co/api/v2/ping
