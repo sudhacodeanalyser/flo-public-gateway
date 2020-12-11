@@ -12,13 +12,17 @@ import { MaxLengthString } from '../validator/MaxLengthString';
 export enum ValveState {
   OPEN = 'open',
   CLOSED = 'closed',
-  IN_TRANSITION = 'inTransition'
+  IN_TRANSITION = 'inTransition',
+  BROKEN = 'broken',
+  UNKNOWN = 'unknown',
 }
 
 export enum ValveStateNumeric {
+  UNKNOWN = -1,
   CLOSED = 0,
   OPEN = 1,
-  IN_TRANSITION = 2
+  IN_TRANSITION = 2,
+  BROKEN = 3
 }
 
 export const ValveStateCodec = convertEnumtoCodec(ValveState);
