@@ -3,7 +3,7 @@ import _ from 'lodash';
 import * as O from 'fp-ts/lib/Option';
 import LteTable from './LteTable';
 import DeviceLteTable from './DeviceLteTable';
-import { BaseLte, Lte, LteCreate, SsidCredentials } from '../api';
+import { BaseLte, Lte, LteCreate, SsidCredentials, SsidCredentialsWithContext } from '../api';
 import { pipe } from 'fp-ts/lib/pipeable';
 import crypto from 'crypto';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
@@ -28,11 +28,15 @@ class LteService {
     return this.lteTable.create(lteCreate);
   }
 
-  public async getSsidCredentials(qrCode: string): Promise<Option<SsidCredentials>> {
+  public async getSsidCredentials(qrCode: string): Promise<Option<SsidCredentialsWithContext>> {
     const maybeLte = await this.lteTable.getByQrCode(qrCode);
     return pipe(
       maybeLte,
-      O.map(lte => this.extractCredentials(lte))
+      O.map(lte => ({
+        ...this.extractCredentials(lte),
+        imeiLast4: lte.imei.slice(-4),
+        iccidLast4: lte.iccid.slice(-4)
+      }))
     );
   }
 

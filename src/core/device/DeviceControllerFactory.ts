@@ -8,7 +8,7 @@ import { QrData, QrDataValidator } from '../../api-v1/pairing/PairingService';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import { InternalDeviceService } from '../../internal-device-service/InternalDeviceService';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
-import { DependencyFactoryFactory, Device, DeviceActionRules, DeviceActionRulesCreate, DeviceActionRulesCreateCodec, DeviceCreate, DeviceCreateValidator, DeviceType, DeviceUpdate, DeviceUpdateValidator, SystemMode as DeviceSystemMode, SystemModeCodec as DeviceSystemModeCodec, HardwareThresholdsCodec, HardwareThresholds, FirmwareInfo, SsidCredentials, BaseLteCodec, BaseLte } from '../api';
+import { DependencyFactoryFactory, Device, DeviceActionRules, DeviceActionRulesCreate, DeviceActionRulesCreateCodec, DeviceCreate, DeviceCreateValidator, DeviceType, DeviceUpdate, DeviceUpdateValidator, SystemMode as DeviceSystemMode, SystemModeCodec as DeviceSystemModeCodec, HardwareThresholdsCodec, HardwareThresholds, FirmwareInfo, SsidCredentials, BaseLteCodec, BaseLte, SsidCredentialsWithContext } from '../api';
 import { asyncMethod, authorizationHeader, createMethod, deleteMethod, httpController, parseExpand, withResponseType } from '../api/controllerUtils';
 import { convertEnumtoCodec } from '../api/enumUtils';
 import ForbiddenError from '../api/error/ForbiddenError';
@@ -196,7 +196,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
         })
       }))
     )
-    private async retrieveSsidCredentials(@requestBody() { data }: { data: string }): Promise<SsidCredentials> {
+    private async retrieveSsidCredentials(@requestBody() { data }: { data: string }): Promise<SsidCredentialsWithContext> {
       const maybeSsidCredentials = await this.lteService.getSsidCredentials(data);
       return pipe(
         maybeSsidCredentials,

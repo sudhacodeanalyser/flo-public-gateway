@@ -353,6 +353,11 @@ export interface SsidCredentials {
   password: string;
 }
 
+export interface SsidCredentialsWithContext extends SsidCredentials {
+  imeiLast4: string;
+  iccidLast4: string;
+}
+
 const optOffsetIndex = t.partial({
   offsetIndex: t.number
 })
