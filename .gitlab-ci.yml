@@ -109,7 +109,7 @@ Dev:
     ENV: "development"
     INSTANA_SERVICE_NAME: "flo-public-gateway-${ENV}"
     K8S_NAMESPACE: "flo-public-gateway"
-  image: kloiadocker/kloiahelm:0.0.1
+  image: registry.gitlab.com/flotechnologies/devops/docker-tools:helm-2-17
   stage: deploy
   dependencies:
     - Compile
@@ -163,7 +163,7 @@ ReleaseCandidate:
     TELEMETRY_TAGS_SERVICE_URL_PROD: "https://flo-telemetry-tags.flosecurecloud.com"
     SENSOR_METER_URL_PROD: "https://flo-puck-service.flosecurecloud.com"
     DEFAULT_NOTIFY_ACCOUNT_STATUS_EMAIL_PROD: "Suzanne.Street@moen.com"
-  image: kloiadocker/kloiahelm:0.0.1
+  image: registry.gitlab.com/flotechnologies/devops/docker-tools:helm-2-17
   stage: deploy-rc
   allow_failure: true
   dependencies:
@@ -219,7 +219,7 @@ K8sProd:
     WATER_METER_SERVICE_URL_PROD: "http://flo-water-meter.flo-water-meter.svc.cluster.local"
     PUBLIC_GATEWAY_HOST_PROD: "api-gw.meetflo.com"
     DEFAULT_NOTIFY_ACCOUNT_STATUS_EMAIL_PROD: "Suzanne.Street@moen.com"
-  image: kloiadocker/kloiahelm:0.0.1
+  image: registry.gitlab.com/flotechnologies/devops/docker-tools:helm-2-17
   stage: deploy
   dependencies:
     - Compile
