@@ -452,8 +452,8 @@ class UserResolver extends Resolver<User> {
   }
 
   public async removeAdminUser(id: string): Promise<void> {
-    await this.userSystemRoleTable.remove({ user_id: id }),
-    await this.userTable.remove({ id })
+    await this.userSystemRoleTable.remove({ user_id: id });
+    await this.userTable.remove({ id });
   }
 
   public async getByEmail(email: string, expandProps?: PropExpand): Promise<User | null> {
