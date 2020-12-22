@@ -182,6 +182,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
         body: BaseLteCodec
       }))
     )
+    @createMethod
     private async createLte(@requestBody() lte: BaseLte): Promise<void> {
       return this.lteService.createLte(lte);
     }
