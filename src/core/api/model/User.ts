@@ -3,7 +3,7 @@ import { Account, DeviceAlarmSettings, DeviceStats, Expandable, Location, Timest
 import { NonEmptyString } from '../../api/validator/NonEmptyString';
 import { PhoneNumber } from '../../api/validator/PhoneNumber';
 import { Email } from '../../api/validator/Email';
-import { Password } from '../../api/validator/Password';
+import { AdminPassword, Password } from '../../api/validator/Password';
 
 export interface UserLocationRole {
   locationId: string;
@@ -65,6 +65,14 @@ export const UserCreateCodec = t.intersection([
     source: t.string
   })
 ]);
+
+export const AdminUserCreateCodec = t.type({
+  email: Email,
+  password: AdminPassword,
+  isSuperUser: t.union([t.undefined, t.boolean])
+})
+
+export type AdminUserCreate = t.TypeOf<typeof AdminUserCreateCodec>;
 
 export type UserCreate = t.TypeOf<typeof UserCreateCodec>;
 

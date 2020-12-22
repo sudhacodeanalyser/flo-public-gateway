@@ -13,6 +13,7 @@ import MemoziedUserAccountRoleTable from './MemoizedUserAccountRoleTable';
 import { UserInviteService } from './UserRegistrationService';
 import UserRegistrationTokenMetadataTable from './UserRegistrationTokenMetadataTable';
 import UserLocationPgTable from './UserLocationPgTable';
+import UserSystemRoleTable from './UserSystemRoleTable';
 
 export default new ContainerModule((bind: interfaces.Bind) => {
   bind<UserAccountRoleTable>('UserAccountRoleTable').to(MemoziedUserAccountRoleTable);
@@ -26,4 +27,5 @@ export default new ContainerModule((bind: interfaces.Bind) => {
   bind<UserRegistrationTokenMetadataTable>('UserRegistrationTokenMetadataTable').to(UserRegistrationTokenMetadataTable);
   bind<string>('RegistrationTokenSecret').toConstantValue(config.registrationTokenSecret);
   bind<UserLocationPgTable>('UserLocationPgTable').to(UserLocationPgTable);
+  bind<UserSystemRoleTable>('UserSystemRoleTable').to(UserSystemRoleTable);
 });
