@@ -2,7 +2,7 @@ import { fold, fromNullable, Option } from 'fp-ts/lib/Option';
 import { pipe } from 'fp-ts/lib/pipeable';
 import { inject, injectable } from 'inversify';
 import _ from 'lodash';
-import { PropExpand, UpdateAlarmSettings, User, UserUpdate, UserCreate, RetrieveAlarmSettingsFilter, EntityAlarmSettings, UserStats, DependencyFactoryFactory } from '../api';
+import { PropExpand, UpdateAlarmSettings, User, UserUpdate, UserCreate, RetrieveAlarmSettingsFilter, EntityAlarmSettings, UserStats, DependencyFactoryFactory, AdminUserCreate } from '../api';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import ValidationError from '../api/error/ValidationError';
 import ConflictError from '../api/error/ConflictError';
@@ -48,6 +48,10 @@ class UserService {
     );
 
     return updatedUser;
+  }
+
+  public async isSuperUser(id: string): Promise<boolean> {
+    return this.userResolver.isSuperUser(id);
   }
 
   public async getUserById(id: string, expand?: PropExpand): Promise<Option<User>> {
@@ -121,6 +125,14 @@ class UserService {
         }
       )
     );
+  }
+
+  public async createAdminUser(adminUserCreate: AdminUserCreate): Promise<void> {
+    await this.userResolver.createAdminUser(adminUserCreate);
+  }
+
+  public async removeAdminUser(id: string): Promise<void> {
+    await this.userResolver.removeAdminUser(id);
   }
 
   public async createUser(userCreate: UserCreate): Promise<User> {
