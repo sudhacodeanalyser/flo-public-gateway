@@ -111,6 +111,16 @@ paths:
                   type: string
                 deviceModel:
                   type: string
+                connectivity:
+                  type: object
+                  properties:
+                    lte: 
+                      type: object
+                      required:
+                        - qrCode
+                      properties:
+                        qrCode:
+                          type: string
       responses:
         200:
           description: A Device with the specified MAC address or an empty object if not found.
@@ -577,8 +587,96 @@ paths:
         403:
           $ref: '#/components/responses/ForbiddenError'
 
+  /api/v2/devices/lte:
+    post:
+      summary: Creates an LTE Device
+      tags:
+        - Devices
+        - LTE
+      produces:
+        - application/json
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - imei
+                - iccid
+                - randomKey
+              properties:
+                imei:
+                  type: string
+                  minLength: 15
+                  maxLength: 15
+                iccid:
+                  type: string
+                  minLength: 20
+                  maxLength: 20
+                randomKey:
+                  type: string
+                  minLength: 512
+                  maxLength: 512
+                offsetIndex:
+                  type: number
+                  default: 1
+              example:
+                imei: 358666081365927
+                iccid: 89011702278473675084
+                randomKey: 194ffe16e26a81ac9b231602d41e45dbba4c76028d7e70e4d4990b3afdbed809d9a817f56b08af8e88cb3875d09d4fbbcff8591fd2e3ccbc4f294226769ddfb8dd8fcb61b9879c10b156f7e90032158efe6655c4c65f502315f8ddbbcd759c8626bcaafb94044b09f10052b7f0cd7bba6b9390044a3d91cf1bb149f0100ee994d028063bfea5298ef65c127a430178933ee6acac4e19c9573e31dcb7092117a648ad5f4a04f74ed29da4d662e429c82106d26c109869e077e6bb2c0bfc69570ea4c5d31f49b92b7912db8cab4d02aafcb53d46da636e26c5d178953f13e834bf99700bec17d34f9e9667903da2222aca71c493243ea346f44f92d6d4390c2c22
+      responses:
+        201:
+          description: LTE created
+        400:
+          description: Invalid request body
+
+  /api/v2/devices/lte/credentials:
+    post:
+      summary: Retrieves LTE device credentials
+      tags:
+        - Devices
+        - LTE
+      produces:
+        - application/json
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - data
+              properties:
+                data:
+                  type: string
+                  description: LTE QR Code
+              example:
+                data: lte-a36b9e7423316fc17f055983f16c48b650905e0bc6ed4cacfd0574a450576b3d
+      responses:
+        200:
+          description: LTE Credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LteCredentials'
+        400:
+          description: Invalid request body
+
 components:
   schemas:
+    LteCredentials:
+      type: object
+      properties:
+        ssid:
+          type: string
+        password:
+          type: string
+        imeiLast4:
+          type: string
+        iccidLast4:
+          type: string
+
     FirmwareInfo:
       type: object
       properties:
