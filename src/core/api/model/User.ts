@@ -122,25 +122,25 @@ export interface UserStats {
   devices: DeviceStats;
 }
 
-export interface EmailChangeConfirm {
-  email: string,
-  key: string,
+export interface UserEmailChangeCreate {
+  userId: string;
+  old: EmailChangeReq;
+  new: EmailChangeReq;
 }
 
-export interface EmailChangeConfirmed extends EmailChangeConfirm {
-  on?: string,
+export interface EmailChangeReq {
+  email: string;
+}
+
+export interface EmailChangeConfirmed extends EmailChangeReq {
+  key: string;
+  on?: string;
 }
 
 export interface UserEmailChange {
-  id: number,
-  userId: string,
-  created: string,
-  old: EmailChangeConfirmed,
-  new: EmailChangeConfirmed,
-}
-
-export interface UserEmailChangeCreate {
-  userId: string,
-  old: EmailChangeConfirm,
-  new: EmailChangeConfirm,
+  id: number;
+  userId: string;
+  created: string;
+  old: EmailChangeConfirmed;
+  new: EmailChangeConfirmed;
 }

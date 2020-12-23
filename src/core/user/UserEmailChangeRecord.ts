@@ -27,9 +27,9 @@ const UserEmailChangeRecordToModelSchema: StrictSchema<UserEmailChange, UserEmai
   },
   new: (input: UserEmailChangeData) => {
     const n:EmailChangeConfirmed = {
-      email: input.old_email,
-      key: input.old_conf_key,
-      on: input.old_conf_on,
+      email: input.new_email,
+      key: input.new_conf_key,
+      on: input.new_conf_on,
     };
     return n;
   },

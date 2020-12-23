@@ -28,14 +28,12 @@ class UserEmailChangeTable extends PostgresTable<UserEmailChangeData> {
   }
 
   // 1) init change: insert a row without confirmation dates, return new id
-  public async create(c: UserEmailChangeCreate): Promise<Option<number>> {
-    const stmt = 'insert into email_change (user_id, old_email,old_conf_key, new_email,new_conf_key) values(?,?,?,?,?) returning id;';
-    const res = await this.pgDbClient.execute(stmt, [c.userId, c.old.email, c.old.key, c.new.email, c.new.key]);
-    const maybeData = O.fromNullable(_.first(res.rows));
-    return pipe(
-      maybeData,
-      O.map(data => data.id)
-    );
+  public async create(c: UserEmailChangeCreate): Promise<Option<UserEmailChange>> {
+    const stmt = `insert into email_change (user_id, old_email,old_conf_key, new_email,new_conf_key) 
+      values(?,?,uuid_generate_v4(),?,uuid_generate_v4()) 
+      returning id,user_id, old_email,old_conf_key,old_conf_on, new_conf_email,new_conf_key,new_conf_on, created;`;
+    const res = await this.pgDbClient.execute(stmt, [c.userId,c.old.email,c.new.email]);
+    return this.firstEmailChangeRow(res);
   }
 
   // 2) confirm an old email as good: return the full object
