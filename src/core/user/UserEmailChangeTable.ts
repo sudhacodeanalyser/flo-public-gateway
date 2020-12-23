@@ -13,7 +13,7 @@ type Option<T> = O.Option<T>;
 @injectable()
 class UserEmailChangeTable extends PostgresTable<UserEmailChangeData> {
   // ensure static ordering in case new columns are added to the middle of the table on accident
-  private static allColumns:string = 'id,user_id, old_email,old_conf_key,old_conf_on, new_conf_email,new_conf_key,new_conf_on, created';
+  private static readonly allColumns:string = 'id,user_id, old_email,old_conf_key,old_conf_on, new_conf_email,new_conf_key,new_conf_on, created';
 
   constructor(
     @inject('PostgresDbClient') @targetName('core') private pgDbClient: PostgresDbClient
