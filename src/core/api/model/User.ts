@@ -125,7 +125,7 @@ export interface UserStats {
 export interface RegistrationData {
   locale?:            string;
   userAccountRole?:   UserAccountRole;
-  userLocationRoles?: UserLocationRole;
+  userLocationRoles?: UserLocationRole[];
 }
 
 export interface UserRegistrationTokenMetadata {
