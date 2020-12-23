@@ -40,7 +40,7 @@ class UserEmailChangeTable extends PostgresTable<UserEmailChangeData> {
 
   // 2) confirm an old email as good: return the full object
   public async confirmOld(id:number, key:string): Promise<Option<UserEmailChange>> {
-    const stmt = `update email_change set old_key_on=current_timestamp where id=? and old_conf_key=?;
+    const stmt = `update email_change set old_key_on=current_timestamp where id=? and old_conf_key=? and old_conf_on=null 
       returning id,user_id, old_email,old_conf_key,old_conf_on, new_conf_email,new_conf_key,new_conf_on, created;`;
     const res = await this.pgDbClient.execute(stmt, [id, key]);
     return this.firstEmailChangeRow(res);
@@ -48,7 +48,7 @@ class UserEmailChangeTable extends PostgresTable<UserEmailChangeData> {
 
   // 3) confirm the new email a good: return the full object
   public async confirmNew(id:number, key:string): Promise<Option<UserEmailChange>> {
-    const stmt = `update email_change set new_key_on=current_timestamp where id=? and new_conf_key=?;
+    const stmt = `update email_change set new_key_on=current_timestamp where id=? and new_conf_key=? and new_conf_on=null 
       returning id,user_id, old_email,old_conf_key,old_conf_on, new_conf_email,new_conf_key,new_conf_on, created;`;
     const res = await this.pgDbClient.execute(stmt, [id, key]);
     return this.firstEmailChangeRow(res);
