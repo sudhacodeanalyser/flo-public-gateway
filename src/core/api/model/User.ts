@@ -121,3 +121,18 @@ export interface UserInvite extends t.TypeOf<typeof UserInviteCodec> {}
 export interface UserStats {
   devices: DeviceStats;
 }
+
+export interface RegistrationData {
+  locale?:            string;
+  userAccountRole?:   UserAccountRole;
+  userLocationRoles?: UserLocationRole;
+}
+
+export interface UserRegistrationTokenMetadata {
+  email:                      string;
+  createdAt?:                 string;
+  tokenExpiresAt?:            string;
+  registrationDataExpiresAt?: string;
+  registrationData:           RegistrationData;
+  accountId?:                 string;
+}

@@ -36,7 +36,8 @@ export class AccountRecord {
       createdAt: this.data.created_at,
       updatedAt: this.data.updated_at,
       groups: this.data.group_id ? [{ id: this.data.group_id }] : [],
-      type: this.data.type_v2 || 'personal'
+      type: this.data.type_v2 || 'personal',
+      pendingInvites: undefined,
     }
   }
 }
