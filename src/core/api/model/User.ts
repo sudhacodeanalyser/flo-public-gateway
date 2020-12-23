@@ -1,9 +1,9 @@
 import * as t from 'io-ts';
 import { Account, DeviceAlarmSettings, DeviceStats, Expandable, Location, TimestampedModel } from '../../api';
-import { NonEmptyString } from '../../api/validator/NonEmptyString';
-import { PhoneNumber } from '../../api/validator/PhoneNumber';
-import { Email } from '../../api/validator/Email';
-import { AdminPassword, Password } from '../../api/validator/Password';
+import { NonEmptyString } from '../validator/NonEmptyString';
+import { PhoneNumber } from '../validator/PhoneNumber';
+import { Email } from '../validator/Email';
+import { AdminPassword, Password } from '../validator/Password';
 
 export interface UserLocationRole {
   locationId: string;
@@ -120,4 +120,27 @@ export interface UserInvite extends t.TypeOf<typeof UserInviteCodec> {}
 
 export interface UserStats {
   devices: DeviceStats;
+}
+
+export interface EmailChangeConfirm {
+  email: string,
+  key: string,
+}
+
+export interface EmailChangeConfirmed extends EmailChangeConfirm {
+  on?: string,
+}
+
+export interface UserEmailChange {
+  id: number,
+  userId: string,
+  created: string,
+  old: EmailChangeConfirmed,
+  new: EmailChangeConfirmed,
+}
+
+export interface UserEmailChangeCreate {
+  userId: string,
+  old: EmailChangeConfirm,
+  new: EmailChangeConfirm,
 }
