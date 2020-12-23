@@ -28,7 +28,7 @@ class UserEmailChangeTable extends PostgresTable<UserEmailChangeData> {
     return this.firstEmailChangeRow(res);
   }
 
-  // 1) init change: insert a row without confirmation dates, return new id
+  // 1) init change: insert a row without confirmation dates, return full object
   public async create(c: UserEmailChangeCreate): Promise<Option<UserEmailChange>> {
     const stmt = `insert into email_change (user_id, old_email,old_conf_key, new_email,new_conf_key) 
       values(?,?,uuid_generate_v4(),?,uuid_generate_v4()) 
