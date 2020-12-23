@@ -1,6 +1,5 @@
-import { Expandable, Location, TimestampedModel, User } from '../../api';
+import { Expandable, Location, UserRegistrationTokenMetadata, TimestampedModel, User } from '../../api';
 import * as t from 'io-ts';
-import { Email } from '../../api/validator/Email';
 
 export enum AccountType {
   ENTERPRISE = 'enterprise',
@@ -35,6 +34,7 @@ export interface Account extends TimestampedModel, AccountMutable {
   users: Array<Expandable<User>>;
   userRoles: AccountUserRole[];
   groups: Array<Expandable<AccountGroup>>;
+  pendingInvites?: UserRegistrationTokenMetadata[];
 }
 
 export const AccountMergeValidator = t.type({

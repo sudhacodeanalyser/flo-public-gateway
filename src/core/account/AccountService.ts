@@ -93,7 +93,8 @@ class AccountService {
       { accountId: userInvite.accountId, roles: userInvite.accountRoles }, 
       userInvite.locationRoles,
       userInvite.locale,
-      sevenDays
+      sevenDays,
+      userInvite.accountId,
     );
 
     const isOwner = !userInvite.accountId;

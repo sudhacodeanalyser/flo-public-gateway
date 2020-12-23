@@ -1,7 +1,7 @@
 import { injectable, inject } from 'inversify';
 import * as t from 'io-ts';
 import UserRegistrationTokenMetadataTable from './UserRegistrationTokenMetadataTable';
-import { UserAccountRole, UserLocationRole } from '../api';
+import { UserAccountRole, UserLocationRole, UserRegistrationTokenMetadata } from '../api';
 import uuid from 'uuid';
 import jwt from 'jsonwebtoken';
 import moment from 'moment';
@@ -12,6 +12,7 @@ import { LocalizationService } from '../service';
 import EmailClient from '../../email/EmailClient';
 import ConflictError from '../api/error/ConflictError';
 import config from '../../config/config';
+import { UserRegistrationTokenMetadataRecord } from './UserRegistrationTokenMetadataRecord';
 
 export const UserRegistrationDataCodec = t.type({
   email: t.string,
@@ -89,7 +90,7 @@ export class UserInviteService {
     await this.emailClient.send(email, templateId, { auth: { token } });
   }
 
-  public async issueToken(email: string, userAccountRole: UserAccountRole, userLocationRoles: UserLocationRole[], locale?: string, ttl?: number): Promise<{ token: string, metadata: InviteTokenData }> {
+  public async issueToken(email: string, userAccountRole: UserAccountRole, userLocationRoles: UserLocationRole[], locale?: string, ttl?: number, accountId?: string): Promise<{ token: string, metadata: InviteTokenData }> {
     const existingToken = await this.getTokenByEmail(email);
 
     if (existingToken) {
@@ -106,7 +107,8 @@ export class UserInviteService {
         locale
       },
       token_expires_at: tokenExpiresAt,
-      registration_data_expires_at: moment().add(30, 'days').toISOString()
+      registration_data_expires_at: moment().add(30, 'days').toISOString(),
+      account_id: accountId,
     };
     const metadata = await this.userRegistrationTokenMetatadataTable.put(tokenData);
     const token = await (new Promise<string>((resolve, reject) =>
@@ -253,5 +255,10 @@ export class UserInviteService {
     if (tokenData) {
       await this.userRegistrationTokenMetatadataTable.remove({ token_id: tokenData.token_id });
     }
+  }
+
+  public async getUserRegistrationTokenMetadataByAccountId(accountId: string): Promise<UserRegistrationTokenMetadata[]> {
+    const records = await this.userRegistrationTokenMetatadataTable.getByAccountId(accountId);
+    return Promise.all(records.map(datum => new UserRegistrationTokenMetadataRecord(datum).toModel()));
   }
 }
