@@ -3,12 +3,14 @@ import { Timestamped, User, UserCreate } from '../api';
 import { UserDetailRecordData } from './UserDetailRecord';
 
 export interface UserRecordData extends Timestamped {
-  id: string,
-  email: string,
-  password: string,
-  source?: string,
-  is_active?: boolean,
-  account_id: string;
+  id: string;
+  email: string;
+  password: string;
+  source?: string;
+  is_active?: boolean;
+  is_system_user?: boolean;
+  is_super_user?: boolean;
+  account_id?: string;
 }
 
 const RecordToModelSchema: StrictSchema<User, UserRecordData & UserDetailRecordData> = {

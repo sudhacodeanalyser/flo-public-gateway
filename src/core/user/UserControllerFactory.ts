@@ -1,10 +1,11 @@
-import { Option, some, fromNullable } from 'fp-ts/lib/Option';
+import { Option, filter, fold, some, fromNullable } from 'fp-ts/lib/Option';
+import { pipe } from 'fp-ts/lib/pipeable';
 import { Container, inject } from 'inversify';
 import { BaseHttpController, httpDelete, httpGet, httpPost, interfaces, queryParam, requestBody, requestParam, request } from 'inversify-express-utils';
 import * as t from 'io-ts';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
-import { UpdateAlarmSettings, UpdateAlarmSettingsCodec, User, UserUpdate, UserUpdateValidator, RetrieveAlarmSettingsFilterCodec, RetrieveAlarmSettingsFilter, EntityAlarmSettings, UserStats } from '../api';
+import { UpdateAlarmSettings, UpdateAlarmSettingsCodec, User, UserUpdate, UserUpdateValidator, RetrieveAlarmSettingsFilterCodec, RetrieveAlarmSettingsFilter, EntityAlarmSettings, UserStats, AdminUserCreate, AdminUserCreateCodec } from '../api';
 import { asyncMethod, authorizationHeader, createMethod, deleteMethod, httpController, parseExpand, withResponseType } from '../api/controllerUtils';
 import Request from '../api/Request';
 import * as Responses from '../api/response';
@@ -15,6 +16,7 @@ import UnauthorizedError from '../api/error/UnauthorizedError';
 import { Password } from '../api/validator/Password';
 import ConcurrencyService from '../../concurrency/ConcurrencyService';
 import LimitReachedError from '../api/error/LimitReachedError';
+import ForbiddenError from '../api/error/ForbiddenError';
 
 export function UserControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
@@ -160,6 +162,58 @@ export function UserControllerFactory(container: Container, apiVersion: number):
     @createMethod
     private async verifyEmailAndCreateUser(@requestBody() emailVerification: EmailVerification): Promise<OAuth2Response> {
       return this.userRegistrationService.verifyEmailAndCreateUser(emailVerification);
+    }
+
+    @httpPost(
+      '/admin',
+      auth,
+      reqValidator.create(t.type({
+        body: AdminUserCreateCodec
+      }))
+    )
+    @createMethod
+    private async createAdminUser(@request() req: Request, @requestBody() adminUserCreate: AdminUserCreate): Promise<void> {
+      const tokenMetadata = req.token;
+      const userId = tokenMetadata && tokenMetadata.user_id;
+
+      if (!tokenMetadata) {
+        throw new UnauthorizedError();
+      } else if (!userId) {
+        throw new ForbiddenError();
+      }
+
+      const isSuperUser = await this.userService.isSuperUser(userId);
+      if (!isSuperUser) {
+        throw new ForbiddenError('You must be a super user to create admin users.');
+      }
+      await this.userService.createAdminUser(adminUserCreate);
+    }
+
+    @httpDelete(
+      '/admin/:id',
+      auth,
+      reqValidator.create(t.type({
+        params: t.type({
+          id: t.string
+        })
+      }))
+    )
+    @deleteMethod
+    private async removeAdminUser(@request() req: Request, @requestParam('id') id: string): Promise<void> {
+      const tokenMetadata = req.token;
+      const userId = tokenMetadata && tokenMetadata.user_id;
+
+      if (!tokenMetadata) {
+        throw new UnauthorizedError();
+      } else if (!userId) {
+        throw new ForbiddenError();
+      }
+
+      const isSuperUser = await this.userService.isSuperUser(userId);
+      if (!isSuperUser) {
+        throw new ForbiddenError('You must be a super user to remove admin users.');
+      }
+      return this.userService.removeAdminUser(id);
     }
 
     @httpPost(

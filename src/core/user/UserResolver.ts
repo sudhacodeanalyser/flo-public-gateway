@@ -4,7 +4,7 @@ import { injectHttpContext, interfaces } from 'inversify-express-utils';
 import _ from 'lodash';
 import { fromPartialRecord } from '../../database/Patch';
 import { DependencyFactoryFactory, DeviceAlarmSettings, EntityAlarmSettingsItem, PropExpand, UpdateAlarmSettings, User, UnitSystem, UserCreate, RetrieveAlarmSettingsFilter, EntityAlarmSettings,
-LocationAlarmSettings, AlarmSettings, AccountType } from '../api';
+LocationAlarmSettings, AlarmSettings, AccountType, AdminUserCreate } from '../api';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import { NotificationService } from '../notification/NotificationService';
 import { AccountResolver, DeviceResolver, LocationResolver, PropertyResolverMap, Resolver } from '../resolver';
@@ -20,6 +20,7 @@ import LocationTreeTable, { LocationTreeRow } from '../location/LocationTreeTabl
 import uuid from 'uuid';
 import { AccountRecord, AccountRecordData } from '../account/AccountRecord';
 import AccountTable from '../account/AccountTable';
+import UserSystemRoleTable from './UserSystemRoleTable';
 
 @injectable()
 class UserResolver extends Resolver<User> {
@@ -206,6 +207,7 @@ class UserResolver extends Resolver<User> {
     @inject('UserDetailTable') private userDetailTable: UserDetailTable,
     @inject('UserLocationRoleTable') private userLocationRoleTable: UserLocationRoleTable,
     @inject('UserAccountRoleTable') private userAccountRoleTable: UserAccountRoleTable,
+    @inject('UserSystemRoleTable') private userSystemRoleTable: UserSystemRoleTable,
     @inject('DependencyFactoryFactory') depFactoryFactory: DependencyFactoryFactory,
     @inject('DefaultUserLocale') private defaultUserLocale: string,
     @inject('NotificationService') private notificationService: NotificationService,
@@ -244,6 +246,11 @@ class UserResolver extends Resolver<User> {
     }
 
     return new UserRecord({ ...updatedUserRecord, ...updatedUserDetailRecord }).toModel();
+  }
+
+  public async isSuperUser(id: string): Promise<boolean> {
+    const user = await this.userTable.get({ id });
+    return user?.is_super_user === true;
   }
 
   public async getUserById(id: string, expandProps?: PropExpand): Promise<User | null> {
@@ -426,6 +433,27 @@ class UserResolver extends Resolver<User> {
     }).toModel();
 
     return user;
+  }
+
+  public async createAdminUser(adminUserCreate: AdminUserCreate): Promise<void> {
+    const id = uuid.v4();
+    await this.userTable.put({
+      id,
+      email: adminUserCreate.email,
+      password: adminUserCreate.password,
+      is_active: true,
+      is_system_user: true,
+      is_super_user: adminUserCreate.isSuperUser
+    });
+    await this.userSystemRoleTable.put({
+      user_id: id,
+      roles: [ 'admin' ]
+    });
+  }
+
+  public async removeAdminUser(id: string): Promise<void> {
+    await this.userSystemRoleTable.remove({ user_id: id });
+    await this.userTable.remove({ id });
   }
 
   public async getByEmail(email: string, expandProps?: PropExpand): Promise<User | null> {

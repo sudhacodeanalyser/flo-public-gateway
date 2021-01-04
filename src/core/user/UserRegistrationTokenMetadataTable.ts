@@ -3,25 +3,16 @@ import DatabaseClient from '../../database/DatabaseClient';
 import DatabaseTable from '../../database/DatabaseTable';
 import { DynamoDbQuery } from '../../database/dynamo/DynamoDbClient';
 import moment from 'moment';
-
-export interface UserRegistrationTokenMetadataRecord {
-  token_id: string;
-  email: string;
-  created_at?: string;
-  token_expires_at?: string;
-  _registration_data_expires_at_secs?: number;
-  registration_data_expires_at?: string;
-  registration_data: any;
-}
+import { UserRegistrationTokenMetadataRecordData } from './UserRegistrationTokenMetadataRecord';
 
 @injectable()
-class UserRegistrationTokenMetadataTable extends DatabaseTable<UserRegistrationTokenMetadataRecord> {
+class UserRegistrationTokenMetadataTable extends DatabaseTable<UserRegistrationTokenMetadataRecordData> {
 
   constructor(@inject('DatabaseClient') dbClient: DatabaseClient) {
     super(dbClient, 'UserRegistrationTokenMetadata');
   }
 
-  public async put(record: UserRegistrationTokenMetadataRecord): Promise<UserRegistrationTokenMetadataRecord> {
+  public async put(record: UserRegistrationTokenMetadataRecordData): Promise<UserRegistrationTokenMetadataRecordData> {
     const registrationDataExpiresAtSecs = record.registration_data_expires_at ?
       moment(record.registration_data_expires_at).unix() :
       undefined;
@@ -33,7 +24,7 @@ class UserRegistrationTokenMetadataTable extends DatabaseTable<UserRegistrationT
     });
   }
 
-  public async getByEmail(email: string): Promise<UserRegistrationTokenMetadataRecord | null> {
+  public async getByEmail(email: string): Promise<UserRegistrationTokenMetadataRecordData | null> {
     const results = await this.query<DynamoDbQuery>({
       IndexName: 'EmailCreatedAtIndex',
       KeyConditionExpression: '#email = :email',
@@ -48,6 +39,22 @@ class UserRegistrationTokenMetadataTable extends DatabaseTable<UserRegistrationT
     });
 
     return results[0] || null;
+  }
+
+  public async getByAccountId(accountId: string): Promise<UserRegistrationTokenMetadataRecordData[]> {
+    const results = await this.query<DynamoDbQuery>({
+      IndexName: 'AccountCreatedIndex',
+      KeyConditionExpression: '#account_id = :account_id',
+      ExpressionAttributeNames: {
+        '#account_id': 'account_id'
+      },
+      ExpressionAttributeValues: {
+        ':account_id': accountId
+      },
+      ScanIndexForward: false,
+    });
+
+    return results;
   }
 
   private sanitizeEmail(email: string): string {
