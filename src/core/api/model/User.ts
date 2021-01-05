@@ -136,3 +136,18 @@ export interface UserRegistrationTokenMetadata {
   registrationData:           RegistrationData;
   accountId?:                 string;
 }
+
+export const ImpersonateUserCodec = t.type({
+  email: t.string,
+  impersonatorEmail: t.string,
+  impersonatorPassword: t.string
+});
+
+export interface ImpersonateUser extends t.TypeOf<typeof ImpersonateUserCodec> {}
+
+export interface ImpersonationToken {
+  token: string;
+  timeNow: number;
+  tokenExpiration: number;
+  userId: string;
+}
