@@ -43,7 +43,11 @@ export function UserControllerFactory(container: Container, apiVersion: number):
       }))
     )
     private async impersonateUser(@requestBody() body: ImpersonateUser): Promise<ImpersonationToken> {
-      const impersonatedUser = await this.userService.getUserByEmail(body.email);
+      const impersonatedUser = await this.userService.getUserByEmail(body.email, { 
+        $select: {
+          id: true
+        }
+      });
       
       if (!impersonatedUser) {
         throw new UnauthorizedError()
