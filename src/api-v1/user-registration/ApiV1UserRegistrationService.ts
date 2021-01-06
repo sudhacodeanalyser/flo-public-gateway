@@ -125,9 +125,7 @@ class ApiV1UserRegistrationService extends HttpService implements UserRegistrati
       }
     };
 
-    console.log(request);
-
-    return await this.sendRequest(request);
+    return this.sendRequest(request);
   }
 }
 
