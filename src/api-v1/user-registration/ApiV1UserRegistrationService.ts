@@ -2,7 +2,7 @@ import { inject, injectable } from 'inversify';
 import { HttpService } from '../../http/HttpService';
 import HttpError from '../../http/HttpError';
 import { EmailAvailabilityCodec } from './models';
-import { UserRegistrationData, EmailAvailability, UserRegistrationService, EmailVerification, OAuth2Response, OAuth2ResponseCodec, RegistrationTokenResponse, RegistrationTokenResponseCodec } from '../../core/user/UserRegistrationService';
+import { UserRegistrationData, EmailAvailability, UserRegistrationService, EmailVerification, OAuth2Response, OAuth2ResponseCodec, RegistrationTokenResponse, RegistrationTokenResponseCodec, ImpersonationToken } from '../../core/user/UserRegistrationService';
 import { isLeft } from 'fp-ts/lib/Either';
 
 import _ from 'lodash';
@@ -113,6 +113,21 @@ class ApiV1UserRegistrationService extends HttpService implements UserRegistrati
     }
 
     return result.right;
+  }
+
+  public async impersonateUser(userId: string, impersonatorEmail: string, impersonatorPassword: string): Promise<ImpersonationToken> {
+    const request = {
+      method: 'POST',
+      url: `${this.apiV1Url}/auth/user/${userId}/impersonate`,
+      body: {
+        username: impersonatorEmail,
+        password: impersonatorPassword
+      }
+    };
+
+    console.log(request);
+
+    return await this.sendRequest(request);
   }
 }
 
