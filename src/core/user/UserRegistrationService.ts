@@ -58,12 +58,19 @@ export type OAuth2Response = t.TypeOf<typeof OAuth2ResponseCodec>;
 
 export type RegistrationTokenResponse = t.TypeOf<typeof RegistrationTokenResponseCodec>;
 
+export interface ImpersonationToken {
+  token: string;
+  timeNow: number;
+  tokenExpiration: number;
+}
+
 export interface UserRegistrationService {
   acceptTermsAndVerifyEmail(data: UserRegistrationData): Promise<void>;
   checkEmailAvailability(email: string): Promise<EmailAvailability>;
   resendVerificationEmail(email: string): Promise<void>;
   verifyEmailAndCreateUser(emailVerification: EmailVerification): Promise<OAuth2Response>;
   getRegistrationTokenByEmail(authToken: string, email: string): Promise<RegistrationTokenResponse>;
+  impersonateUser(userId: string, impersonatorEmail: string, impersonatorPassword: string): Promise<ImpersonationToken>;
 }
 
 export interface InviteTokenData {

@@ -5,7 +5,7 @@ import { BaseHttpController, httpDelete, httpGet, httpPost, interfaces, queryPar
 import * as t from 'io-ts';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
-import { UpdateAlarmSettings, UpdateAlarmSettingsCodec, User, UserUpdate, UserUpdateValidator, RetrieveAlarmSettingsFilterCodec, RetrieveAlarmSettingsFilter, EntityAlarmSettings, UserStats, AdminUserCreate, AdminUserCreateCodec } from '../api';
+import { UpdateAlarmSettings, UpdateAlarmSettingsCodec, User, UserUpdate, UserUpdateValidator, RetrieveAlarmSettingsFilterCodec, RetrieveAlarmSettingsFilter, EntityAlarmSettings, UserStats, AdminUserCreate, AdminUserCreateCodec, ImpersonateUserCodec, ImpersonateUser, ImpersonationToken } from '../api';
 import { asyncMethod, authorizationHeader, createMethod, deleteMethod, httpController, parseExpand, withResponseType } from '../api/controllerUtils';
 import Request from '../api/Request';
 import * as Responses from '../api/response';
@@ -33,6 +33,32 @@ export function UserControllerFactory(container: Container, apiVersion: number):
       @inject('ConcurrencyService') private concurrencyService: ConcurrencyService
     ) {
       super();
+    }
+
+    @httpPost(
+      '/impersonate',
+      // Auth deferred to API v1
+      reqValidator.create(t.type({
+        body: ImpersonateUserCodec
+      }))
+    )
+    private async impersonateUser(@requestBody() body: ImpersonateUser): Promise<ImpersonationToken> {
+      const impersonatedUser = await this.userService.getUserByEmail(body.email, { 
+        $select: {
+          id: true
+        }
+      });
+      
+      if (!impersonatedUser) {
+        throw new UnauthorizedError()
+      }
+
+      const impersonationToken = await this.userRegistrationService.impersonateUser(impersonatedUser.id, body.impersonatorEmail, body.impersonatorPassword);
+
+      return {
+        ...impersonationToken,
+        userId: impersonatedUser.id
+      }
     }
 
     @httpPost(
