@@ -67,7 +67,7 @@
     "squel": "^5.12.2",
     "stripe": "^7.14.0",
     "swagger-jsdoc": "^3.2.9",
-    "swagger-ui-express": "^4.1.6",
+    "swagger-ui-express": "^4.0.2",
     "ts-enum-util": "^4.0.1",
     "twilio": "^3.39.1",
     "uuid": "^3.3.2",
