@@ -1,4 +1,4 @@
-import { interfaces, controller, httpPost, request } from 'inversify-express-utils';
+import { interfaces, controller, httpPost, request, requestBody } from 'inversify-express-utils';
 import { inject, Container } from 'inversify';
 import { SessionService } from '../service';
 import { httpController } from '../api/controllerUtils';
@@ -15,6 +15,14 @@ export function SessionControllerFactory(container: Container, apiVersion: numbe
   const authMiddlewareFactory = container.get<AuthMiddlewareFactory>('AuthMiddlewareFactory');
   const auth = authMiddlewareFactory.create();
 
+  const FirestoreAuthRequestBodyCodec = t.partial({
+    macAddresses: t.array(t.string),
+    locationIds: t.array(t.string),
+    userIds: t.array(t.string),
+  });
+
+  type FirestoreAuthRequestBody = t.TypeOf<typeof FirestoreAuthRequestBodyCodec>;
+
   @httpController({ version: apiVersion }, '/session')
   class SessionController implements interfaces.Controller {
     constructor(
@@ -23,14 +31,21 @@ export function SessionControllerFactory(container: Container, apiVersion: numbe
 
     @httpPost('/firestore',
       auth,
+      reqValidator.create(t.type({
+        body: FirestoreAuthRequestBodyCodec
+      }))
     )
-    private async issueFirestoreToken(@request() req: Request): Promise<FirestoreTokenResponse> {
+    private async issueFirestoreToken(@request() req: Request, @requestBody() body: FirestoreAuthRequestBody): Promise<FirestoreTokenResponse> {
       const token = req.token;
 
       if (!token || !token.user_id) {
         throw new ForbiddenError();
       }
-      return this.sessionService.issueFirestoreToken(token.user_id);
+      return this.sessionService.issueFirestoreToken(token.user_id, {
+        ...(body.macAddresses ? { devices: body.macAddresses } : {}),
+        ...(body.locationIds ? { locations: body.locationIds } : {}),
+        ...(body.userIds ? { users: body.userIds } : {}),
+      });
     }
 
     @httpPost('/logout',

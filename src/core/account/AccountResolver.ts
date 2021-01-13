@@ -9,6 +9,7 @@ import UserAccountRoleTable from '../user/UserAccountRoleTable';
 import { UserAccountRoleRecord } from '../user/UserAccountRoleRecord';
 import { fromPartialRecord } from '../../database/Patch';
 import _ from 'lodash';
+import { UserInviteService } from '../user/UserRegistrationService';
 
 @injectable()
 class AccountResolver extends Resolver<Account> {
@@ -78,7 +79,13 @@ class AccountResolver extends Resolver<Account> {
     },
     type: async (account: Account, shouldExpand: boolean = false) => {
       return account.type || 'personal';
-    }
+    },
+    pendingInvites: async (account: Account, shouldExpand: boolean = false) => {
+      if (!shouldExpand) {
+        return null;
+      }
+      return this.userInviteService.getUserRegistrationTokenMetadataByAccountId(account.id);
+    },
   };
   private locationResolverFactory: () => LocationResolver;
   private userResolverFactory: () => UserResolver;
@@ -86,6 +93,7 @@ class AccountResolver extends Resolver<Account> {
   constructor(
     @inject('AccountTable') private accountTable: AccountTable,
     @inject('UserAccountRoleTable') private userAccountRoleTable: UserAccountRoleTable,
+    @inject('UserInviteService') private userInviteService: UserInviteService,
     @inject('DependencyFactoryFactory') depFactoryFactory: DependencyFactoryFactory,
     @injectHttpContext private readonly httpContext: interfaces.HttpContext
   ) {
