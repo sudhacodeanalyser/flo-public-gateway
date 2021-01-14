@@ -1,5 +1,11 @@
 import { injectable, inject } from 'inversify';
-import { HttpService, HttpError } from '../http/HttpService'
+import { UnsubscribePreferences, BatchUnsubscribePreferences } from '../core/api/model/Email';
+import _ from 'lodash';
+import { HttpError, HttpService } from '../http/HttpService'
+
+export enum EmailTypes {
+  WEEKLY_EMAIL = 1,
+}
 
 @injectable()
 class EmailGatewayService extends HttpService {
@@ -29,6 +35,81 @@ class EmailGatewayService extends HttpService {
     };
 
     await this.sendRequest(request);
+  }
+
+  public async getUnsubscribePreferences(email: string): Promise<UnsubscribePreferences> {
+    const request = {
+      method: 'GET',
+      url: `${this.url}/unsubscribe/email/${email}`
+    }
+
+    return this.sendRequest(request);
+  }
+
+  public async deleteUnsubscribePreferences(email: string): Promise<void>{
+    const request = {
+      method: 'DELETE',
+      url: `${this.url}/unsubscribe/email/${email}`
+    };
+
+    return this.sendRequest(request);
+  }
+
+  public async updateUnsubscribePreferences(email: string, preferences: number[]): Promise<UnsubscribePreferences> {
+    const request = {
+      method: 'POST',
+      url: `${this.url}/unsubscribe/email/${email}`,
+      body: {
+        emailTypeIds: preferences
+      }
+    };
+
+    return await this.sendRequest(request);
+  }
+
+  public async addUnsubscribePreferences(email: string, preferences: number[]): Promise<UnsubscribePreferences> {
+    let currentPreferences;
+    let typeIds;
+
+    try {
+      currentPreferences = await this.getUnsubscribePreferences(email);
+      typeIds = preferences.reduce((acc: number[], id) => acc.includes(id) ? acc : [...acc, id], currentPreferences.emailTypes);
+    } catch (err) {
+      if (err instanceof HttpError && err.statusCode === 404) {
+        typeIds = preferences;
+      } else {
+        throw err;
+      }
+    }
+
+    const request = {
+      method: 'POST',
+      url: `${this.url}/unsubscribe/email/${email}`,
+      body: {
+        emailTypeIds: typeIds
+      }
+    };
+
+    return this.sendRequest(request);
+  }
+
+  public async removeUnsubscribePreferences(email: string, preferences: number[]): Promise<void> {
+    try {
+      const currentPreferences = await this.getUnsubscribePreferences(email);
+      const typeIds = _.without(currentPreferences.emailTypes, ...preferences);
+      if (typeIds.length === 0) {
+        await this.deleteUnsubscribePreferences(email);
+      } else {
+        await this.updateUnsubscribePreferences(email, typeIds);
+      }
+    } catch (err) {
+      if (err instanceof HttpError && err.statusCode === 404) {
+        // user has no unsubscribe preferences
+        return;
+      } else {
+        throw err;
+      }
+    }
   }
 }
 
