@@ -153,6 +153,10 @@ class UserService {
       devices: deviceStats
     };
   }
+
+  public async requestEmailChange(email: string): Promise<void> {
+
+  }
 }
 
 export { UserService };

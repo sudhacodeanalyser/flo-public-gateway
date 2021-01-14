@@ -382,6 +382,19 @@ export function UserControllerFactory(container: Container, apiVersion: number):
     private async retrieveUserStats(@requestParam('id') id: string): Promise<UserStats> {
       return this.userService.retrieveUserStats(id);
     }
+
+    @httpGet(
+      '/email/request-change',
+      authWithId,
+      reqValidator.create(t.type({
+        body: t.type({
+          email: t.string
+        })
+      }))
+    )
+    private async requestEmailChange(@requestParam('id') id: string): Promise<UserStats> {
+      return this.userService.retrieveUserStats(id);
+    }
   }
 
   return UserController;
