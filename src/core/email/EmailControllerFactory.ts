@@ -1,15 +1,13 @@
 import { Container, inject } from "inversify";
 import { BaseHttpController, interfaces, httpPost, requestParam, httpGet } from 'inversify-express-utils';
-import * as O from 'fp-ts/lib/Option'
+import * as O from 'fp-ts/lib/Option';
 import * as t from 'io-ts';
 import { pipe } from 'fp-ts/lib/pipeable';
-import { httpController } from "../api/controllerUtils";
+import { httpController, asyncMethod } from "../api/controllerUtils";
 import { EmailGatewayService, EmailTypes } from '../../email/EmailGatewayService';
-import { asyncMethod } from '../api/controllerUtils'
 import ReqValidationMiddlewareFactory from "../..//validation/ReqValidationMiddlewareFactory";
 import { UserService } from "../user/UserService";
 import ResourceDoesNotExistError from "../api/error/ResourceDoesNotExistError";
-import { isNone } from "fp-ts/lib/Option";
 import UnauthorizedError from "../api/error/UnauthorizedError";
 import { UnsubscribePreferences } from "../api/model/Email";
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
@@ -80,7 +78,7 @@ export function EmailControllerFactory(container: Container, apiVersion: number)
         }
       });
 
-      if (isNone(userData) || !userData.value.email) {
+      if (O.isNone(userData) || !userData.value.email) {
         throw new ResourceDoesNotExistError('User does not exist.');
       }
 
@@ -115,7 +113,7 @@ export function EmailControllerFactory(container: Container, apiVersion: number)
         }
       });
 
-      if (isNone(userData) || !userData.value.email) {
+      if (O.isNone(userData) || !userData.value.email) {
         throw new ResourceDoesNotExistError('User does not exist.');
       }
 

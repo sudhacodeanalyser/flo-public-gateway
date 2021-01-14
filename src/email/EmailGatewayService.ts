@@ -64,7 +64,7 @@ class EmailGatewayService extends HttpService {
       }
     };
 
-    return await this.sendRequest(request);
+    return this.sendRequest(request);
   }
 
   public async addUnsubscribePreferences(email: string, preferences: number[]): Promise<UnsubscribePreferences> {
