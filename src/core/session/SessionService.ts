@@ -9,7 +9,7 @@ import { AuthCache } from '../../auth/AuthCache';
 import { ApiV1LogoutService } from '../../api-v1/logout/ApiV1LogoutService';
 import ValidationError from '../api/error/ValidationError';
 
-const MAX_AUTH_DEVICE_ASSETS = 20;
+const MAX_AUTH_DEVICE_ASSETS = 50;
 
 @injectable()
 class SessionService {
