@@ -4,6 +4,7 @@ import { NonEmptyString } from '../validator/NonEmptyString';
 import { PhoneNumber } from '../validator/PhoneNumber';
 import { Email } from '../validator/Email';
 import { AdminPassword, Password } from '../validator/Password';
+import { convertEnumtoCodec } from '../enumUtils';
 
 export interface UserLocationRole {
   locationId: string;
@@ -143,6 +144,36 @@ export interface UserEmailChange {
   created: string;
   old: EmailChangeConfirmed;
   new: EmailChangeConfirmed;
+}
+
+export interface UserEmailChangeResponse {
+  userId: string;
+  newEmail: string;
+  oldEmail: string;
+}
+
+export enum UserEmailType {
+  CONFIRM_NEW_EMAIL = 'new',
+  CONFIRM_OLD_EMAIL = 'old'
+}
+
+export const UserEmailTypeCodec = convertEnumtoCodec(UserEmailType);
+
+export const EmailChangeVerifyRequestCodec = t.type({
+  confirmationId: t.number,
+  confirmationKey: t.string,
+  type: UserEmailTypeCodec,
+});
+
+export interface EmailChangeVerifyRequest extends t.TypeOf<typeof EmailChangeVerifyRequestCodec> {}
+
+export enum EmailChangeStatus {
+  COMPLETED = 'completed',
+  PENDING = 'pending'
+}
+
+export interface UserEmailChangeVerifyResponse extends UserEmailChangeResponse {
+  status: EmailChangeStatus;
 }
 
 export interface RegistrationData {

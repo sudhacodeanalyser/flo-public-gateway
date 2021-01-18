@@ -5,7 +5,7 @@ import { BaseHttpController, httpDelete, httpGet, httpPost, interfaces, queryPar
 import * as t from 'io-ts';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
-import { UpdateAlarmSettings, UpdateAlarmSettingsCodec, User, UserUpdate, UserUpdateValidator, RetrieveAlarmSettingsFilterCodec, RetrieveAlarmSettingsFilter, EntityAlarmSettings, UserStats, AdminUserCreate, AdminUserCreateCodec, ImpersonateUserCodec, ImpersonateUser, ImpersonationToken } from '../api';
+import { UpdateAlarmSettings, UpdateAlarmSettingsCodec, User, UserUpdate, UserUpdateValidator, RetrieveAlarmSettingsFilterCodec, RetrieveAlarmSettingsFilter, EntityAlarmSettings, UserStats, AdminUserCreate, AdminUserCreateCodec, ImpersonateUserCodec, ImpersonateUser, ImpersonationToken, UserEmailChangeResponse, EntityAlarmSettingsItemCodec, UserEmailTypeCodec, EmailChangeVerifyRequest, EmailChangeVerifyRequestCodec, UserEmailChangeVerifyResponse } from '../api';
 import { asyncMethod, authorizationHeader, createMethod, deleteMethod, httpController, parseExpand, withResponseType } from '../api/controllerUtils';
 import Request from '../api/Request';
 import * as Responses from '../api/response';
@@ -17,6 +17,9 @@ import { Password } from '../api/validator/Password';
 import ConcurrencyService from '../../concurrency/ConcurrencyService';
 import LimitReachedError from '../api/error/LimitReachedError';
 import ForbiddenError from '../api/error/ForbiddenError';
+import _ from 'lodash';
+import { UserEmailChangeService } from './UserEmailChangeService';
+import { Email } from '../api/validator/Email';
 
 export function UserControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
@@ -30,7 +33,8 @@ export function UserControllerFactory(container: Container, apiVersion: number):
       @inject('UserService') private userService: UserService,
       @inject('UserRegistrationService') private userRegistrationService: UserRegistrationService,
       @inject('PasswordResetService') private passwordResetService: PasswordResetService,
-      @inject('ConcurrencyService') private concurrencyService: ConcurrencyService
+      @inject('ConcurrencyService') private concurrencyService: ConcurrencyService,
+      @inject('UserEmailChangeService') private userEmailChangeService: UserEmailChangeService,
     ) {
       super();
     }
@@ -383,17 +387,34 @@ export function UserControllerFactory(container: Container, apiVersion: number):
       return this.userService.retrieveUserStats(id);
     }
 
-    @httpGet(
-      '/email/request-change',
+    @httpPost(
+      '/:id/email/request-change',
       authWithId,
       reqValidator.create(t.type({
+        params: t.type({
+          id: t.string
+        }),
         body: t.type({
-          email: t.string
+          email: Email,
         })
       }))
     )
-    private async requestEmailChange(@requestParam('id') id: string): Promise<UserStats> {
-      return this.userService.retrieveUserStats(id);
+    private async requestEmailChange(@requestParam('id') id: string, @requestBody() { email }: { email: string }): Promise<UserEmailChangeResponse> {
+      return this.userEmailChangeService.requestEmailChange(email, id);
+    }
+
+    @httpPost(
+      '/:id/email/verify-change',
+      authWithId,
+      reqValidator.create(t.type({
+        params: t.type({
+          id: t.string
+        }),
+        body: EmailChangeVerifyRequestCodec
+      }))
+    )
+    private async verifyEmailChange(@requestParam('id') userId: string, @requestBody() body: EmailChangeVerifyRequest): Promise<UserEmailChangeVerifyResponse> {
+      return this.userEmailChangeService.verifyEmailChange(userId, body.type, body.confirmationId, body.confirmationKey);
     }
   }
 

@@ -2,7 +2,7 @@ import { fold, fromNullable, Option } from 'fp-ts/lib/Option';
 import { pipe } from 'fp-ts/lib/pipeable';
 import { inject, injectable } from 'inversify';
 import _ from 'lodash';
-import { PropExpand, UpdateAlarmSettings, User, UserUpdate, UserCreate, RetrieveAlarmSettingsFilter, EntityAlarmSettings, UserStats, DependencyFactoryFactory, AdminUserCreate } from '../api';
+import { PropExpand, UpdateAlarmSettings, User, UserUpdate, UserCreate, RetrieveAlarmSettingsFilter, EntityAlarmSettings, UserStats, DependencyFactoryFactory, AdminUserCreate, UserEmailChangeResponse } from '../api';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import ValidationError from '../api/error/ValidationError';
 import ConflictError from '../api/error/ConflictError';
@@ -152,10 +152,6 @@ class UserService {
     return {
       devices: deviceStats
     };
-  }
-
-  public async requestEmailChange(email: string): Promise<void> {
-
   }
 }
 
