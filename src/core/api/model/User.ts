@@ -1,9 +1,10 @@
 import * as t from 'io-ts';
 import { Account, DeviceAlarmSettings, DeviceStats, Expandable, Location, TimestampedModel } from '../../api';
-import { NonEmptyString } from '../../api/validator/NonEmptyString';
-import { PhoneNumber } from '../../api/validator/PhoneNumber';
-import { Email } from '../../api/validator/Email';
-import { AdminPassword, Password } from '../../api/validator/Password';
+import { NonEmptyString } from '../validator/NonEmptyString';
+import { PhoneNumber } from '../validator/PhoneNumber';
+import { Email } from '../validator/Email';
+import { AdminPassword, Password } from '../validator/Password';
+import { convertEnumtoCodec } from '../enumUtils';
 
 export interface UserLocationRole {
   locationId: string;
@@ -120,6 +121,60 @@ export interface UserInvite extends t.TypeOf<typeof UserInviteCodec> {}
 
 export interface UserStats {
   devices: DeviceStats;
+}
+
+export interface UserEmailChangeCreate {
+  userId: string;
+  old: EmailChangeReq;
+  new: EmailChangeReq;
+}
+
+export interface EmailChangeReq {
+  email: string;
+}
+
+export interface EmailChangeConfirmed extends EmailChangeReq {
+  key: string;
+  on?: string;
+}
+
+export interface UserEmailChange {
+  id: number;
+  userId: string;
+  created: string;
+  old: EmailChangeConfirmed;
+  new: EmailChangeConfirmed;
+}
+
+export interface UserEmailChangeResponse {
+  userId: string;
+  newEmail: string;
+  oldEmail: string;
+}
+
+export enum UserEmailType {
+  CONFIRM_NEW_EMAIL = 'new',
+  CONFIRM_OLD_EMAIL = 'old'
+}
+
+export const UserEmailTypeCodec = convertEnumtoCodec(UserEmailType);
+
+export const EmailChangeVerifyRequestCodec = t.type({
+  confirmationId: t.number,
+  confirmationKey: t.string,
+  type: UserEmailTypeCodec,
+});
+
+export interface EmailChangeVerifyRequest extends t.TypeOf<typeof EmailChangeVerifyRequestCodec> {}
+
+export enum EmailChangeStatus {
+  COMPLETED = 'completed',
+  PENDING_OLD = 'pendingOld',
+  PENDING_NEW = 'pendingNew',
+}
+
+export interface UserEmailChangeVerifyResponse extends UserEmailChangeResponse {
+  status: EmailChangeStatus;
 }
 
 export interface RegistrationData {
