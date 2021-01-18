@@ -169,7 +169,8 @@ export interface EmailChangeVerifyRequest extends t.TypeOf<typeof EmailChangeVer
 
 export enum EmailChangeStatus {
   COMPLETED = 'completed',
-  PENDING = 'pending'
+  PENDING_OLD = 'pendingOld',
+  PENDING_NEW = 'pendingNew',
 }
 
 export interface UserEmailChangeVerifyResponse extends UserEmailChangeResponse {

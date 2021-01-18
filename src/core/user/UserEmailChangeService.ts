@@ -97,7 +97,7 @@ class UserEmailChangeService {
         () => {
           throw new ForbiddenError('Invalid confirmation id/key');
         },
-        d => (d.old.on && d.new.on) ? EmailChangeStatus.COMPLETED : EmailChangeStatus.PENDING
+        d => (d.old.on && d.new.on) ? EmailChangeStatus.COMPLETED : !d.old.on ? EmailChangeStatus.PENDING_OLD : EmailChangeStatus.PENDING_NEW
       )
     );
 
