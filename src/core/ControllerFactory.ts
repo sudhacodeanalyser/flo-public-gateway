@@ -23,6 +23,7 @@ import { DeliveryHookControllerFactory } from './delivery-hook/DeliveryHookContr
 import { HeadsUpControllerFactory } from './heads-up/HeadsUpControllerFactory';
 import { EventControllerFactory } from './event/EventControllerFactory';
 import { AccountSyncControllerFactory } from '../auth/moen/AccountSyncControllerFactory'
+import { EmailControllerFactory } from './email/EmailControllerFactory';
 
 export default function ControllerFactory(container: Container, apiVersion: number = 2): interfaces.Controller[] {
   return [
@@ -48,6 +49,7 @@ export default function ControllerFactory(container: Container, apiVersion: numb
     HeadsUpControllerFactory,
     EventControllerFactory,
     AccountSyncControllerFactory,
+    EmailControllerFactory,
   ]
   .map(controllerFactory => controllerFactory(container, apiVersion));
 }
