@@ -114,9 +114,11 @@ class UserEmailChangeService {
   }
 
   private async sendConfirmationEmail(email: string, key: string, confirmationId: string, type: UserEmailType, locale?: string): Promise<void> {
-    const { items: [{ value: templateId }] } = await this.localizationService.getAssets(
-      { name: 'user.email-change.template', type: 'email', locale }
-    );
+    const { localizedValue: templateId } = await this.localizationService.getLocalizedValue({
+      name: 'user.email-change.template',
+      type: 'email',
+      locale: locale || 'en-us',
+    });
 
     return this.emailClient.send(email, templateId, {
       key,
