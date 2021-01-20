@@ -411,7 +411,7 @@ class UserResolver extends Resolver<User> {
       this.userTable.put({
         id,
         account_id: userCreate.account.id,
-        email: userCreate.email,
+        email: userCreate.email.toLowerCase().trim(),
         password: userCreate.password,
         source: userCreate.source,
         is_active: true
