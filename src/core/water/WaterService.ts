@@ -476,7 +476,6 @@ class WaterService {
       .map(deviceItems => {
         const items = _.chain(deviceItems.items || [])
           .filter(({ date }) => {
-
             return date >= startDate && date < endDate;
           })
           .groupBy(({ date }) =>
@@ -488,13 +487,12 @@ class WaterService {
           )
           .map((hours, aggregatedInterval) => {
             const nonMissingData = hours.filter(({ missing }) => !missing);
-
             return {
               date: moment.tz(aggregatedInterval, timezone).toISOString(),
               used: _.sumBy(hours, 'used'),
-              psi: _.meanBy(hours, 'psi'),
-              temp: _.meanBy(hours, 'temp'),
-              rate: _.meanBy(hours, 'rate')
+              psi: _.meanBy(nonMissingData, 'psi'),
+              temp: _.meanBy(nonMissingData, 'temp'),
+              rate: _.meanBy(nonMissingData, 'rate')
             };
           })
           .sortBy('date')
