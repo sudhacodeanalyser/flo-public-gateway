@@ -486,7 +486,7 @@ class WaterService {
                 moment(date).tz(timezone).format('YYYY-MM')
           )
           .map((hours, aggregatedInterval) => {
-            const nonMissingData = hours.filter(({ missing }) => missing === undefined || !missing);
+            const nonMissingData = hours.filter(({ missing }) => !missing);
             return {
               date: moment.tz(aggregatedInterval, timezone).toISOString(),
               used: _.sumBy(hours, 'used'),
