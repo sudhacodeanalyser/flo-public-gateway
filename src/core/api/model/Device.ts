@@ -383,6 +383,8 @@ export interface Lte extends LteCreate {
   passwordOffset: number;
 }
 
-export interface QrCode {
+export interface LteContext {
   qrCode: string;
+  imei: string;
+  iccid: string;
 }
