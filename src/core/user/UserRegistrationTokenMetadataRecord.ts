@@ -9,6 +9,7 @@ export interface UserRegistrationTokenMetadataRecordData {
   registration_data_expires_at?: string;
   registration_data: any;
   account_id?: string;
+  support_emails?: string[];
 }
 
 export class UserRegistrationTokenMetadataRecord {
@@ -29,6 +30,7 @@ export class UserRegistrationTokenMetadataRecord {
         userLocationRoles: this.data.registration_data?.userLocationRoles,
       },
       accountId: this.data.account_id,
+      supportEmails: this.data.support_emails,
     }
   }
 }

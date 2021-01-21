@@ -92,7 +92,7 @@ export function AccountControllerFactory(container: Container, apiVersion: numbe
       reqValidator.create(t.type({
         body: InviteAcceptValidator
       }))
-    ) 
+    )
     private async acceptInvite(@request() req: Request, @requestBody() body: InviteAcceptData): Promise<User> {
       const token = req.get('Authorization');
       const tokenStr = token && token.split(' ')[1];
@@ -112,7 +112,7 @@ export function AccountControllerFactory(container: Container, apiVersion: numbe
         } else {
           auth(req, res, next);
         }
-        
+
       },
       reqValidator.create(t.type({
         query: t.union([
@@ -126,7 +126,7 @@ export function AccountControllerFactory(container: Container, apiVersion: numbe
       }))
     )
     private async getInviteToken(@request() req: Request, @queryParam('email') email?: string,  @queryParam('token') token?: string): Promise<{ token: string, metadata: InviteTokenData }> {
-      const tokenData = email !== undefined ? 
+      const tokenData = email !== undefined ?
         await this.accountService.getInvitationTokenByEmail(email) :
         token && {
           token,
@@ -168,7 +168,7 @@ export function AccountControllerFactory(container: Container, apiVersion: numbe
     @withResponseType<Account, Responses.AccountResponse>(Responses.Account.fromModel)
     private async getAccount(@requestParam('id') id: string, @queryParam('expand') expand?: string): Promise<Option<Account>> {
       const expandProps = parseExpand(expand);
-      
+
       return this.accountService.getAccountById(id, expandProps);
     }
 
@@ -218,7 +218,7 @@ export function AccountControllerFactory(container: Container, apiVersion: numbe
       return this.accountService.updateAccountUserRole(id, userId, roles);
     }
 
-    
+
   }
 
   return AccountController;
