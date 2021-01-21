@@ -7,6 +7,7 @@ import { BaseLte, Lte, LteCreate, SsidCredentials, SsidCredentialsWithContext } 
 import { pipe } from 'fp-ts/lib/pipeable';
 import crypto from 'crypto';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
+import NotFoundError from '../api/error/NotFoundError';
 
 type Option<T> = O.Option<T>;
 
@@ -37,6 +38,17 @@ class LteService {
         imeiLast4: lte.imei.slice(-4),
         iccidLast4: lte.iccid.slice(-4)
       }))
+    );
+  }
+
+  public async retrieveQrCode(imei: string): Promise<string> {
+    const maybeLte = await this.lteTable.getByImei(imei);
+    return pipe(
+      maybeLte,
+      O.fold(
+        async () => { throw new NotFoundError('LTE Device not found'); },
+        async lte => lte.qrCode
+      )
     );
   }
 

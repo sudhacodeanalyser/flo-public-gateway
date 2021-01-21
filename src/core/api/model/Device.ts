@@ -382,3 +382,7 @@ export interface Lte extends LteCreate {
   ssidOffset: number;
   passwordOffset: number;
 }
+
+export interface QrCode {
+  qrCode: string;
+}
