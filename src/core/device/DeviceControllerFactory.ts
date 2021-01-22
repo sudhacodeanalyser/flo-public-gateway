@@ -8,7 +8,7 @@ import { QrData, QrDataValidator } from '../../api-v1/pairing/PairingService';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import { InternalDeviceService } from '../../internal-device-service/InternalDeviceService';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
-import { DependencyFactoryFactory, Device, DeviceActionRules, DeviceActionRulesCreate, DeviceActionRulesCreateCodec, DeviceCreate, DeviceCreateValidator, DeviceType, DeviceUpdate, DeviceUpdateValidator, SystemMode as DeviceSystemMode, SystemModeCodec as DeviceSystemModeCodec, HardwareThresholdsCodec, HardwareThresholds, FirmwareInfo, SsidCredentials, BaseLteCodec, BaseLte, SsidCredentialsWithContext, LteContext } from '../api';
+import { DependencyFactoryFactory, Device, DeviceActionRules, DeviceActionRulesCreate, DeviceActionRulesCreateCodec, DeviceCreate, DeviceCreateValidator, DeviceType, DeviceUpdate, DeviceUpdateValidator, SystemMode as DeviceSystemMode, SystemModeCodec as DeviceSystemModeCodec, HardwareThresholdsCodec, HardwareThresholds, FirmwareInfo, SsidCredentials, BaseLteCodec, BaseLte, SsidCredentialsWithContext, LteContext,  DeviceSyncBodyCodec, DeviceSyncOptions } from '../api';
 import { asyncMethod, authorizationHeader, createMethod, deleteMethod, httpController, parseExpand, withResponseType } from '../api/controllerUtils';
 import { convertEnumtoCodec } from '../api/enumUtils';
 import ForbiddenError from '../api/error/ForbiddenError';
@@ -29,6 +29,7 @@ import { PuckAuthMiddleware } from '../../auth/PuckAuthMiddleware';
 import { MachineLearningService } from '../../machine-learning/MachineLearningService';
 import ConcurrencyService from '../../concurrency/ConcurrencyService';
 import ConflictError from '../api/error/ConflictError';
+import { DeviceSyncService } from './DeviceSyncService';
 
 const { isNone, some  } = O;
 type Option<T> = O.Option<T>;
@@ -126,7 +127,8 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       @inject('PuckPairingTokenTTL') private readonly puckPairingTokenTTL: number,
       @inject('MachineLearningService') private mlService: MachineLearningService,
       @inject('LteService') private lteService: LteService,
-      @inject('ConcurrencyService') private concurrencyService: ConcurrencyService
+      @inject('ConcurrencyService') private concurrencyService: ConcurrencyService,
+      @inject('DeviceSyncService') private deviceSyncService: DeviceSyncService,
     ) {
       super();
     }
@@ -279,13 +281,16 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       reqValidator.create(t.type({
         params: t.type({
           id: t.string
-        })
+        }),
+        body: DeviceSyncBodyCodec
       }))
     )
-    private async syncDevice(@requestParam('id') id: string): Promise<void> {
-
-      const macAddress = await this.mapIcdToMacAddress(id);
-      return this.internalDeviceService.syncDevice(macAddress);
+    private async syncDevice(@requestParam('id') id: string, @requestBody() body: DeviceSyncOptions): Promise<void> {
+      const device = await this.deviceService.getDeviceById(id);
+      if (isNone(device)) {
+        throw new ResourceDoesNotExistError('Device does not exist.');
+      }
+      return this.deviceSyncService.synchronize(device.value, body);
     }
 
     @httpDelete('/:id',

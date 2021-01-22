@@ -383,8 +383,20 @@ export interface Lte extends LteCreate {
   passwordOffset: number;
 }
 
+export const DeviceSyncBodyCodec = t.partial({
+  additional: t.partial({
+    syncInstallEvent: t.boolean,
+    syncPesSchedule: t.boolean,
+    syncEnterpriseSettings: t.boolean,
+    syncFloSenseModel: t.boolean,
+  })
+});
+
+export interface DeviceSyncOptions extends t.TypeOf<typeof DeviceSyncBodyCodec> {}
+
 export interface LteContext {
   qrCode: string;
   imei: string;
   iccid: string;
 }
+

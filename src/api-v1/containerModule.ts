@@ -14,6 +14,8 @@ import { ApiV1IrrigationScheduleService } from './irrigation-schedule/ApiV1Irrig
 import { ApiV1DeviceSystemModeService } from './device-system-mode/ApiV1DeviceSystemModeService';
 import { ApiV1DirectiveService } from './directive/ApiV1DirectiveService';
 import { ApiV1LogoutService } from './logout/ApiV1LogoutService';
+import { OnboardingService } from '../core/device/OnboardingService';
+import { ApiV1OnboardingService } from './onboarding-event/ApiV1OnboardingService';
 
 export default new ContainerModule((bind: interfaces.Bind) => {
   bind<string>('ApiV1Token').toConstantValue(config.apiV1Token);
@@ -49,5 +51,6 @@ export default new ContainerModule((bind: interfaces.Bind) => {
       return directiveService;
    }
   });
+  bind<OnboardingService>('OnboardingService').to(ApiV1OnboardingService);
 });
 
