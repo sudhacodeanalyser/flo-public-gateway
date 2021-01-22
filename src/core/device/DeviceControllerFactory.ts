@@ -220,7 +220,6 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
         })
       }))
     )
-    @createMethod
     private async retrieveQrCode(@requestBody() { imei }: { imei: string}): Promise<LteContext> {
       return this.lteService.retrieveQrCode(imei);
     }
