@@ -30,7 +30,7 @@ class DeviceSyncService {
     this.logger.info(`DeviceSyncService.synchronize: Starting sync process for device ${device.macAddress}`, syncOptions);
     const syncPromises = _.chain(syncOptions)
       .pickBy(value => value === true)
-      .map((val, key) => syncDefinition[key] ? syncDefinition[key](device) : Promise.resolve())
+      .map(async (val, key) => syncDefinition[key] ? syncDefinition[key](device) : {})
       .value();
 
     await Promise.all(syncPromises);
