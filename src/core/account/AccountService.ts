@@ -89,12 +89,13 @@ class AccountService {
     );
 
     const tokenData = await this.userInviteService.issueToken(
-      userInvite.email, 
-      { accountId: userInvite.accountId, roles: userInvite.accountRoles }, 
+      userInvite.email,
+      { accountId: userInvite.accountId, roles: userInvite.accountRoles },
       userInvite.locationRoles,
       userInvite.locale,
       sevenDays,
       userInvite.accountId,
+      userInvite.metadata
     );
 
     const isOwner = !userInvite.accountId;
@@ -123,7 +124,7 @@ class AccountService {
     if (!tokenData) {
       throw new NotFoundError('Invitation not found.');
     }
-  
+
     const isOwner = tokenData.metadata.userAccountRole.roles.includes('owner');
 
     await this.userInviteService.sendInvite(tokenData.metadata.email, tokenData.token, tokenData.metadata.locale, isOwner);
@@ -149,7 +150,7 @@ class AccountService {
       locale: tokenData.locale ? NonEmptyStringFactory.create(tokenData.locale) : undefined,
       account: { id: accountId },
       email: EmailFactory.create(tokenData.email),
-      ...data 
+      ...data
     });
 
     if (!tokenData.userAccountRole.accountId) {
@@ -166,7 +167,7 @@ class AccountService {
 
     await Promise.all([
       this.updateAccountUserRole(accountId, user.id, tokenData.userAccountRole.roles),
-      ...tokenData.userLocationRoles.map(({ locationId, roles }) => 
+      ...tokenData.userLocationRoles.map(({ locationId, roles }) =>
         locationService.addLocationUserRole(locationId, user.id, roles, false)
       )
     ]);
@@ -217,7 +218,7 @@ class AccountService {
       }
     });
 
-    if (locationMerge) {     
+    if (locationMerge) {
       const sourceLocationIds = new Set(locations.map(l => l.id))
       const invalidSourceLocations = locationMerge
         .filter(({ sourceLocationId }) => !sourceLocationIds.has(sourceLocationId));
@@ -236,14 +237,14 @@ class AccountService {
 
       await Promise.all(
         locationMerge
-          .map(({ sourceLocationId, destLocationId }) => 
+          .map(({ sourceLocationId, destLocationId }) =>
             locationService.transferDevices(destLocationId, sourceLocationId)
           )
       );
 
       await Promise.all(
         locationMerge
-          .map(({ sourceLocationId, destLocationId }) => 
+          .map(({ sourceLocationId, destLocationId }) =>
             this.notificationService.moveEvents(sourceAccountId, destAccountId, sourceLocationId, destLocationId)
           )
       );
@@ -255,10 +256,10 @@ class AccountService {
             return [id, l.id]
           })
       );
-  
+
       await Promise.all(
         locationMappingPairs
-          .map(([sourceLocationId, destLocationId]: string[]) => 
+          .map(([sourceLocationId, destLocationId]: string[]) =>
             this.notificationService.moveEvents(sourceAccountId, destAccountId, sourceLocationId, destLocationId)
           )
       )
@@ -271,7 +272,7 @@ class AccountService {
       throw new Error('Destination account not found.');
     }
 
-    return updatedDestAccount; 
+    return updatedDestAccount;
   }
 
   private async getAllUnitLocations(userId: string): Promise<string[]> {
@@ -292,7 +293,7 @@ class AccountService {
         ]
       }
       return locationIds;
-    } 
+    }
 
     return pageThruLocations();
   }
@@ -303,15 +304,17 @@ class AccountService {
 
   private async notifyUserInvited(tokenMetadata: InviteTokenData): Promise<void> {
     if (!tokenMetadata.userAccountRole.accountId) {
+      const notifyEmails = tokenMetadata.supportEmails && !_.isEmpty(tokenMetadata.supportEmails) ? tokenMetadata.supportEmails : [config.defaultNotifyAccountStatusEmail];
       const { items: [{ value: templateId }]} = await this.localizationService.getAssets({ name: 'enterprise.account-status.moen.template', type: 'email', locale: 'en-us' });
-      await this.emailClient.send(config.defaultNotifyAccountStatusEmail, templateId, { email: tokenMetadata.email, status: AccountStatus.USER_INVITED });
+      await Promise.all(notifyEmails.map((notifyEmail) => this.emailClient.send(notifyEmail, templateId, { email: tokenMetadata.email, status: AccountStatus.USER_INVITED })));
     }
   }
 
   private async notifyAccountCreated(tokenMetadata: InviteTokenData): Promise<void> {
-    if(!tokenMetadata.userAccountRole.accountId) {
+    if (!tokenMetadata.userAccountRole.accountId) {
+      const notifyEmails = tokenMetadata.supportEmails && !_.isEmpty(tokenMetadata.supportEmails) ? tokenMetadata.supportEmails : [config.defaultNotifyAccountStatusEmail];
       const { items: [{ value: templateId }]} = await this.localizationService.getAssets({ name: 'enterprise.account-status.moen.template', type: 'email', locale: 'en-us' });
-      await this.emailClient.send(config.defaultNotifyAccountStatusEmail, templateId, { email: tokenMetadata.email, status: AccountStatus.ACCOUNT_CREATED });
+      await Promise.all(notifyEmails.map((notifyEmail) => this.emailClient.send(notifyEmail, templateId, { email: tokenMetadata.email, status: AccountStatus.ACCOUNT_CREATED })));
     }
   }
 }

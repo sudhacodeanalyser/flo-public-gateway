@@ -393,3 +393,10 @@ export const DeviceSyncBodyCodec = t.partial({
 });
 
 export interface DeviceSyncOptions extends t.TypeOf<typeof DeviceSyncBodyCodec> {}
+
+export interface LteContext {
+  qrCode: string;
+  imei: string;
+  iccid: string;
+}
+

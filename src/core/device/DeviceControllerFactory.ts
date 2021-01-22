@@ -8,7 +8,7 @@ import { QrData, QrDataValidator } from '../../api-v1/pairing/PairingService';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import { InternalDeviceService } from '../../internal-device-service/InternalDeviceService';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
-import { DependencyFactoryFactory, Device, DeviceActionRules, DeviceActionRulesCreate, DeviceActionRulesCreateCodec, DeviceCreate, DeviceCreateValidator, DeviceType, DeviceUpdate, DeviceUpdateValidator, SystemMode as DeviceSystemMode, SystemModeCodec as DeviceSystemModeCodec, HardwareThresholdsCodec, HardwareThresholds, FirmwareInfo, SsidCredentials, BaseLteCodec, BaseLte, SsidCredentialsWithContext, DeviceSyncBodyCodec, DeviceSyncOptions } from '../api';
+import { DependencyFactoryFactory, Device, DeviceActionRules, DeviceActionRulesCreate, DeviceActionRulesCreateCodec, DeviceCreate, DeviceCreateValidator, DeviceType, DeviceUpdate, DeviceUpdateValidator, SystemMode as DeviceSystemMode, SystemModeCodec as DeviceSystemModeCodec, HardwareThresholdsCodec, HardwareThresholds, FirmwareInfo, SsidCredentials, BaseLteCodec, BaseLte, SsidCredentialsWithContext, LteContext,  DeviceSyncBodyCodec, DeviceSyncOptions } from '../api';
 import { asyncMethod, authorizationHeader, createMethod, deleteMethod, httpController, parseExpand, withResponseType } from '../api/controllerUtils';
 import { convertEnumtoCodec } from '../api/enumUtils';
 import ForbiddenError from '../api/error/ForbiddenError';
@@ -210,6 +210,20 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
           ssidCredentials => ssidCredentials
         )
       );
+    }
+
+    // Special endpoint for retrieving LTE device QR Code - Admins only
+    @httpPost(
+      '/lte/qr-code',
+      auth,
+      reqValidator.create(t.type({
+        body: t.type({
+          imei: t.string
+        })
+      }))
+    )
+    private async retrieveQrCode(@requestBody() { imei }: { imei: string}): Promise<LteContext> {
+      return this.lteService.retrieveQrCode(imei);
     }
 
     @httpGet('/:id',
