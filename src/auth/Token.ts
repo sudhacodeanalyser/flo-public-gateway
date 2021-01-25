@@ -18,4 +18,10 @@ export const OAuth2TokenCodec = t.type({
   exp: t.union([t.undefined, t.number])
 });
 
+export const RegistrationTokenCodec = t.type({
+  jti: t.string,
+  iat: t.number,
+  exp: t.union([t.undefined, t.number])
+});
+
 export type TokenMetadata = any;
