@@ -663,6 +663,56 @@ paths:
         400:
           description: Invalid request body
 
+  /api/v2/devices/{id}/sync:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Device ID
+    post:
+      summary: Syncs device state
+      tags:
+        - Devices
+        - Sync
+      produces:
+        - application/json
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                additional:
+                  type: object
+                  properties:
+                    syncInstallEvent:
+                      type: boolean
+                      default: false
+                    syncPesSchedule:
+                      type: boolean
+                      default: false
+                    syncEnterpriseSettings:
+                      type: boolean
+                      default: false
+                    syncFloSenseModel:
+                      type: boolean
+                      default: false
+              example:
+                additional:
+                  syncInstallEvent: true
+                  syncPesSchedule: false
+                  syncEnterpriseSettings: true
+                  syncFloSenseModel: false
+      responses:
+        204:
+          description: Device synced
+        400:
+          description: Invalid request body
+
 components:
   schemas:
     LteCredentials:
