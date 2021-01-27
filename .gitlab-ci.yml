@@ -43,6 +43,7 @@ variables:
   TELEMETRY_TAGS_SERVICE_URL: "http://flo-telemetry-tags.flo-telemetry-tags.svc.cluster.local"
   SENSOR_METER_URL: "http://flo-puck-service.flo-puck-service.svc.cluster.local:8080"
   PUBLIC_GATEWAY_HOST: "api-gw-dev.flocloud.co"   # should match EXTERNAL ingress/service name
+  DEFAULT_NOTIFY_ACCOUNT_STATUS_EMAIL: "flotech.runscope.1@gmail.com"
 
 stages:
   - build

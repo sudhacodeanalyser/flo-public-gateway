@@ -3,10 +3,11 @@ import _ from 'lodash';
 import * as O from 'fp-ts/lib/Option';
 import LteTable from './LteTable';
 import DeviceLteTable from './DeviceLteTable';
-import { BaseLte, Lte, LteCreate, SsidCredentials, SsidCredentialsWithContext } from '../api';
+import { BaseLte, Lte, LteContext, SsidCredentials, SsidCredentialsWithContext } from '../api';
 import { pipe } from 'fp-ts/lib/pipeable';
 import crypto from 'crypto';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
+import NotFoundError from '../api/error/NotFoundError';
 
 type Option<T> = O.Option<T>;
 
@@ -37,6 +38,21 @@ class LteService {
         imeiLast4: lte.imei.slice(-4),
         iccidLast4: lte.iccid.slice(-4)
       }))
+    );
+  }
+
+  public async retrieveQrCode(imei: string): Promise<LteContext> {
+    const maybeLte = await this.lteTable.getByImei(imei);
+    return pipe(
+      maybeLte,
+      O.fold(
+        async () => { throw new NotFoundError('LTE Device not found'); },
+        async lte => ({
+          qrCode: lte.qrCode,
+          imei: lte.imei,
+          iccid: lte.iccid
+        })
+      )
     );
   }
 

@@ -80,6 +80,24 @@ class LteTable extends PostgresTable<LteRecordData> {
       throw err;
     }
   }
+
+  public async getByImei(imei: string): Promise<Option<Lte>> {
+    const { text, values } = squel.useFlavour('postgres')
+      .select()
+      .field('"lte".*')
+      .field('"lo".*')
+      .from('"lte"')
+      .join('"lte_offset"', '"lo"', '"lo"."index" = "lte"."offset_index"')
+      .where('"lte"."imei" = ?', imei)
+      .toParam();
+    
+    const records = await this.pgDbClient.execute(text, values);
+    const maybeLteRecordData = O.fromNullable(_.first(records.rows));
+    return pipe(
+      maybeLteRecordData,
+      O.map(lteRecordData => new LteRecord(lteRecordData).toModel())
+    );
+  }
 }
 
 export default LteTable;

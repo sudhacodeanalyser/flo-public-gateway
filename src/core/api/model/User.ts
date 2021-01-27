@@ -96,8 +96,8 @@ const {
 } = UserCreateCodec.types[0].props;
 
 export const InviteAcceptValidator = t.intersection([
-  t.strict({ 
-    ...userCreateRequireProps 
+  t.strict({
+    ...userCreateRequireProps
   }),
   t.exact(t.partial({
     ...UserCreateCodec.types[1].props
@@ -105,6 +105,10 @@ export const InviteAcceptValidator = t.intersection([
 ]);
 
 export type InviteAcceptData = t.TypeOf<typeof InviteAcceptValidator>;
+
+export const UserInviteMetadataCodec = t.type({
+  supportEmails: t.union([t.undefined, t.array(t.string)])
+});
 
 export const UserInviteCodec = t.type({
   email: Email,
@@ -114,10 +118,13 @@ export const UserInviteCodec = t.type({
     locationId: t.string,
     roles: t.array(t.string)
   })),
-  locale: t.union([t.undefined, t.string])
+  locale: t.union([t.undefined, t.string]),
+  metadata: t.union([t.undefined, UserInviteMetadataCodec])
 });
 
 export interface UserInvite extends t.TypeOf<typeof UserInviteCodec> {}
+
+export interface UserInviteMetadata extends t.TypeOf<typeof UserInviteMetadataCodec> {}
 
 export interface UserStats {
   devices: DeviceStats;
@@ -190,6 +197,7 @@ export interface UserRegistrationTokenMetadata {
   registrationDataExpiresAt?: string;
   registrationData:           RegistrationData;
   accountId?:                 string;
+  supportEmails?:             string[];
 }
 
 export const ImpersonateUserCodec = t.type({

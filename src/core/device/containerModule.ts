@@ -11,6 +11,7 @@ import config from '../../config/config';
 import PairInitTable from './PairInitTable';
 import LteTable from './LteTable';
 import DeviceLteTable from './DeviceLteTable';
+import { DeviceSyncService } from './DeviceSyncService';
 
 export default new ContainerModule((bind: interfaces.Bind) => {
   bind<DeviceService>('DeviceService').to(DeviceService);
@@ -27,4 +28,5 @@ export default new ContainerModule((bind: interfaces.Bind) => {
   bind<LteService>('LteService').to(LteService);
   bind<LteTable>('LteTable').to(LteTable);
   bind<DeviceLteTable>('DeviceLteTable').to(DeviceLteTable);
+  bind<DeviceSyncService>('DeviceSyncService').to(DeviceSyncService);
 });

@@ -6,11 +6,20 @@ import { UserRegistrationData, EmailAvailability, UserRegistrationService, Email
 import { isLeft } from 'fp-ts/lib/Either';
 
 import _ from 'lodash';
+import Redis from 'ioredis';
+import { CachePolicy } from '../../cache/CacheMiddleware';
+import jwt from 'jsonwebtoken';
+import { pipe } from 'fp-ts/lib/pipeable';
+import { RegistrationTokenCodec } from '../../auth/Token';
+// tslint:disable-next-line:no-duplicate-imports
+import * as Either from 'fp-ts/lib/Either';
 
 @injectable()
 class ApiV1UserRegistrationService extends HttpService implements UserRegistrationService {
   constructor(
-    @inject('ApiV1Url') private readonly apiV1Url: string
+    @inject('ApiV1Url') private readonly apiV1Url: string,
+    @inject('RedisClient') protected redisClient: Redis.Redis,
+    @inject('CachePolicy') protected cachePolicy: CachePolicy,
   ) {
     super();
   }
@@ -80,6 +89,16 @@ class ApiV1UserRegistrationService extends HttpService implements UserRegistrati
   }
 
   public async verifyEmailAndCreateUser(emailVerification: EmailVerification): Promise<OAuth2Response> {
+    const key = this.formatKey(emailVerification)
+
+    const cacheResult = this.cachePolicy === CachePolicy.WRITE_ONLY || this.cachePolicy === CachePolicy.OFF ?
+      null :
+      (key) && await this.redisClient.get(key);
+
+    if (cacheResult != null || this.cachePolicy === CachePolicy.READ_ONLY) {
+      return cacheResult && JSON.parse(cacheResult);
+    }
+
     const request = {
       method: 'POST',
       url: `${this.apiV1Url}/userregistration/verify/oauth2`,
@@ -96,7 +115,11 @@ class ApiV1UserRegistrationService extends HttpService implements UserRegistrati
       throw new Error('Invalid response.');
     }
 
-    return result.right;
+    if (key && result.right && (this.cachePolicy === CachePolicy.WRITE_ONLY || this.cachePolicy === CachePolicy.READ_WRITE)) {
+      // Don't wait on cache write
+      this.redisClient.setex(key, 60 * 5, JSON.stringify(result.right));
+    }
+    return result.right
   }
 
   public async getRegistrationTokenByEmail(authToken: string, email: string): Promise<RegistrationTokenResponse> {
@@ -126,6 +149,23 @@ class ApiV1UserRegistrationService extends HttpService implements UserRegistrati
     };
 
     return this.sendRequest(request);
+  }
+
+  private formatTokenKey(token: string): string | null {
+    const tokenData = jwt.decode(token || '');
+    const key = pipe(
+      RegistrationTokenCodec.decode(tokenData),
+      Either.fold(
+        (): string | null => null,
+        ({ jti, iat }) => `${jti}_${iat}`
+      ),
+    );
+    return key && `{${ key }}`;
+  }
+
+  private formatKey(emailVerification: EmailVerification): string | null {
+    const tokenKey = this.formatTokenKey(emailVerification.token);
+    return tokenKey && `UserRegistration_${tokenKey}`;
   }
 }
 

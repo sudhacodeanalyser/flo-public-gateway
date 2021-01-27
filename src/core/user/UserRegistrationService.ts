@@ -1,7 +1,7 @@
 import { injectable, inject } from 'inversify';
 import * as t from 'io-ts';
 import UserRegistrationTokenMetadataTable from './UserRegistrationTokenMetadataTable';
-import { UserAccountRole, UserLocationRole, UserRegistrationTokenMetadata } from '../api';
+import { UserAccountRole, UserInviteMetadata, UserLocationRole, UserRegistrationTokenMetadata } from '../api';
 import uuid from 'uuid';
 import jwt from 'jsonwebtoken';
 import moment from 'moment';
@@ -79,6 +79,7 @@ export interface InviteTokenData {
   userLocationRoles: UserLocationRole[];
   userAccountRole: UserAccountRole;
   locale?: string;
+  supportEmails?: string[];
 }
 
 @injectable()
@@ -97,7 +98,7 @@ export class UserInviteService {
     await this.emailClient.send(email, templateId, { auth: { token } });
   }
 
-  public async issueToken(email: string, userAccountRole: UserAccountRole, userLocationRoles: UserLocationRole[], locale?: string, ttl?: number, accountId?: string): Promise<{ token: string, metadata: InviteTokenData }> {
+  public async issueToken(email: string, userAccountRole: UserAccountRole, userLocationRoles: UserLocationRole[], locale?: string, ttl?: number, accountId?: string, additionalMetadata?: UserInviteMetadata): Promise<{ token: string, metadata: InviteTokenData }> {
     const existingToken = await this.getTokenByEmail(email);
 
     if (existingToken) {
@@ -116,6 +117,7 @@ export class UserInviteService {
       token_expires_at: tokenExpiresAt,
       registration_data_expires_at: moment().add(30, 'days').toISOString(),
       account_id: accountId,
+      support_emails: additionalMetadata?.supportEmails
     };
     const metadata = await this.userRegistrationTokenMetatadataTable.put(tokenData);
     const token = await (new Promise<string>((resolve, reject) =>
@@ -123,7 +125,8 @@ export class UserInviteService {
         {
           ...tokenData.registration_data,
           email,
-          iat: moment(metadata.created_at).unix()
+          iat: moment(metadata.created_at).unix(),
+          supportEmails: tokenData.support_emails,
         },
         this.tokenSecret,
         {
@@ -147,7 +150,8 @@ export class UserInviteService {
         email,
         userLocationRoles,
         userAccountRole,
-        locale
+        locale,
+        supportEmails: additionalMetadata?.supportEmails
       }
     };
   }
@@ -167,7 +171,8 @@ export class UserInviteService {
         {
           ...metadata.registration_data,
           email,
-          iat: moment(metadata.created_at).unix()
+          iat: moment(metadata.created_at).unix(),
+          supportEmails: metadata.support_emails,
         },
         this.tokenSecret,
         {
@@ -191,7 +196,8 @@ export class UserInviteService {
         email: metadata.email,
         userAccountRole: metadata.registration_data.userAccountRole,
         userLocationRoles: metadata.registration_data.userLocationRoles,
-        locale: metadata.registration_data.locale
+        locale: metadata.registration_data.locale,
+        supportEmails: metadata.support_emails
       }
     };
   }
@@ -235,7 +241,8 @@ export class UserInviteService {
             userAccountRole: data.userAccountRole,
             userLocationRoles: data.userLocationRoles || [],
             locale: data.locale,
-            isExpired: !!data.exp && moment.unix(data.exp).isBefore(moment())
+            isExpired: !!data.exp && moment.unix(data.exp).isBefore(moment()),
+            supportEmails: data.supportEmails
           });
         }
       })
@@ -251,9 +258,13 @@ export class UserInviteService {
       return null;
     }
 
+    const additionalMetadata: UserInviteMetadata = {
+      supportEmails: data.support_emails
+    }
+
     await this.userRegistrationTokenMetatadataTable.remove({ token_id: data.token_id });
 
-    return this.issueToken(email, data.registration_data.userAccountRole, data.registration_data.userLocationRoles, data.registration_data.locale, ttl);
+    return this.issueToken(email, data.registration_data.userAccountRole, data.registration_data.userLocationRoles, data.registration_data.locale, ttl, data.account_id, additionalMetadata);
   }
 
   public async revoke(email: string): Promise<void> {
