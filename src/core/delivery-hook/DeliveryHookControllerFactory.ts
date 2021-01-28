@@ -16,7 +16,8 @@ import {
   SendWithUsEvent,
   ServiceEventParamsCodec,
   TwilioStatusEvent,
-  TwilioStatusEventCodec
+  TwilioStatusEventCodec,
+  TwilioVoiceCallStatusEvent
 } from '../api';
 import { httpController } from '../api/controllerUtils';
 import Request from '../api/Request';
@@ -60,7 +61,6 @@ export function DeliveryHookControllerFactory(container: Container, apiVersion: 
       serviceEventValidator
     )
     private async registerEmailServiceEvent(
-      @request() req: Request,
       @requestParam('incidentId') incidentId: string,
       @requestParam('userId') userId: string,
       @requestBody() receipt: Receipt
@@ -75,7 +75,6 @@ export function DeliveryHookControllerFactory(container: Container, apiVersion: 
       twilioStatusEventValidator
     )
     private async registerSmsServiceEvent(
-      @request() req: Request,
       @requestParam('incidentId') incidentId: string,
       @requestParam('userId') userId: string,
       @requestBody() event: TwilioStatusEvent
@@ -83,6 +82,20 @@ export function DeliveryHookControllerFactory(container: Container, apiVersion: 
       return this
         .notificationService
         .registerSmsServiceEvent(incidentId, userId, event);
+    }
+
+    @httpPost(
+      '/voice/events/:incidentId/:userId',
+      twilioAuth
+    )
+    private async registerVoiceCallStatusEvent(
+      @requestParam('incidentId') incidentId: string,
+      @requestParam('userId') userId: string,
+      @requestBody() statusEvent: TwilioVoiceCallStatusEvent
+    ): Promise<void> {
+      return this
+        .notificationService
+        .registerVoiceCallStatus(incidentId, userId, statusEvent);
     }
   }
 

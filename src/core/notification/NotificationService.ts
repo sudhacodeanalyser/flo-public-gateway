@@ -15,7 +15,8 @@ import {
   NewUserFeedback,
   StatsFilter,
   EntityAlarmSettings,
-  RetrieveAlarmSettingsFilter
+  RetrieveAlarmSettingsFilter,
+  TwilioVoiceCallStatusEvent
 } from '../api';
 import Request from '../api/Request';
 import {Option} from 'fp-ts/lib/Option';
@@ -24,6 +25,7 @@ export interface UnAuthNotificationService {
   registerSendgridEmailEvent(events: SendWithUsEvent[]): Promise<void>;
   registerEmailServiceEvent(incidentId: string, userId: string, receipt: Receipt): Promise<void>;
   registerSmsServiceEvent(incidentId: string, userId: string, event: TwilioStatusEvent): Promise<void>;
+  registerVoiceCallStatus(incidentId: string, userId: string, event: TwilioVoiceCallStatusEvent): Promise<void>;
 }
 
 export interface NotificationService {
