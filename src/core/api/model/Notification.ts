@@ -354,6 +354,19 @@ export const TwilioStatusEventCodec = t.type({
 
 export interface TwilioStatusEvent extends t.TypeOf<typeof TwilioStatusEventCodec> {}
 
+export interface TwilioVoiceCallStatusEvent {
+  CallSid: string;
+  AccountSid: string;
+  From: string;
+  To: string;
+  CallStatus: string;
+  ApiVersion: string;
+  Direction: string;
+  ForwardedFrom?: string;
+  CallerName?: string;
+  ParentCallSid?: string;
+}
+
 
 enum FilterStateType {
   SNOOZE = 'snooze',
