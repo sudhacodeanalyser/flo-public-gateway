@@ -27,6 +27,7 @@ import telemetryTagsContainerModule from '../telemetry/containerModule';
 import machineLearningContainerModule from '../machine-learning/containerModule';
 import irrigationContainerModule from '../irrigation/containerModule';
 import googlePlacesContainerModule from '../google-places/containerModule';
+import enterpriseServiceContainerModule from '../enterprise-service/containerModule';
 
 export default function ContainerFactory(container: Container = new Container()): Container {
 
@@ -57,6 +58,7 @@ export default function ContainerFactory(container: Container = new Container())
     irrigationContainerModule,
     googlePlacesContainerModule,
     concurrencyContainerModule,
+    enterpriseServiceContainerModule,
     ...coreContainerModules
   );
 
