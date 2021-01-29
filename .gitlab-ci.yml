@@ -164,6 +164,7 @@ ReleaseCandidate:
     TELEMETRY_TAGS_SERVICE_URL_PROD: "https://flo-telemetry-tags.flosecurecloud.com"
     SENSOR_METER_URL_PROD: "https://flo-puck-service.flosecurecloud.com"
     DEFAULT_NOTIFY_ACCOUNT_STATUS_EMAIL_PROD: "Suzanne.Street@moen.com"
+    CALLBACK_GATEWAY_HOST: "callback.flocloud.co"
   image: registry.gitlab.com/flotechnologies/devops/docker-tools:helm-2-17
   stage: deploy-rc
   allow_failure: true
@@ -220,6 +221,7 @@ K8sProd:
     WATER_METER_SERVICE_URL_PROD: "http://flo-water-meter.flo-water-meter.svc.cluster.local"
     PUBLIC_GATEWAY_HOST_PROD: "api-gw.meetflo.com"
     DEFAULT_NOTIFY_ACCOUNT_STATUS_EMAIL_PROD: "Suzanne.Street@moen.com"
+    CALLBACK_GATEWAY_HOST_PROD: "callback.meetflo.com"
   image: registry.gitlab.com/flotechnologies/devops/docker-tools:helm-2-17
   stage: deploy
   dependencies:
