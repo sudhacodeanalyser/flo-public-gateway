@@ -44,6 +44,7 @@ variables:
   SENSOR_METER_URL: "http://flo-puck-service.flo-puck-service.svc.cluster.local:8080"
   PUBLIC_GATEWAY_HOST: "api-gw-dev.flocloud.co"   # should match EXTERNAL ingress/service name
   DEFAULT_NOTIFY_ACCOUNT_STATUS_EMAIL: "flotech.runscope.1@gmail.com"
+  CALLBACK_GATEWAY_HOST: "callback.flocloud.co"
 
 stages:
   - build
@@ -164,7 +165,7 @@ ReleaseCandidate:
     TELEMETRY_TAGS_SERVICE_URL_PROD: "https://flo-telemetry-tags.flosecurecloud.com"
     SENSOR_METER_URL_PROD: "https://flo-puck-service.flosecurecloud.com"
     DEFAULT_NOTIFY_ACCOUNT_STATUS_EMAIL_PROD: "Suzanne.Street@moen.com"
-    CALLBACK_GATEWAY_HOST: "callback.flocloud.co"
+    CALLBACK_GATEWAY_HOST_PROD: "callback.meetflo.com"    
   image: registry.gitlab.com/flotechnologies/devops/docker-tools:helm-2-17
   stage: deploy-rc
   allow_failure: true
