@@ -19,7 +19,8 @@ import {
   StatsFilter,
   RetrieveAlarmSettingsFilter,
   EntityAlarmSettings,
-  DependencyFactoryFactory
+  DependencyFactoryFactory,
+  TwilioVoiceCallStatusEvent
 } from '../core/api';
 import { DeviceService } from '../core/device/DeviceService';
 import { HttpService } from '../http/HttpService';
@@ -217,6 +218,17 @@ class ApiNotificationService extends HttpService {
       method: 'post',
       url: `/sms/events/${incidentId}/${userId}`,
       body: this.toLowerCamelCaseObject(event)
+    });
+  }
+
+  public async registerVoiceCallStatus(incidentId: string, userId: string, event: TwilioVoiceCallStatusEvent): Promise<void> {
+    return this.sendRequest({
+      method: 'post',
+      url: `/voice/status/${incidentId}/${userId}`,
+      body: {
+        callStatus: event.CallStatus,
+        data: this.toLowerCamelCaseObject(event)
+      }
     });
   }
 

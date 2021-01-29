@@ -128,6 +128,7 @@ const config = {
   googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY,
   defaultNotifyAccountStatusEmail: process.env.DEFAULT_NOTIFY_ACCOUNT_STATUS_EMAIL,
   enterpriseServiceUrl: process.env.FLO_ENTERPRISE_SERVICE_URL,
+  callbackGatewayHost: process.env.CALLBACK_GATEWAY_HOST
 };
 
 export default {
