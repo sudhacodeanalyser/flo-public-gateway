@@ -3,7 +3,6 @@ import {
   BaseHttpController,
   httpPost,
   interfaces,
-  queryParam,
   request,
   requestBody, requestParam
 } from 'inversify-express-utils';
@@ -25,11 +24,12 @@ import { UnAuthNotificationService } from '../notification/NotificationService';
 import TwilioAuthMiddlewareFactory from "./TwilioAuthMiddlewareFactory";
 
 export function DeliveryHookControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
+  const callbackGatewayHost = container.get<string>('CallbackGatewayHost');
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
   const authMiddlewareFactory = container.get<AuthMiddlewareFactory>('AuthMiddlewareFactory');
   const auth = authMiddlewareFactory.create();
   const twilioAuthMiddlewareFactory = container.get<TwilioAuthMiddlewareFactory>('TwilioAuthMiddlewareFactory');
-  const twilioAuth = twilioAuthMiddlewareFactory.create();
+  const twilioAuth = (originHost?: string) => twilioAuthMiddlewareFactory.create(originHost);
   const serviceEventValidator = reqValidator.create(t.type({
     params: ServiceEventParamsCodec,
     body: ReceiptCodec
@@ -86,7 +86,7 @@ export function DeliveryHookControllerFactory(container: Container, apiVersion: 
 
     @httpPost(
       '/voice/events/:incidentId/:userId',
-      twilioAuth
+      twilioAuth(callbackGatewayHost)
     )
     private async registerVoiceCallStatusEvent(
       @requestParam('incidentId') incidentId: string,

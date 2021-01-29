@@ -125,7 +125,8 @@ const config = {
   apiV1Token: process.env.API_V1_TOKEN,
   emailGatewayUrl: process.env.EMAIL_GATEWAY_URL,
   googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY,
-  defaultNotifyAccountStatusEmail: process.env.DEFAULT_NOTIFY_ACCOUNT_STATUS_EMAIL
+  defaultNotifyAccountStatusEmail: process.env.DEFAULT_NOTIFY_ACCOUNT_STATUS_EMAIL,
+  callbackGatewayHost: process.env.CALLBACK_GATEWAY_HOST
 };
 
 export default {
