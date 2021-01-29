@@ -33,7 +33,7 @@ class DeviceSyncService {
       syncEnterpriseSettings: this.syncEnterpriseSettings.bind(this),
       syncFloSenseModel:      this.syncFloSenseModel.bind(this),
     }
-    const syncOptions = { syncDevice: false, ...options.additional };
+    const syncOptions = { syncDevice: true, ...options.additional };
 
     this.logger.info(`DeviceSyncService.synchronize: Starting sync process for device ${device.macAddress}`, syncOptions);
     const syncPromises = _.chain(syncOptions)
