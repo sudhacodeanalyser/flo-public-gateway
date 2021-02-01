@@ -9,10 +9,13 @@ class TwilioAuthMiddlewareFactory {
   @inject('TwilioAuthToken') private twilioAuthToken: string;
   @inject('PublicGatewayHost') private host: string;
 
-  public create(): express.Handler {
+  // TODO: Simplify this once Callback API Gateway handles all Twilio callbacks. 
+  public create(originUrl?: string): express.Handler {
     return async (req: Request, res: express.Response, next: express.NextFunction): Promise<void> => {
       try {
-        const url = 'https://' + (this.host || req.get('host')) + req.originalUrl;
+        const url = originUrl ? 
+          originUrl.replace(':incidentId', req.params.incidentId).replace(':userId', req.params.userId) :
+          'https://' + (this.host || req.get('host')) + req.originalUrl;
         const twilioSignature = req.get('x-twilio-signature') || '';
 
         if (client.validateRequest(this.twilioAuthToken, twilioSignature, url, req.body)) {

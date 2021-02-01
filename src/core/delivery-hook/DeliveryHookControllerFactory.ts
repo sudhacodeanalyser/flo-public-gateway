@@ -3,7 +3,6 @@ import {
   BaseHttpController,
   httpPost,
   interfaces,
-  queryParam,
   request,
   requestBody, requestParam
 } from 'inversify-express-utils';
@@ -16,7 +15,8 @@ import {
   SendWithUsEvent,
   ServiceEventParamsCodec,
   TwilioStatusEvent,
-  TwilioStatusEventCodec
+  TwilioStatusEventCodec,
+  TwilioVoiceCallStatusEvent
 } from '../api';
 import { httpController } from '../api/controllerUtils';
 import Request from '../api/Request';
@@ -24,11 +24,13 @@ import { UnAuthNotificationService } from '../notification/NotificationService';
 import TwilioAuthMiddlewareFactory from "./TwilioAuthMiddlewareFactory";
 
 export function DeliveryHookControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
+  const callbackGatewayHost = container.get<string>('CallbackGatewayHost');
+  const callbackGatewayUrl = `https://${callbackGatewayHost}/twilio/voice/:userId/:incidentId`;
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
   const authMiddlewareFactory = container.get<AuthMiddlewareFactory>('AuthMiddlewareFactory');
   const auth = authMiddlewareFactory.create();
   const twilioAuthMiddlewareFactory = container.get<TwilioAuthMiddlewareFactory>('TwilioAuthMiddlewareFactory');
-  const twilioAuth = twilioAuthMiddlewareFactory.create();
+  const twilioAuth = (originHost?: string) => twilioAuthMiddlewareFactory.create(originHost);
   const serviceEventValidator = reqValidator.create(t.type({
     params: ServiceEventParamsCodec,
     body: ReceiptCodec
@@ -60,7 +62,6 @@ export function DeliveryHookControllerFactory(container: Container, apiVersion: 
       serviceEventValidator
     )
     private async registerEmailServiceEvent(
-      @request() req: Request,
       @requestParam('incidentId') incidentId: string,
       @requestParam('userId') userId: string,
       @requestBody() receipt: Receipt
@@ -70,12 +71,12 @@ export function DeliveryHookControllerFactory(container: Container, apiVersion: 
         .registerEmailServiceEvent(incidentId, userId, receipt);
     }
 
+    // TODO: This endpoint should be forwarded from Callback API Gateway. Once that's done, TwilioAuthMiddleware can be simplified.
     @httpPost('/sms/events/:incidentId/:userId',
       twilioAuth,
       twilioStatusEventValidator
     )
     private async registerSmsServiceEvent(
-      @request() req: Request,
       @requestParam('incidentId') incidentId: string,
       @requestParam('userId') userId: string,
       @requestBody() event: TwilioStatusEvent
@@ -83,6 +84,20 @@ export function DeliveryHookControllerFactory(container: Container, apiVersion: 
       return this
         .notificationService
         .registerSmsServiceEvent(incidentId, userId, event);
+    }
+
+    @httpPost(
+      '/voice/events/:incidentId/:userId',
+      twilioAuth(callbackGatewayUrl)
+    )
+    private async registerVoiceCallStatusEvent(
+      @requestParam('incidentId') incidentId: string,
+      @requestParam('userId') userId: string,
+      @requestBody() statusEvent: TwilioVoiceCallStatusEvent
+    ): Promise<void> {
+      return this
+        .notificationService
+        .registerVoiceCallStatus(incidentId, userId, statusEvent);
     }
   }
 
