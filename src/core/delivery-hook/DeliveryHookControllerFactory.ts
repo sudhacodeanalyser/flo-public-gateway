@@ -25,6 +25,7 @@ import TwilioAuthMiddlewareFactory from "./TwilioAuthMiddlewareFactory";
 
 export function DeliveryHookControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const callbackGatewayHost = container.get<string>('CallbackGatewayHost');
+  const callbackGatewayUrl = `https://${callbackGatewayHost}/twilio/voice/:userId/:incidentId`;
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
   const authMiddlewareFactory = container.get<AuthMiddlewareFactory>('AuthMiddlewareFactory');
   const auth = authMiddlewareFactory.create();
@@ -70,6 +71,7 @@ export function DeliveryHookControllerFactory(container: Container, apiVersion: 
         .registerEmailServiceEvent(incidentId, userId, receipt);
     }
 
+    // TODO: This endpoint should be forwarded from Callback API Gateway. Once that's done, TwilioAuthMiddleware can be simplified.
     @httpPost('/sms/events/:incidentId/:userId',
       twilioAuth,
       twilioStatusEventValidator
@@ -86,7 +88,7 @@ export function DeliveryHookControllerFactory(container: Container, apiVersion: 
 
     @httpPost(
       '/voice/events/:incidentId/:userId',
-      twilioAuth(callbackGatewayHost)
+      twilioAuth(callbackGatewayUrl)
     )
     private async registerVoiceCallStatusEvent(
       @requestParam('incidentId') incidentId: string,
