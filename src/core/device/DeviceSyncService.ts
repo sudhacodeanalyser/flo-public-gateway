@@ -9,7 +9,6 @@ import { Device, DeviceSyncOptions } from '../api';
 import Logger from 'bunyan';
 import { MachineLearningService } from '../../machine-learning/MachineLearningService';
 import { EnterpriseService } from '../../enterprise-service/EnterpriseService';
-import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 
 export type DeviceSyncFn = (device: Device) => Promise<void>;
 export type DeviceSyncConfig = { [name: string]: DeviceSyncFn };
@@ -64,7 +63,7 @@ class DeviceSyncService {
   }
 
   public async syncFloSenseModel(device: Device): Promise<void> {
-    throw new ResourceDoesNotExistError('DeviceSyncService: syncFloSenseModel has not been implemented yet');
+    return this.mlService.syncFloSenseModel(device.macAddress);
   }
 
   public async syncInstallEvent(device: Device): Promise<void> {

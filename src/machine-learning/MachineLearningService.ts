@@ -40,6 +40,10 @@ class MachineLearningService extends MemoizeMixin(HttpService) {
   public async syncPesSchedule(macAddress: string): Promise<any> {
     return this.forward('POST', `${macAddress}/pes/schedule/sync`);
   }
+
+  public async syncFloSenseModel(macAddress: string): Promise<any> {
+    return this.forward('POST', `${macAddress}/floSense/models/sync`);
+  }
 }
 
 export { MachineLearningService };
