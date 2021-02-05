@@ -291,7 +291,7 @@ class LocationPgTable extends PostgresTable<LocationPgRecordData> {
     };
   }
 
-  private applyFilters(queryBuilder: squel.PostgresSelect, filters: LocationFilters, alias: string = 'l'): squel.PostgresSelect {
+  private applyBasicFilters(queryBuilder: squel.PostgresSelect, filters: LocationFilters, alias: string = 'l'): squel.PostgresSelect {
     const filterMap = {
       locClass: 'location_class',
       city: 'city',
@@ -306,11 +306,36 @@ class LocationPgTable extends PostgresTable<LocationPgRecordData> {
         return query;
       }
 
-      const column = (filterMap as any)[key] as string;
+      const column = (filterMap as any)[key] as string | undefined;
+      if (column === undefined) {
+        return query;
+      }
 
       const op = _.isArray(value) ? 'IN' : '=';
       return query.where(`"${ alias }"."${ column }" ${op} ?`, value);
     }, queryBuilder);
+  }
+
+  private applyFilters(queryBuilder: squel.PostgresSelect, filters: LocationFilters, alias: string = 'l'): squel.PostgresSelect {
+    return this.applyOfflineDevicesFilter(
+      this.applyBasicFilters(queryBuilder, filters, alias),
+      filters,
+      alias,
+    )
+  }
+
+  private applyOfflineDevicesFilter(queryBuilder: squel.PostgresSelect, filters: LocationFilters, alias: string = 'l'): squel.PostgresSelect {
+    if (!filters.hasOfflineDevices) {
+      return queryBuilder;
+    }
+
+    return queryBuilder.where(`
+      EXISTS(
+        SELECT 1 FROM "device" AS "d"
+        INNER JOIN "devices" AS "ds" ON "d"."mac_address" = "ds"."device_id"
+        WHERE "d"."location_id" = "${alias}"."id" AND "ds"."is_connected" = ?
+      )
+    `, false);
   }
 
   private applySort(queryBuilder: squel.PostgresSelect, sortProperties: LocationSortProperties = {}, alias: string = 'l'): squel.PostgresSelect {
