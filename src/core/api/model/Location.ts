@@ -301,6 +301,7 @@ export interface LocationFilters {
   country?: string[];
   postalCode?: string[];
   parentId?: string;
+  hasOfflineDevices?: boolean;
 }
 
 export interface LocationSortProperties {

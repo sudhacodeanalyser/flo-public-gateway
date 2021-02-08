@@ -135,7 +135,8 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
              size: IntegerFromString,
              page: IntegerFromString,
              q: t.string,
-             sort: t.string
+             sort: t.string,
+             hasOfflineDevices: BooleanFromString,
            }),
            t.union([
              t.type({
@@ -169,7 +170,8 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
       @queryParam('withChildren') withChildren: boolean = true,
       @queryParam('rootOnly') rootOnly: boolean = false,
       @queryParam('q') searchText?: string,
-      @queryParam('sort') sort?: string
+      @queryParam('sort') sort?: string,
+      @queryParam('hasOfflineDevices') hasOfflineDevices?: boolean
     ): Promise<{ total: number; page: number; items: Responses.Location[] }> {
       const tokenMetadata = req.token;
       const expandProps = parseExpand(expand);
@@ -180,6 +182,7 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
         country,
         postalCode,
         parentId,
+        hasOfflineDevices,
       };
       let locPage: LocationPage;
       let sortProperties: LocationSortProperties | undefined;
