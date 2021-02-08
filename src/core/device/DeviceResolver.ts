@@ -677,15 +677,15 @@ class DeviceResolver extends Resolver<Device> {
       throw new ResourceDoesNotExistError('Device not found.');
     }
 
-    const sourcelocationRecord = await this.locationTable.getByLocationId(deviceRecord.location_id);
+    const sourceLocationRecord = await this.locationTable.getByLocationId(deviceRecord.location_id);
 
-    if (!sourcelocationRecord) {
+    if (!sourceLocationRecord) {
         throw new ResourceDoesNotExistError('Location does not exist');
     }
 
-    const destlocationRecord = await this.locationTable.getByLocationId(destLocationId);
+    const destLocationRecord = await this.locationTable.getByLocationId(destLocationId);
 
-    if (!destlocationRecord) {
+    if (!destLocationRecord) {
         throw new ResourceDoesNotExistError('Location does not exist');
     }
 
@@ -697,9 +697,9 @@ class DeviceResolver extends Resolver<Device> {
     });
     
     await this.notificationService.moveEvents(
-          sourcelocationRecord.account_id, 
-          destlocationRecord.account_id, 
-          sourcelocationRecord.location_id, 
+          sourceLocationRecord.account_id, 
+          destLocationRecord.account_id, 
+          sourceLocationRecord.location_id, 
           destLocationId);
     
     return this.toModel(transferredDeviceRecord);
