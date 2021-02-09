@@ -107,6 +107,9 @@ environment-prod:
 
 runscope:
 	$(DOCKER) \
+		pull \
+		$(RUNSCOPE_IMAGE)
+	$(DOCKER) \
 		run --rm --tty\
 		--env RUNSCOPE_ACCESS_TOKEN="$(RUNSCOPE_ACCESS_TOKEN)" \
 		--env RUNSCOPE_TRIGGER_URL="$(RUNSCOPE_TRIGGER_URL)" \

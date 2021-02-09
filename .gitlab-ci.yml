@@ -270,6 +270,7 @@ RunscopeProd:
     - Compile
   only:
     - master
+    - fix-runscope-pull
   environment:
     name: prod
     url: https://api-gw.meetflo.com/api/v2/ping
