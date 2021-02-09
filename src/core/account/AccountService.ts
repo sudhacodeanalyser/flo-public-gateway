@@ -241,13 +241,6 @@ class AccountService {
             locationService.transferDevices(destLocationId, sourceLocationId)
           )
       );
-
-      await Promise.all(
-        locationMerge
-          .map(({ sourceLocationId, destLocationId }) =>
-            this.notificationService.moveEvents(sourceAccountId, destAccountId, sourceLocationId, destLocationId)
-          )
-      );
     } else {
       const locationMappingPairs = await Promise.all(
         locations
@@ -256,13 +249,6 @@ class AccountService {
             return [id, l.id]
           })
       );
-
-      await Promise.all(
-        locationMappingPairs
-          .map(([sourceLocationId, destLocationId]: string[]) =>
-            this.notificationService.moveEvents(sourceAccountId, destAccountId, sourceLocationId, destLocationId)
-          )
-      )
     }
 
     const updatedDestAccount = toNullable(await this.getAccountById(destAccountId));
