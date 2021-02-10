@@ -700,7 +700,8 @@ class DeviceResolver extends Resolver<Device> {
           sourceLocationRecord.account_id, 
           destLocationRecord.account_id, 
           sourceLocationRecord.location_id, 
-          destLocationId);
+          destLocationId,
+          deviceId);
     
     return this.toModel(transferredDeviceRecord);
   }
