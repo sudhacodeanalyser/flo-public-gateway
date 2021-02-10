@@ -243,7 +243,7 @@ class ApiNotificationService extends HttpService {
     });
   }
 
-  public async moveEvents(srcAccountId: string, destAccountId: string, srcLocationId: string, destLocationId: string): Promise<void> {
+  public async moveEvents(srcAccountId: string, destAccountId: string, srcLocationId: string, destLocationId: string, deviceId: string): Promise<void> {
     return this.sendRequest({
       method: 'put',
       url: '/events/move',
@@ -251,7 +251,8 @@ class ApiNotificationService extends HttpService {
         srcAccountId,
         destAccountId,
         srcLocationId,
-        destLocationId
+        destLocationId,
+        deviceId
       }
     })
   }
