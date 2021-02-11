@@ -73,7 +73,7 @@ export function DeliveryHookControllerFactory(container: Container, apiVersion: 
 
     // TODO: This endpoint should be forwarded from Callback API Gateway. Once that's done, TwilioAuthMiddleware can be simplified.
     @httpPost('/sms/events/:incidentId/:userId',
-      twilioAuth,
+      twilioAuth(),
       twilioStatusEventValidator
     )
     private async registerSmsServiceEvent(
