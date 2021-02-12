@@ -1,6 +1,7 @@
 import { injectable, inject } from 'inversify';
 import { KafkaProducer } from '../../kafka/KafkaProducer';
 import { Expandable, Device as DeviceModel, Location as LocationModel, Account as AccountModel, User as UserModel } from '../api';
+import { injectHttpContext, interfaces } from 'inversify-express-utils';
 import Logger from 'bunyan';
 import { Device, Account, Location, User } from '../api/response';
 
@@ -22,16 +23,18 @@ interface EntityActivityMessage<T> {
   date: string;
   type: EntityActivityType;
   action: EntityActivityAction;
+  requestId: string | undefined;
   id: string;
   item?: any;
 }
 
-@injectable() 
+@injectable()
 class EntityActivityService {
 
   constructor(
     @inject('EntityActivityKafkaTopic') private readonly entityActivityKafkaTopic: string,
     @inject('KafkaProducer') private readonly kafkaProducer: KafkaProducer,
+    @injectHttpContext private readonly httpContext: interfaces.HttpContext,
     @inject('Logger') private readonly logger: Logger
   ) {}
 
@@ -47,11 +50,13 @@ class EntityActivityService {
 
   private formatEntityActivityMessage<T>(type: EntityActivityType, action: EntityActivityAction, data: Expandable<T>): EntityActivityMessage<T> {
     const item = this.mapItem(type, data);
-    
+    const requestId = this.httpContext && this.httpContext.request && this.httpContext.request.get('x-request-id');
+
     return {
       date: new Date().toISOString(),
       type,
       action,
+      requestId,
       id: item.id,
       item
     };
@@ -90,7 +95,7 @@ class EntityActivityService {
             account: deviceLocationAccount
           }
         };
-      case EntityActivityType.LOCATION: 
+      case EntityActivityType.LOCATION:
         const {
           id: locationId,
           account: locationAccount,
