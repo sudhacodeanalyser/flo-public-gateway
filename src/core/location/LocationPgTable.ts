@@ -333,8 +333,8 @@ class LocationPgTable extends PostgresTable<LocationPgRecordData> {
       EXISTS(
         SELECT 1 FROM "device" AS "d"
         INNER JOIN "devices" AS "ds" ON "d"."mac_address" = "ds"."device_id"
-        INNER JOIN "location_tree" AS "lt" ON "lt"."child_id" = "d"."location_id"
-        WHERE "lt"."parent_id" = "${alias}"."id" AND "ds"."is_connected" = ?
+        LEFT JOIN "location_tree" AS "lt" ON "d"."location_id" = "lt"."child_id"
+        WHERE "${alias}"."id" = COALESCE("lt"."parent_id", "d"."location_id") AND "ds"."is_connected" = ?
       )
     `, false);
   }
