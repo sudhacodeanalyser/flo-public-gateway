@@ -87,7 +87,6 @@ class WaterService {
     const start = this.formatDate(startDate, tz);
     const end = this.formatDate(endDate, tz);
     const results = await this.getWaterMeterReport([macAddress], start, end, interval, tz);
-
     return this.formatConsumptionReport(start, end, interval, tz, results, undefined, macAddress);
   }
 
@@ -489,7 +488,7 @@ class WaterService {
             const nonMissingData = hours.filter(({ missing }) => !missing);
             return {
               date: moment.tz(aggregatedInterval, timezone).toISOString(),
-              used: _.sumBy(hours, 'used'),
+              used: _.sumBy(nonMissingData, 'used'),
               psi: _.meanBy(nonMissingData, 'psi'),
               temp: _.meanBy(nonMissingData, 'temp'),
               rate: _.meanBy(nonMissingData, 'rate')

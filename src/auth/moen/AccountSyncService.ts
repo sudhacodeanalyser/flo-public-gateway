@@ -9,6 +9,15 @@ class AccountSyncService extends HttpService {
     super();
   }
 
+  public async getPing(): Promise<any> {
+    const request = {
+      method: 'GET',
+      url: `${this.url}/ping`,
+      proxyError: true
+    };
+    return this.sendRequest(request);
+  }
+
   public async getTokenTrade(authToken: string): Promise<any> {
     const request = {
       method: 'GET',
