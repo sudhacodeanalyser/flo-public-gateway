@@ -7,7 +7,7 @@ import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
 import { LocationFacetPage, DependencyFactoryFactory, AreaName, AreaNameCodec, Areas, Location, LocationCreateValidator, LocationUpdate, LocationUpdateValidator, LocationUserRole, SystemMode, SystemModeCodec, PesThresholdsCodec, PesThresholds, LocationPage, LocationSortProperties } from '../api';
 import { createMethod, deleteMethod, httpController, parseExpand, withResponseType, httpMethod, queryParamArray, asyncMethod } from '../api/controllerUtils';
-import Request from '../api/Request';
+import Request, { extractIpAddress } from '../api/Request';
 import * as Responses from '../api/response';
 import { NonEmptyArray } from '../api/validator/NonEmptyArray';
 import { DeviceSystemModeServiceFactory } from '../device/DeviceSystemModeService';
@@ -16,6 +16,7 @@ import { either } from 'fp-ts/lib/Either';
 import { IntegerFromString } from '../api/validator/IntegerFromString';
 import { BooleanFromString } from '../api/validator/BooleanFromString';
 import ReqValidationError from '../../validation/ReqValidationError';
+import { getEventInfo } from '../api/eventInfo';
 
 const { some } = O;
 type Option<T> = O.Option<T>;
@@ -113,8 +114,9 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
     private async createLocation(@request() req: Request, @requestBody() location: Location, @queryParamArray('roles') roles?: string[]): Promise<Option<Location>> {
       const tokenMetadata = req.token;
       const userId = tokenMetadata && tokenMetadata.user_id;
+      const resourceEventInfo = getEventInfo(req);      
 
-      return this.locationService.createLocation(location, userId, roles);
+      return this.locationService.createLocation(resourceEventInfo, location, userId, roles);
     }
 
     @httpMethod(
@@ -292,8 +294,9 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
       }))
     )
     @deleteMethod
-    private async removeLocation(@requestParam('id') id: string): Promise<void> {
-      return this.locationService.removeLocation(id);
+    private async removeLocation(@request() req: Request, @requestParam('id') id: string): Promise<void> {
+      const resourceEventInfo = getEventInfo(req);
+      return this.locationService.removeLocation(id, resourceEventInfo);
     }
 
     @httpPut(
@@ -403,7 +406,7 @@ export function LocationControllerFactory(container: Container, apiVersion: numb
     @asyncMethod
     private async overridePes(@requestParam('id') id: string, @requestBody() pesThresholds: PesThresholds): Promise<void> {
       return this.locationService.updatePes(id, pesThresholds);
-    }
+    }  
   }
 
   return LocationControllerFactory;
