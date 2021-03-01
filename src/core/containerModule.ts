@@ -15,6 +15,7 @@ import alarmContainerModule from './alarm/containerModule';
 import alertContainerModule from './alert/containerModule';
 import floDetectContainerModule from './flo-detect/containerModule';
 import entityActivityContainerModule from './entity-activity/containerModule';
+import resourceEventContainerModule from './resource-event/containerModule';
 import telemetryContainerModule from './telemetry/containerModule';
 import iftttContainerModule from './ifttt/containerModule';
 import deliveryHookContainerModule from './delivery-hook/containerModule';
@@ -39,6 +40,7 @@ export default [
   alertContainerModule,
   floDetectContainerModule,
   entityActivityContainerModule,
+  resourceEventContainerModule,
   telemetryContainerModule,
   iftttContainerModule,
   deliveryHookContainerModule,

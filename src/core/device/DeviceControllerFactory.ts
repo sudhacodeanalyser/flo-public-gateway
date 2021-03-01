@@ -16,7 +16,7 @@ import NotFoundError from '../api/error/NotFoundError';
 import ResourceDoesNotExistError from "../api/error/ResourceDoesNotExistError";
 import ValidationError from '../api/error/ValidationError'
 import UnauthorizedError from '../api/error/UnauthorizedError';
-import Request from '../api/Request';
+import Request, { extractIpAddress } from '../api/Request';
 import * as Responses from '../api/response';
 import { DeviceService, PuckTokenService, LocationService, LteService } from '../service';
 import { DeviceSystemModeServiceFactory } from './DeviceSystemModeService';
@@ -30,6 +30,9 @@ import { MachineLearningService } from '../../machine-learning/MachineLearningSe
 import ConcurrencyService from '../../concurrency/ConcurrencyService';
 import ConflictError from '../api/error/ConflictError';
 import { DeviceSyncService } from './DeviceSyncService';
+import _ from 'lodash';
+import { ResourceEventInfo } from '../api/model/ResourceEvent';
+import { getEventInfo } from '../api/eventInfo';
 
 const { isNone, some  } = O;
 type Option<T> = O.Option<T>;
@@ -302,11 +305,13 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       }))
     )
     @deleteMethod
-    private async removeDevice(@requestParam('id') id: string): Promise<void> {
+    private async removeDevice(@authorizationHeader() authToken: string, @request() req: Request, @requestParam('id') id: string): Promise<void> {
+      const resourceEventInfo = getEventInfo(req);      
+     
       const macAddress = await this.mapIcdToMacAddress(id);
       await this.internalDeviceService.removeDevice(macAddress);
       await this.lteService.unlinkDevice(id);
-      return this.deviceService.removeDevice(id);
+      return this.deviceService.removeDevice(id, resourceEventInfo);
     }
 
     @httpPost('/pair/init',
@@ -362,6 +367,8 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     private async pairDevice(@authorizationHeader() authToken: string, @request() req: Request, @requestBody() deviceCreate: DeviceCreate): Promise<Option<Device | { device: Device, token: string }>> {
       const tokenMetadata = req.token;
 
+      const resourceEventInfo = getEventInfo(req); 
+
       if (!tokenMetadata) {
         throw new UnauthorizedError();
       } else if (!tokenMetadata.user_id && !tokenMetadata.client_id) {
@@ -375,7 +382,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
         throw new ConflictError('Device pairing in process.');
       }
       try {
-        const device = await this.deviceService.pairDevice(authToken, deviceCreate);
+        const device = await this.deviceService.pairDevice(authToken, deviceCreate, resourceEventInfo);
         if (deviceCreate.connectivity?.lte) {
           await this.lteService.linkDevice(device.id, deviceCreate.connectivity.lte.qrCode);
         }
@@ -404,7 +411,14 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
         throw new ValidationError();
       }
 
-      const device = await this.deviceService.pairDevice(authToken, { ...deviceCreate, id: tokenMetadata.puckId });
+      const eventInfo : ResourceEventInfo ={
+        clientId: '',
+        ipAddress: '',
+        userAgent: '',
+        userId: ''
+      }
+
+      const device = await this.deviceService.pairDevice(authToken, { ...deviceCreate, id: tokenMetadata.puckId }, eventInfo);
 
       return some({
         device,
@@ -683,7 +697,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     @withResponseType<Device, Responses.Device>(Responses.Device.fromModel)
     private async transferDevice(@requestParam('id') id: string, @requestBody() { locationId }: { locationId: string }): Promise<Option<Device>> {
       return some(await this.deviceService.transferDevice(id, locationId));
-    }
+    }   
   }
 
   return DeviceController;

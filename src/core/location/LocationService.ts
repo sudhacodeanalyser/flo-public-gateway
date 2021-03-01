@@ -12,13 +12,14 @@ import ForbiddenError from '../api/error/ForbiddenError';
 import { DeviceSystemModeService } from '../device/DeviceSystemModeService';
 import { IrrigationScheduleService } from '../device/IrrigationScheduleService';
 import { LocationResolver } from '../resolver';
-import { AccountService, DeviceService, SubscriptionService, EntityActivityAction, EntityActivityService, EntityActivityType } from '../service';
+import { AccountService, DeviceService, SubscriptionService, EntityActivityAction, EntityActivityService, EntityActivityType, ResourceEventService } from '../service';
 import moment from 'moment';
 import LocationTreeTable, { LocationTreeRow } from './LocationTreeTable'
 import { pipe } from 'fp-ts/lib/pipeable';
 import { MachineLearningService } from '../../machine-learning/MachineLearningService';
 import NotFoundError from '../api/error/NotFoundError';
 import { GeoLocationService } from './GeoLocationService';
+import { ResourceEventAction, ResourceEventInfo, ResourceEventType } from '../api/model/ResourceEvent';
 
 const { fromNullable, isNone } = O;
 type Option<T> = O.Option<T>;
@@ -37,6 +38,7 @@ class LocationService {
     @inject('LocationTreeTable') private locationTreeTable: LocationTreeTable,
     @inject('IrrigationScheduleService') private irrigationScheduleService: IrrigationScheduleService,
     @inject('EntityActivityService') private entityActivityService: EntityActivityService,
+    @inject('ResourceEventService') private resourceEventService: ResourceEventService,
     @inject('MachineLearningService') private mlService: MachineLearningService,
     @inject('GeoLocationService') private geoLocationService: GeoLocationService,
   ) {
@@ -45,7 +47,7 @@ class LocationService {
     this.subscriptionServiceFactory = depFactoryFactory<SubscriptionService>('SubscriptionService');
   }
 
-  public async createLocation(location: Omit<Location, 'id'> & { id?: string }, userId?: string, roles: string[] = ['write', 'valve-open', 'valve-close']): Promise<Option<Location>> {
+  public async createLocation(resourceEventInfo: ResourceEventInfo, location: Omit<Location, 'id'> & { id?: string }, userId?: string, roles: string[] = ['write', 'valve-open', 'valve-close']): Promise<Option<Location>> {
 
     if (location.parent?.id) {
       await this.validateParent(location.account.id, location.parent.id);
@@ -106,6 +108,15 @@ class LocationService {
       createdLocation
     );
 
+    if(resourceEventInfo.userId && resourceEventInfo.userId.length > 0) {
+      await this.resourceEventService.publishResourceEvent(
+        ResourceEventType.LOCATION,
+        ResourceEventAction.CREATED,
+        createdLocation,
+        resourceEventInfo
+      );
+    }
+   
     return fromNullable(createdLocation);
   }
 
@@ -222,7 +233,7 @@ class LocationService {
     return updatedLocation;
   }
 
-  public async removeLocation(id: string): Promise<void> {
+  public async removeLocation(id: string, resourceEventInfo: ResourceEventInfo): Promise<void> {
     const subscriptionService = this.subscriptionServiceFactory();
     const subscription = await subscriptionService.getSubscriptionByRelatedEntityId(id);
     const location = await this.locationResolver.get(id);
@@ -242,6 +253,13 @@ class LocationService {
       EntityActivityAction.DELETED,
       location
     );
+    
+    await this.resourceEventService.publishResourceEvent(
+      ResourceEventType.LOCATION,
+      ResourceEventAction.DELETED,
+      location,
+      resourceEventInfo
+    );    
   }
 
   public async getAllLocationUserRoles(locationId: string): Promise<LocationUserRole[]> {
@@ -582,12 +600,19 @@ class LocationService {
       throw new ConflictError('Cannot transfer location with subscription.');
     }
 
+    const eventInfo : ResourceEventInfo ={
+      clientId: '',
+      ipAddress: '',
+      userAgent: '',
+      userId: ''
+    }
+
     const {
       id,
       account,
       ...locationData
     } = srcLocation;
-    const clonedLocation = O.toNullable(await this.createLocation({
+    const clonedLocation = O.toNullable(await this.createLocation(eventInfo,{
       ...locationData,
       account: { id: destAccountId }
     }));
