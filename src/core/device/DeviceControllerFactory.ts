@@ -31,8 +31,6 @@ import ConcurrencyService from '../../concurrency/ConcurrencyService';
 import ConflictError from '../api/error/ConflictError';
 import { DeviceSyncService } from './DeviceSyncService';
 import _ from 'lodash';
-import { ResourceEventInfo } from '../api/model/ResourceEvent';
-import { getEventInfo } from '../api/eventInfo';
 
 const { isNone, some  } = O;
 type Option<T> = O.Option<T>;
@@ -306,12 +304,11 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     )
     @deleteMethod
     private async removeDevice(@authorizationHeader() authToken: string, @request() req: Request, @requestParam('id') id: string): Promise<void> {
-      const resourceEventInfo = getEventInfo(req);      
      
       const macAddress = await this.mapIcdToMacAddress(id);
       await this.internalDeviceService.removeDevice(macAddress);
       await this.lteService.unlinkDevice(id);
-      return this.deviceService.removeDevice(id, resourceEventInfo);
+      return this.deviceService.removeDevice(id);
     }
 
     @httpPost('/pair/init',
@@ -367,8 +364,6 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     private async pairDevice(@authorizationHeader() authToken: string, @request() req: Request, @requestBody() deviceCreate: DeviceCreate): Promise<Option<Device | { device: Device, token: string }>> {
       const tokenMetadata = req.token;
 
-      const resourceEventInfo = getEventInfo(req); 
-
       if (!tokenMetadata) {
         throw new UnauthorizedError();
       } else if (!tokenMetadata.user_id && !tokenMetadata.client_id) {
@@ -382,7 +377,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
         throw new ConflictError('Device pairing in process.');
       }
       try {
-        const device = await this.deviceService.pairDevice(authToken, deviceCreate, resourceEventInfo);
+        const device = await this.deviceService.pairDevice(authToken, deviceCreate);
         if (deviceCreate.connectivity?.lte) {
           await this.lteService.linkDevice(device.id, deviceCreate.connectivity.lte.qrCode);
         }
@@ -411,14 +406,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
         throw new ValidationError();
       }
 
-      const eventInfo : ResourceEventInfo ={
-        clientId: '',
-        ipAddress: '',
-        userAgent: '',
-        userId: ''
-      }
-
-      const device = await this.deviceService.pairDevice(authToken, { ...deviceCreate, id: tokenMetadata.puckId }, eventInfo);
+      const device = await this.deviceService.pairDevice(authToken, { ...deviceCreate, id: tokenMetadata.puckId });
 
       return some({
         device,

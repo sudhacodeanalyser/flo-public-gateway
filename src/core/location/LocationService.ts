@@ -254,12 +254,14 @@ class LocationService {
       location
     );
     
-    await this.resourceEventService.publishResourceEvent(
-      ResourceEventType.LOCATION,
-      ResourceEventAction.DELETED,
-      location,
-      resourceEventInfo
-    );    
+    if(resourceEventInfo.userId.length > 0) {
+      await this.resourceEventService.publishResourceEvent(
+        ResourceEventType.LOCATION,
+        ResourceEventAction.DELETED,
+        location,
+        resourceEventInfo
+      );
+    }
   }
 
   public async getAllLocationUserRoles(locationId: string): Promise<LocationUserRole[]> {

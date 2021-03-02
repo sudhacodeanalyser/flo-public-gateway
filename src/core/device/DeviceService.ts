@@ -21,7 +21,7 @@ import ForbiddenError from '../api/error/ForbiddenError';
 import moment from 'moment-timezone';
 import PairInitTable from './PairInitTable';
 import ExtendableError from '../api/error/ExtendableError';
-import { ResourceEventAction, ResourceEventInfo, ResourceEventType } from '../api/model/ResourceEvent';
+import { ResourceEventAction, ResourceEventType } from '../api/model/ResourceEvent';
 
 const { isNone, fromNullable } = O;
 type Option<T> = O.Option<T>;
@@ -151,7 +151,7 @@ class DeviceService {
     return updatedDevice;
   }
 
-  public async removeDevice(id: string, resourceEventInfo: ResourceEventInfo): Promise<void> {
+  public async removeDevice(id: string): Promise<void> {
 
     await pipe(
       await this.getDeviceById(id),
@@ -165,16 +165,8 @@ class DeviceService {
             EntityActivityType.DEVICE,
             EntityActivityAction.DELETED,
             device
-          );
-          
-          await this.resourceEventService.publishResourceEvent(
-            ResourceEventType.DEVICE,
-            ResourceEventAction.DELETED,
-            device,
-            resourceEventInfo
-          );
-          
-        }
+          );       
+      }
       )
     );
   }
@@ -196,7 +188,7 @@ class DeviceService {
      };
   }
 
-  public async pairDevice(authToken: string, deviceCreate: DeviceCreate & { id?: string }, resourceEventInfo: any): Promise<Device> {
+  public async pairDevice(authToken: string, deviceCreate: DeviceCreate & { id?: string }): Promise<Device> {
     const [device, locationOpt] = await Promise.all([
       this.deviceResolver.getByMacAddress(deviceCreate.macAddress, {
         $select: {
@@ -265,13 +257,6 @@ class DeviceService {
       createdDevice
     );
 
-    await this.resourceEventService.publishResourceEvent(
-      ResourceEventType.DEVICE,
-      ResourceEventAction.CREATED,
-      createdDevice,
-      resourceEventInfo
-    );
-    
     return createdDevice;
   }
 
