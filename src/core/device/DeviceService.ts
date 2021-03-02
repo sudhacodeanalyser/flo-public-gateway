@@ -9,7 +9,7 @@ import { DependencyFactoryFactory, Device, DeviceCreate, DeviceType, DeviceUpdat
 import ConflictError from '../api/error/ConflictError';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import { DeviceResolver } from '../resolver';
-import { EntityActivityAction, EntityActivityService, EntityActivityType, LocationService, UserService } from '../service';
+import { EntityActivityAction, EntityActivityService, ResourceEventService, EntityActivityType, LocationService, UserService } from '../service';
 import { SessionService } from '../session/SessionService';
 import { DirectiveService } from './DirectiveService';
 import { PairingResponse } from './PairingService';
@@ -21,6 +21,7 @@ import ForbiddenError from '../api/error/ForbiddenError';
 import moment from 'moment-timezone';
 import PairInitTable from './PairInitTable';
 import ExtendableError from '../api/error/ExtendableError';
+import { ResourceEventAction, ResourceEventType } from '../api/model/ResourceEvent';
 
 const { isNone, fromNullable } = O;
 type Option<T> = O.Option<T>;
@@ -38,6 +39,7 @@ class DeviceService {
     @inject('DependencyFactoryFactory') depFactoryFactory: DependencyFactoryFactory,
     @inject('InternalDeviceService') private internalDeviceService: InternalDeviceService,
     @inject('EntityActivityService') private entityActivityService: EntityActivityService,
+    @inject('ResourceEventService') private resourceEventService: ResourceEventService,
     @inject('MachineLearningService') private mlService: MachineLearningService,
     @inject('NotificationService') private notificationService: NotificationService,
     @inject('PairInitTable') private pairInitTable: PairInitTable,
@@ -163,8 +165,8 @@ class DeviceService {
             EntityActivityType.DEVICE,
             EntityActivityAction.DELETED,
             device
-          );
-        }
+          );       
+      }
       )
     );
   }
@@ -254,7 +256,7 @@ class DeviceService {
       EntityActivityAction.CREATED,
       createdDevice
     );
-    
+
     return createdDevice;
   }
 

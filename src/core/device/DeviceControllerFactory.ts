@@ -16,7 +16,7 @@ import NotFoundError from '../api/error/NotFoundError';
 import ResourceDoesNotExistError from "../api/error/ResourceDoesNotExistError";
 import ValidationError from '../api/error/ValidationError'
 import UnauthorizedError from '../api/error/UnauthorizedError';
-import Request from '../api/Request';
+import Request, { extractIpAddress } from '../api/Request';
 import * as Responses from '../api/response';
 import { DeviceService, PuckTokenService, LocationService, LteService } from '../service';
 import { DeviceSystemModeServiceFactory } from './DeviceSystemModeService';
@@ -30,6 +30,7 @@ import { MachineLearningService } from '../../machine-learning/MachineLearningSe
 import ConcurrencyService from '../../concurrency/ConcurrencyService';
 import ConflictError from '../api/error/ConflictError';
 import { DeviceSyncService } from './DeviceSyncService';
+import _ from 'lodash';
 
 const { isNone, some  } = O;
 type Option<T> = O.Option<T>;
@@ -302,7 +303,8 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       }))
     )
     @deleteMethod
-    private async removeDevice(@requestParam('id') id: string): Promise<void> {
+    private async removeDevice(@authorizationHeader() authToken: string, @request() req: Request, @requestParam('id') id: string): Promise<void> {
+     
       const macAddress = await this.mapIcdToMacAddress(id);
       await this.internalDeviceService.removeDevice(macAddress);
       await this.lteService.unlinkDevice(id);
@@ -683,7 +685,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     @withResponseType<Device, Responses.Device>(Responses.Device.fromModel)
     private async transferDevice(@requestParam('id') id: string, @requestBody() { locationId }: { locationId: string }): Promise<Option<Device>> {
       return some(await this.deviceService.transferDevice(id, locationId));
-    }
+    }   
   }
 
   return DeviceController;

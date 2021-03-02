@@ -49,9 +49,9 @@ class LocationPgTable extends PostgresTable<LocationPgRecordData> {
         .where(`
           NOT EXISTS(
             SELECT 1 FROM "user_location" AS "ul"
-            JOIN "location" as "ll" on "ul"."location_id" = "ll"."id"
+            LEFT JOIN "location_tree" as "lt" on "ul"."location_id" = "lt"."parent_id"
             WHERE "ul"."user_id" = ?
-            AND "l"."parent_location_id" = "ll"."id"
+            AND "l"."parent_location_id" = COALESCE("lt"."child_id", "ul"."location_id")
           )
         `, userId)
         .where('"ul"."user_id" = ?', userId),

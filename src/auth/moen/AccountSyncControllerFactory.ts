@@ -16,6 +16,11 @@ export function AccountSyncControllerFactory(container: Container, apiVersion: n
       super();
     }
 
+    @httpGet('/ping')
+    private async getPing(@request() req: Request): Promise<any> {
+      return this.accountSyncService.getPing();
+    }
+
     @httpGet('/token/trade')
     private async getTokenTrade(@request() req: Request): Promise<any> {
       return this.accountSyncService.getTokenTrade(req.headers.authorization as string);
