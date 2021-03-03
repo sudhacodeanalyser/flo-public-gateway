@@ -483,7 +483,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     }
 
     @httpPost('/:id/healthTest/:action',
-      authWithId,
+      authWithParents,
       reqValidator.create(t.type({
         params: t.type({
           id: t.string,
