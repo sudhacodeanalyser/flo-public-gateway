@@ -28,6 +28,8 @@ import { PuckTokenService } from './PuckTokenService';
 import ConflictError from '../api/error/ConflictError';
 import moment from 'moment-timezone';
 import LteTable from './LteTable';
+import { ResourceEventAction, ResourceEventInfo, ResourceEventType } from '../api/model/ResourceEvent';
+import { ResourceEventService } from '../service';
 
 const defaultHwThresholds = (deviceModel: string) => {
   const minZero = {
@@ -587,7 +589,8 @@ class DeviceResolver extends Resolver<Device> {
    @inject('PuckTokenService') private puckTokenService: PuckTokenService,
    @inject('LteTable') private lteTable: LteTable,
    @injectHttpContext private readonly httpContext: interfaces.HttpContext,
-   @inject('IrrigationScheduleService') private irrigationScheduleService: IrrigationScheduleService
+   @inject('IrrigationScheduleService') private irrigationScheduleService: IrrigationScheduleService,
+   @inject('ResourceEventService') private resourceEventService: ResourceEventService
   ) {
     super();
 
@@ -673,7 +676,7 @@ class DeviceResolver extends Resolver<Device> {
     return this.toModel(createdDeviceRecordData);
   }
 
-  public async transferDevice(deviceId: string, destLocationId: string): Promise<Device> {
+  public async transferDevice(deviceId: string, destLocationId: string, resourceEventInfo: ResourceEventInfo): Promise<Device> {
     const deviceRecord = await this.deviceTable.get({ id: deviceId });
 
     if (!deviceRecord) {
@@ -705,8 +708,24 @@ class DeviceResolver extends Resolver<Device> {
           sourceLocationRecord.location_id, 
           destLocationId,
           deviceId);
+
+    const transferredDevice = await this.toModel(transferredDeviceRecord);
+
+    resourceEventInfo.eventData = {
+      sourceLocationId: sourceLocationRecord.location_id,
+      sourceLocationName: sourceLocationRecord.location_name,
+      destLocationId: destLocationRecord.location_id,
+      destLocationName: destLocationRecord.location_name
+    };
+
+    await this.resourceEventService.publishResourceEvent(
+      ResourceEventType.DEVICE,
+      ResourceEventAction.UPDATED,
+      transferredDevice,
+      resourceEventInfo
+    );
     
-    return this.toModel(transferredDeviceRecord);
+    return transferredDevice;
   }
 
 

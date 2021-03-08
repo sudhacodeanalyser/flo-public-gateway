@@ -585,7 +585,7 @@ class LocationService {
     return this.locationResolver.getAllByFilters(expandProps, size, page, filters, searchText, sortProperties);
   }
 
-  public async transferLocation(destAccountId: string, srcLocationId: string): Promise<Location> {
+  public async transferLocation(destAccountId: string, srcLocationId: string, resourceEventInfo: ResourceEventInfo): Promise<Location> {
     const srcLocation = O.toNullable(await this.getLocation(srcLocationId));
 
     if (!srcLocation) {
@@ -602,19 +602,12 @@ class LocationService {
       throw new ConflictError('Cannot transfer location with subscription.');
     }
 
-    const eventInfo : ResourceEventInfo ={
-      clientId: '',
-      ipAddress: '',
-      userAgent: '',
-      userId: ''
-    }
-
     const {
       id,
       account,
       ...locationData
     } = srcLocation;
-    const clonedLocation = O.toNullable(await this.createLocation(eventInfo,{
+    const clonedLocation = O.toNullable(await this.createLocation(resourceEventInfo,{
       ...locationData,
       account: { id: destAccountId }
     }));
@@ -623,14 +616,14 @@ class LocationService {
       throw new Error(`Failed to copy location ${ srcLocationId }`);
     }
 
-    await this.transferDevices(clonedLocation.id, srcLocationId);
+    await this.transferDevices(clonedLocation.id, srcLocationId, resourceEventInfo);
 
     await this.updatePartialLocation(srcLocationId, { _mergedIntoLocationId: clonedLocation.id });
 
     return clonedLocation;
   }
 
-  public async transferDevices(destLocationId: string, srcLocationId: string): Promise<void> {
+  public async transferDevices(destLocationId: string, srcLocationId: string, resourceEventInfo: ResourceEventInfo): Promise<void> {
     const srcLocation = O.toNullable(await this.getLocation(srcLocationId, {
       $select: {
         devices: {
@@ -650,7 +643,7 @@ class LocationService {
     await Promise.all(
       srcLocation.devices
         .map(({ id }) => 
-          deviceService.transferDevice(id, destLocationId)
+          deviceService.transferDevice(id, destLocationId, resourceEventInfo)
         )
     );
 

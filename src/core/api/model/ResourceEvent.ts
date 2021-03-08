@@ -16,6 +16,7 @@ export interface ResourceEventInfo {
     ipAddress: string;
     clientId: string;
     userAgent: string;
+    eventData?: any;
 }
 
 export interface ItemEvent{

@@ -21,7 +21,7 @@ import ForbiddenError from '../api/error/ForbiddenError';
 import moment from 'moment-timezone';
 import PairInitTable from './PairInitTable';
 import ExtendableError from '../api/error/ExtendableError';
-import { ResourceEventAction, ResourceEventType } from '../api/model/ResourceEvent';
+import { ResourceEventAction, ResourceEventInfo, ResourceEventType } from '../api/model/ResourceEvent';
 
 const { isNone, fromNullable } = O;
 type Option<T> = O.Option<T>;
@@ -151,7 +151,7 @@ class DeviceService {
     return updatedDevice;
   }
 
-  public async removeDevice(id: string): Promise<void> {
+  public async removeDevice(id: string, resourceEventInfo: ResourceEventInfo): Promise<void> {
 
     await pipe(
       await this.getDeviceById(id),
@@ -165,7 +165,14 @@ class DeviceService {
             EntityActivityType.DEVICE,
             EntityActivityAction.DELETED,
             device
-          );       
+          );
+
+          await this.resourceEventService.publishResourceEvent(
+            ResourceEventType.DEVICE,
+            ResourceEventAction.DELETED,
+            device,
+            resourceEventInfo
+          );
       }
       )
     );
@@ -188,7 +195,7 @@ class DeviceService {
      };
   }
 
-  public async pairDevice(authToken: string, deviceCreate: DeviceCreate & { id?: string }): Promise<Device> {
+  public async pairDevice(authToken: string, deviceCreate: DeviceCreate & { id?: string }, resourceEventInfo: ResourceEventInfo): Promise<Device> {
     const [device, locationOpt] = await Promise.all([
       this.deviceResolver.getByMacAddress(deviceCreate.macAddress, {
         $select: {
@@ -255,6 +262,13 @@ class DeviceService {
       EntityActivityType.DEVICE,
       EntityActivityAction.CREATED,
       createdDevice
+    );
+
+    await this.resourceEventService.publishResourceEvent(
+      ResourceEventType.DEVICE,
+      ResourceEventAction.CREATED,
+      createdDevice,
+      resourceEventInfo
     );
 
     return createdDevice;
@@ -330,8 +344,8 @@ class DeviceService {
     }), this.emptyDeviceStats());
   }
 
-  public async transferDevice(id: string, destLocationId: string): Promise<Device> {
-    return this.deviceResolver.transferDevice(id, destLocationId);
+  public async transferDevice(id: string, destLocationId: string, resourceEventInfo: ResourceEventInfo): Promise<Device> {
+    return this.deviceResolver.transferDevice(id, destLocationId, resourceEventInfo);
   }
 
   public async markPairInit(macAddress: string): Promise<void> {
