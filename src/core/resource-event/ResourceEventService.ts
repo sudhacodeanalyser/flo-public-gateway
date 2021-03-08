@@ -73,12 +73,12 @@ class ResourceEventService {
   private formatResourceEventMessage<T>(
     type: ResourceEventType,
     action: ResourceEventAction,
-    data: Expandable<T>,
+    itemData: Expandable<T>,
     resourceEventInfo: ResourceEventInfo,
     accountId: string,
     userName: string,
   ): ResourceEventMessage {
-    const item = this.mapItem(type, data);
+    const item = this.mapItem(type, itemData, resourceEventInfo.eventData);
 
     return {
       created: new Date().toISOString(),
@@ -96,28 +96,28 @@ class ResourceEventService {
     };
   }
 
-  private mapItem(type: ResourceEventType, data: any): ItemEvent {
+  private mapItem(type: ResourceEventType, itemData: any, eventData: any): ItemEvent {
     switch (type) {
       case ResourceEventType.DEVICE:
         const { id: deviceId, nickname: deviceNickname } = Device.fromModel(
-          data as DeviceModel
+          itemData as DeviceModel
         );
 
         return {
           resourceId: deviceId,
           resourceName: deviceNickname || '',
-          eventData: {},
+          eventData: eventData || {},
         };
       case ResourceEventType.LOCATION:
         const {
           id: locationId,
           nickname: locationNickname,
-        } = Location.fromModel(data as LocationModel);
+        } = Location.fromModel(itemData as LocationModel);
 
         return {
           resourceId: locationId,
           resourceName: locationNickname || '',
-          eventData: {},
+          eventData: eventData || {},
         };
       default:
         return {
