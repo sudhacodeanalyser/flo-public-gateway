@@ -31,6 +31,7 @@ import ConcurrencyService from '../../concurrency/ConcurrencyService';
 import ConflictError from '../api/error/ConflictError';
 import { DeviceSyncService } from './DeviceSyncService';
 import _ from 'lodash';
+import { getEventInfo } from '../api/eventInfo';
 
 const { isNone, some  } = O;
 type Option<T> = O.Option<T>;
@@ -304,11 +305,11 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     )
     @deleteMethod
     private async removeDevice(@authorizationHeader() authToken: string, @request() req: Request, @requestParam('id') id: string): Promise<void> {
-     
+      const resourceEventInfo = getEventInfo(req);
       const macAddress = await this.mapIcdToMacAddress(id);
       await this.internalDeviceService.removeDevice(macAddress);
       await this.lteService.unlinkDevice(id);
-      return this.deviceService.removeDevice(id);
+      return this.deviceService.removeDevice(id, resourceEventInfo);
     }
 
     @httpPost('/pair/init',
@@ -363,6 +364,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     @withResponseType<Device, Responses.Device>(Responses.Device.fromModel)
     private async pairDevice(@authorizationHeader() authToken: string, @request() req: Request, @requestBody() deviceCreate: DeviceCreate): Promise<Option<Device | { device: Device, token: string }>> {
       const tokenMetadata = req.token;
+      const resourceEventInfo = getEventInfo(req);
 
       if (!tokenMetadata) {
         throw new UnauthorizedError();
@@ -377,7 +379,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
         throw new ConflictError('Device pairing in process.');
       }
       try {
-        const device = await this.deviceService.pairDevice(authToken, deviceCreate);
+        const device = await this.deviceService.pairDevice(authToken, deviceCreate, resourceEventInfo);
         if (deviceCreate.connectivity?.lte) {
           await this.lteService.linkDevice(device.id, deviceCreate.connectivity.lte.qrCode);
         }
@@ -397,6 +399,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     @withResponseType<Device, Responses.Device>(Responses.Device.fromModel)
     private async completePuckPairing(@authorizationHeader() authToken: string, @request() req: Request, @requestBody() deviceCreate: DeviceCreate): Promise<Option<{ device: Device, token: string }>> {
       const tokenMetadata = req.token;
+      const resourceEventInfo = getEventInfo(req);
 
       if (!tokenMetadata) {
         throw new UnauthorizedError();
@@ -406,7 +409,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
         throw new ValidationError();
       }
 
-      const device = await this.deviceService.pairDevice(authToken, { ...deviceCreate, id: tokenMetadata.puckId });
+      const device = await this.deviceService.pairDevice(authToken, { ...deviceCreate, id: tokenMetadata.puckId }, resourceEventInfo);
 
       return some({
         device,
@@ -483,7 +486,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     }
 
     @httpPost('/:id/healthTest/:action',
-      authWithId,
+      authWithParents,
       reqValidator.create(t.type({
         params: t.type({
           id: t.string,
@@ -683,8 +686,9 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       }))
     )
     @withResponseType<Device, Responses.Device>(Responses.Device.fromModel)
-    private async transferDevice(@requestParam('id') id: string, @requestBody() { locationId }: { locationId: string }): Promise<Option<Device>> {
-      return some(await this.deviceService.transferDevice(id, locationId));
+    private async transferDevice(@requestParam('id') id: string, @request() req: Request, @requestBody() { locationId }: { locationId: string }): Promise<Option<Device>> {
+      const resourceEventInfo = getEventInfo(req);
+      return some(await this.deviceService.transferDevice(id, locationId, resourceEventInfo));
     }   
   }
 

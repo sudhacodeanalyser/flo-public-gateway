@@ -19,6 +19,7 @@ import NotFoundError from '../api/error/NotFoundError';
 import { pipe } from 'fp-ts/lib/pipeable';
 import * as TO from 'fp-ts-contrib/lib/TaskOption';
 import ReqValidationError from '../../validation/ReqValidationError'
+import { getEventInfo } from '../api/eventInfo';
 
 const { some, none } = O;
 type Option<T> = O.Option<T>;
@@ -149,9 +150,9 @@ export function AccountControllerFactory(container: Container, apiVersion: numbe
         body: AccountMergeValidator
       }))
     )
-    private async mergeAccounts(@requestBody() merge: AccountMerge): Promise<Account> {
-
-      return this.accountService.mergeAccounts(merge);
+    private async mergeAccounts(@request() req: Request,@requestBody() merge: AccountMerge): Promise<Account> {
+      const resourceEventInfo = getEventInfo(req);
+      return this.accountService.mergeAccounts(merge, resourceEventInfo);
     }
 
     @httpGet('/:id',

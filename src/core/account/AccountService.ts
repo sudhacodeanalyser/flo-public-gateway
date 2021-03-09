@@ -8,7 +8,7 @@ import UnauthorizedError from '../api/error/UnauthorizedError';
 import ConflictError from '../api/error/ConflictError';
 import ForbiddenError from '../api/error/ForbiddenError';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
-import { UserService, LocationService, LocalizationService } from '../service';
+import { UserService, LocationService, LocalizationService, ResourceEventService } from '../service';
 import Logger from 'bunyan';
 import { NonEmptyStringFactory } from '../api/validator/NonEmptyString';
 import { EmailFactory } from '../api/validator/Email';
@@ -17,6 +17,7 @@ import { NotificationService } from '../notification/NotificationService';
 import uuid from 'uuid';
 import EmailClient from '../../email/EmailClient';
 import config from '../../config/config';
+import { ResourceEventAction, ResourceEventInfo, ResourceEventType } from '../api/model/ResourceEvent';
 
 const sevenDays = 604800;
 
@@ -33,6 +34,7 @@ class AccountService {
     @inject('DependencyFactoryFactory') depFactoryFactory: DependencyFactoryFactory,
     @inject('EmailClient') private emailClient: EmailClient,
     @inject('LocalizationService') private localizationService: LocalizationService,
+    @inject('ResourceEventService') private resourceEventService: ResourceEventService,
   ) {
     this.userServiceFactory = depFactoryFactory('UserService');
     this.locationServiceFactory = depFactoryFactory('LocationService');
@@ -201,7 +203,7 @@ class AccountService {
     return this.accountResolver.updatePartial(id, accountUpdate);
   }
 
-  public async mergeAccounts({ destAccountId, sourceAccountId, locationMerge }: AccountMerge): Promise<Account> {
+  public async mergeAccounts({ destAccountId, sourceAccountId, locationMerge }: AccountMerge, resourceEventInfo: ResourceEventInfo): Promise<Account> {
     const srcAccount = toNullable(await this.getAccountById(sourceAccountId));
     const destAccount = toNullable(await this.getAccountById(destAccountId));
 
@@ -238,14 +240,14 @@ class AccountService {
       await Promise.all(
         locationMerge
           .map(({ sourceLocationId, destLocationId }) =>
-            locationService.transferDevices(destLocationId, sourceLocationId)
+            locationService.transferDevices(destLocationId, sourceLocationId, resourceEventInfo)
           )
       );
     } else {
       const locationMappingPairs = await Promise.all(
         locations
           .map(async ({ id }) => {
-            const l = await locationService.transferLocation(destAccountId, id)
+            const l = await locationService.transferLocation(destAccountId, id, resourceEventInfo)
             return [id, l.id]
           })
       );
@@ -257,6 +259,20 @@ class AccountService {
     if (!updatedDestAccount) {
       throw new Error('Destination account not found.');
     }
+
+    resourceEventInfo.eventData = {
+      sourceAccountId: srcAccount.id,
+      destAccountId: destAccount.id
+    };
+
+    await locations.forEach(location => {
+       this.resourceEventService.publishResourceEvent(
+        ResourceEventType.LOCATION,
+        ResourceEventAction.UPDATED,
+        location,
+        resourceEventInfo
+      );
+    }) 
 
     return updatedDestAccount;
   }
