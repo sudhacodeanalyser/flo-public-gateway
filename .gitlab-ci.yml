@@ -112,7 +112,7 @@ Dev:
     ENV: "development"
     INSTANA_SERVICE_NAME: "flo-public-gateway-${ENV}"
     K8S_NAMESPACE: "flo-public-gateway"
-  image: registry.gitlab.com/flotechnologies/devops/docker-tools:helm-2-17
+  image: registry.gitlab.com/flotechnologies/devops/docker-tools:helm-v3-5-4
   stage: deploy
   dependencies:
     - Compile
