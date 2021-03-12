@@ -118,8 +118,7 @@ Dev:
     - Compile
   only:    
     - dev
-    - dev.rate-limit-5th-try
-    - rm-validator
+    - eks
   environment:
     name: dev
     url: https://flo-public-gateway.flocloud.co/api/v2/ping
