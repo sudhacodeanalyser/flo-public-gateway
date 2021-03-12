@@ -1,5 +1,5 @@
 ---
-image: registry.gitlab.com/flotechnologies/gitlabci-docker-compose:18.06-fat
+image: registry.gitlab.com/flotechnologies/devops/docker-tools:helm-v3.5.4
 
 services:
   - docker:18.09-dind
@@ -128,7 +128,7 @@ Dev:
     - make deploy
     - make deploy-status
   tags:
-    - dev
+    - eks
 
 ReleaseCandidate:
   variables:
