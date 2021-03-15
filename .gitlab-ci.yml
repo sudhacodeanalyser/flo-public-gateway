@@ -120,7 +120,7 @@ Dev:
     - dev
     - eks
   environment:
-    name: dev
+    name: eks
     url: https://flo-public-gateway.flocloud.co/api/v2/ping
   script:
     - make environment-dev
