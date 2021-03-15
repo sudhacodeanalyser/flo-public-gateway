@@ -94,7 +94,7 @@ deploy:
 		--wait --timeout $(HELM_DEPLOY_TIMEOUT)s
 
 deploy-status:
-	$(HELM) history --max $(HELM_HISTORY_MAX) $(HELM_RELEASE_NAME)
+	$(HELM) history --max $(HELM_HISTORY_MAX) $(HELM_RELEASE_NAME) -n $(K8S_NAMESPACE)
 	$(HELM) status $(HELM_RELEASE_NAME) -n $(K8S_NAMESPACE)
 
 environment:
