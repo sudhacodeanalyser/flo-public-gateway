@@ -79,6 +79,7 @@ Compile:
     expire_in: 1 week
     # Cache modules in between jobs
   cache:
+    untracked: true
     key: "$CI_PROJECT_NAME-$CI_COMMIT_REF_SLUG"
     paths:
       - .npm/

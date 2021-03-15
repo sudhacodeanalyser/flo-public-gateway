@@ -90,7 +90,7 @@ deploy:
 		--values ./k8s/pipeline.yaml \
 		--set environment=$(ENV) \
 		--namespace=$(K8S_NAMESPACE) \
-		--wait --timeout $(HELM_DEPLOY_TIMEOUT)
+		--wait --timeout $(HELM_DEPLOY_TIMEOUT)s
 
 deploy-status:
 	$(HELM) history --max $(HELM_HISTORY_MAX) $(HELM_RELEASE_NAME)
