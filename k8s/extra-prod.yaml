@@ -1,0 +1,6 @@
+internalIngress:
+  host: internal-ingress.flosecurecloud.com
+routingIngress:
+  annotations: {}
+v1ProxyService:
+  floApiV1Hostname: not-for-public-use-api-gw.meetflo.com

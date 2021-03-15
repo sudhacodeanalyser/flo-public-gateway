@@ -60,6 +60,7 @@ before_script:
     # TODO: this should be part of the compose image
     apk add --no-cache make bash jq gettext
     mkdir -pv "${HOME}/.docker/"
+    wget https://nexus.flotech.co/repository/tools/kube-svc-ctl/alpine/kube-svc-ctl -O kube-svc-ctl && chmod +x kube-svc-ctl
     echo "${DOCKER_AUTH_CONFIG}" > "${HOME}/.docker/config.json"
     docker login
     docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY
@@ -109,7 +110,6 @@ Sanity:
 
 Dev:
   variables:
-    KUBERNETES_SERVICE_ACCOUNT_OVERWRITE: tiller
     ENV: "development"
     INSTANA_SERVICE_NAME: "flo-public-gateway-${ENV}"
     K8S_NAMESPACE: "flo-public-gateway"
@@ -124,7 +124,7 @@ Dev:
     name: eks
     url: https://flo-public-gateway.flocloud.co/api/v2/ping
   script:
-    - make environment-dev
+    - make environment
     - make deploy
     - make deploy-status
   tags:

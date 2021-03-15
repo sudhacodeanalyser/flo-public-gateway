@@ -1,0 +1,4 @@
+internalIngress:
+  host: internal-ingress.flocloud.co
+routingIngress:
+  annotations: {}

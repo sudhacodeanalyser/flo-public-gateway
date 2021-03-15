@@ -88,6 +88,7 @@ deploy:
 		./k8s/$(HELM_CHART) \
 		--install \
 		--values ./k8s/pipeline.yaml \
+		--values ./k8s/extra-$(ENV).yaml \
 		--set environment=$(ENV) \
 		--namespace=$(K8S_NAMESPACE) \
 		--wait --timeout $(HELM_DEPLOY_TIMEOUT)s
@@ -96,13 +97,8 @@ deploy-status:
 	$(HELM) history --max $(HELM_HISTORY_MAX) $(HELM_RELEASE_NAME)
 	$(HELM) status $(HELM_RELEASE_NAME)
 
-environment-dev:
-	chmod +x ./k8s/env-dev.sh
-	./k8s/env-dev.sh
-
-environment-prod:
-	chmod +x ./k8s/env-prod.sh
-	./k8s/env-prod.sh
+environment:
+	./kube-svc-ctl generate-svc-config -service $(APP) -tag "${CI_PIPELINE_ID}" > ./k8s/pipeline.yaml
 
 runscope:
 	$(DOCKER) \
