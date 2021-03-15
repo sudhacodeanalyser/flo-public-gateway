@@ -46,6 +46,16 @@ ingress:
   #      - chart-example.local
 
 
+floApiProxyConfig: |
+  server {
+          listen       80;
+          server_name  _;
+          location / {
+              proxy_pass   flo-api.flo-api.svc.cluster.local;
+          }
+
+  }
+
 routingPaths:
   - name: /api/v2
   - name: /docs

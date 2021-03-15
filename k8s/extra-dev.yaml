@@ -2,5 +2,12 @@ internalIngress:
   host: internal-ingress.flocloud.co
 routingIngress:
   annotations: {}
+floApiProxyConfig: |
+  server {
+          listen       80;
+          server_name  _;
+          location / {
+              proxy_pass   https://flo-api-k8s.flocloud.co;
+          }
 
-floApiUrl: https://flo-api-k8s.flocloud.co
+  }
