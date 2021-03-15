@@ -3,13 +3,14 @@ kind: Service
 apiVersion: v1
 metadata:
   name: {{ template "flo-public-gateway.proxy-to-flo-api-name" . }}
-  annotations:
-    kubernetes.io/ingress.class: "nginx"
 spec:
   ports:
-    - port: 8000
+    - port: 8081
+      name: http
       protocol: TCP
-      targetPort: 8000
-  type: ExternalName
-  externalName: {{ .Values.floApiUrl | quote }}
+      targetPort: http
+  type: NodePort
+  selector:
+    app.kubernetes.io/name: {{ include "flo-public-gateway.name" . }}-proxy
+    app.kubernetes.io/instance: {{ .Release.Name }}
 

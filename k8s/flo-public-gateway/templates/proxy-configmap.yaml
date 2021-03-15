@@ -1,0 +1,15 @@
+{{- $fullName := include "flo-public-gateway.fullname" . -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $fullName }}-nginx-config
+data:
+  extra-vhost.conf: |
+    server {
+        listen       80;
+        server_name  _;
+        location / {
+            proxy_pass   {{ .Values.floApiUrl }};
+        }
+
+    }

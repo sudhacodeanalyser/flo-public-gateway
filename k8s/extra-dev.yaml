@@ -2,3 +2,5 @@ internalIngress:
   host: internal-ingress.flocloud.co
 routingIngress:
   annotations: {}
+
+floApiUrl: https://flo-api-k8s.flocloud.co

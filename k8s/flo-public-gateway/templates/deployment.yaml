@@ -1,3 +1,4 @@
+{{- $fullName := include "flo-public-gateway.fullname" . -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -34,6 +35,10 @@ spec:
     spec:
       imagePullSecrets:
         - name: gitlab-registry
+      volumes:
+        - name: nginx-config
+          configMap:
+            name: {{ $fullName }}-nginx-sidecar-config
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
