@@ -95,7 +95,7 @@ deploy:
 
 deploy-status:
 	$(HELM) history --max $(HELM_HISTORY_MAX) $(HELM_RELEASE_NAME)
-	$(HELM) status $(HELM_RELEASE_NAME)
+	$(HELM) status $(HELM_RELEASE_NAME) -n $(K8S_NAMESPACE)
 
 environment:
 	./kube-svc-ctl generate-svc-config -service $(APP) -tag "${CI_PIPELINE_ID}" > ./k8s/pipeline.yaml
