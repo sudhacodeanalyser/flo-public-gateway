@@ -83,7 +83,6 @@ debug-helm:
 		--namespace=$(K8S_NAMESPACE)
 
 deploy:
-	$(HELM) init --upgrade --wait --force-upgrade --debug
 	$(HELM) upgrade \
 		$(HELM_RELEASE_NAME) \
 		./k8s/$(HELM_CHART) \
