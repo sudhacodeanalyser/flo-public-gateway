@@ -72,7 +72,8 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
           page: PositiveIntegerFromString,
           size: PositiveIntegerFromString,
           lang: t.string,
-          unitSystem: t.string
+          unitSystem: t.string,
+          createdAt: t.union([t.string, t.array(t.string)])
         })
       })),
       authMiddlewareFactory.create(async ({ query }: Request, depFactoryFactory: DependencyFactoryFactory) => {
@@ -170,6 +171,7 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
       const severity = _.concat([], req.query.severity || []);
       const reason = _.concat([], req.query.reason || []);
       const alarmId = _.concat([], req.query.alarmId || []);
+      const createdAt = _.concat([], req.query.createdAt || []);
 
       const filters = {
         ...req.query,
@@ -181,6 +183,7 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
         ...(!_.isEmpty(severity) && { severity }),
         ...(!_.isEmpty(reason) && { reason }),
         ...(!_.isEmpty(alarmId) && { alarmId }),
+        ...(!_.isEmpty(createdAt) && { createdAt }),
       };
 
       if (_.isEmpty(filters.deviceId) && _.isEmpty(filters.locationId) && noLocationOrDevice) {
