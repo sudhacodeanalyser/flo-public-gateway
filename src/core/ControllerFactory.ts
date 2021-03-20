@@ -24,6 +24,7 @@ import { HeadsUpControllerFactory } from './heads-up/HeadsUpControllerFactory';
 import { EventControllerFactory } from './event/EventControllerFactory';
 import { AccountSyncControllerFactory } from '../auth/moen/AccountSyncControllerFactory'
 import { EmailControllerFactory } from './email/EmailControllerFactory';
+import { ResourceEventControllerFactory } from './resource-event/ResourceEventControllerFactory';
 
 export default function ControllerFactory(container: Container, apiVersion: number = 2): interfaces.Controller[] {
   return [
@@ -50,6 +51,7 @@ export default function ControllerFactory(container: Container, apiVersion: numb
     EventControllerFactory,
     AccountSyncControllerFactory,
     EmailControllerFactory,
+    ResourceEventControllerFactory,
   ]
   .map(controllerFactory => controllerFactory(container, apiVersion));
 }

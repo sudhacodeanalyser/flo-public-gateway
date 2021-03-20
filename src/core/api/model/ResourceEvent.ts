@@ -25,7 +25,7 @@ export interface ItemEvent{
     eventData?: any;
 }
 
-export interface ResourceEventMessage {
+export interface ResourceEvent {
     created: string;
     accountId: string;
     resourceType: ResourceEventType;
