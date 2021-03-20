@@ -33,6 +33,7 @@ variables:
   KAFKA_HOST: "kafka-cherry-broker-1.dev.flocloud.co:9092,kafka-cherry-broker-2.dev.flocloud.co:9092,kafka-cherry-broker-3.dev.flocloud.co:9092"
   KAFKA_TIMEOUT_MS: "10000"
   LOCALIZATION_API_URL: "http://flo-localization-service.flo-localization-service.svc.cluster.local:3000/v1"
+  RESOURCE_EVENT_API_URL: "http://flo-resource-event.flo-resource-event.svc.cluster.local"
   NOTIFICATION_API_URL: "http://flo-notification-api.flo-notification-api.svc.cluster.local"
   POSTGRES_DATABASE: "list-service"
   POSTGRES_HOST: "dev-rds-cherry.dev.flocloud.co"
@@ -160,6 +161,7 @@ ReleaseCandidate:
     POSTGRES_PORT_PROD: 5432
     POSTGRES_USER_PROD: "${POSTGRES_USER}"
     LOCALIZATION_API_URL_PROD: "http://flo-localization-service.flo-localization-service.svc.cluster.local:3000/v1"
+    RESOURCE_EVENT_API_URL_PROD: "http://flo-resource-event.flo-resource-event.svc.cluster.local"
     NOTIFICATION_API_URL_PROD: "http://flo-notification-api.flo-notification-api.svc.cluster.local"
     PRESENCE_SERVICE_URL_PROD: "https://flo-core-service.flosecurecloud.com/presence"
     REDIS_HOST_PROD: "flo-api.k5ahfc.clustercfg.usw2.cache.amazonaws.com"
