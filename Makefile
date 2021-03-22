@@ -90,7 +90,7 @@ deploy:
 		--values ./k8s/pipeline.yaml \
 		--values ./k8s/extra-$(ENV).yaml \
 		--set environment=$(ENV) \
-		--namespace=$(K8S_NAMESPACE) \
+		--namespace=$(K8S_NAMESPACE) --create-namespace \
 		--wait --timeout $(HELM_DEPLOY_TIMEOUT)s
 
 deploy-status:
