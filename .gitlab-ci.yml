@@ -1,5 +1,5 @@
 ---
-image: registry.gitlab.com/flotechnologies/devops/docker-tools:helm-v3.5.4
+image: registry.gitlab.com/flotechnologies/devops/docker-tools@sha256:4442bf7c5959ab0b9428af9fb43bf6cc15f5b7f9f1b59f281adba9781633bb43
 
 services:
   - docker:18.09-dind
@@ -23,7 +23,6 @@ before_script:
     # TODO: this should be part of the compose image
     apk add --no-cache make bash jq gettext
     mkdir -pv "${HOME}/.docker/"
-    wget https://nexus.flotech.co/repository/tools/kube-svc-ctl/alpine/kube-svc-ctl -O kube-svc-ctl && chmod +x kube-svc-ctl
     echo "${DOCKER_AUTH_CONFIG}" > "${HOME}/.docker/config.json"
     docker login
     docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY
@@ -157,15 +156,16 @@ K8sProd:
     - Compile
   only:
     - master
+    - eks-prod
   environment:
-    name: prod
+    name: prod-eks
     url: https://api-gw.meetflo.com/api/v2/ping
   script:
-    - make environment-prod
+    - make environment
     - make deploy
     - make deploy-status
   tags:
-    - deploy-prod
+    - eks-prod
 
 .RunscopeRC:
   variables:
@@ -197,10 +197,10 @@ RunscopeProd:
     - master
     - fix-runscope-pull
   environment:
-    name: prod
+    name: prod-eks
     url: https://api-gw.meetflo.com/api/v2/ping
   script:
     - sleep 20
     - make runscope
   tags:
-    - dev
+    - eks-prod

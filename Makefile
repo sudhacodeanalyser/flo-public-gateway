@@ -98,7 +98,7 @@ deploy-status:
 	$(HELM) status $(HELM_RELEASE_NAME) -n $(K8S_NAMESPACE)
 
 environment:
-	./kube-svc-ctl generate-svc-config -service $(APP) -tag "${CI_PIPELINE_ID}" > ./k8s/pipeline.yaml
+	kube-svc-ctl generate-svc-config -service $(APP) -tag "${CI_PIPELINE_ID}" > ./k8s/pipeline.yaml
 
 runscope:
 	$(DOCKER) \
