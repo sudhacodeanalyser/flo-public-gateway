@@ -1,7 +1,15 @@
-internalIngress:
-  host: internal-ingress.flocloud.co
-routingIngress:
-  annotations: {}
+ingress:
+  enabled: true
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/success-codes: 200,404
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
+  path: "/*"
+  hosts:
+    - api-gw-dev.flocloud.co
+    - api-dev.flocloud.co
+    - flo-public-gateway-k8s.flocloud.co
 floApiProxyConfig: |
   server {
           listen       80;
