@@ -7,19 +7,21 @@ import {
   DependencyFactoryFactory,
 } from '../api';
 import Logger from 'bunyan';
+import { memoized, MemoizeMixin } from '../../memoize/MemoizeMixin';
 import { UserService } from '../service';
 import { Device, Location} from '../api/response';
+import { HttpService, HttpError } from '../../http/HttpService'
 import {
   ItemEvent,
   ResourceEventAction,
   ResourceEventInfo,
-  ResourceEventMessage,
+  ResourceEvent,
   ResourceEventType,
 } from '../api/model/ResourceEvent';
 import { isNone } from 'fp-ts/lib/Option';
 
 @injectable()
-class ResourceEventService {
+class ResourceEventService extends MemoizeMixin(HttpService) {
   private userServiceFactory: () => UserService;
 
   constructor(
@@ -28,8 +30,21 @@ class ResourceEventService {
     @inject('KafkaProducer') private readonly kafkaProducer: KafkaProducer,
     @inject('Logger') private readonly logger: Logger,
     @inject('DependencyFactoryFactory') depFactoryFactory: DependencyFactoryFactory,
+    @inject('ResourceEventApiUrl') private resourceEventApiUrl: string
   ) {
+    super();
     this.userServiceFactory = depFactoryFactory('UserService');
+  }
+
+  public async getResourceEvents(accountId: string, from: string, to: string): Promise<ResourceEvent[]> {
+    const request = {
+      method: 'get',
+      url: `${this.resourceEventApiUrl}/event?accountId=${accountId}&from=${from}&to=${to}`
+    };
+
+    const response = await this.sendRequest(request);
+
+    return response;
   }
 
   public async publishResourceEvent<T>(
@@ -77,7 +92,7 @@ class ResourceEventService {
     resourceEventInfo: ResourceEventInfo,
     accountId: string,
     userName: string,
-  ): ResourceEventMessage {
+  ): ResourceEvent {
     const item = this.mapItem(type, itemData, resourceEventInfo.eventData);
 
     return {
