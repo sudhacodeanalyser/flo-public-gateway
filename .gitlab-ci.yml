@@ -150,6 +150,7 @@ K8sProd:
   variables:
     VAULT_URL: ${VAULT_URL_PROD}
     VAULT_TOKEN: ${VAULT_TOKEN_PROD}
+    ENV: prod
   image: registry.gitlab.com/flotechnologies/devops/docker-tools:helm-v3-5-4
   stage: deploy
   dependencies:
