@@ -90,7 +90,7 @@ deploy:
 		--values ./k8s/pipeline.yaml \
 		--values ./k8s/extra-$(ENV).yaml \
 		--set environment=$(ENV) \
-		--namespace=$(K8S_NAMESPACE) \
+		--namespace=$(K8S_NAMESPACE) --create-namespace \
 		--wait --timeout $(HELM_DEPLOY_TIMEOUT)s
 
 deploy-status:
@@ -98,7 +98,7 @@ deploy-status:
 	$(HELM) status $(HELM_RELEASE_NAME) -n $(K8S_NAMESPACE)
 
 environment:
-	./kube-svc-ctl generate-svc-config -service $(APP) -tag "${CI_PIPELINE_ID}" > ./k8s/pipeline.yaml
+	kube-svc-ctl generate-svc-config -service $(APP) -tag "${CI_PIPELINE_ID}" > ./k8s/pipeline.yaml
 
 runscope:
 	$(DOCKER) \

@@ -36,10 +36,7 @@ ingress:
     alb.ingress.kubernetes.io/success-codes: 200,404
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
   path: "/*"
-  hosts:
-    - api-gw-dev.flocloud.co
-    - api-dev.flocloud.co
-    - flo-public-gateway-k8s.flocloud.co
+  hosts: []
   tls: []
   #  - secretName: chart-example-tls
   #    hosts:
