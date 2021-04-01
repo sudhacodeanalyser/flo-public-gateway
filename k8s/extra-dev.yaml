@@ -15,7 +15,7 @@ floApiProxyConfig: |
           listen       80;
           server_name  _;
           location / {
-              proxy_pass   https://flo-api-k8s.flocloud.co;
+              proxy_pass   http://flo-api.flo-api.svc.cluster.local:8000;
           }
 
   }
