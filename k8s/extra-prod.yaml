@@ -9,6 +9,7 @@ ingress:
   path: "/*"
   hosts:
     - api-gw-eks.flosecurecloud.com
+    - api.meetflo.com
   tls: []
 
 floApiProxyConfig: |
