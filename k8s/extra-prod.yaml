@@ -6,7 +6,7 @@ ingress:
     alb.ingress.kubernetes.io/success-codes: 200,404
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
     alb.ingress.kubernetes.io/subnets: subnet-0d0b5769, subnet-8ff580f9
-    alb.ingress.kubernetes.io/certificate-arn:
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-west-2:617288038711:certificate/49f4de9f-74a3-41bc-8808-e2558c45999b
   path: "/*"
   hosts:
     - api-gw-eks.flosecurecloud.com
