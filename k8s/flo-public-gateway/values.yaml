@@ -48,6 +48,12 @@ floApiProxyConfig: |
           listen       80;
           server_name  _;
           location / {
+              add_header 'Access-Control-Allow-Origin' '*';
+              add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
+              #
+              # Custom headers and headers various browsers *should* be OK with but aren't
+              #
+              add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range';
               proxy_pass   flo-api.flo-api.svc.cluster.local;
           }
 
