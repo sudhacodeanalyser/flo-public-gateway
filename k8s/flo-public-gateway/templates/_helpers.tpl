@@ -64,3 +64,6 @@ Create the name of the service account to use
 {{- define "flo-public-gateway.proxy-to-flo-api-name" -}}
 proxy-flo-api-flo-public-gateway
 {{- end -}}
+{{- define "flo-public-gateway.proxy-to-flo-public-gateway" -}}
+proxy-flo-public-gateway
+{{- end -}}

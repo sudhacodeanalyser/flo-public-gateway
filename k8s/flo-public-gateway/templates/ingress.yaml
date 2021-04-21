@@ -37,7 +37,7 @@ spec:
               servicePort: 8081
           - path: {{ $ingressPath }}
             backend:
-              serviceName: {{ $fullName }}
+              serviceName: {{ template "flo-public-gateway.proxy-to-flo-public-gateway" . }}
               servicePort: 3000
 
   {{- end }}

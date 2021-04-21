@@ -11,6 +11,6 @@ spec:
       targetPort: http
   type: NodePort
   selector:
-    app.kubernetes.io/name: {{ include "flo-public-gateway.name" . }}-proxy
+    app.kubernetes.io/name: {{ include "flo-public-gateway.name" . }}-v1-proxy
     app.kubernetes.io/instance: {{ .Release.Name }}
 
