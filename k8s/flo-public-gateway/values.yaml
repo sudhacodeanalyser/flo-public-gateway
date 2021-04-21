@@ -58,7 +58,7 @@ publicGatewayProxyConfig: |
             listen       80;
             server_name  _;
             location / {
-                proxy_pass   flo-public-gateway.flo-public-gateway.svc.cluster.local:3000;
+                proxy_pass   http://flo-public-gateway.flo-public-gateway.svc.cluster.local:3000;
             }
 
     }
