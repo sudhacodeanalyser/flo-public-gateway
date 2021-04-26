@@ -44,5 +44,27 @@ BEGIN;
     INSERT INTO list (list_id, key_id, short_display, long_display, "state", "order", lang) VALUES ('purchase_location', 'ns', 'No sé', 'No sé', 1, 6, 'es')
     ON CONFLICT ON CONSTRAINT list_pkey DO NOTHING;
 
+    -- FR
+    INSERT INTO list (list_id, key_id, short_display, long_display, "state", "order", lang) VALUES ('purchase_location', 'meetflo', 'meetflo.com', 'site web flo', 1, 0, 'fr') 
+    ON CONFLICT ON CONSTRAINT list_pkey DO NOTHING;
+
+    INSERT INTO list (list_id, key_id, short_display, long_display, "state", "order", lang) VALUES ('purchase_location', 'amazon', 'amazon.com', 'site web amazon', 1, 1, 'fr') 
+    ON CONFLICT ON CONSTRAINT list_pkey DO NOTHING;
+
+    INSERT INTO list (list_id, key_id, short_display, long_display, "state", "order", lang) VALUES ('purchase_location', 'homeimprovementstore', 'Magasin de rénovation domiciliaire', 'Magasin de rénovation domiciliaire', 1, 2, 'fr')
+    ON CONFLICT ON CONSTRAINT list_pkey DO NOTHING;
+
+    INSERT INTO list (list_id, key_id, short_display, long_display, "state", "order", lang) VALUES ('purchase_location', 'plumber', 'Plombier', 'Plombier', 1, 3, 'fr')
+    ON CONFLICT ON CONSTRAINT list_pkey DO NOTHING;
+
+    INSERT INTO list (list_id, key_id, short_display, long_display, "state", "order", lang) VALUES ('purchase_location', 'lennar', 'Lennar', 'Lennar', 1, 4, 'fr')
+    ON CONFLICT ON CONSTRAINT list_pkey DO NOTHING;
+
+    INSERT INTO list (list_id, key_id, short_display, long_display, "state", "order", lang) VALUES ('purchase_location', 'other', 'Autres', 'Autres', 1, 5, 'fr')
+    ON CONFLICT ON CONSTRAINT list_pkey DO NOTHING;
+
+    INSERT INTO list (list_id, key_id, short_display, long_display, "state", "order", lang) VALUES ('purchase_location', 'ns', 'Pas certain', 'Pas certain', 1, 6, 'fr')
+    ON CONFLICT ON CONSTRAINT list_pkey DO NOTHING;
+
     COMMIT;
 END;
