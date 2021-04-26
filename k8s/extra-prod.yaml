@@ -11,6 +11,7 @@ ingress:
   hosts:
     - api-gw-eks.flosecurecloud.com
     - api.meetflo.com
+    - api-gw.meetflo.com
   tls: []
 
 floApiProxyConfig: |
