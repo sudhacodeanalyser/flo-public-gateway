@@ -80,8 +80,7 @@ export function AccountControllerFactory(container: Container, apiVersion: numbe
       authWithIdBody,
       reqValidator.create(t.type({
         body: t.type({
-          emailValidator,
-          accountIdValidator
+          email: emailValidator,
         })
       }))
     )
