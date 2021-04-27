@@ -19,7 +19,7 @@ BEGIN;
     INSERT INTO list (list_id, key_id, short_display, long_display, "state", "order", lang) VALUES ('purchase_location', 'other', 'Other', 'Other source', 1, 5, 'en')
     ON CONFLICT ON CONSTRAINT list_pkey DO NOTHING;
 
-    INSERT INTO list (list_id, key_id, short_display, long_display, "state", "order", lang) VALUES ('purchase_location', 'ns', 'Not sure', 'Not sure', 1, 6, 'en')
+    INSERT INTO list (list_id, key_id, short_display, long_display, "state", "order", lang) VALUES ('purchase_location', 'unknown', 'Not sure', 'Not sure', 1, 6, 'en')
     ON CONFLICT ON CONSTRAINT list_pkey DO NOTHING;
 
     -- ES
@@ -41,7 +41,7 @@ BEGIN;
     INSERT INTO list (list_id, key_id, short_display, long_display, "state", "order", lang) VALUES ('purchase_location', 'other', 'Otros', 'Otros', 1, 5, 'es')
     ON CONFLICT ON CONSTRAINT list_pkey DO NOTHING;
 
-    INSERT INTO list (list_id, key_id, short_display, long_display, "state", "order", lang) VALUES ('purchase_location', 'ns', 'No sé', 'No sé', 1, 6, 'es')
+    INSERT INTO list (list_id, key_id, short_display, long_display, "state", "order", lang) VALUES ('purchase_location', 'unknown', 'No sé', 'No sé', 1, 6, 'es')
     ON CONFLICT ON CONSTRAINT list_pkey DO NOTHING;
 
     -- FR
@@ -63,7 +63,7 @@ BEGIN;
     INSERT INTO list (list_id, key_id, short_display, long_display, "state", "order", lang) VALUES ('purchase_location', 'other', 'Autres', 'Autres', 1, 5, 'fr')
     ON CONFLICT ON CONSTRAINT list_pkey DO NOTHING;
 
-    INSERT INTO list (list_id, key_id, short_display, long_display, "state", "order", lang) VALUES ('purchase_location', 'ns', 'Pas certain', 'Pas certain', 1, 6, 'fr')
+    INSERT INTO list (list_id, key_id, short_display, long_display, "state", "order", lang) VALUES ('purchase_location', 'unknown', 'Pas certain', 'Pas certain', 1, 6, 'fr')
     ON CONFLICT ON CONSTRAINT list_pkey DO NOTHING;
 
     COMMIT;
