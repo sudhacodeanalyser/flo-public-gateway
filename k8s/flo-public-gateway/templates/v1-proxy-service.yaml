@@ -1,0 +1,16 @@
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: {{ template "flo-public-gateway.proxy-to-flo-api-name" . }}
+spec:
+  ports:
+    - port: 8081
+      name: http
+      protocol: TCP
+      targetPort: http
+  type: NodePort
+  selector:
+    app.kubernetes.io/name: {{ include "flo-public-gateway.name" . }}-v1-proxy
+    app.kubernetes.io/instance: {{ .Release.Name }}
+

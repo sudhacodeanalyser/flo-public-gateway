@@ -12,7 +12,7 @@ nameOverride: ""
 fullnameOverride: ""
 
 service:
-  type: ClusterIP
+  type: NodePort
   port: 3000
   livenessProbe:
     path: "/api/v2/ping"
@@ -28,146 +28,52 @@ service:
 
 floApiUrl: "flo-api.flo-api.svc.cluster.local"
 
-routingIngress:
+ingress:
   enabled: true
   annotations:
-    kubernetes.io/ingress.class: nginx
-    nginx.ingress.kubernetes.io/enable-cors: "false"
-    nginx.ingress.kubernetes.io/server-snippet: |
-      location /api/v1/oauth2/token {
-
-          set $namespace      "flo-public-gateway";
-          set $ingress_name   "flo-public-gateway";
-          set $service_name   "proxy-flo-api-flo-public-gateway";
-          set $service_port   "8000";
-          set $location_path  "/api/v1/oauth2/token";
-
-          rewrite_by_lua_block {
-                  lua_ingress.rewrite({
-                          force_ssl_redirect = false,
-                          ssl_redirect = true,
-                          force_no_ssl_redirect = false,
-                          use_port_in_redirects = false,
-                  })
-                  balancer.rewrite()
-                  plugins.run()
-          }
-
-          # be careful with `access_by_lua_block` and `satisfy any` directives as satisfy any
-          # will always succeed when there's `access_by_lua_block` that does not have any lua code doing `ngx.exit(ngx.DECLINED)`
-          # other authentication method such as basic auth or external auth useless - all requests will be allowed.
-          #access_by_lua_block {
-          #}
-
-          header_filter_by_lua_block {
-                  lua_ingress.header()
-                  plugins.run()
-          }
-
-          body_filter_by_lua_block {
-          }
-
-          log_by_lua_block {
-                  balancer.log()
-
-                  monitor.call()
-
-                  plugins.run()
-          }
-
-          limit_req zone=my-zone-3 burst=5 nodelay;
-          limit_req_status 429;
-          # limit_req_dry_run on;
-
-          port_in_redirect off;
-
-          set $balancer_ewma_score -1;
-          set $proxy_upstream_name "flo-public-gateway-proxy-flo-api-flo-public-gateway-8000";
-          set $proxy_host          $proxy_upstream_name;
-          set $pass_access_scheme  $scheme;
-
-          set $pass_server_port    $server_port;
-
-          set $best_http_host      $http_host;
-          set $pass_port           $pass_server_port;
-
-          set $proxy_alternative_upstream_name "";
-
-          client_max_body_size                    1m;
-
-          proxy_set_header Host                   $best_http_host;
-
-          # Pass the extracted client certificate to the backend
-
-          # Allow websocket connections
-          proxy_set_header                        Upgrade           $http_upgrade;
-
-          proxy_set_header                        Connection        $connection_upgrade;
-
-          proxy_set_header X-Request-ID           $req_id;
-          proxy_set_header X-Real-IP              $remote_addr;
-
-          proxy_set_header X-Forwarded-For        $remote_addr;
-
-          proxy_set_header X-Forwarded-Proto      $pass_access_scheme;
-
-          proxy_set_header X-Forwarded-Host       $best_http_host;
-          proxy_set_header X-Forwarded-Port       $pass_port;
-
-          proxy_set_header X-Scheme               $pass_access_scheme;
-
-          # Pass the original X-Forwarded-For
-          proxy_set_header X-Original-Forwarded-For $http_x_forwarded_for;
-
-          # mitigate HTTPoxy Vulnerability
-          # https://www.nginx.com/blog/mitigating-the-httpoxy-vulnerability-with-nginx/
-          proxy_set_header Proxy                  "";
-
-          # Custom headers to proxied server
-
-          proxy_connect_timeout                   5s;
-          proxy_send_timeout                      60s;
-          proxy_read_timeout                      60s;
-
-          proxy_buffering                         off;
-          proxy_buffer_size                       4k;
-          proxy_buffers                           4 4k;
-
-          proxy_max_temp_file_size                1024m;
-
-          proxy_request_buffering                 on;
-          proxy_http_version                      1.1;
-
-          proxy_cookie_domain                     off;
-          proxy_cookie_path                       off;
-
-          # In case of errors try the next upstream server before returning an error
-          proxy_next_upstream                     error timeout http_502;
-          proxy_next_upstream_timeout             0;
-          proxy_next_upstream_tries               3;
-
-          proxy_pass http://upstream_balancer;
-
-          proxy_redirect                          off;
-
-      }
-  hosts:
-    production:
-      - api.meetflo.com
-      - api-gw.meetflo.com
-      - flo-public-gateway.flosecurecloud.com
-      - flo-public-gateway-prod.flosecurecloud.com
-    development:
-      - api-gw-dev.flocloud.co
-      - api-dev.flocloud.co
-      - flo-public-gateway-k8s.flocloud.co
-    rc:
-      - api-gw-rc.flosecurecloud.com
-      - flo-public-gateway-rc.flosecurecloud.com
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/success-codes: 200,404
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
+  path: "/*"
+  hosts: []
   tls: []
   #  - secretName: chart-example-tls
   #    hosts:
   #      - chart-example.local
+
+
+floApiProxyConfig: |
+  server {
+          listen       80;
+          server_name  _;
+          location / {
+              add_header 'Access-Control-Allow-Origin' '*';
+              add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
+              #
+              # Custom headers and headers various browsers *should* be OK with but aren't
+              #
+              add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range';
+              proxy_pass   flo-api.flo-api.svc.cluster.local;
+          }
+
+  }
+
+publicGatewayProxyConfig: |
+  server {
+            listen       80;
+            server_name  _;
+            location / {
+                #add_header 'Access-Control-Allow-Origin' '*';
+                #add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
+                #
+                # Custom headers and headers various browsers *should* be OK with but aren't
+                #
+                #add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range';
+                proxy_pass   http://flo-public-gateway.flo-public-gateway.svc.cluster.local:3000;
+            }
+
+    }
 
 routingPaths:
   - name: /api/v2
@@ -179,9 +85,6 @@ routingPaths:
     servicePrefix: proxy-flo-api-
 
 
-nodeSelector:
-  kops.k8s.io/instancegroup: nodes
-
 tolerations: []
 
 affinity: {}
@@ -191,8 +94,8 @@ secrets:
 
 resources:
   requests:
-    cpu: 1000m
-    memory: 512Mi
+    cpu: 500m
+    memory: 384Mi
   # limits:
   #   cpu: 3
   #   memory: 2Gi

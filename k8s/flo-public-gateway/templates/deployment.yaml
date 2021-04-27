@@ -1,3 +1,4 @@
+{{- $fullName := include "flo-public-gateway.fullname" . -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -10,7 +11,7 @@ metadata:
     app.kubernetes.io/managed-by: {{ .Release.Service }}
     helm.sh/chart: {{ include "flo-public-gateway.chart" . }}
 spec:
-{{ if eq .Values.environment "production" }}
+{{ if eq .Values.environment "prod" }}
   replicas: {{ .Values.replicaCount }}
 {{ else  }}
   replicas: 2
@@ -34,6 +35,10 @@ spec:
     spec:
       imagePullSecrets:
         - name: gitlab-registry
+      volumes:
+        - name: nginx-config
+          configMap:
+            name: {{ $fullName }}-nginx-sidecar-config
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
