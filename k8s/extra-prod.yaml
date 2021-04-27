@@ -1,0 +1,25 @@
+ingress:
+  enabled: true
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/success-codes: 200,404
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
+    alb.ingress.kubernetes.io/subnets: subnet-0d0b5769, subnet-8ff580f9
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-west-2:617288038711:certificate/49f4de9f-74a3-41bc-8808-e2558c45999b
+  path: "/*"
+  hosts:
+    - api-gw-eks.flosecurecloud.com
+    - api.meetflo.com
+    - api-gw.meetflo.com
+  tls: []
+
+floApiProxyConfig: |
+  server {
+          listen       80;
+          server_name  _;
+          location / {
+              proxy_pass   http://flo-api.flo-api.svc.cluster.local:8000;
+          }
+
+  }
