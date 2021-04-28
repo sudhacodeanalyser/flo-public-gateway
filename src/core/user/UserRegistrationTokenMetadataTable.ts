@@ -1,5 +1,5 @@
 import { inject, injectable } from 'inversify';
-import DatabaseClient from '../../database/DatabaseClient';
+import DatabaseClient, { KeyMap } from '../../database/DatabaseClient';
 import DatabaseTable from '../../database/DatabaseTable';
 import { DynamoDbQuery } from '../../database/dynamo/DynamoDbClient';
 import moment from 'moment';
@@ -54,6 +54,11 @@ class UserRegistrationTokenMetadataTable extends DatabaseTable<UserRegistrationT
       ScanIndexForward: false,
     });
 
+    return results;
+  }
+
+  public async getAllUserRegistrationToken(pageSize: number = 20, startKey?: KeyMap): Promise<{ items: UserRegistrationTokenMetadataRecordData[], lastEvaluatedKey?: KeyMap }> {
+    const results = await super.scan(pageSize, startKey);
     return results;
   }
 

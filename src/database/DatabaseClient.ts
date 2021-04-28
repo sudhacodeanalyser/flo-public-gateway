@@ -12,4 +12,5 @@ export default interface DatabaseClient extends DatabaseReadClient {
   put<T>(tableName: string, item: T): Promise<T>;
   update<T>(tableName: string, key: KeyMap, patch: Patch): Promise<T>;
   remove(tableName: string, key: KeyMap): Promise<void>;
+  scan<T>(tableName: string, limit: number, exclusiveStartKey?: KeyMap): Promise<{ items: T[], lastEvaluatedKey?: KeyMap}>
 }
