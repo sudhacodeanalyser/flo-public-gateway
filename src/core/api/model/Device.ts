@@ -69,6 +69,7 @@ const DeviceMutableCodec = t.type({
   nickname: t.string,
   prvInstallation: NonEmptyString,
   irrigationType: NonEmptyString,
+  purchaseLocation: NonEmptyString,
   valve: t.partial({
     target: t.keyof(_.pick(ValveStateCodec.keys, ['open', 'closed'])),
     meta: ValveStateMetaCodec
