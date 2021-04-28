@@ -16,6 +16,7 @@ export interface DeviceRecordData {
   is_paired?: boolean;
   prv_installation?: string;
   irrigation_type?: string;
+  purchase_location?: string;
   should_inherit_system_mode?: boolean;
   target_system_mode?: DeviceSystemMode;
   revert_scheduled_at?: string;
@@ -48,6 +49,7 @@ const RecordToModelSchema: StrictSchema<Device, DeviceRecordData>  = {
   },
   irrigationType: 'irrigation_type',
   prvInstallation: 'prv_installation',
+  purchaseLocation: 'purchase_location',
   systemMode: (input: DeviceRecordData) => ({
     target: input.target_system_mode,
     isLocked: false,
@@ -112,6 +114,7 @@ const ModelToRecordSchema: StrictSchema<DeviceRecordData, Device> = {
   device_model: 'deviceModel',
   prv_installation: 'prvInstallation',
   irrigation_type: 'irrigationType',
+  purchase_location: 'purchaseLocation',
   area_id: (input: Device) => _.get(input, 'area.id', undefined),
   puck_configured_at: (input: Device) => {
     return input.puckConfig ?
@@ -139,6 +142,7 @@ const PartialModelToRecordSchema: StrictSchema<Partial<DeviceRecordData>, Partia
   device_model: 'deviceModel',
   prv_installation: 'prvInstallation',
   irrigation_type: 'irrigationType',
+  purchase_location: 'purchaseLocation',
   area_id: (input: Partial<Device>) => _.get(input, 'area.id', undefined),
   puck_configured_at: (input: Partial<Device>) => {
     return input.puckConfig ?

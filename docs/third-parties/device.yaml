@@ -159,6 +159,8 @@ components:
       properties:
         prvInstallation:
           type: string
+        purchaseLocation:
+          type: string
         irrigationType:
           $ref: '#/components/schemas/IrrigationType'
         installationPoint:
