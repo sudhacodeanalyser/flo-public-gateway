@@ -20,7 +20,6 @@ class DatabaseReadTable<T> {
   public async batchGet(keys: KeyMap[], batchSize?: number): Promise<Array<T | null>> {
     return this.dbClient.batchGet(this.tableName, keys, batchSize);
   }
-
 }
 
 export { DatabaseReadTable };

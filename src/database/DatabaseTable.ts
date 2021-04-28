@@ -21,7 +21,7 @@ class DatabaseTable<T> extends DatabaseReadTable<T> {
   public async update(key: KeyMap, patch: Patch): Promise<T> {
 
     if (
-      _.isEmpty(patch) || 
+      _.isEmpty(patch) ||
       (_.isEmpty(patch.setOps) && _.isEmpty(patch.appendOps) && _.isEmpty(patch.removeOps))
     ) {
       const item = await this.get(key);
@@ -40,6 +40,9 @@ class DatabaseTable<T> extends DatabaseReadTable<T> {
     return this.dbClient.remove(this.tableName, key);
   }
 
+  public async scan(limit: number, exclusiveStartKey?: KeyMap): Promise<{ items: T[], lastEvaluatedKey?: KeyMap}> {
+    return this.dbClient.scan(this.tableName, limit, exclusiveStartKey);
+  }
 }
 
 export default DatabaseTable;

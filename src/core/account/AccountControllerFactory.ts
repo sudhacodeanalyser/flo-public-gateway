@@ -4,7 +4,7 @@ import { inject, Container } from 'inversify';
 import { AccountService, UserService } from '../service';
 import { parseExpand, httpController, deleteMethod, withResponseType } from '../api/controllerUtils';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
-import { AccountMergeValidator, AccountMerge, AccountMutable, AccountMutableCodec, Account, AccountUserRole, UserInviteCodec, UserCreate, InviteAcceptValidator, InviteAcceptData, User } from '../api';
+import { AccountMergeValidator, AccountMerge, AccountMutable, AccountMutableCodec, Account, AccountUserRole, UserInviteCodec, UserCreate, InviteAcceptValidator, InviteAcceptData, User, PendingInvitesRequest, PendingInvitesDataCodec, UserRegistrationPendingTokenMetadata } from '../api';
 import { InviteTokenData } from '../user/UserRegistrationService';
 import { NonEmptyArray } from '../api/validator/NonEmptyArray';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
@@ -20,6 +20,7 @@ import { pipe } from 'fp-ts/lib/pipeable';
 import * as TO from 'fp-ts-contrib/lib/TaskOption';
 import ReqValidationError from '../../validation/ReqValidationError'
 import { getEventInfo } from '../api/eventInfo';
+import { KeyMap } from '../../database/DatabaseClient';
 
 const { some, none } = O;
 type Option<T> = O.Option<T>;
@@ -40,6 +41,7 @@ type UserInviteBody = t.TypeOf<typeof UserInviteValidator>;
 export function AccountControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
   const authMiddlewareFactory = container.get<AuthMiddlewareFactory>('AuthMiddlewareFactory');
+  const authAdmin = authMiddlewareFactory.create();
   const authWithId = authMiddlewareFactory.create(async ({ params: { id } }: Request) => ({ account_id: id }));
   const authWithIdBody = authMiddlewareFactory.create(async ({ body: { accountId } }: Request) => ({ account_id: accountId }));
   const auth = authMiddlewareFactory.create();
@@ -140,6 +142,20 @@ export function AccountControllerFactory(container: Container, apiVersion: numbe
       return tokenData;
     }
 
+    @httpPost(
+      '/invite/pending',
+      authAdmin,
+      async (req, res, next) => {
+        next();
+      },
+      reqValidator.create(t.type({
+        body: PendingInvitesDataCodec
+      }))
+    )
+    private async getAllPending(@request() req: Request,  @requestBody() body: PendingInvitesRequest): Promise<{items: UserRegistrationPendingTokenMetadata[], next?: string }> {
+      const pendingInviteData = await this.accountService.getAllPendingUserInvites(body.size, body.next);
+      return pendingInviteData;
+    }
 
     // Warning this operation is NOT ATOMIC, if there is any failure mid-operation, then there is a high
     // likelihood of data loss or corruption. Ensure all data is backed up before performing this operation.

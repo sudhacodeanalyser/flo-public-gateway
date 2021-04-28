@@ -1,7 +1,7 @@
 import { injectable, inject } from 'inversify';
 import * as t from 'io-ts';
 import UserRegistrationTokenMetadataTable from './UserRegistrationTokenMetadataTable';
-import { UserAccountRole, UserInviteMetadata, UserLocationRole, UserRegistrationTokenMetadata } from '../api';
+import { UserAccountRole, UserInviteMetadata, UserLocationRole, UserRegistrationPendingTokenMetadata, UserRegistrationTokenMetadata } from '../api';
 import uuid from 'uuid';
 import jwt from 'jsonwebtoken';
 import moment from 'moment';
@@ -11,8 +11,8 @@ import { KafkaProducer } from '../../kafka/KafkaProducer';
 import { LocalizationService } from '../service';
 import EmailClient from '../../email/EmailClient';
 import ConflictError from '../api/error/ConflictError';
-import config from '../../config/config';
 import { UserRegistrationTokenMetadataRecord } from './UserRegistrationTokenMetadataRecord';
+import { UserRegistrationPendingTokenMetadataRecord } from './UserRegistrationPendingTokenMetadataRecord';
 
 export const UserRegistrationDataCodec = t.type({
   email: t.string,
@@ -278,5 +278,17 @@ export class UserInviteService {
   public async getUserRegistrationTokenMetadataByAccountId(accountId: string): Promise<UserRegistrationTokenMetadata[]> {
     const records = await this.userRegistrationTokenMetatadataTable.getByAccountId(accountId);
     return Promise.all(records.map(datum => new UserRegistrationTokenMetadataRecord(datum).toModel()));
+  }
+
+  public async getAllPendingUserInvites(pageSize: number = 20, next?: string): Promise<{ items: UserRegistrationPendingTokenMetadata[], next?: string }> {
+    let startKey;
+    if (next) {
+      startKey = {
+        token_id: next
+      };
+    }
+    const result = await this.userRegistrationTokenMetatadataTable.scan(pageSize, startKey);
+    const records = result.items.map(datum => new UserRegistrationPendingTokenMetadataRecord(datum).toModel())
+    return { items: records, next: result.lastEvaluatedKey?.token_id }
   }
 }
