@@ -288,7 +288,7 @@ export class UserInviteService {
       };
     }
     const result = await this.userRegistrationTokenMetatadataTable.scan(pageSize, startKey);
-    const records = result.items.map(datum => new UserRegistrationPendingTokenMetadataRecord(datum).toModel())
+    const records = result.items.map(datum => new UserRegistrationPendingTokenMetadataRecord(datum).toModel()).filter((model) => model.email);
     return { items: records, next: result.lastEvaluatedKey?.token_id }
   }
 }
