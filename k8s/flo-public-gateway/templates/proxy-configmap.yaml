@@ -1,0 +1,8 @@
+{{- $fullName := include "flo-public-gateway.fullname" . -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $fullName }}-nginx-config
+data:
+  extra-vhost.conf: |
+{{ .Values.floApiProxyConfig | indent 4 }}

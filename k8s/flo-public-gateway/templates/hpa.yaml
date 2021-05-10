@@ -3,7 +3,7 @@ kind: HorizontalPodAutoscaler
 metadata:
   name: {{ template "flo-public-gateway.fullname" . }}-hpa
 spec:
-{{- if eq .Values.environment "production" }}
+{{- if eq .Values.environment "prod" }}
   minReplicas: {{ .Values.replicaCount }}
   maxReplicas: {{ add .Values.replicaCount 2 }}
 {{- else  }}

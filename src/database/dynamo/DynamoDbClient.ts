@@ -105,8 +105,8 @@ class DynamoDbClient implements DatabaseClient {
       if (err.name === 'ConditionalCheckFailedException') {
         throw new ResourceDoesNotExistError();
       } else if (err.name === 'ValidationException' && flattenNestedProps) {
-        // This exception likely due to a nested object not existing on the record. 
-        // Therefore we will try once more without flattening the nested properties in order to 
+        // This exception likely due to a nested object not existing on the record.
+        // Therefore we will try once more without flattening the nested properties in order to
         // upsert the nested object.
         return this.update(tableName, key, rawPatch, false);
       } else {
@@ -129,7 +129,7 @@ class DynamoDbClient implements DatabaseClient {
 
     if (_.isEmpty(Attributes)) {
       throw new ResourceDoesNotExistError();
-    } 
+    }
   }
 
   public _query(tableName: string, queryOptions: DynamoDbQuery): AWS.Request<AWS.DynamoDB.DocumentClient.QueryOutput, AWS.AWSError> {
@@ -309,7 +309,7 @@ class DynamoDbClient implements DatabaseClient {
     const setOps = patch.setOps && patch.setOps
       .filter(({ value }) =>  flattenNestedProps && !_.isArray(value) && _.isObject(value));
     const setExprTuples = setOps === undefined ? [] :
-      _.flatMap(setOps, setOp => 
+      _.flatMap(setOps, setOp =>
         Object.keys(setOp.value)
           .filter(nestedKey => setOp.value[nestedKey] !== undefined)
           .map(nestedKey => ({

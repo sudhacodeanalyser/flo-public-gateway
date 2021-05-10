@@ -126,6 +126,16 @@ export interface UserInvite extends t.TypeOf<typeof UserInviteCodec> {}
 
 export interface UserInviteMetadata extends t.TypeOf<typeof UserInviteMetadataCodec> {}
 
+export const PendingInvitesDataCodec = t.type({
+  size: t.union([t.number, t.undefined]),
+  next: t.union([
+    t.undefined,
+    t.string
+  ])
+});
+
+export interface PendingInvitesRequest extends t.TypeOf<typeof PendingInvitesDataCodec> {}
+
 export interface UserStats {
   devices: DeviceStats;
 }
@@ -213,4 +223,12 @@ export interface ImpersonationToken {
   timeNow: number;
   tokenExpiration: number;
   userId: string;
+}
+
+export interface UserRegistrationPendingTokenMetadata {
+  email: string;
+  accountId?: string;
+  tokenExpiresAt?: string;
+  registrationDataExpiresAt?: string;
+  createdAt?: string;
 }

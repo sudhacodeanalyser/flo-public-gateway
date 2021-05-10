@@ -1,5 +1,5 @@
 import { injectable, inject } from 'inversify';
-import { AccountMerge, AccountMutable, Account, AccountUserRole, UserInvite, PropExpand, DependencyFactoryFactory, User, InviteAcceptData, AccountStatus, AccountType } from '../api';
+import { AccountMerge, AccountMutable, Account, AccountUserRole, UserInvite, PropExpand, DependencyFactoryFactory, User, InviteAcceptData, AccountStatus, AccountType, UserRegistrationPendingTokenMetadata } from '../api';
 import { UserInviteService, InviteTokenData } from '../user/UserRegistrationService';
 import { AccountResolver } from '../resolver';
 import { Option, fromNullable, toNullable } from 'fp-ts/lib/Option';
@@ -18,6 +18,7 @@ import uuid from 'uuid';
 import EmailClient from '../../email/EmailClient';
 import config from '../../config/config';
 import { ResourceEventAction, ResourceEventInfo, ResourceEventType } from '../api/model/ResourceEvent';
+import { KeyMap } from '../../database/DatabaseClient';
 
 const sevenDays = 604800;
 
@@ -199,6 +200,10 @@ class AccountService {
     return this.userInviteService.revoke(email);
   }
 
+  public async getAllPendingUserInvites(pageSize?: number, next?: string): Promise<{ items: UserRegistrationPendingTokenMetadata[], next?: string }> {
+    return this.userInviteService.getAllPendingUserInvites(pageSize, next);
+  }
+
   public async updateAccount(id: string, accountUpdate: AccountMutable): Promise<Account> {
     return this.accountResolver.updatePartial(id, accountUpdate);
   }
@@ -272,7 +277,7 @@ class AccountService {
         location,
         resourceEventInfo
       );
-    }) 
+    })
 
     return updatedDestAccount;
   }
