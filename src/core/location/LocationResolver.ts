@@ -29,10 +29,7 @@ const DEFAULT_AREAS_ID = 'areas.default';
 class LocationResolver extends Resolver<Location> {
   protected propertyResolverMap: PropertyResolverMap<Location> = {
     devices: async (location: Location, shouldExpand = false, expandProps?: PropExpand) => {
-      
-      const devices = await this.deviceResolverFactory().getAllByLocationId(location.id, shouldExpand 
-        ? expandProps 
-        : { $select: {  id: true, macAddress : true } });
+      const devices = await this.deviceResolverFactory().getAllByLocationId(location.id, expandProps);
 
       return devices.map(device => {
 
@@ -219,7 +216,7 @@ class LocationResolver extends Resolver<Location> {
       };
     },
     irrigationSchedule: async (location: Location, shouldExpand = false) => {
-      
+
       if (location.irrigationSchedule !== undefined) {
         return location.irrigationSchedule;
       }
