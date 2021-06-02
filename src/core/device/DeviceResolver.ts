@@ -139,10 +139,11 @@ class DeviceResolver extends Resolver<Device> {
 
         const lte = pipe(
           maybeLte,
-          Option.map(({ qrCode, imei }) => ({ 
+          Option.map(({ qrCode, imei, iccid }) => ({ 
             lte: { 
               qrCode ,
-              imei
+              imei, 
+              iccid
              }
           })),
           Option.toNullable
