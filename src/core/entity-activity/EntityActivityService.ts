@@ -90,6 +90,8 @@ class EntityActivityService {
           serialNumber,
           fwVersion,
           lastHeardFromTime,
+          lte: data.lte || null,
+          lte_paired: data.lte_paired || null,
           location: location && {
             id: deviceLocationId,
             account: deviceLocationAccount
