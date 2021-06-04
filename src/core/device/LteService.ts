@@ -75,7 +75,8 @@ class LteService {
               lte_paired: true,
               macAddress,
               lte
-            }
+            },
+            true
           )
         }
       )
@@ -91,9 +92,9 @@ class LteService {
       {
         id: deviceId,
         lte_paired: false,
-        lte: null,
         macAddress
-      }
+      },
+      true
     )
 
   }
