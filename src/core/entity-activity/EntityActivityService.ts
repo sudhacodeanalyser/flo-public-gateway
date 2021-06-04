@@ -38,7 +38,7 @@ class EntityActivityService {
     @inject('Logger') private readonly logger: Logger
   ) {}
 
-  public async publishEntityActivity<T>(type: EntityActivityType, action: EntityActivityAction, item: Expandable<T>, explode: Boolean = false): Promise<void> {
+  public async publishEntityActivity<T>(type: EntityActivityType, action: EntityActivityAction, item: Expandable<T>, explode: boolean = false): Promise<void> {
     try {
       const message = this.formatEntityActivityMessage(type, action, item, explode);
 
@@ -48,8 +48,8 @@ class EntityActivityService {
     }
   }
 
-  private formatEntityActivityMessage<T>(type: EntityActivityType, action: EntityActivityAction, data: Expandable<T>, explode: Boolean): EntityActivityMessage<T> {
-    var item = this.mapItem(type, data);
+  private formatEntityActivityMessage<T>(type: EntityActivityType, action: EntityActivityAction, data: Expandable<T>, explode: boolean): EntityActivityMessage<T> {
+    let item = this.mapItem(type, data);
     if (explode){
       item = {
         ...data,
