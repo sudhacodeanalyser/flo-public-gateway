@@ -58,7 +58,7 @@ class LteService {
     );
   }
 
-  public async linkDevice(deviceId: string, qrCode: string): Promise<void> {
+  public async linkDevice(deviceId: string, macAddress: string, qrCode: string): Promise<void> {
     const maybeLte = await this.lteTable.getByQrCode(qrCode);
     return pipe(
       maybeLte,
@@ -73,6 +73,7 @@ class LteService {
             {
               id: deviceId,
               lte_paired: true,
+              macAddress,
               lte
             }
           )
@@ -81,7 +82,7 @@ class LteService {
     );
   }
 
-  public async unlinkDevice(deviceId: string): Promise<void> {
+  public async unlinkDevice(deviceId: string, macAddress: string): Promise<void> {
     await this.deviceLteTable.unlinkDevice(deviceId)
 
     await this.entityActivityService.publishEntityActivity(
@@ -90,7 +91,8 @@ class LteService {
       {
         id: deviceId,
         lte_paired: false,
-        lte: null
+        lte: null,
+        macAddress
       }
     )
 
