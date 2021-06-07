@@ -308,7 +308,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       const resourceEventInfo = getEventInfo(req);
       const macAddress = await this.mapIcdToMacAddress(id);
       await this.internalDeviceService.removeDevice(macAddress);
-      await this.lteService.unlinkDevice(id);
+      await this.lteService.unlinkDevice(id, macAddress);
       return this.deviceService.removeDevice(id, resourceEventInfo);
     }
 
@@ -381,7 +381,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       try {
         const device = await this.deviceService.pairDevice(authToken, deviceCreate, resourceEventInfo);
         if (deviceCreate.connectivity?.lte) {
-          await this.lteService.linkDevice(device.id, deviceCreate.connectivity.lte.qrCode);
+          await this.lteService.linkDevice(device.id, device.macAddress, deviceCreate.connectivity.lte.qrCode);
         }
         return some(device);
       } finally {
