@@ -38,9 +38,9 @@ class EntityActivityService {
     @inject('Logger') private readonly logger: Logger
   ) {}
 
-  public async publishEntityActivity<T>(type: EntityActivityType, action: EntityActivityAction, item: Expandable<T>): Promise<void> {
+  public async publishEntityActivity<T>(type: EntityActivityType, action: EntityActivityAction, item: Expandable<T>, explode: boolean = false): Promise<void> {
     try {
-      const message = this.formatEntityActivityMessage(type, action, item);
+      const message = this.formatEntityActivityMessage(type, action, item, explode);
 
       await this.kafkaProducer.send(this.entityActivityKafkaTopic, message);
     } catch (err) {
@@ -48,8 +48,14 @@ class EntityActivityService {
     }
   }
 
-  private formatEntityActivityMessage<T>(type: EntityActivityType, action: EntityActivityAction, data: Expandable<T>): EntityActivityMessage<T> {
-    const item = this.mapItem(type, data);
+  private formatEntityActivityMessage<T>(type: EntityActivityType, action: EntityActivityAction, data: Expandable<T>, explode: boolean): EntityActivityMessage<T> {
+    let item = this.mapItem(type, data);
+    if (explode){
+      item = {
+        ...data,
+        ...item
+      }
+    }
     const requestId = this.httpContext && this.httpContext.request && this.httpContext.request.get('x-request-id');
 
     return {

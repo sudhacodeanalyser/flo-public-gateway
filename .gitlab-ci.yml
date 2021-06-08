@@ -81,6 +81,7 @@ Dev:
   only:
     - dev
     - eks
+    - /-ci$/i
   environment:
     name: eks
     url: https://flo-public-gateway.flocloud.co/api/v2/ping

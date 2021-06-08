@@ -3,6 +3,7 @@ import _ from 'lodash';
 import * as O from 'fp-ts/lib/Option';
 import LteTable from './LteTable';
 import DeviceLteTable from './DeviceLteTable';
+import { EntityActivityAction, EntityActivityService, EntityActivityType,} from '../service';
 import { BaseLte, Lte, LteContext, SsidCredentials, SsidCredentialsWithContext } from '../api';
 import { pipe } from 'fp-ts/lib/pipeable';
 import crypto from 'crypto';
@@ -17,6 +18,7 @@ class LteService {
   constructor(
     @inject('LteTable') private lteTable: LteTable,
     @inject('DeviceLteTable') private deviceLteTable: DeviceLteTable,
+    @inject('EntityActivityService') private entityActivityService: EntityActivityService
   ) {}
 
   public async createLte(lte: BaseLte): Promise<void> {
@@ -56,19 +58,45 @@ class LteService {
     );
   }
 
-  public async linkDevice(deviceId: string, qrCode: string): Promise<void> {
+  public async linkDevice(deviceId: string, macAddress: string, qrCode: string): Promise<void> {
     const maybeLte = await this.lteTable.getByQrCode(qrCode);
     return pipe(
       maybeLte,
       O.fold(
         async () => { throw new ResourceDoesNotExistError('LTE device not found.') },
-        async lte => this.deviceLteTable.linkDevice(deviceId, lte.imei)
+        async lte => {
+          await this.deviceLteTable.linkDevice(deviceId, lte.imei)
+
+          await this.entityActivityService.publishEntityActivity(
+            EntityActivityType.DEVICE,
+            EntityActivityAction.UPDATED,
+            {
+              id: deviceId,
+              lte_paired: true,
+              macAddress,
+              lte
+            },
+            true
+          )
+        }
       )
     );
   }
 
-  public async unlinkDevice(deviceId: string): Promise<void> {
-    return this.deviceLteTable.unlinkDevice(deviceId);
+  public async unlinkDevice(deviceId: string, macAddress: string): Promise<void> {
+    await this.deviceLteTable.unlinkDevice(deviceId)
+
+    await this.entityActivityService.publishEntityActivity(
+      EntityActivityType.DEVICE,
+      EntityActivityAction.UPDATED,
+      {
+        id: deviceId,
+        lte_paired: false,
+        macAddress
+      },
+      true
+    )
+
   }
 
   private generateQrCode(lte: BaseLte): string {
