@@ -33,14 +33,12 @@ class LteService {
 
   public async getSsidCredentials(qrCode: string): Promise<Option<SsidCredentialsWithContext>> {
     const maybeLte = await this.lteTable.getByQrCode(qrCode);
-    return pipe(
-      maybeLte,
-      O.map(lte => ({
-        ...this.extractCredentials(lte),
-        imeiLast4: lte.imei.slice(-4),
-        iccidLast4: lte.iccid.slice(-4)
-      }))
-    );
+    return this.getSsidCredentialsWithContext(maybeLte)
+  }
+
+  public async getCurrentCredentials(deviceId: string): Promise<Option<SsidCredentialsWithContext>> {
+    const maybeLte = await this.lteTable.getByDeviceId(deviceId);
+    return this.getSsidCredentialsWithContext(maybeLte)
   }
 
   public async retrieveQrCode(imei: string): Promise<LteContext> {
@@ -59,12 +57,24 @@ class LteService {
   }
 
   public async linkDevice(deviceId: string, macAddress: string, qrCode: string): Promise<void> {
+    const maybeExistingLteLink = await this.lteTable.getByDeviceId(deviceId);
+
+    const existingLteLink = pipe(
+      maybeExistingLteLink,
+      O.toNullable
+    );
+
     const maybeLte = await this.lteTable.getByQrCode(qrCode);
     return pipe(
       maybeLte,
       O.fold(
         async () => { throw new ResourceDoesNotExistError('LTE device not found.') },
         async lte => {
+
+          if (existingLteLink !== undefined && lte.imei === existingLteLink?.imei) {
+              return
+          }
+
           await this.deviceLteTable.linkDevice(deviceId, lte.imei)
 
           await this.entityActivityService.publishEntityActivity(
@@ -97,6 +107,17 @@ class LteService {
       true
     )
 
+  }
+
+  private getSsidCredentialsWithContext(maybeLte: Option<Lte>): Option<SsidCredentialsWithContext> {
+    return pipe(
+      maybeLte,
+      O.map(lte => ({
+        ...this.extractCredentials(lte),
+        imeiLast4: lte.imei.slice(-4),
+        iccidLast4: lte.iccid.slice(-4)
+      }))
+    );
   }
 
   private generateQrCode(lte: BaseLte): string {

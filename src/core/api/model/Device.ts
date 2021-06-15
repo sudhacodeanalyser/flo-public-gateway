@@ -27,6 +27,20 @@ export enum ValveStateNumeric {
 
 export const ValveStateCodec = convertEnumtoCodec(ValveState);
 
+export enum ConnectionMethod {
+  UNKNOWN = 'unknown',
+  WIFI = 'wifi',
+  LTE = 'lte',
+}
+
+export enum ConnectionMethodNumeric {
+  UNKNOWN = -1,
+  WIFI = 0,
+  LTE = 1
+}
+
+export const ConnectionMethodCodec = convertEnumtoCodec(ConnectionMethod);
+
 const ValveStateMetaCodec = t.partial({
   target: t.keyof(_.pick(ValveStateCodec.keys, ['open', 'closed'])),
   cause: t.type({
@@ -61,7 +75,13 @@ const LteCodec = t.type({
   })
 });
 
+
 const OptionalLteCodec = t.partial(LteCodec.props);
+export const ConnectionInfoCodec =  t.intersection([
+  t.type({
+  method: t.keyof(ConnectionMethodCodec.keys),
+}), OptionalLteCodec]);
+
 type OptionalLte = t.TypeOf<typeof OptionalLteCodec>;
 
 const DeviceMutableCodec = t.type({

@@ -387,6 +387,54 @@ paths:
         409:
           description: Device system mode is locked and cannot be changed
 
+  /api/v2/devices/{id}/connection:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Device ID
+    post:
+      summary: Sets the on-site connection details on a device
+      tags:
+        - Devices
+        - Connectivity
+      produces:
+        application/json
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - method
+              properties:
+                method:
+                  type: string
+                  enum:
+                    - unknown
+                    - wifi
+                    - lte
+                lte: 
+                  type: object
+                  required:
+                    - qrCode
+                  properties:
+                    qrCode:
+                      type: string
+      responses:
+        202:
+          description: Details set
+          schema:
+            $ref: '#/components/schemas/Device'
+        400:
+          description: Invalid request body
+        404:
+          description: Device does not exist
+
   /api/v2/devices/{id}/reset:
     parameters:
       - in: path
