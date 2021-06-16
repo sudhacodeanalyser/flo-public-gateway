@@ -8,7 +8,9 @@ import { QrData, QrDataValidator } from '../../api-v1/pairing/PairingService';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import { InternalDeviceService } from '../../internal-device-service/InternalDeviceService';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
-import { DependencyFactoryFactory, Device, DeviceActionRules, DeviceActionRulesCreate, DeviceActionRulesCreateCodec, DeviceCreate, DeviceCreateValidator, DeviceType, DeviceUpdate, DeviceUpdateValidator, SystemMode as DeviceSystemMode, SystemModeCodec as DeviceSystemModeCodec, HardwareThresholdsCodec, HardwareThresholds, FirmwareInfo, SsidCredentials, BaseLteCodec, BaseLte, SsidCredentialsWithContext, LteContext,  DeviceSyncBodyCodec, DeviceSyncOptions } from '../api';
+import { DependencyFactoryFactory, Device, DeviceActionRules, DeviceActionRulesCreate, DeviceActionRulesCreateCodec, DeviceCreate, DeviceCreateValidator, DeviceType, 
+  DeviceUpdate, DeviceUpdateValidator, SystemMode as DeviceSystemMode, SystemModeCodec as DeviceSystemModeCodec, HardwareThresholdsCodec, HardwareThresholds, FirmwareInfo, SsidCredentials, 
+  BaseLteCodec, BaseLte, SsidCredentialsWithContext, LteContext,  DeviceSyncBodyCodec, DeviceSyncOptions, ConnectionInfoCodec, ConnectionMethod, PropExpand  } from '../api';
 import { asyncMethod, authorizationHeader, createMethod, deleteMethod, httpController, parseExpand, withResponseType } from '../api/controllerUtils';
 import { convertEnumtoCodec } from '../api/enumUtils';
 import ForbiddenError from '../api/error/ForbiddenError';
@@ -117,6 +119,8 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
   );
 
   type SystemModeRequest = t.TypeOf<typeof SystemModeRequestCodec>;
+
+  type ConnectionInfoRequest = t.TypeOf<typeof ConnectionInfoCodec>;
 
   @httpController({version: apiVersion}, '/devices')
   class DeviceController extends BaseHttpController {
@@ -228,6 +232,34 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       return this.lteService.retrieveQrCode(imei);
     }
 
+    @httpPost('/connection',
+    reqValidator.create(t.type({
+      query: t.type({
+        macAddress: t.string
+      }),
+      body: ConnectionInfoCodec
+    })),
+    authWithParents
+    )
+    @asyncMethod
+    private async setConnectionMethodByAddr(
+      @request() req: Request,
+      @queryParam('macAddress') macAddress: string,
+      @requestBody() con: ConnectionInfoRequest
+    ): Promise<void> {
+      
+      const maybeDevice = await this.deviceService.getByMacAddress(macAddress, { $select: { id: true } });
+      const device = pipe(maybeDevice, O.fold(
+        () => {
+            throw new NotFoundError()
+          },
+        (s: Device) => s)
+      )
+
+      await this.setConnectionMethod(req, device.id, con)
+      return
+    }
+
     @httpGet('/:id',
       reqValidator.create(t.type({
         params: t.type({
@@ -288,11 +320,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       }))
     )
     private async syncDevice(@requestParam('id') id: string, @requestBody() body: DeviceSyncOptions): Promise<void> {
-      const device = await this.deviceService.getDeviceById(id);
-      if (isNone(device)) {
-        throw new ResourceDoesNotExistError('Device does not exist.');
-      }
-      return this.deviceSyncService.synchronize(device.value, body);
+      await this.syncById(id, body)
     }
 
     @httpDelete('/:id',
@@ -421,6 +449,57 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       });
     }
 
+    @httpPost('/:id/connection',
+      authWithId,
+      reqValidator.create(t.type({
+        params: t.type({
+          id: t.string
+        }),
+        body: ConnectionInfoCodec
+      }))
+    )
+    @asyncMethod
+    private async setConnectionMethod(
+      @request() req: Request,
+      @requestParam('id') id: string,
+      @requestBody() con: ConnectionInfoRequest
+    ): Promise<void> {
+   
+      await this.syncById(id);
+      const maybeDevice = await this.deviceService.getDeviceById(id, { $select: { id: true, macAddress: true, connectivity: true } });
+      const device = pipe(maybeDevice, O.fold(
+        () => {
+            throw new NotFoundError()
+          },
+        (s: Device) => s)
+      )
+
+      switch (con.method){
+        case ConnectionMethod.LTE:
+          if (con.lte !== undefined){
+            await this.lteService.linkDevice(id, device.macAddress, con.lte.qrCode)
+          }
+          break
+
+        default:
+          const ssid = device.connectivity?.ssid
+          if (ssid === undefined){
+            // we dont know much of anything, unlink it if linked
+            await this.lteService.unlinkDevice(id, device.macAddress)
+            return
+          }
+
+          const maybeCurrentCredentials = await this.lteService.getCurrentCredentials(id)
+          const currentCredentials = O.toNullable(maybeCurrentCredentials)
+          
+          if (currentCredentials?.ssid !== ssid) {
+            await this.lteService.unlinkDevice(id, device.macAddress)
+          }
+      }
+
+      return;
+    }
+
     @httpPost('/:id/systemMode',
       // auth is deferred to  API v1 call
       reqValidator.create(t.type({
@@ -430,6 +509,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
         body: SystemModeRequestCodec
       }))
     )
+    
     @asyncMethod
     @withResponseType<Device, Responses.Device>(Responses.Device.fromModel)
     private async setDeviceSystemMode(
@@ -690,6 +770,17 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       const resourceEventInfo = getEventInfo(req);
       return some(await this.deviceService.transferDevice(id, locationId, resourceEventInfo));
     }   
+
+
+    /* helpers */
+    private async syncById(id: string, opts: DeviceSyncOptions = {}): Promise<void> {
+      const device = await this.deviceService.getDeviceById(id, { $select: { id: true, macAddress: true } })
+      if (isNone(device)) {
+        throw new ResourceDoesNotExistError('Device does not exist.')
+      }
+      return this.deviceSyncService.synchronize(device.value, opts)
+    }
+      
   }
 
   return DeviceController;
