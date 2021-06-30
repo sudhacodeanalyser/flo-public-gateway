@@ -23,3 +23,8 @@ floApiProxyConfig: |
           }
 
   }
+
+resources:
+  requests:
+    cpu: 1
+    memory: 1536Mi
