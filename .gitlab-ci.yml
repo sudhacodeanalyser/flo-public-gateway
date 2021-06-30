@@ -97,41 +97,9 @@ ReleaseCandidate:
     ENV: "rc"
     HELM_RELEASE_NAME: "flo-public-gateway-rc"
     K8S_NAMESPACE: "flo-public-gateway-rc"
-    API_V1_URL_PROD: "http://flo-api.flo-api.svc.cluster.local:8000/api/v1"
-    ACL_URL_PROD: "${API_V1_URL_PROD}/accesscontrol/refresh"
-    AUTH_URL_PROD: "${API_V1_URL_PROD}/accesscontrol/authorize"
-    DOCS_ENDPOINT_USER_PROD: "${DOCS_ENDPOINT_USER}"
-    DYNAMO_TABLE_PREFIX_PROD: "prod_"
-    EXTERNAL_DOCS_ENDPOINT_USER_PROD: "${EXTERNAL_DOCS_ENDPOINT_USER}"
-    EXTERNAL_SERVICE_HTTP_TIMEOUT_MS_PROD: "10000"
-    HEALTH_TEST_SERVICE_URL_PROD: "http://flo-device-manager.flo-device-manager.svc.cluster.local:8080"
-    INFLUX_ANALYTICS_DB_PROD: "telemetry_analytics_prod"
-    INFLUX_HOST_PROD: "mcfly-da662558.influxcloud.net"
-    INFLUX_HOURLY_MEASUREMENT_PROD: "telemetry_hourly"
-    INFLUX_PORT_PROD: "8086"
-    INFLUX_SECOND_MEASUREMNT_PROD: '"twelve_weeks".telemetry_raw'
-    INFLUX_TELEMETRY_DB_PROD: "telemetry_prod"
-    INFLUX_USERNAME_PROD: "flo_api_prod"
-    INSTANA_SERVICE_NAME: "flo-public-gateway-${ENV}"
-    INTERNAL_FLO_MOEN_AUTH_URL_PROD: "http://flo-moen-auth.flo-moen-auth.svc.cluster.local:80"
-    INTERNAL_DEVICE_SERVICE_BASE_URL_PROD: "http://flo-device-service.flo-device-service.svc.cluster.local:3000/v1"
-    KAFKA_HOST_PROD: "kafka-cherry-broker-1.prod.flosecurecloud.com:9092,kafka-cherry-broker-2.prod.flosecurecloud.com:9092,kafka-cherry-broker-3.prod.flosecurecloud.com:9092"
-    KAFKA_TIMEOUT_MS_PROD: "${KAFKA_TIMEOUT_MS}"
-    POSTGRES_DATABASE_PROD: "${POSTGRES_DATABASE}"
-    POSTGRES_HOST_PROD: "prod-rds.cutnsvmodttf.us-west-2.rds.amazonaws.com"
-    POSTGRES_PORT_PROD: 5432
-    POSTGRES_USER_PROD: "${POSTGRES_USER}"
-    LOCALIZATION_API_URL_PROD: "http://flo-localization-service.flo-localization-service.svc.cluster.local:3000/v1"
-    RESOURCE_EVENT_API_URL_PROD: "http://flo-resource-event.flo-resource-event.svc.cluster.local"
-    NOTIFICATION_API_URL_PROD: "http://flo-notification-api.flo-notification-api.svc.cluster.local"
-    PRESENCE_SERVICE_URL_PROD: "https://flo-core-service.flosecurecloud.com/presence"
-    REDIS_HOST_PROD: "flo-api.k5ahfc.clustercfg.usw2.cache.amazonaws.com"
-    TELEMETRY_TAGS_SERVICE_URL_PROD: "https://flo-telemetry-tags.flosecurecloud.com"
-    SENSOR_METER_URL_PROD: "https://flo-puck-service.flosecurecloud.com"
-    DEFAULT_NOTIFY_ACCOUNT_STATUS_EMAIL_PROD: "Suzanne.Street@moen.com"
-    FLO_ENTERPRISE_SERVICE_URL_PROD: "http://flo-enterprise-service.flo-enterprise-service.svc.cluster.local:8080"
-    CALLBACK_GATEWAY_HOST_PROD: "callback.meetflo.com"
-  image: registry.gitlab.com/flotechnologies/devops/docker-tools:helm-2-17
+    VAULT_URL: ${VAULT_URL_PROD}
+    VAULT_TOKEN: ${VAULT_TOKEN_PROD}
+  image: registry.gitlab.com/flotechnologies/devops/docker-tools:helm-v3-5-4
   stage: deploy-rc
   allow_failure: true
   dependencies:
@@ -139,14 +107,14 @@ ReleaseCandidate:
   only:
     - master
   environment:
-    name: rc
+    name: rc-eks
     url: https://api-gw-rc.flosecurecloud.com/api/v2/ping
   script:
-    - make environment-prod
+    - make environment
     - make deploy
     - make deploy-status
   tags:
-    - deploy-prod
+    - eks-prod
 
 K8sProd:
   variables:
