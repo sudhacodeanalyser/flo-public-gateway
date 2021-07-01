@@ -86,7 +86,7 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
         } = query;
 
         const locationService = depFactoryFactory<LocationService>('LocationService')();
-        const deviceService = deviceId && depFactoryFactory<DeviceService>('DeviceService')();
+        const deviceService = depFactoryFactory<DeviceService>('DeviceService')();
 
         const devices = !_.isEmpty(deviceId) && (await Promise.all((_.isArray(deviceId) ? deviceId : [deviceId])
           .map(async did => 
@@ -262,7 +262,7 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
     private async submitIncidentFeedback(@request() req: Request, @response() res: express.Response, @requestParam('id') incidentId: string, @requestBody() userFeedback: UserFeedback & { deviceId: string, alarmId: number | undefined, systemMode: string | undefined }): Promise<UserFeedback> {
       const alarmEvent = await this.notificationService.getAlarmEvent(incidentId);
 
-      await authMiddlewareFactory.create(async () => ({ icd_id: alarmEvent.deviceId }))(req, res, err => {
+      await authMiddlewareFactory.create(async () => ({ icd_id: alarmEvent.deviceId }))(req, res, (err: any) => {
         if (err) {
           throw err;
         }
