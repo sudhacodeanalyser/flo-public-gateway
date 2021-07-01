@@ -1,5 +1,5 @@
 # This image is used as a build environment to run nodejs tools, like npm
-FROM node:12-alpine
+FROM node:10-alpine
 
 ARG NODE_ENV=development
 
