@@ -21,6 +21,7 @@ import iftttContainerModule from './ifttt/containerModule';
 import deliveryHookContainerModule from './delivery-hook/containerModule';
 import headsUpContainerModule from './heads-up/containerModule';
 import eventContainerModule from './event/containerModule';
+import alexaContainerModule from './alexa/containerModule';
 
 export default [
   pingContainerModule,
@@ -45,5 +46,6 @@ export default [
   iftttContainerModule,
   deliveryHookContainerModule,
   headsUpContainerModule,
-  eventContainerModule
+  eventContainerModule,
+  alexaContainerModule
 ];
