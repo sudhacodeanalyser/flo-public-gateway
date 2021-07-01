@@ -6,6 +6,7 @@
     "type": "git",
     "url": "https://gitlab.com/flotechnologies/flo-public-gateway"
   },
+  "license": "UNLICENSED",
   "scripts": {
     "copy-docs": "shx rm -rf dist/docs/*.yaml dist/docs/*/ && copyfiles docs/{,**/}*.yaml dist",
     "build": "npm run build-ts && npm run tslint && npm run copy-docs",
