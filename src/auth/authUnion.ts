@@ -9,7 +9,7 @@ export function authUnion(...authHandlers: express.Handler[]): express.Handler {
     for (let i = 0; i < authHandlers.length && !isAuthorized; i++) {
       const authHandler = authHandlers[i];
 
-      isAuthorized = await (new Promise((resolve, reject) => authHandler(req, res, (err: any) => {
+      isAuthorized = await (new Promise((resolve, reject) => authHandler(req, res, err => {
         if (err) {
           // TODO: Revisit this log level?
           if (req.log) {

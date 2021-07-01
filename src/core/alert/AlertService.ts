@@ -33,7 +33,7 @@ class AlertService {
       userId,
       alarmId: alarmEvent.alarm.id,
       systemMode: alarmEvent.systemMode,
-      // createdAt: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
       ...alertFeedback
     });
 
