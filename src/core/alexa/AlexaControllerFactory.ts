@@ -6,7 +6,7 @@ import { AlexaService } from './AlexaService';
 
 export function AlexaControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
 
-  @httpController({ version: apiVersion }, '/alexa')
+  @httpController({ version: apiVersion }, '/app/alexa')
   class AlexaController extends BaseHttpController {
     constructor(
       @inject('AlexaService') private alexaService: AlexaService,
@@ -14,6 +14,7 @@ export function AlexaControllerFactory(container: Container, apiVersion: number)
       super();
     }
 
+    @httpGet('')
     @httpGet('/ping')
     private async getPing(@request() req: Request): Promise<any> {
       return this.alexaService.getPing();

@@ -38,13 +38,13 @@ class AlexaService extends HttpService {
     return this.sendRequest(request);
   }
 
-  public async postAccountLink(authToken: string, userId: string, req: any): Promise<any> {
+  public async postAccountLink(authToken: string, userId: string, body: any): Promise<any> {
     const request = {
       method: 'GET',
       url: `${this.url}/user/${userId}/alexa`,
       authToken,
       proxyError: true,
-      body: req,
+      body,
     };
     return this.sendRequest(request);
   }
