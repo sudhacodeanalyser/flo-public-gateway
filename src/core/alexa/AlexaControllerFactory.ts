@@ -6,7 +6,7 @@ import { AlexaService } from './AlexaService';
 
 export function AlexaControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
 
-  @httpController({ version: apiVersion }, '/app/alexa')
+  @httpController({ version: apiVersion }, '/alexa')
   class AlexaController extends BaseHttpController {
     constructor(
       @inject('AlexaService') private alexaService: AlexaService,
@@ -26,4 +26,3 @@ export function AlexaControllerFactory(container: Container, apiVersion: number)
   }
   return AlexaControllerFactory;
 }
-//test
