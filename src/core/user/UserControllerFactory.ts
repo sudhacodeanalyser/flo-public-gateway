@@ -436,9 +436,10 @@ export function UserControllerFactory(container: Container, apiVersion: number):
     private async fetchAlexaLink(
       @requestParam('id') userId: string,
       @requestHeaders('Authorization') authToken: string,
+      @queryParam('deep') deep: string,
     ): Promise<any> {
 
-      return this.alexaService.getAccountLink(authToken, userId);
+      return this.alexaService.getAccountLink(authToken, userId, /^true$/gi.test(deep));
     }
 
     @httpPost(
@@ -461,9 +462,10 @@ export function UserControllerFactory(container: Container, apiVersion: number):
     private async removeAlexaLink(
       @requestParam('id') userId: string,
       @requestHeaders('Authorization') authToken: string,
+      @queryParam('force') force: string,
     ): Promise<any> {
 
-      return this.alexaService.deleteAccountLink(authToken, userId);
+      return this.alexaService.deleteAccountLink(authToken, userId, /^true$/gi.test(force));
     }
   }
 
