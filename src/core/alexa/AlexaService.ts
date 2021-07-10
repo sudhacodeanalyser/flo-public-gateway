@@ -28,13 +28,16 @@ class AlexaService extends HttpService {
     return this.sendRequest(request);
   }
 
-  public async getAccountLink(authToken: string, userId: string): Promise<any> {
+  public async getAccountLink(authToken: string, userId: string, deep: boolean): Promise<any> {
     const request = {
       method: 'GET',
       url: `${this.url}/user/${userId}/alexa`,
       authToken,
       proxyError: true,
     };
+    if(deep) {
+      request.url += '?deep=true';
+    }
     return this.sendRequest(request);
   }
 
@@ -49,13 +52,16 @@ class AlexaService extends HttpService {
     return this.sendRequest(request);
   }
 
-  public async deleteAccountLink(authToken: string, userId: string): Promise<any> {
+  public async deleteAccountLink(authToken: string, userId: string, force: boolean): Promise<any> {
     const request = {
       method: 'DELETE',
       url: `${this.url}/user/${userId}/alexa`,
       authToken,
       proxyError: true,
     };
+    if(force) {
+      request.url += '?force=true';
+    }
     return this.sendRequest(request);
   }
 }
