@@ -27,6 +27,7 @@ const DEFAULT_AREAS_ID = 'areas.default';
 
 @injectable()
 class LocationResolver extends Resolver<Location> {
+  
   protected propertyResolverMap: PropertyResolverMap<Location> = {
     devices: async (location: Location, shouldExpand = false, expandProps?: PropExpand) => {
       
@@ -102,8 +103,13 @@ class LocationResolver extends Resolver<Location> {
         })
       )) as Array<{ userId: string, locationId: string, roles: string[] }>;
 
-      return _.chain([...explicitUserRoles, ...parentUserRoles])
-        .filter(({ userId }) => hasAccountPrivilege || userId === currentUserId)
+      let visibleUserRoles= [...explicitUserRoles, ...parentUserRoles]
+      if (!hasAccountPrivilege) {
+        const ans = this.accountResolverFactory().getMaxSecurityLevel(visibleUserRoles);
+        visibleUserRoles = visibleUserRoles.filter(({userId }) => ans[userId].maxLevel <= ans[currentUserId].maxLevel);
+      }
+
+      return _.chain(visibleUserRoles)
         .groupBy('userId')
         .map((userRoles, userId) => {
            return {

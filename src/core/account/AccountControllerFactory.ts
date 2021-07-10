@@ -4,23 +4,18 @@ import { inject, Container } from 'inversify';
 import { AccountService, UserService } from '../service';
 import { parseExpand, httpController, deleteMethod, withResponseType } from '../api/controllerUtils';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
-import { AccountMergeValidator, AccountMerge, AccountMutable, AccountMutableCodec, Account, AccountUserRole, UserInviteCodec, UserCreate, InviteAcceptValidator, InviteAcceptData, User, PendingInvitesRequest, PendingInvitesDataCodec, UserRegistrationPendingTokenMetadata } from '../api';
+import { AccountMergeValidator, AccountMerge, AccountMutable, AccountMutableCodec, Account, AccountUserRole, UserInviteCodec, 
+  InviteAcceptValidator, InviteAcceptData, User, PendingInvitesRequest, PendingInvitesDataCodec, UserRegistrationPendingTokenMetadata } from '../api';
 import { InviteTokenData } from '../user/UserRegistrationService';
 import { NonEmptyArray } from '../api/validator/NonEmptyArray';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import Request from '../api/Request';
-import { Response, NextFunction } from 'express';
 import * as O from 'fp-ts/lib/Option';
 import * as Responses from '../api/response';
 import _ from 'lodash';
 import UnauthorizedError from '../api/error/UnauthorizedError';
-import ForbiddenError from '../api/error/ForbiddenError';
 import NotFoundError from '../api/error/NotFoundError';
-import { pipe } from 'fp-ts/lib/pipeable';
-import * as TO from 'fp-ts-contrib/lib/TaskOption';
-import ReqValidationError from '../../validation/ReqValidationError'
 import { getEventInfo } from '../api/eventInfo';
-import { KeyMap } from '../../database/DatabaseClient';
 
 const { some, none } = O;
 type Option<T> = O.Option<T>;
