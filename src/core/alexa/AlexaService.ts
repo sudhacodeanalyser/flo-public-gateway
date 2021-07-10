@@ -31,7 +31,7 @@ class AlexaService extends HttpService {
   public async getAccountLink(authToken: string, userId: string, deep: boolean): Promise<any> {
     const request = {
       method: 'GET',
-      url: `${this.url}/user/${userId}/alexa`,
+      url: `${this.url}/users/${userId}/alexa`,
       authToken,
       proxyError: true,
     };
@@ -43,8 +43,8 @@ class AlexaService extends HttpService {
 
   public async postAccountLink(authToken: string, userId: string, body: any): Promise<any> {
     const request = {
-      method: 'GET',
-      url: `${this.url}/user/${userId}/alexa`,
+      method: 'POST',
+      url: `${this.url}/users/${userId}/alexa`,
       authToken,
       proxyError: true,
       body,
@@ -55,7 +55,7 @@ class AlexaService extends HttpService {
   public async deleteAccountLink(authToken: string, userId: string, force: boolean): Promise<any> {
     const request = {
       method: 'DELETE',
-      url: `${this.url}/user/${userId}/alexa`,
+      url: `${this.url}/users/${userId}/alexa`,
       authToken,
       proxyError: true,
     };
