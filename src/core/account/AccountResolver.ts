@@ -229,8 +229,7 @@ class AccountResolver extends Resolver<Account> {
               userId: id, 
               maxLevel: _(rs)
                   .map('roles')
-                  .flatten()
-                  .map((r) => this.securityLevel.get(r) || 0)
+                  .map((r) =>  this.getMaxSecurityLevelByRoles(r))
                   .max() || 0
             }
           }
@@ -238,6 +237,14 @@ class AccountResolver extends Resolver<Account> {
         .keyBy('userId')
         .value();
       return ans;
+  }
+
+  public getMaxSecurityLevelByRoles(roles: string[]): number {
+    const ans = _(roles)
+      .map((r) => this.securityLevel.get(r) || 0)
+      .max() || 0
+
+    return ans;
   }
 }
 

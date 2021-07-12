@@ -57,7 +57,7 @@ export function AccountControllerFactory(container: Container, apiVersion: numbe
       }))
     )
     private async inviteUserToAccount(@request() req: Request, @requestBody() body: UserInviteBody): Promise<void> {
-      await this.accountService.inviteUserToJoinAccount(body);
+      await this.accountService.inviteUserToJoinAccount(req, body);
     }
 
     @httpPost('/invite/revoke',
