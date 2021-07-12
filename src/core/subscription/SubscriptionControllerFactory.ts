@@ -161,7 +161,7 @@ export function SubscriptionControllerFactory(container: Container, apiVersion: 
           return Promise.resolve({ 
             location_id: sub.location && sub.location.id
           });
-        })(req, res, (err) => 
+        })(req, res, (err) =>
           err ? reject(err) : resolve()
         )
       ));
@@ -213,7 +213,7 @@ export function SubscriptionControllerFactory(container: Container, apiVersion: 
             return Promise.resolve({ 
               location_id: sub.location && sub.location.id
             });
-          })(req, res, (err) => 
+          })(req, res, (err) =>
             err ? reject(err) : resolve()
           )
         ));

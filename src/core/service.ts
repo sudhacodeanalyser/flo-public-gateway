@@ -19,3 +19,4 @@ export * from './ifttt/IFTTTService';
 export * from './device/PuckTokenService';
 export * from './sensors/SensorService';
 export * from './device/LteService';
+export * from './alexa/AlexaService';

@@ -119,7 +119,7 @@ class AuthMiddlewareFactory {
             throw(new ConflictError(authResponse.data?.message ?? 'Token Exchange Conflict'));
         }
       }
-      throw(err); // rethrow by default
+      throw(err); // rethrow by default.
     }
   }
 

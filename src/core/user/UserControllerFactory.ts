@@ -1,7 +1,18 @@
 import { Option, filter, fold, some, fromNullable } from 'fp-ts/lib/Option';
 import { pipe } from 'fp-ts/lib/pipeable';
 import { Container, inject } from 'inversify';
-import { BaseHttpController, httpDelete, httpGet, httpPost, interfaces, queryParam, requestBody, requestParam, request } from 'inversify-express-utils';
+import {
+  BaseHttpController,
+  httpDelete,
+  httpGet,
+  httpPost,
+  interfaces,
+  queryParam,
+  requestBody,
+  requestParam,
+  request,
+  requestHeaders,
+} from 'inversify-express-utils';
 import * as t from 'io-ts';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
@@ -9,7 +20,7 @@ import { UpdateAlarmSettings, UpdateAlarmSettingsCodec, User, UserUpdate, UserUp
 import { asyncMethod, authorizationHeader, createMethod, deleteMethod, httpController, parseExpand, withResponseType } from '../api/controllerUtils';
 import Request from '../api/Request';
 import * as Responses from '../api/response';
-import { UserService } from '../service';
+import { AlexaService, UserService } from '../service';
 import { PasswordResetService } from './PasswordResetService';
 import { EmailAvailability, EmailVerification, EmailVerificationCodec, OAuth2Response, UserRegistrationData, UserRegistrationDataCodec, UserRegistrationService, RegistrationTokenResponse } from './UserRegistrationService';
 import UnauthorizedError from '../api/error/UnauthorizedError';
@@ -35,6 +46,7 @@ export function UserControllerFactory(container: Container, apiVersion: number):
       @inject('PasswordResetService') private passwordResetService: PasswordResetService,
       @inject('ConcurrencyService') private concurrencyService: ConcurrencyService,
       @inject('UserEmailChangeService') private userEmailChangeService: UserEmailChangeService,
+      @inject('AlexaService') private alexaService: AlexaService,
     ) {
       super();
     }
@@ -415,6 +427,45 @@ export function UserControllerFactory(container: Container, apiVersion: number):
     )
     private async verifyEmailChange(@requestParam('id') userId: string, @requestBody() body: EmailChangeVerifyRequest): Promise<UserEmailChangeVerifyResponse> {
       return this.userEmailChangeService.verifyEmailChange(userId, body.type, body.confirmationId, body.confirmationKey);
+    }
+
+    @httpGet(
+      '/:id/alexa',
+      authWithId,
+    )
+    private async fetchAlexaLink(
+      @requestParam('id') userId: string,
+      @requestHeaders('Authorization') authToken: string,
+      @queryParam('deep') deep: string,
+    ): Promise<any> {
+
+      return this.alexaService.getAccountLink(authToken, userId, /^true$/gi.test(deep));
+    }
+
+    @httpPost(
+      '/:id/alexa',
+      authWithId,
+    )
+    private async createAlexaLink(
+        @requestParam('id') userId: string,
+        @requestHeaders('Authorization') authToken: string,
+        @requestBody() body: any,
+      ): Promise<any> {
+
+      return this.alexaService.postAccountLink(authToken, userId, body);
+    }
+
+    @httpDelete(
+      '/:id/alexa',
+      authWithId,
+    )
+    private async removeAlexaLink(
+      @requestParam('id') userId: string,
+      @requestHeaders('Authorization') authToken: string,
+      @queryParam('force') force: string,
+    ): Promise<any> {
+
+      return this.alexaService.deleteAccountLink(authToken, userId, /^true$/gi.test(force));
     }
   }
 
