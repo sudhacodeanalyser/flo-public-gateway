@@ -136,6 +136,16 @@ export function createMethod(target: any, propertyName: string, propertyDescript
   };
 }
 
+export function emptyMethod(target: any, propertyName: string, propertyDescriptor: PropertyDescriptor): void {
+  const method = propertyDescriptor.value;
+
+  propertyDescriptor.value = async function (...args: any[]): Promise<HttpResponseMessage> {
+    await method.apply(this, args);
+
+    return new HttpResponseMessage(204);
+  };
+}
+
 export function deleteMethod(target: any, propertyName: string, propertyDescriptor: PropertyDescriptor): void {
   const method = propertyDescriptor.value;
 
