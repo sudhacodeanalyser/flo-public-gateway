@@ -131,8 +131,17 @@ export function createMethod(target: any, propertyName: string, propertyDescript
     const response = new HttpResponseMessage(201);
 
     response.content = new JsonContent(result);
-
     return response;
+  };
+}
+
+export function emptyMethod(target: any, propertyName: string, propertyDescriptor: PropertyDescriptor): void {
+  const method = propertyDescriptor.value;
+
+  propertyDescriptor.value = async function (...args: any[]): Promise<HttpResponseMessage> {
+    await method.apply(this, args);
+
+    return new HttpResponseMessage(204);
   };
 }
 
