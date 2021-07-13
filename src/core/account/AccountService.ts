@@ -18,7 +18,7 @@ import uuid from 'uuid';
 import EmailClient from '../../email/EmailClient';
 import config from '../../config/config';
 import { ResourceEventAction, ResourceEventInfo, ResourceEventType } from '../api/model/ResourceEvent';
-import { KeyMap } from '../../database/DatabaseClient';
+import Request from '../api/Request';
 
 const sevenDays = 604800;
 
@@ -62,7 +62,7 @@ class AccountService {
     return account === null ? {} : account;
   }
 
-  public async inviteUserToJoinAccount(userInvite: UserInvite): Promise<{ token: string, metadata: InviteTokenData }> {
+  public async inviteUserToJoinAccount(req: Request, userInvite: UserInvite): Promise<{ token: string, metadata: InviteTokenData }> {
     const user = await this.userServiceFactory().getUserByEmail(userInvite.email);
 
     if (user) {
@@ -90,6 +90,16 @@ class AccountService {
         }
       })
     );
+
+    const currentUserId = req?.token?.user_id;
+    if (currentUserId) {
+      const accountUserRoles = await this.accountResolver.getAllAccountUserRolesByAccountId(userInvite.accountId);
+      const userMaxLevel = this.accountResolver.getMaxSecurityLevel(accountUserRoles);
+      const inviteMaxLevel = this.accountResolver.getMaxSecurityLevelByRoles(userInvite.accountRoles)
+      if (inviteMaxLevel >  userMaxLevel[currentUserId].maxLevel) {
+        throw new ForbiddenError('Forbidden.');
+      }
+    }
 
     const tokenData = await this.userInviteService.issueToken(
       userInvite.email,
