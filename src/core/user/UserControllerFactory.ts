@@ -17,7 +17,16 @@ import * as t from 'io-ts';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
 import { UpdateAlarmSettings, UpdateAlarmSettingsCodec, User, UserUpdate, UserUpdateValidator, RetrieveAlarmSettingsFilterCodec, RetrieveAlarmSettingsFilter, EntityAlarmSettings, UserStats, AdminUserCreate, AdminUserCreateCodec, ImpersonateUserCodec, ImpersonateUser, ImpersonationToken, UserEmailChangeResponse, EntityAlarmSettingsItemCodec, UserEmailTypeCodec, EmailChangeVerifyRequest, EmailChangeVerifyRequestCodec, UserEmailChangeVerifyResponse } from '../api';
-import { asyncMethod, authorizationHeader, createMethod, deleteMethod, httpController, parseExpand, withResponseType } from '../api/controllerUtils';
+import {
+  asyncMethod,
+  authorizationHeader,
+  createMethod,
+  deleteMethod,
+  emptyMethod,
+  httpController,
+  parseExpand,
+  withResponseType,
+} from '../api/controllerUtils';
 import Request from '../api/Request';
 import * as Responses from '../api/response';
 import { AlexaService, UserService } from '../service';
@@ -446,6 +455,7 @@ export function UserControllerFactory(container: Container, apiVersion: number):
       '/:id/alexa',
       authWithId,
     )
+    @createMethod
     private async createAlexaLink(
         @requestParam('id') userId: string,
         @requestHeaders('Authorization') authToken: string,
@@ -459,11 +469,12 @@ export function UserControllerFactory(container: Container, apiVersion: number):
       '/:id/alexa',
       authWithId,
     )
+    @emptyMethod
     private async removeAlexaLink(
       @requestParam('id') userId: string,
       @requestHeaders('Authorization') authToken: string,
       @queryParam('force') force: string,
-    ): Promise<any> {
+    ): Promise<void> {
 
       return this.alexaService.deleteAccountLink(authToken, userId, /^true$/gi.test(force));
     }
