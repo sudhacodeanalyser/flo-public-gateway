@@ -57,7 +57,9 @@ export function AccountControllerFactory(container: Container, apiVersion: numbe
       }))
     )
     private async inviteUserToAccount(@request() req: Request, @requestBody() body: UserInviteBody): Promise<void> {
-      await this.accountService.inviteUserToJoinAccount(req, body);
+      const resourceEventInfo = getEventInfo(req);
+
+      await this.accountService.inviteUserToJoinAccount(req, body, resourceEventInfo);
     }
 
     @httpPost('/invite/revoke',
@@ -91,6 +93,8 @@ export function AccountControllerFactory(container: Container, apiVersion: numbe
       }))
     )
     private async acceptInvite(@request() req: Request, @requestBody() body: InviteAcceptData): Promise<User> {
+      const resourceEventInfo = getEventInfo(req);
+
       const token = req.get('Authorization');
       const tokenStr = token && token.split(' ')[1];
 
@@ -98,7 +102,7 @@ export function AccountControllerFactory(container: Container, apiVersion: numbe
         throw new UnauthorizedError();
       }
 
-      return this.accountService.acceptInvitation(tokenStr, body);
+      return this.accountService.acceptInvitation(tokenStr, body, resourceEventInfo);
     }
 
     @httpGet('/invite/token',
