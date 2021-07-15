@@ -92,7 +92,7 @@ class AccountService {
     );
 
     const currentUserId = req?.token?.user_id;
-    if (currentUserId) {
+    if (currentUserId && !this.accountResolver.hasPrivilege(userInvite.accountId)) {
       const accountUserRoles = await this.accountResolver.getAllAccountUserRolesByAccountId(userInvite.accountId);
       const userMaxLevel = this.accountResolver.getMaxSecurityLevel(accountUserRoles);
       const inviteMaxLevel = this.accountResolver.getMaxSecurityLevelByRoles(userInvite.accountRoles)
