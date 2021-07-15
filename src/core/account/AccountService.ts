@@ -122,20 +122,24 @@ class AccountService {
       this.logger.error(`Failed to send notification for user invitation for user ${tokenData.metadata.email}`, err);
     }
 
-    if(user){
-      resourceEventInfo.eventData = {
-        action: "send_invite",
-        accountId: userInvite.accountId,
-        roles: userInvite.accountRoles,
-      };
+    resourceEventInfo.eventData = {
+      action: "send_invite",
+      accountId: userInvite.accountId,
+      email: userInvite.email,
+      roles: userInvite.accountRoles,
+    };
 
-      this.resourceEventService.publishResourceEvent(
-        ResourceEventType.USER,
-        ResourceEventAction.CREATED,
-        user,
-        resourceEventInfo
-      );
-    }
+    const invitedUser = {
+      id: userInvite.accountId,
+      email: userInvite.email,
+    };
+
+    this.resourceEventService.publishResourceEvent(
+      ResourceEventType.USER,
+      ResourceEventAction.CREATED,
+      invitedUser,
+      resourceEventInfo
+    );
     
     return tokenData;
   }

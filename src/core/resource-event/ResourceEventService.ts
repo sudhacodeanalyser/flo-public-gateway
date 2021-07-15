@@ -149,9 +149,7 @@ class ResourceEventService extends MemoizeMixin(HttpService) {
           eventData: eventData || {},
         };
       case ResourceEventType.USER:
-        const { id: userId, email: email } = User.fromModel(
-          itemData as UserModel
-        );
+        const { id: userId, email: email } = itemData;
 
         return {
           resourceId: userId,
