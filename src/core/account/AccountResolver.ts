@@ -13,6 +13,7 @@ import { UserInviteService } from '../user/UserRegistrationService';
 
 @injectable()
 class AccountResolver extends Resolver<Account> {
+
   protected propertyResolverMap: PropertyResolverMap<Account> = {
     owner: async (account: Account, shouldExpand: boolean = false, expandProps?: PropExpand) => {
       const hasPrivilege = await this.hasPrivilege(account.id);
@@ -45,9 +46,11 @@ class AccountResolver extends Resolver<Account> {
       const currentUserId = req?.token?.user_id;
       const hasPrivilege = await this.hasPrivilege(account.id);
       const accountUserRoles = await this.getAllAccountUserRolesByAccountId(account.id);
-      const visibleAccountUserRoles = hasPrivilege ?
-        accountUserRoles :
-        _.filter(accountUserRoles, ({ userId: currentUserId }));
+      let visibleAccountUserRoles = accountUserRoles
+      if (!hasPrivilege){
+        const ans = this.getMaxSecurityLevel(accountUserRoles)
+        visibleAccountUserRoles = accountUserRoles.filter(({userId }) => ans[userId].maxLevel <= ans[currentUserId].maxLevel);
+      }
 
       if (shouldExpand) {
         return Promise.all(
@@ -87,9 +90,16 @@ class AccountResolver extends Resolver<Account> {
       return this.userInviteService.getUserRegistrationTokenMetadataByAccountId(account.id);
     },
   };
+  
   private locationResolverFactory: () => LocationResolver;
   private userResolverFactory: () => UserResolver;
-
+  private securityLevel = new Map<string, number>([
+    ['owner',     100], 
+    ['write',     80],
+    ['provision', 50], 
+    ['readonly',  10]
+  ]); 
+  
   constructor(
     @inject('AccountTable') private accountTable: AccountTable,
     @inject('UserAccountRoleTable') private userAccountRoleTable: UserAccountRoleTable,
@@ -187,8 +197,8 @@ class AccountResolver extends Resolver<Account> {
     
     return currentUserRoles && (
       req?.token?.isAdmin() || // Is Flo system admin
-      (currentUserId && !_.chain(accountUserRoles)
-        .filter({ userId: currentUserId })
+      (currentUserId && !_.chain(accountUserRoles)        
+      .filter({ userId: currentUserId })
         .map('roles')
         .flatten()
         .intersection(['owner', 'write'])
@@ -209,6 +219,32 @@ class AccountResolver extends Resolver<Account> {
     const account = new AccountRecord(createdAccountRecord).toModel();
 
     return account;
+  }
+
+  public getMaxSecurityLevel(accountUserRoles: AccountUserRole[]): _.Dictionary<{userId: string, maxLevel: number}> {
+    const ans = _(accountUserRoles)
+        .groupBy('userId')
+        .map((rs, id) => {
+          return {
+              userId: id, 
+              maxLevel: _(rs)
+                  .map('roles')
+                  .map((r) =>  this.getMaxSecurityLevelByRoles(r))
+                  .max() || 0
+            }
+          }
+        )
+        .keyBy('userId')
+        .value();
+      return ans;
+  }
+
+  public getMaxSecurityLevelByRoles(roles: string[]): number {
+    const ans = _(roles)
+      .map((r) => this.securityLevel.get(r) || 0)
+      .max() || 0
+
+    return ans;
   }
 }
 
