@@ -4,13 +4,14 @@ import {
   Expandable,
   Device as DeviceModel,
   Location as LocationModel,
+  User as UserModel,
   DependencyFactoryFactory,
 } from '../api';
 import Logger from 'bunyan';
 import { memoized, MemoizeMixin } from '../../memoize/MemoizeMixin';
 import { UserService } from '../service';
-import { Device, Location} from '../api/response';
-import { HttpService, HttpError } from '../../http/HttpService'
+import { Device, Location, User } from '../api/response';
+import { HttpService, HttpError } from '../../http/HttpService';
 import {
   ItemEvent,
   ResourceEventAction,
@@ -29,17 +30,24 @@ class ResourceEventService extends MemoizeMixin(HttpService) {
     private readonly resourceEventKafkaTopic: string,
     @inject('KafkaProducer') private readonly kafkaProducer: KafkaProducer,
     @inject('Logger') private readonly logger: Logger,
-    @inject('DependencyFactoryFactory') depFactoryFactory: DependencyFactoryFactory,
+    @inject('DependencyFactoryFactory')
+    depFactoryFactory: DependencyFactoryFactory,
     @inject('ResourceEventApiUrl') private resourceEventApiUrl: string
   ) {
     super();
     this.userServiceFactory = depFactoryFactory('UserService');
   }
 
-  public async getResourceEvents(accountId: string, from: string, to: string): Promise<ResourceEvent[]> {
+  public async getResourceEvents(
+    accountId: string,
+    from: string,
+    to: string
+  ): Promise<ResourceEvent[]> {
     const request = {
       method: 'get',
-      url: `${this.resourceEventApiUrl}/event?accountId=${accountId}&from=${from}&to=${to}`
+      url: `${
+        this.resourceEventApiUrl
+      }/event?accountId=${accountId}&from=${from}&to=${to}`,
     };
 
     const response = await this.sendRequest(request);
@@ -54,20 +62,22 @@ class ResourceEventService extends MemoizeMixin(HttpService) {
     resourceEventInfo: ResourceEventInfo
   ): Promise<void> {
     try {
-
-      const user = await this.userServiceFactory().getUserById(resourceEventInfo.userId, {
-        $select: {
-          email: true,
-          account: { $select: { id: true } }
+      const user = await this.userServiceFactory().getUserById(
+        resourceEventInfo.userId,
+        {
+          $select: {
+            email: true,
+            account: { $select: { id: true } },
+          },
         }
-      });
+      );
 
-      let accountId = ''
-      let userName = ''
+      let accountId = '';
+      let userName = '';
 
       if (!isNone(user)) {
-        userName = user.value.email || ''
-        accountId = user.value.account.id
+        userName = user.value.email || '';
+        accountId = user.value.account.id;
       }
 
       const message = this.formatResourceEventMessage(
@@ -91,7 +101,7 @@ class ResourceEventService extends MemoizeMixin(HttpService) {
     itemData: Expandable<T>,
     resourceEventInfo: ResourceEventInfo,
     accountId: string,
-    userName: string,
+    userName: string
   ): ResourceEvent {
     const item = this.mapItem(type, itemData, resourceEventInfo.eventData);
 
@@ -111,7 +121,11 @@ class ResourceEventService extends MemoizeMixin(HttpService) {
     };
   }
 
-  private mapItem(type: ResourceEventType, itemData: any, eventData: any): ItemEvent {
+  private mapItem(
+    type: ResourceEventType,
+    itemData: any,
+    eventData: any
+  ): ItemEvent {
     switch (type) {
       case ResourceEventType.DEVICE:
         const { id: deviceId, nickname: deviceNickname } = Device.fromModel(
@@ -132,6 +146,14 @@ class ResourceEventService extends MemoizeMixin(HttpService) {
         return {
           resourceId: locationId,
           resourceName: locationNickname || '',
+          eventData: eventData || {},
+        };
+      case ResourceEventType.USER:
+        const { id: userId, email: email } = itemData;
+
+        return {
+          resourceId: userId,
+          resourceName: email || '',
           eventData: eventData || {},
         };
       default:
