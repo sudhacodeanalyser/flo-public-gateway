@@ -52,7 +52,7 @@ class AlexaService extends HttpService {
     return this.sendRequest(request);
   }
 
-  public async deleteAccountLink(authToken: string, userId: string, force: boolean): Promise<any> {
+  public async deleteAccountLink(authToken: string, userId: string, force: boolean): Promise<void> {
     const request = {
       method: 'DELETE',
       url: `${this.url}/users/${userId}/alexa`,
