@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import { AxiosInstance, AxiosRequestConfig } from 'axios';
+import { AxiosInstance, AxiosRequestConfig, Method } from 'axios';
 import { injectable, inject } from 'inversify';
 import HttpError from './HttpError';
 import config from '../config/config';
@@ -30,7 +30,7 @@ class HttpService {
     try {
       const httpContextReq = this.httpContext && this.httpContext.request;
       const cfg: AxiosRequestConfig = {
-        method: request.method,
+        method: request.method as Method,
         url: this.baseUrl ? `${this.baseUrl}${request.url}` : request.url,
         headers: {
           'Content-Type': 'application/json',
