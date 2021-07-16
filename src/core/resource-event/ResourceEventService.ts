@@ -76,10 +76,15 @@ class ResourceEventService extends MemoizeMixin(HttpService) {
       let userName = '';
 
       if (!isNone(user)) {
-        userName = user.value.email || resourceEventInfo.userId;
-        accountId = user.value.account.id || resourceEventInfo.userId;
-      } else {
+        userName = user.value.email || '';
+        accountId = user.value.account.id || '';
+      } 
+      
+      if (userName === '') {
         userName = resourceEventInfo.userId;
+      }
+
+      if (accountId === '') {
         accountId = resourceEventInfo.userId;
       }
 
