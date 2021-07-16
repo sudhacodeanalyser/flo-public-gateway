@@ -76,8 +76,8 @@ class ResourceEventService extends MemoizeMixin(HttpService) {
       let userName = '';
 
       if (!isNone(user)) {
-        userName = user.value.email || '';
-        accountId = user.value.account.id;
+        userName = user.value.email || resourceEventInfo.userId;
+        accountId = user.value.account.id || resourceEventInfo.userId;
       }
 
       const message = this.formatResourceEventMessage(

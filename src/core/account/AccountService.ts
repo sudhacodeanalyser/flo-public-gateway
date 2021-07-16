@@ -124,13 +124,12 @@ class AccountService {
 
     resourceEventInfo.eventData = {
       action: "send_invite",
-      accountId: userInvite.accountId,
       email: userInvite.email,
       roles: userInvite.accountRoles,
     };
 
     const invitedUser = {
-      id: userInvite.accountId,
+      id: resourceEventInfo.userId,
       email: userInvite.email,
     };
 
