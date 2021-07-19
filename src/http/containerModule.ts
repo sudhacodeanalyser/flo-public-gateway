@@ -7,10 +7,10 @@ import axiosBetterStacktrace from 'axios-better-stacktrace';
 
 export default new ContainerModule((bind: interfaces.Bind) => {
   const httpAgent = new HttpAgent({
-    freeSocketTimeout: config.externalServiceHttpTimeoutMs
+    freeSocketTimeout: Number(config.externalServiceHttpTimeoutMs)
   });
   const httpsAgent = new HttpsAgent({
-    freeSocketTimeout: config.externalServiceHttpTimeoutMs
+    freeSocketTimeout: Number(config.externalServiceHttpTimeoutMs)
   });
 
   bind<HttpAgent>('HttpAgent').toConstantValue(httpAgent);
