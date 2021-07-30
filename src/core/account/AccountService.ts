@@ -62,7 +62,7 @@ class AccountService {
     return account === null ? {} : account;
   }
 
-  public async inviteUserToJoinAccount(req: Request, userInvite: UserInvite, resourceEventInfo: ResourceEventInfo): Promise<{ token: string, metadata: InviteTokenData }> {
+  public async inviteUserToJoinAccount(req: Request, userInvite: UserInvite): Promise<{ token: string, metadata: InviteTokenData }> {
     const user = await this.userServiceFactory().getUserByEmail(userInvite.email);
 
     if (user) {
@@ -122,24 +122,6 @@ class AccountService {
       this.logger.error(`Failed to send notification for user invitation for user ${tokenData.metadata.email}`, err);
     }
 
-    resourceEventInfo.eventData = {
-      action: "send_invite",
-      email: userInvite.email,
-      roles: userInvite.accountRoles,
-    };
-
-    const invitedUser = {
-      id: resourceEventInfo.userId,
-      email: userInvite.email,
-    };
-
-    this.resourceEventService.publishResourceEvent(
-      ResourceEventType.USER,
-      ResourceEventAction.CREATED,
-      invitedUser,
-      resourceEventInfo
-    );
-    
     return tokenData;
   }
 
@@ -173,7 +155,7 @@ class AccountService {
     return tokenData;
   }
 
-  public async acceptInvitation(token: string, data: InviteAcceptData, resourceEventInfo: ResourceEventInfo): Promise<User> {
+  public async acceptInvitation(token: string, data: InviteAcceptData): Promise<User> {
     const tokenData = await this.userInviteService.redeemToken(token);
     const accountId = tokenData.userAccountRole.accountId || uuid.v4();
 
@@ -202,19 +184,6 @@ class AccountService {
         locationService.addLocationUserRole(locationId, user.id, roles, false)
       )
     ]);
-
-    if(user){
-      resourceEventInfo.eventData = {
-        action: "accept_invite"
-      };
-
-      this.resourceEventService.publishResourceEvent(
-        ResourceEventType.USER,
-        ResourceEventAction.CREATED,
-        user,
-        resourceEventInfo
-      );
-    }
 
     return user;
   }
