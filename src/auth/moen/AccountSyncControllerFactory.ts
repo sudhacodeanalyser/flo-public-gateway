@@ -1,12 +1,12 @@
 import { interfaces, httpHead, httpGet, httpPost, requestBody, request, BaseHttpController, httpPut, httpDelete } from 'inversify-express-utils';
 import { inject, Container } from 'inversify';
 import { httpController, createMethod } from '../../core/api/controllerUtils';
-import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
+// import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
 import Request from '../../core/api/Request';
 import { AccountSyncService } from './AccountSyncService';
 
 export function AccountSyncControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
-  const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
+  // const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
 
   @httpController({ version: apiVersion }, '/moen')
   class AccountSyncController extends BaseHttpController {
