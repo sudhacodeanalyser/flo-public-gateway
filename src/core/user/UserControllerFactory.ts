@@ -447,6 +447,7 @@ export function UserControllerFactory(container: Container, apiVersion: number):
       @requestHeaders('Authorization') authToken: string,
       @queryParam('deep') deep: string,
     ): Promise<any> {
+
       return this.alexaService.getAccountLink(authToken, userId, /^true$/gi.test(deep));
     }
 
@@ -460,6 +461,7 @@ export function UserControllerFactory(container: Container, apiVersion: number):
         @requestHeaders('Authorization') authToken: string,
         @requestBody() body: any,
       ): Promise<any> {
+
       return this.alexaService.postAccountLink(authToken, userId, body);
     }
 
@@ -477,5 +479,6 @@ export function UserControllerFactory(container: Container, apiVersion: number):
       return this.alexaService.deleteAccountLink(authToken, userId, /^true$/gi.test(force));
     }
   }
+
   return UserController;
 }

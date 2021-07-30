@@ -131,6 +131,7 @@ export function createMethod(target: any, propertyName: string, propertyDescript
     const response = new HttpResponseMessage(201);
 
     response.content = new JsonContent(result);
+
     return response;
   };
 }
