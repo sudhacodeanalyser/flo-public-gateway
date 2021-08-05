@@ -4,7 +4,7 @@ import { inject, Container } from 'inversify';
 import { AccountService, UserService } from '../service';
 import { parseExpand, httpController, deleteMethod, withResponseType } from '../api/controllerUtils';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
-import { AccountMergeValidator, AccountMerge, AccountMutable, AccountMutableCodec, Account, AccountUserRole, UserInviteCodec, 
+import { AccountMergeValidator, AccountMerge, AccountMutable, AccountMutableCodec, Account, AccountUserRole, UserInviteCodec,
   InviteAcceptValidator, InviteAcceptData, User, PendingInvitesRequest, PendingInvitesDataCodec, UserRegistrationPendingTokenMetadata } from '../api';
 import { InviteTokenData } from '../user/UserRegistrationService';
 import { NonEmptyArray } from '../api/validator/NonEmptyArray';
@@ -77,6 +77,7 @@ export function AccountControllerFactory(container: Container, apiVersion: numbe
       authWithIdBody,
       reqValidator.create(t.type({
         body: t.type({
+          accountId: accountIdValidator,
           email: emailValidator,
         })
       }))
