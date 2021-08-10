@@ -204,18 +204,21 @@ class AccountService {
       )
     ]);
 
-    if(user){
-      resourceEventInfo.eventData = {
-        action: "acceptInvite"
-      };
+    const invitedUser = {
+      id: user.id || accountId,
+      email: tokenData.email,
+    };
 
-      this.resourceEventService.publishResourceEvent(
-        ResourceEventType.USER,
-        ResourceEventAction.CREATED,
-        user,
-        resourceEventInfo
-      );
-    }
+    resourceEventInfo.eventData = {
+      action: "acceptInvite"
+    };
+
+    this.resourceEventService.publishResourceEvent(
+      ResourceEventType.USER,
+      ResourceEventAction.CREATED,
+      invitedUser,
+      resourceEventInfo
+    );
 
     return user;
   }
