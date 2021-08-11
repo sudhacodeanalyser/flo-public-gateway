@@ -4,7 +4,7 @@ import { inject, Container } from 'inversify';
 import { AccountService, UserService } from '../service';
 import { parseExpand, httpController, deleteMethod, withResponseType } from '../api/controllerUtils';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
-import { AccountMergeValidator, AccountMerge, AccountMutable, AccountMutableCodec, Account, AccountUserRole, UserInviteCodec, 
+import { AccountMergeValidator, AccountMerge, AccountMutable, AccountMutableCodec, Account, AccountUserRole, UserInviteCodec,
   InviteAcceptValidator, InviteAcceptData, User, PendingInvitesRequest, PendingInvitesDataCodec, UserRegistrationPendingTokenMetadata } from '../api';
 import { InviteTokenData } from '../user/UserRegistrationService';
 import { NonEmptyArray } from '../api/validator/NonEmptyArray';
@@ -57,7 +57,9 @@ export function AccountControllerFactory(container: Container, apiVersion: numbe
       }))
     )
     private async inviteUserToAccount(@request() req: Request, @requestBody() body: UserInviteBody): Promise<void> {
-      await this.accountService.inviteUserToJoinAccount(req, body);
+      const resourceEventInfo = getEventInfo(req);
+
+      await this.accountService.inviteUserToJoinAccount(req, body, resourceEventInfo);
     }
 
     @httpPost('/invite/revoke',
@@ -77,6 +79,7 @@ export function AccountControllerFactory(container: Container, apiVersion: numbe
       authWithIdBody,
       reqValidator.create(t.type({
         body: t.type({
+          accountId: accountIdValidator,
           email: emailValidator,
         })
       }))
@@ -91,6 +94,8 @@ export function AccountControllerFactory(container: Container, apiVersion: numbe
       }))
     )
     private async acceptInvite(@request() req: Request, @requestBody() body: InviteAcceptData): Promise<User> {
+      const resourceEventInfo = getEventInfo(req);
+
       const token = req.get('Authorization');
       const tokenStr = token && token.split(' ')[1];
 
@@ -98,7 +103,7 @@ export function AccountControllerFactory(container: Container, apiVersion: numbe
         throw new UnauthorizedError();
       }
 
-      return this.accountService.acceptInvitation(tokenStr, body);
+      return this.accountService.acceptInvitation(tokenStr, body, resourceEventInfo);
     }
 
     @httpGet('/invite/token',
