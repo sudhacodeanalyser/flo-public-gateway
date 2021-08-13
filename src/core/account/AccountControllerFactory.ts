@@ -78,7 +78,7 @@ export function AccountControllerFactory(container: Container, apiVersion: numbe
     @httpPost('/invite/resend',
       authWithIdBody,
       reqValidator.create(t.type({
-        body: t.type({
+        body: t.partial({
           accountId: accountIdValidator,
           email: emailValidator,
         })
