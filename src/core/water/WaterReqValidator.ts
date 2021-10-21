@@ -43,19 +43,17 @@ const RestrictedDateRangeCodec = t.brand(
   DateRangeCodec,
   (dateRange): dateRange is t.Branded<DateRange, RestrictedDateRangeBrand> => {
 
-    // Start date must be after NOW
-    if (moment().isBefore(dateRange.startDate)) {
+    // Start date must be before NOW
+    if (moment().isAfter(dateRange.startDate)) {
       return false;
     }
 
     const endDate = dateRange.endDate || new Date().toISOString();
     const diff = moment(endDate).diff(dateRange.startDate, 'months');
-
-    if (diff > 3 && dateRange.interval !== '1m') {
+    if (diff > 3 && dateRange.interval === '1m') {
       return false;
     }
-
-    // 1 year max
+    // was 1 year originally, then we allow for 37 months
     return diff >= 0 && diff <= 37;
   },
   'RestrictedDateRange'

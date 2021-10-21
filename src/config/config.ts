@@ -41,7 +41,7 @@ function getDefaults(): { [key: string]: any } {
         redisPort: '6379',
         presenceServiceUrl: 'https://flo-core-service-dev.flocloud.co/presence',
         telemetryTagsServiceUrl: 'https://flo-telemetry-tags.flocloud.co',
-        waterMeterUrl: 'https://flo-water-meter.flosecurecloud.com',
+        waterMeterUrl: 'https://flo-water-meter.flocloud.co',
         apiV1IFTTTTestSetupUrl: 'https://api-dev.flocloud.co/api/v1/ifttt/v1/test/setup',
         iftttRealtimeNotificationsUrl: 'https://realtime.ifttt.com/v1/notifications',
         puckTokenSecret: '$$Extr3m3ly_S3cur3_Str1ng!!',
