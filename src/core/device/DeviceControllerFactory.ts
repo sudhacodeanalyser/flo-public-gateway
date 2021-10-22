@@ -8,8 +8,8 @@ import { QrData, QrDataValidator } from '../../api-v1/pairing/PairingService';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import { InternalDeviceService } from '../../internal-device-service/InternalDeviceService';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
-import { DependencyFactoryFactory, Device, DeviceActionRules, DeviceActionRulesCreate, DeviceActionRulesCreateCodec, DeviceCreate, DeviceCreateValidator, DeviceType, 
-  DeviceUpdate, DeviceUpdateValidator, SystemMode as DeviceSystemMode, SystemModeCodec as DeviceSystemModeCodec, HardwareThresholdsCodec, HardwareThresholds, FirmwareInfo, SsidCredentials, 
+import { DependencyFactoryFactory, Device, DeviceActionRules, DeviceActionRulesCreate, DeviceActionRulesCreateCodec, DeviceCreate, DeviceCreateValidator, DeviceType,
+  DeviceUpdate, DeviceUpdateValidator, SystemMode as DeviceSystemMode, SystemModeCodec as DeviceSystemModeCodec, HardwareThresholdsCodec, HardwareThresholds, FirmwareInfo, SsidCredentials,
   BaseLteCodec, BaseLte, SsidCredentialsWithContext, LteContext,  DeviceSyncBodyCodec, DeviceSyncOptions, ConnectionInfoCodec, ConnectionMethod, PropExpand  } from '../api';
 import { asyncMethod, authorizationHeader, createMethod, deleteMethod, httpController, parseExpand, withResponseType } from '../api/controllerUtils';
 import { convertEnumtoCodec } from '../api/enumUtils';
@@ -52,10 +52,18 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
   const authWithId = authMiddlewareFactory.create(async ({ params: { id } }: Request) => ({icd_id: id}));
   const authWithLocation = authMiddlewareFactory.create(async ({ body: { location: { id } } }: Request) => ({ location_id: id }));
   const puckAuthMiddleware = container.get<PuckAuthMiddleware>('PuckAuthMiddleware');
+  const authWithLocationParents = authMiddlewareFactory.create(async ({ body: { location: { id: locationId }}}: Request, depFactoryFactory: DependencyFactoryFactory) => {
+    const locationService = depFactoryFactory<LocationService>('LocationService')();
+    const parentIds = await locationService.getAllParentIds(locationId);
+
+    return {
+      location_id: [locationId, ...parentIds]
+    };
+  })
   const authWithParents = authMiddlewareFactory.create(async ({ params: { id }, query: { macAddress } }: Request, depFactoryFactory: DependencyFactoryFactory) => {
     const deviceService = depFactoryFactory<DeviceService>('DeviceService')();
     const locationService = depFactoryFactory<LocationService>('LocationService')();
-    const device = id ? 
+    const device = id ?
       O.toNullable(await deviceService.getDeviceById(id, { $select: { location: { $select: { id: true } } } })) :
       O.toNullable(await deviceService.getByMacAddress(macAddress, { $select: { location: { $select: { id: true } } } }));
 
@@ -107,7 +115,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       } else if (
         (revertMinutes !== undefined && revertMode === undefined) ||
         (revertMode !== undefined && revertMinutes === undefined) ||
-        (revertMinutes !== undefined && revertMode !== undefined && target !== DeviceSystemMode.SLEEP) || 
+        (revertMinutes !== undefined && revertMode !== undefined && target !== DeviceSystemMode.SLEEP) ||
         revertMode === DeviceSystemMode.SLEEP
       ) {
         return false;
@@ -211,7 +219,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
         maybeSsidCredentials,
         O.fold(
           () => {
-            throw new NotFoundError('LTE device not found.') 
+            throw new NotFoundError('LTE device not found.')
           },
           ssidCredentials => ssidCredentials
         )
@@ -247,7 +255,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       @queryParam('macAddress') macAddress: string,
       @requestBody() con: ConnectionInfoRequest
     ): Promise<void> {
-      
+
       const maybeDevice = await this.deviceService.getByMacAddress(macAddress, { $select: { id: true } });
       const device = pipe(maybeDevice, O.fold(
         () => {
@@ -383,7 +391,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     }
 
     @httpPost('/pair/complete',
-      authWithLocation,
+      authWithLocationParents,
       reqValidator.create(t.type({
         body: DeviceCreateValidator
       }))
@@ -464,7 +472,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       @requestParam('id') id: string,
       @requestBody() con: ConnectionInfoRequest
     ): Promise<void> {
-   
+
       await this.syncById(id);
       const maybeDevice = await this.deviceService.getDeviceById(id, { $select: { id: true, macAddress: true, connectivity: true } });
       const device = pipe(maybeDevice, O.fold(
@@ -491,7 +499,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
 
           const maybeCurrentCredentials = await this.lteService.getCurrentCredentials(id)
           const currentCredentials = O.toNullable(maybeCurrentCredentials)
-          
+
           if (currentCredentials?.ssid !== ssid) {
             await this.lteService.unlinkDevice(id, device.macAddress)
           }
@@ -509,7 +517,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
         body: SystemModeRequestCodec
       }))
     )
-    
+
     @asyncMethod
     @withResponseType<Device, Responses.Device>(Responses.Device.fromModel)
     private async setDeviceSystemMode(
@@ -769,7 +777,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     private async transferDevice(@requestParam('id') id: string, @request() req: Request, @requestBody() { locationId }: { locationId: string }): Promise<Option<Device>> {
       const resourceEventInfo = getEventInfo(req);
       return some(await this.deviceService.transferDevice(id, locationId, resourceEventInfo));
-    }   
+    }
 
 
     /* helpers */
@@ -780,7 +788,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       }
       return this.deviceSyncService.synchronize(device.value, opts)
     }
-      
+
   }
 
   return DeviceController;
