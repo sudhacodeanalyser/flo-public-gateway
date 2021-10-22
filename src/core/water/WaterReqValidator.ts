@@ -43,8 +43,9 @@ const RestrictedDateRangeCodec = t.brand(
   DateRangeCodec,
   (dateRange): dateRange is t.Branded<DateRange, RestrictedDateRangeBrand> => {
 
+    const now = moment();
     // Start date must be before NOW
-    if (moment().isAfter(dateRange.startDate)) {
+    if (!now.isAfter(dateRange.startDate)) {
       return false;
     }
 
