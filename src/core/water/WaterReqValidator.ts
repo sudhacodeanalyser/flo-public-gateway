@@ -43,9 +43,10 @@ const RestrictedDateRangeCodec = t.brand(
   DateRangeCodec,
   (dateRange): dateRange is t.Branded<DateRange, RestrictedDateRangeBrand> => {
 
-    const now = moment();
-    // Start date must be before NOW
-    if (!now.isAfter(dateRange.startDate)) {
+    const startDate = moment(dateRange.startDate);
+    const now = moment(new Date().toUTCString());
+    // Start date must be before NOW (shifted 24h due to unknown TZ)
+    if (!startDate.isBefore(now.add(1, 'day'))) {
       return false;
     }
 
