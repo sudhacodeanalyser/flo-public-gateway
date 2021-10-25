@@ -4,7 +4,7 @@ import Redis from 'ioredis';
 
 @injectable()
 export default class ConcurrencyService {
-  
+
   constructor(
     @inject('RedisClient') private redisClient: Redis.Redis
   ) {}
