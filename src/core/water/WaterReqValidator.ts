@@ -52,7 +52,10 @@ const RestrictedDateRangeCodec = t.brand(
 
     const endDate = dateRange.endDate || new Date().toISOString();
     const diff = moment(endDate).diff(dateRange.startDate, 'months');
-    if (diff > 3 && dateRange.interval !== '1m') {
+
+    if (diff > 12 && dateRange.interval !== '1m') {
+      return false;
+    } else if (diff > 3 && !(dateRange.interval === '1d' || dateRange.interval === '1m')) {
       return false;
     }
     // was 1 year originally, then we allow for 37 months
