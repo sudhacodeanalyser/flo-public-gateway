@@ -20,3 +20,4 @@ export * from './device/PuckTokenService';
 export * from './sensors/SensorService';
 export * from './device/LteService';
 export * from './alexa/AlexaService';
+export * from './alarm-dotcom/AlarmDotcomService';

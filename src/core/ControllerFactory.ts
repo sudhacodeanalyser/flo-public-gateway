@@ -26,6 +26,7 @@ import { AccountSyncControllerFactory } from '../auth/moen/AccountSyncController
 import { EmailControllerFactory } from './email/EmailControllerFactory';
 import { ResourceEventControllerFactory } from './resource-event/ResourceEventControllerFactory';
 import { AlexaControllerFactory } from './alexa/AlexaControllerFactory';
+import { AlarmDotcomControllerFactory } from './alarm-dotcom/AlarmDotcomControllerFactory';
 
 export default function ControllerFactory(container: Container, apiVersion: number = 2): interfaces.Controller[] {
   return [
@@ -54,6 +55,7 @@ export default function ControllerFactory(container: Container, apiVersion: numb
     EmailControllerFactory,
     ResourceEventControllerFactory,
     AlexaControllerFactory,
+    AlarmDotcomControllerFactory,
   ]
   .map(controllerFactory => controllerFactory(container, apiVersion));
 }

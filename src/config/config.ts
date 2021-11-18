@@ -18,6 +18,7 @@ function getDefaults(): { [key: string]: any } {
         aclUrl: 'https://api-dev.flocloud.co/api/v1/accesscontrol/refresh',
         internalFloMoenAuthUrl: 'https://flo-moen-auth.flocloud.co',
         internalFloAlexaSmarthomeUrl: 'https://flo-alexa-smarthome.flocloud.co',
+        internalFloAlarmDotcomUrl: 'https://flo-alarm-dotcom.flocloud.co',
         internalDeviceServiceBaseUrl: 'https://flo-device-service.flocloud.co/v1',
         resourceEventApiUrl: 'https://flo-resource-event.flocloud.co',
         apiV1Url: 'https://api-dev.flocloud.co/api/v1',
@@ -59,6 +60,7 @@ function getDefaults(): { [key: string]: any } {
         pairInitTTL: 604800,
         defaultNotifyAccountStatusEmail: 'flotech.runscope.1@gmail.com',
         enterpriseServiceUrl: 'http://flo-enterprise-service.flocloud.co',
+        gitCommit: 'none',
       };
   }
 }
@@ -78,6 +80,7 @@ const config = {
   kafkaTimeout: process.env.KAFKA_TIMEOUT_MS,
   internalFloMoenAuthUrl: process.env.INTERNAL_FLO_MOEN_AUTH_URL,
   internalFloAlexaSmarthomeUrl: process.env.INTERNAL_FLO_ALEXA_SMARTHOME_URL,
+  internalFloAlarmDotcomUrl: process.env.INTERNAL_FLO_ALARM_DOTCOM_URL,
   internalDeviceServiceBaseUrl: process.env.INTERNAL_DEVICE_SERVICE_BASE_URL,
   resourceEventApiUrl: process.env.RESOURCE_EVENT_API_URL,
   apiV1Url: process.env.API_V1_URL,
@@ -134,7 +137,8 @@ const config = {
   googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY,
   defaultNotifyAccountStatusEmail: process.env.DEFAULT_NOTIFY_ACCOUNT_STATUS_EMAIL,
   enterpriseServiceUrl: process.env.FLO_ENTERPRISE_SERVICE_URL,
-  callbackGatewayHost: process.env.CALLBACK_GATEWAY_HOST
+  callbackGatewayHost: process.env.CALLBACK_GATEWAY_HOST,
+  gitCommit: process.env.COMMIT_SHA,
 };
 
 export default {
