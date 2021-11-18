@@ -1,5 +1,8 @@
 FROM node:10-alpine
 
+ARG COMMIT_SHA_ARG=blank
+ENV COMMIT_SHA=$COMMIT_SHA_ARG
+
 RUN mkdir -p /app
 WORKDIR /app
 COPY . /app

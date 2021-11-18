@@ -7,8 +7,13 @@ class PingService {
     @inject('Config') private readonly config: typeof Config
   ) { }
 
-  public ping(): { date: string, app: string, env: string } {
-    return { date: new Date().toISOString(), app: this.config.appName, env: this.config.env ?? 'unknown' };
+  public ping(): { date: string, app: string, env: string, commit: string, } {
+    return {
+      date: new Date().toISOString(),
+      app: this.config.appName,
+      env: this.config.env ?? 'unknown',
+      commit: this.config.gitCommit ?? 'unknown'
+    };
   }
 }
 

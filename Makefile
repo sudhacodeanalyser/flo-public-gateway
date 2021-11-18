@@ -23,6 +23,7 @@ GIT ?= $(COMPOSE) -f build-tools.yml run --rm git
 RUN ?= $(COMPOSE) -f build-tools.yml run --rm --service-ports run --node-env=$(NODE_ENV) run
 HELM ?= $(shell which helm)
 RUNSCOPE_IMAGE ?= $(DOCKER_REGISTRY)/devops/runscope-python-trigger:latest
+COMMIT_SHA ?= 'nosh'
 
 .PHONY: help auth
 help: ## Display this help screen (default)
@@ -32,7 +33,11 @@ full: ## Compile and run internally
 	$(DOCKER) build --tag flo-public-gateway:local -f Dockerfile.full .
 	$(COMPOSE) -f docker-compose-full.yml up
 
-build: install
+write-env: ## append the necessary env var
+	@echo "" >> .env
+	@echo "COMMIT_SHA=$(COMMIT_SHA)" >> .env
+
+build: install write-env
 	$(COMPOSE) -f build-tools.yml $(@) --pull build
 	$(COMPOSE) $(@) --pull app
 	$(COMPOSE) $(@) --pull app-tag
