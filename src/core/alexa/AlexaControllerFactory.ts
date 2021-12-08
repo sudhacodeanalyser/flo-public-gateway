@@ -1,4 +1,4 @@
-import { interfaces, httpGet, request, BaseHttpController } from 'inversify-express-utils';
+import { interfaces, httpGet, request, BaseHttpController, httpPost } from 'inversify-express-utils';
 import { inject, Container } from 'inversify';
 import { httpController } from '../api/controllerUtils';
 import Request from '../../core/api/Request';
@@ -26,6 +26,16 @@ export function AlexaControllerFactory(container: Container, apiVersion: number)
     @httpGet('/client', auth)
     private async getClient(@request() req: Request): Promise<any> {
       return this.alexaService.getClientInfo(req.headers.authorization as string);
+    }
+
+    @httpGet('/authorize', auth)
+    private async getAuthorize(@request() req: Request): Promise<any> {
+      return this.alexaService.getAuthorizeScopes(req.headers.authorization as string, req.query);
+    }
+
+    @httpPost('/authorize', auth)
+    private async postAuthorize(@request() req: Request): Promise<any> {
+      return this.alexaService.postAuthorizeConfirm(req.headers.authorization as string, req.query, req.body);
     }
   }
   return AlexaControllerFactory;
