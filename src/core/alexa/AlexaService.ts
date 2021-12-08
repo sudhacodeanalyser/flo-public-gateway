@@ -31,7 +31,7 @@ class AlexaService extends HttpService {
   public async getAuthorizeScopes(authToken: string, query: any): Promise<any> {
     const request = {
       method: 'GET',
-      url: `${this.url}/app/alexa/authorize?${query}`,
+      url: `${this.url}/app/alexa/authorize`,
       authToken,
       proxyError: true,
       params: query,
@@ -42,7 +42,7 @@ class AlexaService extends HttpService {
   public async postAuthorizeConfirm(authToken: string, query: any, body: any): Promise<any> {
     const request = {
       method: 'POST',
-      url: `${this.url}/app/alexa/authorize?${query}`,
+      url: `${this.url}/app/alexa/authorize`,
       authToken,
       proxyError: true,
       body,
