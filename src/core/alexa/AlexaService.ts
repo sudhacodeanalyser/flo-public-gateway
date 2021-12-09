@@ -28,6 +28,29 @@ class AlexaService extends HttpService {
     return this.sendRequest(request);
   }
 
+  public async getAuthorizeScopes(authToken: string, query: any): Promise<any> {
+    const request = {
+      method: 'GET',
+      url: `${this.url}/app/alexa/authorize`,
+      authToken,
+      proxyError: true,
+      params: query,
+    };
+    return this.sendRequest(request);
+  }
+
+  public async postAuthorizeConfirm(authToken: string, query: any, body: any): Promise<any> {
+    const request = {
+      method: 'POST',
+      url: `${this.url}/app/alexa/authorize`,
+      authToken,
+      proxyError: true,
+      body,
+      params: query,
+    };
+    return this.sendRequest(request);
+  }
+
   public async getAccountLink(authToken: string, userId: string, deep: boolean): Promise<any> {
     const request = {
       method: 'GET',

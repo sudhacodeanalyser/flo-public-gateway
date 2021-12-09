@@ -58,10 +58,10 @@ class AccountSyncService extends HttpService {
     return this.sendRequest(request);
   }
 
-  public async deleteSyncMe(authToken: string): Promise<any> {
+  public async deleteSyncMe(authToken: string, deleteAccount: string): Promise<any> {
     const request = {
       method: 'DELETE',
-      url: `${this.url}/sync/me`,
+      url: `${this.url}/sync/me?account=` + deleteAccount,
       authToken,
       proxyError: true
     };
