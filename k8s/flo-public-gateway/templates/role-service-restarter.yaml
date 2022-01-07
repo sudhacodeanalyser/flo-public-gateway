@@ -1,0 +1,10 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: "{{ include "flo-public-gateway.fullname" . }}-restarter"
+rules:
+  - apiGroups: ["apps", "extensions"]
+    resources: ["deployments"]
+    resourceNames: ["{{ include "flo-public-gateway.fullname" . }}"]
+    verbs: ["get", "patch", "list", "watch"]
