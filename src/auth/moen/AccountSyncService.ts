@@ -90,6 +90,19 @@ class AccountSyncService extends HttpService {
     return this.sendRequest(request);
   }
 
+  public async getSyncIds(floId?: string, moenId?: string, issuer?: string): Promise<any> {
+    const request = {
+      method: 'GET',
+      url: `${this.url}/sync/id`,
+      params: {
+        moenId,
+        floId,
+        issuer,
+      }
+    };
+
+    return this.sendRequest(request);
+  }
 }
 
 export { AccountSyncService };
