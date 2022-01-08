@@ -11,6 +11,25 @@ image:
 nameOverride: ""
 fullnameOverride: ""
 
+cronJob:
+  backoffLimit: 2
+  activeDeadlineSeconds: 600
+  command:
+    - /bin/sh
+  args:
+    - -c
+    - >-
+      kubectl set env deployment ${APPLICATION_NAME} LAST_RESTART_DATE="$(date)"
+      && kubectl rollout status deployment/${APPLICATION_NAME}
+  concurrencyPolicy: Forbid
+  image:
+    repository: registry.gitlab.com/flotechnologies/devops/kubectl
+    tag: 1.12.10
+    pullPolicy: Always
+    pullSecrets: gitlab-registry
+  restartPolicy: Never
+  schedule: "03 */6 * * *"
+
 service:
   type: NodePort
   port: 3000

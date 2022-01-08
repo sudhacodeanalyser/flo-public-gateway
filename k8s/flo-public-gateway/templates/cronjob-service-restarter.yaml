@@ -1,0 +1,51 @@
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: "{{ include "flo-public-gateway.fullname" . }}-restarter"
+  labels:
+    app.kubernetes.io/name: {{ include "flo-public-gateway.name" . }}
+    helm.sh/chart: {{ include "flo-public-gateway.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  concurrencyPolicy: {{ .Values.cronJob.concurrencyPolicy }}
+  schedule: {{ .Values.cronJob.schedule }}
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          annotations:
+            checksum/schedule: {{ .Values.cronJob.schedule | sha256sum }}
+            checksum/secrets: {{ include (print $.Template.BasePath "/secrets.yaml") . | sha256sum }}
+          labels:
+            app.kubernetes.io/name: {{ include "flo-public-gateway.name" . }}
+            app.kubernetes.io/instance: {{ .Release.Name }}
+        spec:
+          serviceAccountName: "{{ include "flo-public-gateway.fullname" . }}-restarter"
+          imagePullSecrets:
+          - name: {{ .Values.cronJob.image.pullSecrets }}
+          containers:
+          - name: "flo-public-gateway-restarter"
+            image: "{{ .Values.cronJob.image.repository }}:{{ .Values.cronJob.image.tag }}"
+            imagePullPolicy: {{ .Values.cronJob.image.pullPolicy }}
+          {{- with .Values.cronJob.command }}
+            command: {{- toYaml . | nindent 14 }}
+          {{- end }}
+          {{- with .Values.cronJob.args }}
+            args: {{- toYaml . | nindent 14 }}
+          {{- end }}
+            env:
+            {{- range $key, $value := .Values.secrets.datas }}
+            - name: {{ $key | upper }}
+              valueFrom:
+                secretKeyRef:
+                    name:  flocloud-public-gateway-secrets
+                    key: {{ $key |   quote }}
+            {{- end }}
+            securityContext:
+              allowPrivilegeEscalation: false
+              runAsUser: 999
+            resources:
+              {{- toYaml .Values.resources | nindent 14 }}
+          restartPolicy: {{ .Values.cronJob.restartPolicy }}
