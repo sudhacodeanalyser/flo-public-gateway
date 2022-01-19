@@ -1,12 +1,16 @@
-import { interfaces, httpHead, httpGet, httpPost, requestBody, request, BaseHttpController, httpPut, httpDelete } from 'inversify-express-utils';
+import { interfaces, httpHead, httpGet, httpPost, requestBody, request, BaseHttpController, httpPut, httpDelete, queryParam } from 'inversify-express-utils';
 import { inject, Container } from 'inversify';
-import { httpController, createMethod } from '../../core/api/controllerUtils';
-// import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
+import * as t from 'io-ts';
+import { httpController, createMethod, httpMethod } from '../../core/api/controllerUtils';
 import Request from '../../core/api/Request';
 import { AccountSyncService } from './AccountSyncService';
+import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
+import AuthMiddlewareFactory from '../AuthMiddlewareFactory';
+import UnauthorizedError from '../UnauthorizedError';
 
 export function AccountSyncControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
-  // const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
+  const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
+  const authMiddlewareFactory = container.get<AuthMiddlewareFactory>('AuthMiddlewareFactory');
 
   @httpController({ version: apiVersion }, '/moen')
   class AccountSyncController extends BaseHttpController {
@@ -57,6 +61,32 @@ export function AccountSyncControllerFactory(container: Container, apiVersion: n
     @httpPost('/sync/auth')
     private async postSyncAuth(@request() req: Request, @requestBody() body: any): Promise<any> {
       return this.accountSyncService.postSyncAuth(req.headers.authorization as string, body);
+    }
+
+    @httpMethod(
+      'get',
+      '/sync/id',
+      authMiddlewareFactory.create(),
+      reqValidator.create(t.type({
+        query: t.union([t.type({
+          floId: t.string,
+        }),
+        t.type({
+          moenId: t.string,
+          issuer: t.string,
+        })])
+      }))
+    )
+    private async getSyncIds(@request() req: Request, @queryParam('moenId') moenId?: string, @queryParam('floId') floId?: string, @queryParam('issuer') issuer?: string): Promise<any> {
+      const tokenMetadata = req.token;
+      if (tokenMetadata === undefined) {
+        throw new Error('No token defined.');
+      }
+      if (!tokenMetadata.isAdmin()) {
+        throw new UnauthorizedError();
+      }
+
+      return this.accountSyncService.getSyncIds(floId, moenId, issuer);
     }
   }
   return AccountSyncControllerFactory;
