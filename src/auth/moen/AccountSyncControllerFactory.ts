@@ -68,24 +68,22 @@ export function AccountSyncControllerFactory(container: Container, apiVersion: n
       '/sync/id',
       authMiddlewareFactory.create(),
       reqValidator.create(t.type({
-        query: t.union([t.type({
-          floId: t.string,
-        }),
-        t.type({
-          moenId: t.string,
-          issuer: t.string,
-        })])
+        query: t.union([
+          t.type({ floId: t.string }),
+          t.type({ moenId: t.string }),
+        ])
       }))
     )
-    private async getSyncIds(@request() req: Request, @queryParam('moenId') moenId?: string, @queryParam('floId') floId?: string, @queryParam('issuer') issuer?: string): Promise<any> {
+    private async getSyncIds(
+      @request() req: Request,
+      @queryParam('moenId') moenId?: string,
+      @queryParam('floId') floId?: string,
+      @queryParam('issuer') issuer?: string): Promise<any> {
+
       const tokenMetadata = req.token;
-      if (tokenMetadata === undefined) {
-        throw new Error('No token defined.');
-      }
-      if (!tokenMetadata.isAdmin()) {
+      if (!tokenMetadata || !(tokenMetadata.isAdmin() || tokenMetadata.isService())) {
         throw new UnauthorizedError();
       }
-
       return this.accountSyncService.getSyncIds(floId, moenId, issuer);
     }
   }
