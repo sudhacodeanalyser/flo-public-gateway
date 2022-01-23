@@ -179,7 +179,6 @@ class WaterService {
   }
 
   public async getMetricsAveragesByDevice(macAddress: string, startDate: string, endDate: string = new Date().toISOString(), interval: WaterConsumptionInterval = WaterConsumptionInterval.ONE_DAY, tz?: string): Promise<WaterMetricsReport> {
-    const t = true;
     const device = await this.deviceServiceFactory().getByMacAddress(macAddress, {
       $select: {
         location: {
@@ -190,7 +189,7 @@ class WaterService {
             city: true,
             postalCode: true,
             state: true,
-            country: t
+            country: true
           }
         }
       }
