@@ -7,6 +7,7 @@ import { AccountSyncService } from './AccountSyncService';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
 import AuthMiddlewareFactory from '../AuthMiddlewareFactory';
 import UnauthorizedError from '../UnauthorizedError';
+import HttpError from '../../http/HttpError';
 
 export function AccountSyncControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
@@ -67,12 +68,6 @@ export function AccountSyncControllerFactory(container: Container, apiVersion: n
       'get',
       '/sync/id',
       authMiddlewareFactory.create(),
-      reqValidator.create(t.type({
-        query: t.union([
-          t.type({ floId: t.string }),
-          t.type({ moenId: t.string }),
-        ])
-      }))
     )
     private async getSyncIds(
       @request() req: Request,
@@ -80,6 +75,9 @@ export function AccountSyncControllerFactory(container: Container, apiVersion: n
       @queryParam('floId') floId?: string,
       @queryParam('issuer') issuer?: string): Promise<any> {
 
+      if(!(moenId || floId)) {
+        throw new HttpError(400, 'moenId or floId are required');
+      }
       const tokenMetadata = req.token;
       if (!tokenMetadata || !(tokenMetadata.isAdmin() || tokenMetadata.isService())) {
         throw new UnauthorizedError();
