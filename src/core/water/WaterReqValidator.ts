@@ -96,7 +96,8 @@ export const getMetrics = t.type({
   query: t.intersection([
     RestrictedDateRangeCodec,
     t.partial({
-      tz: t.string
+      tz: t.string,
+      cache: t.union([t.string, t.number, t.boolean]),
     }),
     t.type({
       macAddress: t.string

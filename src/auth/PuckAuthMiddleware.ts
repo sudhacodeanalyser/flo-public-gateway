@@ -24,7 +24,8 @@ class PuckAuthMiddleware extends BaseMiddleware {
           tokenMetadata => {
             req.token = {
               ...tokenMetadata,
-              isAdmin: () => false
+              isAdmin: () => false,
+              isService: () => false,
             };
 
             next();

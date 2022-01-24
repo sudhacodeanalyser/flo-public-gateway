@@ -2,14 +2,13 @@ import { injectable, inject } from 'inversify';
 import moment from 'moment-timezone';
 import _ from 'lodash';
 import { DeviceService, LocationService } from '../service';
-import { Location, DependencyFactoryFactory, WaterConsumptionItem, WaterConsumptionReport, WaterConsumptionInterval, WaterAveragesReport, WaterMetricsReport } from '../api';
+import { Location, DependencyFactoryFactory, WaterConsumptionReport, WaterConsumptionInterval, WaterAveragesReport, WaterMetricsReport } from '../api';
 import * as Option from 'fp-ts/lib/Option';
 import { pipe } from 'fp-ts/lib/pipeable';
 import { WaterMeterService, WaterMeterReport, WaterMeterDeviceReport, WaterMeterDeviceData } from './WaterMeterService';
 import { WeatherApi, WeatherData, AddressData } from './WeatherApi';
 import NotFoundError from '../api/error/NotFoundError';
 
-type InfluxRow = { time: Date, sum: number };
 type AveragesResult = {
   averageConsumption: number,
   numRecords: number,

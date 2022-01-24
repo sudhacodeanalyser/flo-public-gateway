@@ -4,6 +4,7 @@ import _ from 'lodash';
 
 export interface Token extends Record<string, any> {
   isAdmin(): boolean;
+  isService(): boolean;
 }
 
 export default interface Request extends express.Request {
