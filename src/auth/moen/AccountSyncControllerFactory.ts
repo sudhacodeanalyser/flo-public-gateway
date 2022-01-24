@@ -7,6 +7,7 @@ import { AccountSyncService } from './AccountSyncService';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
 import AuthMiddlewareFactory from '../AuthMiddlewareFactory';
 import UnauthorizedError from '../UnauthorizedError';
+import HttpError from '../../http/HttpError';
 
 export function AccountSyncControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
   const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
@@ -67,25 +68,20 @@ export function AccountSyncControllerFactory(container: Container, apiVersion: n
       'get',
       '/sync/id',
       authMiddlewareFactory.create(),
-      reqValidator.create(t.type({
-        query: t.union([t.type({
-          floId: t.string,
-        }),
-        t.type({
-          moenId: t.string,
-          issuer: t.string,
-        })])
-      }))
     )
-    private async getSyncIds(@request() req: Request, @queryParam('moenId') moenId?: string, @queryParam('floId') floId?: string, @queryParam('issuer') issuer?: string): Promise<any> {
-      const tokenMetadata = req.token;
-      if (tokenMetadata === undefined) {
-        throw new Error('No token defined.');
+    private async getSyncIds(
+      @request() req: Request,
+      @queryParam('moenId') moenId?: string,
+      @queryParam('floId') floId?: string,
+      @queryParam('issuer') issuer?: string): Promise<any> {
+
+      if(!(moenId || floId)) {
+        throw new HttpError(400, 'moenId or floId are required');
       }
-      if (!tokenMetadata.isAdmin()) {
+      const tokenMetadata = req.token;
+      if (!tokenMetadata || !(tokenMetadata.isAdmin() || tokenMetadata.isService())) {
         throw new UnauthorizedError();
       }
-
       return this.accountSyncService.getSyncIds(floId, moenId, issuer);
     }
   }

@@ -1,8 +1,6 @@
 import {
   interfaces,
-  controller,
   httpGet,
-  requestParam,
   queryParam,
   httpPost,
   requestBody,
@@ -12,9 +10,7 @@ import { inject, Container } from 'inversify';
 import { WaterService, LocationService, DeviceService } from '../service';
 import { WaterConsumptionReport, WaterAveragesReport, WaterConsumptionInterval, WaterMetricsReport, DependencyFactoryFactory } from '../api';
 import { httpController, httpMethod, queryParamArray } from '../api/controllerUtils';
-import moment from 'moment';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
-import * as t from 'io-ts';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import Request from '../api/Request';
 import * as ReqValidator from './WaterReqValidator';
@@ -33,7 +29,6 @@ export function WaterControllerFactory(container: Container, apiVersion: number)
     })
   );
   const authWithParents = authMiddlewareFactory.create(async ({ query: { locationId, macAddress, userId } }: Request, depFactoryFactory: DependencyFactoryFactory) => {
-
     if (locationId) {
       const locationService = depFactoryFactory<LocationService>('LocationService')();
       const locationIds = Array.isArray(locationId) ? locationId : locationId.split(',');

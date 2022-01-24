@@ -1,4 +1,4 @@
-import { AxiosInstance, AxiosPromise } from 'axios';
+import { AxiosInstance } from 'axios';
 import express from 'express';
 import { inject, injectable } from 'inversify';
 import _ from 'lodash';
@@ -11,7 +11,6 @@ import { pipe } from 'fp-ts/lib/pipeable';
 import * as TaskEither from 'fp-ts/lib/TaskEither';
 import { TokenMetadata } from './Token';
 import jwt from 'jsonwebtoken';
-import Logger from 'bunyan';
 import config from '../config/config';
 import { DependencyFactoryFactory } from '../core/api';
 import { AuthCache } from './AuthCache';
@@ -49,10 +48,11 @@ class AuthMiddlewareFactory {
         const methodId = req.method + path;
         const rawParams = getParams && (await getParams(req, this.depFactoryFactory));
         const paramArray = rawParams && (_.isArray(rawParams) ? rawParams : [rawParams]);
+        const noCache = /^(off|0|no|false)$/i.test(req.query.cache);
         const results = await Promise.all((!paramArray || _.isEmpty(paramArray) ? [{}] : paramArray)
           .map(async params => {
             return pipe(
-              await this.authCache.checkCache(methodId, token, params, logger),
+              noCache ? Option.none : await this.authCache.checkCache(methodId, token, params, logger),
               Option.fold(
                 () => async () => this.callAuthService(methodId, token, _.isEmpty(params) ? undefined : params),
                 tokenMedata => TaskEither.right(tokenMedata)
@@ -75,6 +75,9 @@ class AuthMiddlewareFactory {
           ...tokenMetadata,
           isAdmin(): boolean {
             return !!this.roles && this.roles.indexOf('system.admin') >= 0;
+          },
+          isService(): boolean {
+            return this.roles?.indexOf('app.flo-internal-service') >= 0;
           }
         };
         return next();
@@ -154,7 +157,7 @@ class AuthMiddlewareFactory {
 
         if (authResponse.status === 200) {
           // Do not block on cache write
-          this.authCache.writeToCache(authResponse.data, methodId, token, params);
+          process.nextTick(() => this.authCache.writeToCache(authResponse.data, methodId, token, params));
 
           return Either.right(authResponse.data);
         } else {
