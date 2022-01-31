@@ -1,16 +1,13 @@
 import { interfaces, httpHead, httpGet, httpPost, requestBody, request, BaseHttpController, httpPut, httpDelete, queryParam } from 'inversify-express-utils';
 import { inject, Container } from 'inversify';
-import * as t from 'io-ts';
 import { httpController, createMethod, httpMethod } from '../../core/api/controllerUtils';
 import Request from '../../core/api/Request';
 import { AccountSyncService } from './AccountSyncService';
-import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
 import AuthMiddlewareFactory from '../AuthMiddlewareFactory';
 import UnauthorizedError from '../UnauthorizedError';
 import HttpError from '../../http/HttpError';
 
 export function AccountSyncControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
-  const reqValidator = container.get<ReqValidationMiddlewareFactory>('ReqValidationMiddlewareFactory');
   const authMiddlewareFactory = container.get<AuthMiddlewareFactory>('AuthMiddlewareFactory');
 
   @httpController({ version: apiVersion }, '/moen')
@@ -78,12 +75,78 @@ export function AccountSyncControllerFactory(container: Container, apiVersion: n
       if(!(moenId || floId)) {
         throw new HttpError(400, 'moenId or floId are required');
       }
-      const tokenMetadata = req.token;
-      if (!tokenMetadata || !(tokenMetadata.isAdmin() || tokenMetadata.isService())) {
-        throw new UnauthorizedError();
+      const e = assertAdminOrServiceToken(req);
+      if(e) {
+        throw e;
       }
       return this.accountSyncService.getSyncIds(floId, moenId, issuer);
     }
+
+    @httpMethod(
+      'get',
+      '/sync/locations',
+      authMiddlewareFactory.create(),
+    )
+    private async getSyncLocations(
+      @request() req: Request,
+      @queryParam('moenId') moenId?: string,
+      @queryParam('floId') floId?: string,
+      @queryParam('floAccountId') floAccountId?: string): Promise<any> {
+
+      if(!(moenId || floId || floAccountId)) {
+        throw new HttpError(400, 'moenId, floId, or floAccountId are required');
+      }
+      const e = assertAdminOrServiceToken(req);
+      if(e) {
+        throw e;
+      }
+      return this.accountSyncService.getSyncLocations(moenId, floId, floAccountId);
+    }
+
+    @httpMethod(
+      'delete',
+      '/sync/locations',
+      authMiddlewareFactory.create(),
+    )
+    private async deleteSyncLocations(
+      @request() req: Request,
+      @queryParam('moenId') moenId?: string,
+      @queryParam('floId') floId?: string,
+      @queryParam('floAccountId') floAccountId?: string): Promise<any> {
+
+      if(!(moenId || floId || floAccountId)) {
+        throw new HttpError(400, 'moenId, floId, or floAccountId are required');
+      }
+      const e = assertAdminOrServiceToken(req);
+      if(e) {
+        throw e;
+      }
+      return this.accountSyncService.deleteSyncLocations(moenId, floId, floAccountId);
+    }
+
+    @httpMethod(
+      'post',
+      '/sync/locations',
+      authMiddlewareFactory.create(),
+    )
+    private async postSyncLocations(
+      @request() req: Request,
+      @requestBody() body: any): Promise<any> {
+
+      const e = assertAdminOrServiceToken(req);
+      if(e) {
+        throw e;
+      }
+      return this.accountSyncService.setSyncLocations(body);
+    }
   }
   return AccountSyncControllerFactory;
+}
+
+function assertAdminOrServiceToken(req: Request): Error|undefined {
+  const tokenMetadata = req.token;
+  if (!tokenMetadata || !(tokenMetadata.isAdmin() || tokenMetadata.isService())) {
+    return new UnauthorizedError();
+  }
+  return undefined;
 }
