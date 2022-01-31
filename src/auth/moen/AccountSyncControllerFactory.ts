@@ -87,12 +87,8 @@ export function AccountSyncControllerFactory(container: Container, apiVersion: n
       '/sync/locations',
       authMiddlewareFactory.create(),
     )
-    private async getSyncLocations(
-      @request() req: Request,
-      @queryParam('moenId') moenId?: string,
-      @queryParam('floId') floId?: string,
-      @queryParam('floAccountId') floAccountId?: string): Promise<any> {
-
+    private async getSyncLocations(@request() req: Request): Promise<any> {
+      const { moenId, floId, floAccountId } = req.query;
       if(!(moenId || floId || floAccountId)) {
         throw new HttpError(400, 'moenId, floId, or floAccountId are required');
       }
@@ -100,7 +96,7 @@ export function AccountSyncControllerFactory(container: Container, apiVersion: n
       if(e) {
         throw e;
       }
-      return this.accountSyncService.getSyncLocations(moenId, floId, floAccountId);
+      return this.accountSyncService.getSyncLocations(req.query);
     }
 
     @httpMethod(
@@ -108,12 +104,8 @@ export function AccountSyncControllerFactory(container: Container, apiVersion: n
       '/sync/locations',
       authMiddlewareFactory.create(),
     )
-    private async deleteSyncLocations(
-      @request() req: Request,
-      @queryParam('moenId') moenId?: string,
-      @queryParam('floId') floId?: string,
-      @queryParam('floAccountId') floAccountId?: string): Promise<any> {
-
+    private async deleteSyncLocations(@request() req: Request): Promise<any> {
+      const { moenId, floId, floAccountId } = req.query;
       if(!(moenId || floId || floAccountId)) {
         throw new HttpError(400, 'moenId, floId, or floAccountId are required');
       }
@@ -121,7 +113,7 @@ export function AccountSyncControllerFactory(container: Container, apiVersion: n
       if(e) {
         throw e;
       }
-      return this.accountSyncService.deleteSyncLocations(moenId, floId, floAccountId);
+      return this.accountSyncService.deleteSyncLocations(req.query);
     }
 
     @httpMethod(
@@ -129,10 +121,7 @@ export function AccountSyncControllerFactory(container: Container, apiVersion: n
       '/sync/locations',
       authMiddlewareFactory.create(),
     )
-    private async postSyncLocations(
-      @request() req: Request,
-      @requestBody() body: any): Promise<any> {
-
+    private async postSyncLocations(@request() req: Request, @requestBody() body: any): Promise<any> {
       const e = assertAdminOrServiceToken(req);
       if(e) {
         throw e;
