@@ -94,13 +94,43 @@ class AccountSyncService extends HttpService {
     const request = {
       method: 'GET',
       url: `${this.url}/sync/id`,
+      proxyError: true,
       params: {
         moenId,
         floId,
         issuer,
       }
     };
+    return this.sendRequest(request);
+  }
 
+  public async getSyncLocations(params: any) :Promise<any> {
+    const request = {
+      method: 'GET',
+      url: `${this.url}/sync/locations`,
+      proxyError: true,
+      params,
+    };
+    return this.sendRequest(request);
+  }
+
+  public async deleteSyncLocations(params: any) :Promise<any> {
+    const request = {
+      method: 'DELETE',
+      url: `${this.url}/sync/locations`,
+      proxyError: true,
+      params,
+    };
+    return this.sendRequest(request);
+  }
+
+  public async setSyncLocations(body: any) :Promise<any> {
+    const request = {
+      method: 'POST',
+      url: `${this.url}/sync/locations`,
+      proxyError: true,
+      body,
+    };
     return this.sendRequest(request);
   }
 }
