@@ -105,7 +105,7 @@ export function AccountSyncControllerFactory(container: Container, apiVersion: n
       authMiddlewareFactory.create(),
     )
     private async deleteSyncLocations(@request() req: Request): Promise<any> {
-      const { moenId, floId, floAccountId } = req.query;
+      const { moenId, floId, floAccountId } = req.body;
       if(!(moenId || floId || floAccountId)) {
         throw new HttpError(400, 'moenId, floId, or floAccountId are required');
       }
@@ -113,7 +113,7 @@ export function AccountSyncControllerFactory(container: Container, apiVersion: n
       if(e) {
         throw e;
       }
-      return this.accountSyncService.deleteSyncLocations(req.query);
+      return this.accountSyncService.deleteSyncLocations(req.body);
     }
 
     @httpMethod(
