@@ -103,7 +103,7 @@ class UserService {
       }
 
       await this.entityActivityService.publishEntityActivity(
-        EntityActivityType.USER,
+        EntityActivityType.ALARM_SETTINGS,
         EntityActivityAction.UPDATED,
         user
       );

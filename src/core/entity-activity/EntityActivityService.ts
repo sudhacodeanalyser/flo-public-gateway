@@ -16,6 +16,7 @@ export enum EntityActivityType {
   LOCATION = 'location',
   ACCOUNT = 'account',
   USER = 'user',
+  ALARM_SETTINGS = 'alarm_settings',
   SUBSCRIPTION = 'subscription'
 }
 
