@@ -112,7 +112,7 @@ class UserService {
         err, 
         message: "Could not raise user updated event after settings change", 
         data: { 
-          id: id 
+          id
         }
       });
     }
