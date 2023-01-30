@@ -90,7 +90,19 @@ class UserService {
   }
 
   public async updateAlarmSettings(id: string, settings: UpdateAlarmSettings): Promise<void> {
-    return this.userResolver.updateAlarmSettings(id, settings);
+    await this.userResolver.updateAlarmSettings(id, settings);
+
+    const user = await this.userResolver.getUserById(id);
+
+    if (!user) {
+      throw new ConflictError('User not found.');
+    }
+
+    await this.entityActivityService.publishEntityActivity(
+      EntityActivityType.USER,
+      EntityActivityAction.UPDATED,
+      user
+    );
   }
 
   public async retrieveAlarmSettings(id: string, filter: RetrieveAlarmSettingsFilter): Promise<EntityAlarmSettings> {
