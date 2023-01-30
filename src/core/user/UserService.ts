@@ -6,6 +6,7 @@ import { PropExpand, UpdateAlarmSettings, User, UserUpdate, UserCreate, Retrieve
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import ValidationError from '../api/error/ValidationError';
 import ConflictError from '../api/error/ConflictError';
+import NotFoundError from '../api/error/NotFoundError';
 import { UserResolver } from '../resolver';
 import { DeviceService, EntityActivityAction, EntityActivityService, EntityActivityType, AccountService, SubscriptionService } from '../service';
 import Logger from 'bunyan';
@@ -98,7 +99,7 @@ class UserService {
       const user = await this.userResolver.getUserById(id);
 
       if (!user) {
-        throw new ConflictError('User not found.');
+        throw new NotFoundError('User not found.');
       }
 
       await this.entityActivityService.publishEntityActivity(
