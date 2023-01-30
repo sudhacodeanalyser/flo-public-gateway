@@ -8,12 +8,14 @@ import ValidationError from '../api/error/ValidationError';
 import ConflictError from '../api/error/ConflictError';
 import { UserResolver } from '../resolver';
 import { DeviceService, EntityActivityAction, EntityActivityService, EntityActivityType, AccountService, SubscriptionService } from '../service';
+import Logger from 'bunyan';
 
 @injectable()
 class UserService {
   private subscriptionServiceFactory: () => SubscriptionService;
 
   constructor(
+    @inject('Logger') private readonly logger: Logger,
     @inject('UserResolver') private userResolver: UserResolver,
     @inject('AccountService') private accountService: AccountService,
     @inject('EntityActivityService') private entityActivityService: EntityActivityService,
@@ -90,19 +92,31 @@ class UserService {
   }
 
   public async updateAlarmSettings(id: string, settings: UpdateAlarmSettings): Promise<void> {
-    await this.userResolver.updateAlarmSettings(id, settings);
+    const result = await this.userResolver.updateAlarmSettings(id, settings);
 
-    const user = await this.userResolver.getUserById(id);
+    try {
+      const user = await this.userResolver.getUserById(id);
 
-    if (!user) {
-      throw new ConflictError('User not found.');
+      if (!user) {
+        throw new ConflictError('User not found.');
+      }
+
+      await this.entityActivityService.publishEntityActivity(
+        EntityActivityType.USER,
+        EntityActivityAction.UPDATED,
+        user
+      );
+    } catch (err) {
+      this.logger.error({ 
+        err, 
+        message: "Could not raise user updated event after settings change", 
+        data: { 
+          id: id 
+        }
+      });
     }
 
-    await this.entityActivityService.publishEntityActivity(
-      EntityActivityType.USER,
-      EntityActivityAction.UPDATED,
-      user
-    );
+    return result;
   }
 
   public async retrieveAlarmSettings(id: string, filter: RetrieveAlarmSettingsFilter): Promise<EntityAlarmSettings> {
