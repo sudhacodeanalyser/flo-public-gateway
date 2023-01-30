@@ -4,11 +4,12 @@ import * as O from 'fp-ts/lib/Option';
 import LteTable from './LteTable';
 import DeviceLteTable from './DeviceLteTable';
 import { EntityActivityAction, EntityActivityService, EntityActivityType,} from '../service';
-import { BaseLte, Lte, LteContext, SsidCredentials, SsidCredentialsWithContext } from '../api';
+import { BaseLte, Device, Lte, LteContext, SsidCredentials, SsidCredentialsWithContext } from '../api';
 import { pipe } from 'fp-ts/lib/pipeable';
 import crypto from 'crypto';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import NotFoundError from '../api/error/NotFoundError';
+import { DeviceResolver } from './DeviceResolver';
 
 type Option<T> = O.Option<T>;
 
@@ -16,6 +17,7 @@ type Option<T> = O.Option<T>;
 class LteService {
 
   constructor(
+    @inject('DeviceResolver') private deviceResolver: DeviceResolver,
     @inject('LteTable') private lteTable: LteTable,
     @inject('DeviceLteTable') private deviceLteTable: DeviceLteTable,
     @inject('EntityActivityService') private entityActivityService: EntityActivityService
@@ -77,13 +79,16 @@ class LteService {
 
           await this.deviceLteTable.linkDevice(deviceId, lte.imei)
 
+          const device: Device | null = await this.deviceResolver.get(deviceId);
+
           await this.entityActivityService.publishEntityActivity(
             EntityActivityType.DEVICE,
             EntityActivityAction.UPDATED,
             {
+              ...(device || {}),
               id: deviceId,
-              lte_paired: true,
               macAddress,
+              lte_paired: true,
               lte
             },
             true
@@ -96,13 +101,16 @@ class LteService {
   public async unlinkDevice(deviceId: string, macAddress: string): Promise<void> {
     await this.deviceLteTable.unlinkDevice(deviceId)
 
+    const device: Device | null = await this.deviceResolver.get(deviceId);
+
     await this.entityActivityService.publishEntityActivity(
       EntityActivityType.DEVICE,
       EntityActivityAction.UPDATED,
       {
+        ...(device || {}),
         id: deviceId,
-        lte_paired: false,
-        macAddress
+        macAddress,
+        lte_paired: false
       },
       true
     )
