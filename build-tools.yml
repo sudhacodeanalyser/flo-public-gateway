@@ -60,6 +60,25 @@ services:
       - ./tests:/app/tests
       - "./test-results:/app/test-results"
       - "./logs:${CI_ARTIFACTS_DIR:-/app}/logs"
+
+  run-arm64:
+    entrypoint: npm
+    environment:
+      NODE_ENV: "${NODE_ENV:-development}"
+    ports:
+      - 3000:3000
+      - 9229:9229
+    build:
+      context: .
+      dockerfile: Dockerfile.build.arm64
+      args:
+        COMMIT_SHA_ARG: "${COMMIT_SHA:-00000000}"
+    volumes:
+      - .:/app
+      - ".npm:/root/.npm"
+      - ./tests:/app/tests
+      - "./test-results:/app/test-results"
+      - "./logs:${CI_ARTIFACTS_DIR:-/app}/logs"
 networks:
   default:
     driver: bridge
