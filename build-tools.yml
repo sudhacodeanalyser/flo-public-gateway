@@ -4,11 +4,6 @@ version: '3.7'
 services:
   build: &build
     image: "${CI_REGISTRY_IMAGE:-registry.gitlab.com/flotechnologies/flo-public-gateway}:build"
-    build:
-      context: .
-      dockerfile: Dockerfile.build
-      args:
-        COMMIT_SHA_ARG: "${COMMIT_SHA:-00000000}"
     environment:
       BINTRAY_USER: "${BINTRAY_USER:-SetBintrayCredentialsPLS}"
       BINTRAY_KEY: "${BINTRAY_KEY:-empty}"
@@ -23,7 +18,22 @@ services:
       - "~/.aws:/root/.aws:ro"
   npm:
     entrypoint: npm
+    build:
+      context: .
+      dockerfile: Dockerfile.build
+      args:
+        COMMIT_SHA_ARG: "${COMMIT_SHA:-00000000}"
     <<: *build
+
+  npm-arm64:
+    entrypoint: npm
+    build:
+      context: .
+      dockerfile: Dockerfile.build.arm64
+      args:
+        COMMIT_SHA_ARG: "${COMMIT_SHA:-00000000}"
+    <<: *build
+
 
   gradle:
     image: gradle:5.4.0-alpine
