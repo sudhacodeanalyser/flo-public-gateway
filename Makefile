@@ -20,10 +20,16 @@ NODE_ENV ?= development
 NPM ?= $(COMPOSE) -f build-tools.yml run --rm npm --node-env=$(NODE_ENV)
 GRADLE ?= $(COMPOSE) -f build-tools.yml run --rm gradle
 GIT ?= $(COMPOSE) -f build-tools.yml run --rm git
-RUN ?= $(COMPOSE) -f build-tools.yml run --rm --service-ports run --node-env=$(NODE_ENV) run
 HELM ?= $(shell which helm)
 RUNSCOPE_IMAGE ?= $(DOCKER_REGISTRY)/devops/runscope-python-trigger:latest
 COMMIT_SHA ?= 'nosh'
+
+TARGET_ARCH := $(shell uname -m)
+ifeq ($(TARGET_ARCH),arm64)
+RUN ?= $(COMPOSE) -f build-tools.yml run --rm --service-ports run-arm64 --node-env=$(NODE_ENV) run
+else
+RUN ?= $(COMPOSE) -f build-tools.yml run --rm --service-ports run --node-env=$(NODE_ENV) run
+endif
 
 .PHONY: help auth
 help: ## Display this help screen (default)
