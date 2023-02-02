@@ -17,7 +17,6 @@ DOCKER  ?= $(shell which docker)
 COMPOSE ?= $(shell which docker-compose)
 CURL ?= $(shell which curl)
 NODE_ENV ?= development
-NPM ?= $(COMPOSE) -f build-tools.yml run --rm npm --node-env=$(NODE_ENV)
 GRADLE ?= $(COMPOSE) -f build-tools.yml run --rm gradle
 GIT ?= $(COMPOSE) -f build-tools.yml run --rm git
 HELM ?= $(shell which helm)
@@ -27,8 +26,10 @@ COMMIT_SHA ?= 'nosh'
 TARGET_ARCH := $(shell uname -m)
 ifeq ($(TARGET_ARCH),arm64)
 RUN ?= $(COMPOSE) -f build-tools.yml run --rm --service-ports run-arm64 --node-env=$(NODE_ENV) run
+NPM ?= $(COMPOSE) -f build-tools.yml run --rm npm-arm64 --node-env=$(NODE_ENV)
 else
 RUN ?= $(COMPOSE) -f build-tools.yml run --rm --service-ports run --node-env=$(NODE_ENV) run
+NPM ?= $(COMPOSE) -f build-tools.yml run --rm npm --node-env=$(NODE_ENV)
 endif
 
 .PHONY: help auth
