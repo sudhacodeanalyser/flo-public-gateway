@@ -6,14 +6,17 @@ import { PropExpand, UpdateAlarmSettings, User, UserUpdate, UserCreate, Retrieve
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import ValidationError from '../api/error/ValidationError';
 import ConflictError from '../api/error/ConflictError';
+import NotFoundError from '../api/error/NotFoundError';
 import { UserResolver } from '../resolver';
 import { DeviceService, EntityActivityAction, EntityActivityService, EntityActivityType, AccountService, SubscriptionService } from '../service';
+import Logger from 'bunyan';
 
 @injectable()
 class UserService {
   private subscriptionServiceFactory: () => SubscriptionService;
 
   constructor(
+    @inject('Logger') private readonly logger: Logger,
     @inject('UserResolver') private userResolver: UserResolver,
     @inject('AccountService') private accountService: AccountService,
     @inject('EntityActivityService') private entityActivityService: EntityActivityService,
@@ -90,7 +93,31 @@ class UserService {
   }
 
   public async updateAlarmSettings(id: string, settings: UpdateAlarmSettings): Promise<void> {
-    return this.userResolver.updateAlarmSettings(id, settings);
+    const result = await this.userResolver.updateAlarmSettings(id, settings);
+
+    try {
+      const user = await this.userResolver.getUserById(id);
+
+      if (!user) {
+        throw new NotFoundError('User not found.');
+      }
+
+      await this.entityActivityService.publishEntityActivity(
+        EntityActivityType.ALARM_SETTINGS,
+        EntityActivityAction.UPDATED,
+        user
+      );
+    } catch (err) {
+      this.logger.error({ 
+        err, 
+        message: "Could not raise user updated event after settings change", 
+        data: { 
+          id
+        }
+      });
+    }
+
+    return result;
   }
 
   public async retrieveAlarmSettings(id: string, filter: RetrieveAlarmSettingsFilter): Promise<EntityAlarmSettings> {
