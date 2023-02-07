@@ -96,11 +96,11 @@ class UserService {
   public async updateAlarmSettings(id: string, settings: UpdateAlarmSettings): Promise<void> {
     const result = await this.userResolver.updateAlarmSettings(id, settings);
     // Do not await. Instead fire-and-forget.
-    this.raiseAlarmSettingsUpdatedEvent(id);
+    this.publishAlarmSettingsUpdatedEvent(id);
     return result;
   }
 
-  public async raiseAlarmSettingsUpdatedEvent(id: string): Promise<void> {
+  public async publishAlarmSettingsUpdatedEvent(id: string): Promise<void> {
     this.logger.info(`Raise alarm_settings updated event for ${id}`);
     try {
       const expandAlarmSettings = parseExpand('alarmSettings');
