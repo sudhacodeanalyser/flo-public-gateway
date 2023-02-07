@@ -10,6 +10,7 @@ import NotFoundError from '../api/error/NotFoundError';
 import { UserResolver } from '../resolver';
 import { DeviceService, EntityActivityAction, EntityActivityService, EntityActivityType, AccountService, SubscriptionService } from '../service';
 import Logger from 'bunyan';
+import { parseExpand } from '../api/controllerUtils';
 
 @injectable()
 class UserService {
@@ -96,10 +97,11 @@ class UserService {
     const result = await this.userResolver.updateAlarmSettings(id, settings);
 
     try {
-      const user = await this.userResolver.getUserById(id);
+      const expandAlarmSettings = parseExpand('alarmSettings');
+      const user = await this.userResolver.getUserById(id, expandAlarmSettings);
 
       if (!user) {
-        throw new NotFoundError('User not found.');
+        throw new NotFoundError('User alarm settings not found.');
       }
 
       await this.entityActivityService.publishEntityActivity(
@@ -110,7 +112,7 @@ class UserService {
     } catch (err) {
       this.logger.error({ 
         err, 
-        message: "Could not raise user updated event after settings change", 
+        message: "Could not raise alarm_settings updated event after settings change", 
         data: { 
           id
         }
