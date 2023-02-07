@@ -95,7 +95,13 @@ class UserService {
 
   public async updateAlarmSettings(id: string, settings: UpdateAlarmSettings): Promise<void> {
     const result = await this.userResolver.updateAlarmSettings(id, settings);
+    // Do not await. Instead fire-and-forget.
+    this.publishAlarmSettingsUpdatedEvent(id);
+    return result;
+  }
 
+  public async publishAlarmSettingsUpdatedEvent(id: string): Promise<void> {
+    this.logger.info(`Raise alarm_settings updated event for ${id}`);
     try {
       const expandAlarmSettings = parseExpand('alarmSettings');
       const user = await this.userResolver.getUserById(id, expandAlarmSettings);
@@ -118,8 +124,6 @@ class UserService {
         }
       });
     }
-
-    return result;
   }
 
   public async retrieveAlarmSettings(id: string, filter: RetrieveAlarmSettingsFilter): Promise<EntityAlarmSettings> {
