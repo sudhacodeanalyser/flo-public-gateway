@@ -153,7 +153,7 @@ class DeviceService {
 
   public async removeDevice(id: string, resourceEventInfo: ResourceEventInfo): Promise<void> {
     await pipe(
-      await this.getDeviceById(id, { $select: { location: { $select: { id: true, account: { $select: { id: true } } } }, $rest: true } }),
+      await this.getDeviceById(id, { $expand: true, $select: { location: { $select: { id: true, account: { $select: { id: true } } } } } }),
       O.fold(
         async () => {
           await this.deviceResolver.remove(id)
