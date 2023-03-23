@@ -1,4 +1,4 @@
-apiVersion: autoscaling/v2beta1
+apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: {{ template "flo-public-gateway.fullname" . }}-hpa
@@ -14,7 +14,9 @@ spec:
   - type: Resource
     resource:
       name: cpu
-      targetAverageUtilization: 70
+      target:
+        type: Utilization
+        averageUtilization: 70
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
