@@ -3,7 +3,7 @@ import _ from 'lodash';
 import * as O from 'fp-ts/lib/Option';
 import LteTable from './LteTable';
 import DeviceLteTable from './DeviceLteTable';
-import { EntityActivityAction, EntityActivityService, EntityActivityType,} from '../service';
+import { DeviceService, EntityActivityAction, EntityActivityService, EntityActivityType,} from '../service';
 import { BaseLte, Device, Lte, LteContext, SsidCredentials, SsidCredentialsWithContext } from '../api';
 import { pipe } from 'fp-ts/lib/pipeable';
 import crypto from 'crypto';
@@ -86,7 +86,7 @@ class LteService {
             return; // Don't send event if linking failed
           }
 
-          const device: Device | null = await this.deviceResolver.get(deviceId, EntityActivityService.ALL_DEVICE_DETAILS);
+          const device: Device | null = await this.deviceResolver.get(deviceId, DeviceService.ALL_DEVICE_DETAILS);
 
           await this.entityActivityService.publishEntityActivity(
             EntityActivityType.DEVICE,
@@ -108,9 +108,9 @@ class LteService {
 
   public async unlinkDevice(deviceId: string, macAddress: string): Promise<void> {
     const unlinked = await this.deviceLteTable.unlinkDevice(deviceId)
-    if (!unlinked) return; //Attempted to unlink a device that wasn't linked in the first place.
+    if (!unlinked) { return; } // Attempted to unlink a device that wasn't linked in the first place.
 
-    const device: Device | null = await this.deviceResolver.get(deviceId, EntityActivityService.ALL_DEVICE_DETAILS);
+    const device: Device | null = await this.deviceResolver.get(deviceId, DeviceService.ALL_DEVICE_DETAILS);
 
     await this.entityActivityService.publishEntityActivity(
       EntityActivityType.DEVICE,
