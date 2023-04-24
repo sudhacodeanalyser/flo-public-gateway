@@ -1,6 +1,6 @@
 import { injectable, inject } from 'inversify';
 import { KafkaProducer } from '../../kafka/KafkaProducer';
-import { Expandable, Device as DeviceModel, Location as LocationModel, Account as AccountModel, User as UserModel } from '../api';
+import { Expandable, PropExpand, Device as DeviceModel, Location as LocationModel, Account as AccountModel, User as UserModel } from '../api';
 import { injectHttpContext, interfaces } from 'inversify-express-utils';
 import Logger from 'bunyan';
 import { Device, Account, Location, User } from '../api/response';
@@ -57,7 +57,7 @@ class EntityActivityService {
         ...item
       }
     }
-    const requestId = this.httpContext && this.httpContext.request && this.httpContext.request.get('x-request-id');
+    const requestId = this.httpContext?.request?.get('x-request-id');
 
     return {
       date: new Date().toISOString(),
@@ -164,6 +164,75 @@ class EntityActivityService {
         return data;
     }
   }
+
+  /** Contains minimal essential device info as well as essential 
+   * connectivity location and account information */
+  public static ESSENTIAL_DEVICE_DETAILS: PropExpand = { 
+    $select: {
+      id: true,
+      serialNumber: true,
+      macAddress: true,
+      nickname: true,
+      isPaired: true,
+      deviceModel: true,
+      deviceType: true,
+      fwVersion: true,
+      lastHeardFromTime: true,
+      createdAt: true,
+      updatedAt: true,
+      irrigationType: true,
+      prvInstallation: true,
+      purchaseLocation: true,
+      installStatus: true,
+      connectivity: true,
+      location: { 
+        $select: { 
+          id: true, 
+          address: true,
+          address2: true,
+          city: true,
+          state: true,
+          country: true,
+          postalCode: true,
+          timezone: true, 
+          account: { 
+            $select: { 
+              id: true, 
+              type: true 
+            } 
+          } 
+        }
+      } 
+    } 
+  };
+
+  /** Contains full device as well as essential 
+   * connectivity, location and account info */
+  public static ALL_DEVICE_DETAILS: PropExpand = { 
+    $select: {
+      $rest: true,
+      connectivity: true,
+      location: { 
+        $select: { 
+          id: true, 
+          address: true,
+          address2: true,
+          city: true,
+          state: true,
+          country: true,
+          postalCode: true,
+          timezone: true, 
+          account: { 
+            $select: { 
+              id: true, 
+              type: true 
+            } 
+          } 
+        }
+      } 
+    } 
+  };
+
 }
 
 export { EntityActivityService }

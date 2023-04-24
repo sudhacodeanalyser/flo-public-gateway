@@ -25,7 +25,7 @@ class DeviceLteTable extends PostgresTable<DeviceLteRecordData> {
     return results.rows.map(r => r.deviceId);
   }
 
-  public async linkDevice(deviceId: string, imei: string): Promise<void> {
+  public async linkDevice(deviceId: string, imei: string): Promise<boolean> {
     const { text, values } = squel.useFlavour('postgres')
       .insert()
       .into('"device_lte"')
@@ -35,17 +35,19 @@ class DeviceLteTable extends PostgresTable<DeviceLteRecordData> {
       })
       .toParam();
     
-    await this.pgDbClient.execute(text, values);
+      const { rowCount } = await this.pgDbClient.execute(text, values);
+      return rowCount > 0;
   }
 
-  public async unlinkDevice(deviceId: string): Promise<void> {
+  public async unlinkDevice(deviceId: string): Promise<boolean> {
     const { text, values } = squel.useFlavour('postgres')
       .delete()
       .from('"device_lte"')
       .where('"device_id" = ?', deviceId)
       .toParam();
     
-    await this.pgDbClient.execute(text, values);
+    const { rowCount } = await this.pgDbClient.execute(text, values);
+    return rowCount > 0;
   }
 }
 
