@@ -92,7 +92,6 @@ class LteService {
             EntityActivityType.DEVICE,
             EntityActivityAction.UPDATED,
             {
-              scope: 'LTE',
               ...(stripNulls(device) || {}),
               id: deviceId,
               macAddress,
@@ -101,6 +100,7 @@ class LteService {
             },
             true
           )
+
         }
       )
     );
@@ -116,7 +116,6 @@ class LteService {
       EntityActivityType.DEVICE,
       EntityActivityAction.UPDATED,
       {
-        scope: 'LTE',
         ...(stripNulls(device) || {}),
         id: deviceId,
         macAddress,
