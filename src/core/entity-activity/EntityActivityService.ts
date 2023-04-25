@@ -1,6 +1,6 @@
 import { injectable, inject } from 'inversify';
 import { KafkaProducer } from '../../kafka/KafkaProducer';
-import { Expandable, Device as DeviceModel, Location as LocationModel, Account as AccountModel, User as UserModel } from '../api';
+import { Expandable, PropExpand, Device as DeviceModel, Location as LocationModel, Account as AccountModel, User as UserModel } from '../api';
 import { injectHttpContext, interfaces } from 'inversify-express-utils';
 import Logger from 'bunyan';
 import { Device, Account, Location, User } from '../api/response';
@@ -57,7 +57,7 @@ class EntityActivityService {
         ...item
       }
     }
-    const requestId = this.httpContext && this.httpContext.request && this.httpContext.request.get('x-request-id');
+    const requestId = this.httpContext?.request?.get('x-request-id');
 
     return {
       date: new Date().toISOString(),
@@ -164,6 +164,7 @@ class EntityActivityService {
         return data;
     }
   }
+
 }
 
 export { EntityActivityService }

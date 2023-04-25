@@ -25,6 +25,24 @@ export function parseExpand(expand?: string, fields?: string): PropExpand {
   };
 }
 
+/*
+ * Strips any property with a null value.
+ * @description Use this if you are trying to pair down an object that has been 
+ * filtered using the resolver.resolveProps since the resolver leaves null 
+ * properties on the returned object. At some point the resolver method 
+ * could set `[key]: undefined` to eliminate this issue, but at this point 
+ * some clients may rely on the null valued properties being included. 
+ */
+export function stripNulls<T extends object>(input: T | null) : T | null {
+  if (input === null || typeof input !== 'object') {
+    return input;
+  }
+  const inputAsString = JSON.stringify(input, (k, v) => {
+    return v === null ? undefined : v;
+  });
+  return JSON.parse(inputAsString) as T
+}
+
 function lexify(str: string): string[] {
   let nestCount = 0;
   let token = '';

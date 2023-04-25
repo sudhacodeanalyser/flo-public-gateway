@@ -3,13 +3,15 @@ import _ from 'lodash';
 import * as O from 'fp-ts/lib/Option';
 import LteTable from './LteTable';
 import DeviceLteTable from './DeviceLteTable';
-import { EntityActivityAction, EntityActivityService, EntityActivityType,} from '../service';
+import { DeviceService, EntityActivityAction, EntityActivityService, EntityActivityType,} from '../service';
 import { BaseLte, Device, Lte, LteContext, SsidCredentials, SsidCredentialsWithContext } from '../api';
 import { pipe } from 'fp-ts/lib/pipeable';
 import crypto from 'crypto';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import NotFoundError from '../api/error/NotFoundError';
 import { DeviceResolver } from './DeviceResolver';
+import { stripNulls } from '../api/controllerUtils';
+import Logger from 'bunyan';
 
 type Option<T> = O.Option<T>;
 
@@ -17,6 +19,7 @@ type Option<T> = O.Option<T>;
 class LteService {
 
   constructor(
+    @inject('Logger') private logger: Logger,
     @inject('DeviceResolver') private deviceResolver: DeviceResolver,
     @inject('LteTable') private lteTable: LteTable,
     @inject('DeviceLteTable') private deviceLteTable: DeviceLteTable,
@@ -77,15 +80,19 @@ class LteService {
               return
           }
 
-          await this.deviceLteTable.linkDevice(deviceId, lte.imei)
+          const linked = await this.deviceLteTable.linkDevice(deviceId, lte.imei)
+          if (!linked) {
+            this.logger.warn(`LTE linking failed for ${deviceId} and ${lte.imei}}`);
+            return; // Don't send event if linking failed
+          }
 
-          const device: Device | null = await this.deviceResolver.get(deviceId);
+          const device: Device | null = await this.deviceResolver.get(deviceId, DeviceService.ALL_DEVICE_DETAILS);
 
           await this.entityActivityService.publishEntityActivity(
             EntityActivityType.DEVICE,
             EntityActivityAction.UPDATED,
             {
-              ...(device || {}),
+              ...(stripNulls(device) || {}),
               id: deviceId,
               macAddress,
               lte_paired: true,
@@ -93,24 +100,26 @@ class LteService {
             },
             true
           )
+
         }
       )
     );
   }
 
   public async unlinkDevice(deviceId: string, macAddress: string): Promise<void> {
-    await this.deviceLteTable.unlinkDevice(deviceId)
+    const unlinked = await this.deviceLteTable.unlinkDevice(deviceId)
+    if (!unlinked) { return; } // Attempted to unlink a device that wasn't linked in the first place.
 
-    const device: Device | null = await this.deviceResolver.get(deviceId);
+    const device: Device | null = await this.deviceResolver.get(deviceId, DeviceService.ALL_DEVICE_DETAILS);
 
     await this.entityActivityService.publishEntityActivity(
       EntityActivityType.DEVICE,
       EntityActivityAction.UPDATED,
       {
-        ...(device || {}),
+        ...(stripNulls(device) || {}),
         id: deviceId,
         macAddress,
-        lte_paired: false
+        lte_paired: false,
       },
       true
     )

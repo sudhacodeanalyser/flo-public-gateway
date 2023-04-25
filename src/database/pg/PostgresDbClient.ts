@@ -52,7 +52,6 @@ class PostgresDbClient implements DatabaseReadClient {
   }
 
   public async execute(query: string, values: any[]): Promise<postgres.QueryResult> {
-
     return this.postgresPool.query(query, values);
   }
 

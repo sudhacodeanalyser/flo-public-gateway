@@ -141,7 +141,7 @@ class DeviceResolver extends Resolver<Device> {
           maybeLte,
           Option.map(({ qrCode, imei, iccid }) => ({ 
             lte: { 
-              qrCode ,
+              qrCode,
               imei, 
               iccid
              }
