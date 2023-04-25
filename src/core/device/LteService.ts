@@ -95,6 +95,7 @@ class LteService {
               ...(stripNulls(device) || {}),
               id: deviceId,
               macAddress,
+              lte_action: "LINK",
               lte_paired: true,
               lte
             },
@@ -119,6 +120,7 @@ class LteService {
         ...(stripNulls(device) || {}),
         id: deviceId,
         macAddress,
+        lte_action: "UNLINK",
         lte_paired: false,
       },
       true
