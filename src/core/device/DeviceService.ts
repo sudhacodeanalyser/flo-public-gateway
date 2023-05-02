@@ -2,7 +2,7 @@ import Logger from 'bunyan';
 import * as O from 'fp-ts/lib/Option';
 import { pipe } from 'fp-ts/lib/pipeable';
 import { inject, injectable } from 'inversify';
-import _ from 'lodash';
+import _, { create } from 'lodash';
 import { PairingService, QrData } from '../../api-v1/pairing/PairingService';
 import { InternalDeviceService } from '../../internal-device-service/InternalDeviceService';
 import { DependencyFactoryFactory, Device, DeviceCreate, DeviceType, DeviceUpdate, PropExpand, ValveState, FirmwareInfo, DeviceStats, DeviceAlertStats } from '../api';
@@ -59,6 +59,7 @@ class DeviceService {
           country: true,
           postalCode: true,
           timezone: true, 
+          class: true,
           account: { 
             $select: { 
               id: true, 
@@ -87,6 +88,7 @@ class DeviceService {
           country: true,
           postalCode: true,
           timezone: true, 
+          class: true,
           account: { 
             $select: { 
               id: true, 
@@ -223,7 +225,7 @@ class DeviceService {
 
   public async removeDevice(id: string, resourceEventInfo: ResourceEventInfo): Promise<void> {
     await pipe(
-      await this.getDeviceById(id, { $select: { $rest: true, location: { $select: { id: true, account: { $select: { id: true } } } } } }),
+      await this.getDeviceById(id, DeviceService.ALL_DEVICE_DETAILS),
       O.fold(
         async () => {
           await this.deviceResolver.remove(id)
@@ -325,12 +327,13 @@ class DeviceService {
     }
 
     await this.internalDeviceService.upsertDevice(createdDevice.macAddress, deviceCreate);
-    this.internalDeviceService.syncDevice(createdDevice.macAddress);
-
+    await this.internalDeviceService.syncDevice(createdDevice.macAddress);
+    const extendedDeviceInfo: Device | null = await this.deviceResolver.get(createdDevice.id, DeviceService.ALL_DEVICE_DETAILS);
+    
     await this.entityActivityService.publishEntityActivity(
       EntityActivityType.DEVICE,
       EntityActivityAction.CREATED,
-      createdDevice
+      extendedDeviceInfo || createdDevice
     );
 
     await this.resourceEventService.publishResourceEvent(

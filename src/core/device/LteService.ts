@@ -107,8 +107,7 @@ class LteService {
   }
 
   public async unlinkDevice(deviceId: string, macAddress: string): Promise<void> {
-    const unlinked = await this.deviceLteTable.unlinkDevice(deviceId)
-    if (!unlinked) { return; } // Attempted to unlink a device that wasn't linked in the first place.
+    const hadLteLink = await this.deviceLteTable.unlinkDevice(deviceId)
 
     const device: Device | null = await this.deviceResolver.get(deviceId, DeviceService.ALL_DEVICE_DETAILS);
 
@@ -119,7 +118,7 @@ class LteService {
         ...(stripNulls(device) || {}),
         id: deviceId,
         macAddress,
-        lte_paired: false,
+        ...(hadLteLink ? { lte_paired: false } : { /* was not lte linked */ }),
       },
       true
     )
