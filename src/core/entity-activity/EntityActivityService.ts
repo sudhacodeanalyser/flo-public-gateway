@@ -1,6 +1,6 @@
 import { injectable, inject } from 'inversify';
 import { KafkaProducer } from '../../kafka/KafkaProducer';
-import { Expandable, PropExpand, Device as DeviceModel, Location as LocationModel, Account as AccountModel, User as UserModel } from '../api';
+import { Expandable, Device as DeviceModel, Location as LocationModel, Account as AccountModel, User as UserModel } from '../api';
 import { injectHttpContext, interfaces } from 'inversify-express-utils';
 import Logger from 'bunyan';
 import { Device, Account, Location, User } from '../api/response';
