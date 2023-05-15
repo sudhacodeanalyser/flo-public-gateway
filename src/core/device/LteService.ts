@@ -108,7 +108,7 @@ class LteService {
 
   public async unlinkDevice(deviceId: string, macAddress: string): Promise<void> {
     const hadLteLink = await this.deviceLteTable.unlinkDevice(deviceId);
-    if (!hadLteLink) return; // Only LTE linked devices should announce unlinking
+    if (!hadLteLink) { return; } // Only LTE linked devices should announce unlinking
     
     const device: Device | null = await this.deviceResolver.get(deviceId, DeviceService.ALL_DEVICE_DETAILS);
 
