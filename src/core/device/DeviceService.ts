@@ -244,7 +244,7 @@ class DeviceService {
             device,
             resourceEventInfo
           );
-      }
+        }
       )
     );
   }
@@ -275,14 +275,22 @@ class DeviceService {
         }
       }),
       this.locationServiceFactory().getLocation(deviceCreate.location.id, {
-        $select: {
-          account: {
-            $select: {
-              id: true
-            }
-          },
-          timezone: true,
-          class: true
+        $select: { 
+          id: true, 
+          address: true,
+          address2: true,
+          city: true,
+          state: true,
+          country: true,
+          postalCode: true,
+          timezone: true, 
+          class: true,
+          account: { 
+            $select: { 
+              id: true, 
+              type: true 
+            } 
+          } 
         }
       })
     ]);
@@ -328,12 +336,17 @@ class DeviceService {
 
     await this.internalDeviceService.upsertDevice(createdDevice.macAddress, deviceCreate);
     await this.internalDeviceService.syncDevice(createdDevice.macAddress);
-    const extendedDeviceInfo: Device | null = await this.deviceResolver.get(createdDevice.id, DeviceService.ALL_DEVICE_DETAILS);
+    const extendedDeviceInfo: Device | null = await this.deviceResolver.getByMacAddress(createdDevice.macAddress, DeviceService.ALL_DEVICE_DETAILS);
     
     await this.entityActivityService.publishEntityActivity(
       EntityActivityType.DEVICE,
       EntityActivityAction.CREATED,
-      extendedDeviceInfo || createdDevice
+      {
+        ...createdDevice,
+        ...extendedDeviceInfo,
+        location,
+        connectivity: {...extendedDeviceInfo?.connectivity, ...deviceCreate.connectivity} // LTE will eventually be associated by the LteService later
+      }
     );
 
     await this.resourceEventService.publishResourceEvent(

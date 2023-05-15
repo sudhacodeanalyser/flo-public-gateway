@@ -416,8 +416,8 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       }
       try {
         const device = await this.deviceService.pairDevice(authToken, deviceCreate, resourceEventInfo);
-        if (deviceCreate.connectivity?.lte) {
-          await this.lteService.linkDevice(device.id, device.macAddress, deviceCreate.connectivity.lte.qrCode);
+        if (deviceCreate.connectivity?.lte?.qrCode) {
+          await this.lteService.linkDevice(device.id, device.macAddress, deviceCreate.connectivity?.lte?.qrCode);
         }
         return some(device);
       } finally {
