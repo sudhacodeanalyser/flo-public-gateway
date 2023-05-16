@@ -22,6 +22,7 @@ import moment from 'moment-timezone';
 import PairInitTable from './PairInitTable';
 import ExtendableError from '../api/error/ExtendableError';
 import { ResourceEventAction, ResourceEventInfo, ResourceEventType } from '../api/model/ResourceEvent';
+import { stripNulls } from '../api/controllerUtils';
 
 const { isNone, fromNullable } = O;
 type Option<T> = O.Option<T>;
@@ -235,7 +236,8 @@ class DeviceService {
           await this.entityActivityService.publishEntityActivity(
             EntityActivityType.DEVICE,
             EntityActivityAction.DELETED,
-            device
+            stripNulls(device) || {} as Device,
+            true
           );
 
           await this.resourceEventService.publishResourceEvent(
@@ -346,22 +348,23 @@ class DeviceService {
       connectivity: {...extendedDeviceInfo?.connectivity, ...deviceCreate.connectivity} // LTE will eventually be associated by the LteService later
     }
 
-    this.logger.info(JSON.stringify({
-      message: 'Device Created',
-      src: 'DeviceService.pairDevice',
-      payload,
-      parts: {
-        createdDevice: createdDevice || 'N/A',
-        extendedDeviceInfo: extendedDeviceInfo || 'N/A',
-        location: location || 'N/A',
-        deviceCreate: deviceCreate || 'N/A'
-      }
-    }));
+    // this.logger.info(JSON.stringify({
+    //   message: 'Device Created',
+    //   src: 'DeviceService.pairDevice',
+    //   payload,
+    //   parts: {
+    //     createdDevice: createdDevice || 'N/A',
+    //     extendedDeviceInfo: extendedDeviceInfo || 'N/A',
+    //     location: location || 'N/A',
+    //     deviceCreate: deviceCreate || 'N/A'
+    //   }
+    // }));
 
     await this.entityActivityService.publishEntityActivity(
       EntityActivityType.DEVICE,
       EntityActivityAction.CREATED,
-      payload
+      stripNulls(payload) || {} as Device,
+      true
     );
 
     await this.resourceEventService.publishResourceEvent(
