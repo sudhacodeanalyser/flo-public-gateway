@@ -269,7 +269,6 @@ class DeviceService {
   }
 
   public async pairDevice(authToken: string, deviceCreate: DeviceCreate & { id?: string }, resourceEventInfo: ResourceEventInfo): Promise<Device> {
-    this.logger.info('DeviceService.pairDevice:begin');
     const [device, locationOpt] = await Promise.all([
       this.deviceResolver.getByMacAddress(deviceCreate.macAddress, {
         $select: {
@@ -347,18 +346,6 @@ class DeviceService {
       location,
       connectivity: {...extendedDeviceInfo?.connectivity, ...deviceCreate.connectivity} // LTE will eventually be associated by the LteService later
     }
-
-    // this.logger.info(JSON.stringify({
-    //   message: 'Device Created',
-    //   src: 'DeviceService.pairDevice',
-    //   payload,
-    //   parts: {
-    //     createdDevice: createdDevice || 'N/A',
-    //     extendedDeviceInfo: extendedDeviceInfo || 'N/A',
-    //     location: location || 'N/A',
-    //     deviceCreate: deviceCreate || 'N/A'
-    //   }
-    // }));
 
     await this.entityActivityService.publishEntityActivity(
       EntityActivityType.DEVICE,
