@@ -33,14 +33,18 @@ export function parseExpand(expand?: string, fields?: string): PropExpand {
  * could set `[key]: undefined` to eliminate this issue, but at this point 
  * some clients may rely on the null valued properties being included. 
  */
-export function stripNulls<T extends object>(input: T | null) : T | null {
-  if (input === null || typeof input !== 'object') {
-    return input;
+export function stripNulls<T extends object>(input: T | null, defaultValue: T) : T {
+  try {
+    if (input === null || typeof input !== 'object') {
+      return defaultValue;
+    }
+    const inputAsString = JSON.stringify(input, (k, v) => {
+      return v === null ? undefined : v;
+    });
+    return JSON.parse(inputAsString) as T || defaultValue;
+  } catch (error) {
+    return defaultValue;
   }
-  const inputAsString = JSON.stringify(input, (k, v) => {
-    return v === null ? undefined : v;
-  });
-  return JSON.parse(inputAsString) as T
 }
 
 function lexify(str: string): string[] {

@@ -22,6 +22,7 @@ import moment from 'moment-timezone';
 import PairInitTable from './PairInitTable';
 import ExtendableError from '../api/error/ExtendableError';
 import { ResourceEventAction, ResourceEventInfo, ResourceEventType } from '../api/model/ResourceEvent';
+import { stripNulls } from '../api/controllerUtils';
 
 const { isNone, fromNullable } = O;
 type Option<T> = O.Option<T>;
@@ -235,7 +236,8 @@ class DeviceService {
           await this.entityActivityService.publishEntityActivity(
             EntityActivityType.DEVICE,
             EntityActivityAction.DELETED,
-            device
+            stripNulls(device, {} as unknown as Device),
+            true
           );
 
           await this.resourceEventService.publishResourceEvent(
@@ -337,16 +339,19 @@ class DeviceService {
     await this.internalDeviceService.upsertDevice(createdDevice.macAddress, deviceCreate);
     await this.internalDeviceService.syncDevice(createdDevice.macAddress);
     const extendedDeviceInfo: Device | null = await this.deviceResolver.getByMacAddress(createdDevice.macAddress, DeviceService.ALL_DEVICE_DETAILS);
-    
+
+    const payload: Device =  {
+      ...createdDevice,
+      ...extendedDeviceInfo,
+      location,
+      connectivity: {...extendedDeviceInfo?.connectivity, ...deviceCreate.connectivity} // LTE will eventually be associated by the LteService later
+    };
+
     await this.entityActivityService.publishEntityActivity(
       EntityActivityType.DEVICE,
       EntityActivityAction.CREATED,
-      {
-        ...createdDevice,
-        ...extendedDeviceInfo,
-        location,
-        connectivity: {...extendedDeviceInfo?.connectivity, ...deviceCreate.connectivity} // LTE will eventually be associated by the LteService later
-      }
+      stripNulls(payload, {} as unknown as Device),
+      true
     );
 
     await this.resourceEventService.publishResourceEvent(
