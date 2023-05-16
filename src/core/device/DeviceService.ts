@@ -236,7 +236,7 @@ class DeviceService {
           await this.entityActivityService.publishEntityActivity(
             EntityActivityType.DEVICE,
             EntityActivityAction.DELETED,
-            stripNulls(device) || {} as Device,
+            stripNulls(device, {} as unknown as Device),
             true
           );
 
@@ -340,17 +340,17 @@ class DeviceService {
     await this.internalDeviceService.syncDevice(createdDevice.macAddress);
     const extendedDeviceInfo: Device | null = await this.deviceResolver.getByMacAddress(createdDevice.macAddress, DeviceService.ALL_DEVICE_DETAILS);
 
-    const payload =  {
+    const payload: Device =  {
       ...createdDevice,
       ...extendedDeviceInfo,
       location,
       connectivity: {...extendedDeviceInfo?.connectivity, ...deviceCreate.connectivity} // LTE will eventually be associated by the LteService later
-    }
+    };
 
     await this.entityActivityService.publishEntityActivity(
       EntityActivityType.DEVICE,
       EntityActivityAction.CREATED,
-      stripNulls(payload) || {} as Device,
+      stripNulls(payload, {} as unknown as Device),
       true
     );
 

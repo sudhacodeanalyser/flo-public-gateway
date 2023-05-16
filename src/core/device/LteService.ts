@@ -92,7 +92,7 @@ class LteService {
             EntityActivityType.DEVICE,
             EntityActivityAction.UPDATED,
             {
-              ...(stripNulls(device) || {}),
+              ...(stripNulls(device, {} as unknown as Device)),
               id: deviceId,
               macAddress,
               lte_paired: true,
@@ -116,7 +116,7 @@ class LteService {
       EntityActivityType.DEVICE,
       EntityActivityAction.UPDATED,
       {
-        ...(stripNulls(device) || {}),
+        ...(stripNulls(device, {} as unknown as Device)),
         id: deviceId,
         macAddress,
         lte_paired: false,
