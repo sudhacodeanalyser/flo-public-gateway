@@ -267,6 +267,7 @@ class DeviceService {
   }
 
   public async pairDevice(authToken: string, deviceCreate: DeviceCreate & { id?: string }, resourceEventInfo: ResourceEventInfo): Promise<Device> {
+    this.logger.info('DeviceService.pairDevice:begin');
     const [device, locationOpt] = await Promise.all([
       this.deviceResolver.getByMacAddress(deviceCreate.macAddress, {
         $select: {
@@ -337,16 +338,30 @@ class DeviceService {
     await this.internalDeviceService.upsertDevice(createdDevice.macAddress, deviceCreate);
     await this.internalDeviceService.syncDevice(createdDevice.macAddress);
     const extendedDeviceInfo: Device | null = await this.deviceResolver.getByMacAddress(createdDevice.macAddress, DeviceService.ALL_DEVICE_DETAILS);
-    
+
+    const payload =  {
+      ...createdDevice,
+      ...extendedDeviceInfo,
+      location,
+      connectivity: {...extendedDeviceInfo?.connectivity, ...deviceCreate.connectivity} // LTE will eventually be associated by the LteService later
+    }
+
+    this.logger.info(JSON.stringify({
+      message: 'Device Created',
+      src: 'DeviceService.pairDevice',
+      payload,
+      parts: {
+        createdDevice: createdDevice || 'N/A',
+        extendedDeviceInfo: extendedDeviceInfo || 'N/A',
+        location: location || 'N/A',
+        deviceCreate: deviceCreate || 'N/A'
+      }
+    }));
+
     await this.entityActivityService.publishEntityActivity(
       EntityActivityType.DEVICE,
       EntityActivityAction.CREATED,
-      {
-        ...createdDevice,
-        ...extendedDeviceInfo,
-        location,
-        connectivity: {...extendedDeviceInfo?.connectivity, ...deviceCreate.connectivity} // LTE will eventually be associated by the LteService later
-      }
+      payload
     );
 
     await this.resourceEventService.publishResourceEvent(
