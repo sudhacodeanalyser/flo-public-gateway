@@ -4,6 +4,7 @@ import { Expandable, Device as DeviceModel, Location as LocationModel, Account a
 import { injectHttpContext, interfaces } from 'inversify-express-utils';
 import Logger from 'bunyan';
 import { Device, Account, Location, User } from '../api/response';
+import { mergeObjects } from '../api/controllerUtils';
 
 export enum EntityActivityAction {
   CREATED = 'created',
@@ -52,10 +53,7 @@ class EntityActivityService {
   private formatEntityActivityMessage<T>(type: EntityActivityType, action: EntityActivityAction, data: Expandable<T>, explode: boolean): EntityActivityMessage<T> {
     let item = this.mapItem(type, data);
     if (explode){
-      item = {
-        ...data,
-        ...item
-      }
+      item = mergeObjects(data, item);
     }
     const requestId = this.httpContext?.request?.get('x-request-id');
 

@@ -46,6 +46,25 @@ export function stripNulls<T extends object>(input: T | null, defaultValue: T) :
     return defaultValue;
   }
 }
+/*
+ * Merges an object on top of a base object
+ */
+export function mergeObjects(base: any, override: any): any {
+  if (!(base instanceof Object && override instanceof Object)) {
+    return override;
+  }
+
+  const merged = { ...base, ...override };
+
+  for (const key in override) {
+    if (override[key] instanceof Object && !Array.isArray(override[key])) {
+      // Key may not exist in base but merge function will resolve
+      merged[key] = mergeObjects(base[key], override[key]);
+    }
+  }
+
+  return merged;
+}
 
 function lexify(str: string): string[] {
   let nestCount = 0;
