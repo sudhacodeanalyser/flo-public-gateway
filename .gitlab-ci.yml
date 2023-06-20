@@ -17,6 +17,7 @@ stages:
   - verify-rc
   - deploy
   - verify
+  - deploy-flo-cloud-eks
 
 before_script:
   - |
@@ -90,7 +91,7 @@ Dev:
     - make deploy
     - make deploy-status
   tags:
-    - eks
+    - dev-flo-cloud-eks
 
 ReleaseCandidate:
   variables:
