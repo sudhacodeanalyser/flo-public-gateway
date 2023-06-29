@@ -5,7 +5,7 @@ ingress:
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/success-codes: 200,404
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
-    alb.ingress.kubernetes.io/subnets: subnet-a8c538de, subnet-58eb333c, subnet-04dc2cad14c7d8abc
+    alb.ingress.kubernetes.io/subnets: subnet-a8c538de, subnet-04dc2cad14c7d8abc
   path: "/*"
   hosts:
     - api-gw-dev.flocloud.co
