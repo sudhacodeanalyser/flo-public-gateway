@@ -1,4 +1,4 @@
-import _ from 'lodash';
+import * as _ from 'lodash';
 import { Expandable, Omit, Subscription as SubscriptionModel, SubscriptionProviderData } from '../../api';
 import { SubscriptionProviderInfo } from '../model/Subscription';
 import { Location, LocationResponse, Response } from './index';

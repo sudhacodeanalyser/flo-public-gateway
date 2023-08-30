@@ -10,7 +10,7 @@ import {
 } from '../api/model/Presence';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
 import * as t from 'io-ts';
-import _ from 'lodash';
+import * as _ from 'lodash';
 import { DependencyFactoryFactory } from '../api';
 import { LocationService } from '../location/LocationService';
 import ReqValidationError from '../../validation/ReqValidationError';

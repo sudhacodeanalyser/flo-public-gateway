@@ -1,6 +1,6 @@
 import { injectable, inject } from 'inversify';
 import moment from 'moment-timezone';
-import _ from 'lodash';
+import * as _ from 'lodash';
 import { DeviceService } from '../service';
 import { DependencyFactoryFactory, SensorInterval, SensorMetricsReport } from '../api';
 import * as Option from 'fp-ts/lib/Option';

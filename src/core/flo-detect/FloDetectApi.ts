@@ -199,7 +199,7 @@ class FloDetectApi extends HttpService {
         method: 'GET',
         url: `${ this.serviceUrl }/irrigation/${ macAddress }`
       }));
-    } catch (err) {
+    } catch (err: any) {
       if (err.statusCode === 404) {
         return null;
       } 

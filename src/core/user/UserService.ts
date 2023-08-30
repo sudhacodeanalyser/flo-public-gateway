@@ -1,7 +1,7 @@
 import { fold, fromNullable, Option } from 'fp-ts/lib/Option';
 import { pipe } from 'fp-ts/lib/pipeable';
 import { inject, injectable } from 'inversify';
-import _ from 'lodash';
+import * as _ from 'lodash';
 import { PropExpand, UpdateAlarmSettings, User, UserUpdate, UserCreate, RetrieveAlarmSettingsFilter, EntityAlarmSettings, UserStats, DependencyFactoryFactory, AdminUserCreate } from '../api';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import ValidationError from '../api/error/ValidationError';

@@ -10,7 +10,7 @@ import {
 import { asyncMethod, httpController } from '../api/controllerUtils';
 import Request from '../api/Request';
 import { EventService } from './EventService';
-import { toDeviceMake } from '../api';
+import { RawEvent, toDeviceMake } from '../api';
 
 
 export function EventControllerFactory(container: Container, apiVersion: number): interfaces.Controller {
@@ -30,7 +30,7 @@ export function EventControllerFactory(container: Container, apiVersion: number)
       @queryParam('date') date?: string,
       @queryParam('make') make?: string,
     ): Promise<void> {
-      return this.eventService.createEvent(req.query, toDeviceMake(make), date);
+      return this.eventService.createEvent(req.query as RawEvent, toDeviceMake(make), date);
     }
   }
 

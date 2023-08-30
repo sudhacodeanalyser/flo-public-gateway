@@ -12,7 +12,7 @@ import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import Request from '../api/Request';
 import * as O from 'fp-ts/lib/Option';
 import * as Responses from '../api/response';
-import _ from 'lodash';
+import * as _ from 'lodash';
 import UnauthorizedError from '../api/error/UnauthorizedError';
 import NotFoundError from '../api/error/NotFoundError';
 import { getEventInfo } from '../api/eventInfo';

@@ -1,6 +1,6 @@
 import { injectable, inject } from 'inversify';
 import { UnsubscribePreferences, BatchUnsubscribePreferences } from '../core/api/model/Email';
-import _ from 'lodash';
+import * as _ from 'lodash';
 import { HttpError, HttpService } from '../http/HttpService'
 
 export enum EmailTypes {

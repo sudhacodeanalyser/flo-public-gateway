@@ -5,7 +5,7 @@ import config from '../config/config';
 const containerModule = new ContainerModule((bind: interfaces.Bind) => {
   bind<KafkaProducerConfig>('KafkaProducerConfig').toConstantValue({
     host: config.kafkaHost,
-    timeout: config.kafkaTimeout
+    timeout: Number(config.kafkaTimeout)
   });
   bind<KafkaProducer>('KafkaProducer').to(KafkaProducer).inSingletonScope();
 });

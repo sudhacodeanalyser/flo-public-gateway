@@ -11,10 +11,10 @@ export default new ContainerModule((bind: interfaces.Bind) => {
 
   bind<Stripe>('StripeClient').toDynamicValue((context: interfaces.Context) => {
     const httpsAgent = context.container.get<HttpsAgent>('HttpsAgent');
-    const stripeClient = new Stripe(config.stripeSecretKey);
-
-    stripeClient.setHttpAgent(httpsAgent);
-
+    const stripeClient = new Stripe(config.stripeSecretKey, {
+      apiVersion: '2023-08-16',
+      httpAgent: httpsAgent
+    });
 
     return stripeClient;
   })

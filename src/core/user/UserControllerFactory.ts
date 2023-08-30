@@ -37,7 +37,7 @@ import { Password } from '../api/validator/Password';
 import ConcurrencyService from '../../concurrency/ConcurrencyService';
 import LimitReachedError from '../api/error/LimitReachedError';
 import ForbiddenError from '../api/error/ForbiddenError';
-import _ from 'lodash';
+import * as _ from 'lodash';
 import { UserEmailChangeService } from './UserEmailChangeService';
 import { Email } from '../api/validator/Email';
 

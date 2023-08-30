@@ -1,6 +1,6 @@
 import { inject, injectable } from 'inversify';
-import _ from 'lodash';
-import postgres from 'pg';
+import * as _ from 'lodash';
+import * as postgres from 'pg';
 import squel from 'squel';
 import { DatabaseReadClient, KeyMap } from '../DatabaseClient';
 

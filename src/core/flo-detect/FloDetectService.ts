@@ -13,7 +13,7 @@ import * as Option from 'fp-ts/lib/Option';
 import moment from 'moment-timezone';
 import { DeviceService, LocationService } from '../service';
 import { FloDetectApi } from './FloDetectApi';
-import _ from 'lodash';
+import * as _ from 'lodash';
 import NotFoundError from '../api/error/NotFoundError';
 import { FloDetectResolver } from '../resolver';
 

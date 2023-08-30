@@ -137,7 +137,7 @@ export class UserInviteService {
           if (err) {
             reject(err);
           } else {
-            resolve(encodedToken);
+            resolve(encodedToken || '');
           }
         })
     )
@@ -183,7 +183,7 @@ export class UserInviteService {
           if (err) {
             reject(err);
           } else {
-            resolve(encodedToken);
+            resolve(encodedToken || '');
           }
         }
       )

@@ -8,7 +8,7 @@ import { pipe } from 'fp-ts/lib/pipeable';
 import { NotificationService } from '../notification/NotificationService';
 import { injectHttpContext, interfaces } from 'inversify-express-utils';
 import * as t from 'io-ts';
-import _ from 'lodash';
+import * as _ from 'lodash';
 import { LocationService } from '../location/LocationService';
 
 @injectable()
@@ -33,7 +33,6 @@ class AlertService {
       userId,
       alarmId: alarmEvent.alarm.id,
       systemMode: alarmEvent.systemMode,
-      createdAt: new Date().toISOString(),
       ...alertFeedback
     });
 

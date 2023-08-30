@@ -4,7 +4,7 @@ import BatchedDatabaseTable from '../../database/BatchedDatabaseTable';
 import { AlertFeedbackRecordData } from './AlertFeedbackRecord';
 import { KeyMap } from '../../database/DatabaseClient'; 
 import Dataloader from 'dataloader';
-import _ from 'lodash';
+import * as _ from 'lodash';
 import NotFoundError from '../api/error/NotFoundError';
 
 @injectable()

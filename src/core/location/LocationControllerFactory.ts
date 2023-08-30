@@ -2,7 +2,7 @@ import * as O from 'fp-ts/lib/Option';
 import { Container, inject } from 'inversify';
 import { BaseHttpController, httpDelete, httpGet, httpPost, httpPut, interfaces, queryParam, request, requestBody, requestParam, all } from 'inversify-express-utils';
 import * as t from 'io-ts';
-import _ from 'lodash';
+import * as _ from 'lodash';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
 import { LocationFacetPage, DependencyFactoryFactory, AreaName, AreaNameCodec, Areas, Location, LocationCreateValidator, LocationUpdate, LocationUpdateValidator, LocationUserRole, SystemMode, SystemModeCodec, PesThresholdsCodec, PesThresholds, LocationPage, LocationSortProperties } from '../api';

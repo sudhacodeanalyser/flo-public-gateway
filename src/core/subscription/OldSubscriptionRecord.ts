@@ -1,5 +1,5 @@
 import { Subscription } from '../api';
-import _ from 'lodash';
+import * as _ from 'lodash';
 
 export interface OldSubscriptionRecordData {
   account_id: string;

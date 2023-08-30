@@ -1,4 +1,4 @@
-import { inject, injectable, targetName } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { PropertyResolverMap, Resolver } from '../resolver';
 import { 
   FloDetectApi, 

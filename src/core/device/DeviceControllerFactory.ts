@@ -32,7 +32,7 @@ import { MachineLearningService } from '../../machine-learning/MachineLearningSe
 import ConcurrencyService from '../../concurrency/ConcurrencyService';
 import ConflictError from '../api/error/ConflictError';
 import { DeviceSyncService } from './DeviceSyncService';
-import _ from 'lodash';
+import * as _ from 'lodash';
 import { getEventInfo } from '../api/eventInfo';
 
 const { isNone, some  } = O;
@@ -65,7 +65,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     const locationService = depFactoryFactory<LocationService>('LocationService')();
     const device = id ?
       O.toNullable(await deviceService.getDeviceById(id, { $select: { location: { $select: { id: true } } } })) :
-      O.toNullable(await deviceService.getByMacAddress(macAddress, { $select: { location: { $select: { id: true } } } }));
+      O.toNullable(await deviceService.getByMacAddress(macAddress?.toString() || '', { $select: { location: { $select: { id: true } } } }));
 
     if (!device) {
       return {

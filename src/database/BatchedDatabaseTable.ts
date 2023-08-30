@@ -55,12 +55,12 @@ class BatchedDatabaseTable<T> extends DatabaseTable<T> {
       if (this.dataloaderMap) {
 
         if (!this.dataloaderMap.get(dataloaderKey)) {
-          this.dataloaderMap.set(dataloaderKey, new Dataloader<string, T>(keys => this.batchLoad(keys)));
+          this.dataloaderMap.set(dataloaderKey, new Dataloader<string, T>(keys => this.batchLoad(keys.map(k => k.toString()))));
         } 
 
         this.dataloader = this.dataloaderMap.get(dataloaderKey) as Dataloader<string, T>;
       } else {
-        this.dataloader = new Dataloader<string, T>(keys => this.batchLoad(keys));
+        this.dataloader = new Dataloader<string, T>(keys => this.batchLoad(keys.map(k => k.toString())));
       }        
     }
 

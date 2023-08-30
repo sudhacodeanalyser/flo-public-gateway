@@ -12,7 +12,7 @@ import { UserService, LocationService, LocalizationService, ResourceEventService
 import Logger from 'bunyan';
 import { NonEmptyStringFactory } from '../api/validator/NonEmptyString';
 import { EmailFactory } from '../api/validator/Email';
-import _ from 'lodash';
+import * as _ from 'lodash';
 import { NotificationService } from '../notification/NotificationService';
 import uuid from 'uuid';
 import EmailClient from '../../email/EmailClient';

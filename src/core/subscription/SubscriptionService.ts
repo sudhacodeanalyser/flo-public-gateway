@@ -1,5 +1,5 @@
 import { inject, injectable, multiInject } from 'inversify';
-import _ from 'lodash';
+import * as _ from 'lodash';
 import { Location, PartialBy, Subscription, SubscriptionCreate, SubscriptionProvider, User, PropExpand, CreditCardInfo } from '../api';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
 import ValidationError from '../api/error/ValidationError';

@@ -1,6 +1,6 @@
 import * as Either from 'fp-ts/lib/Either';
 import { pipe } from 'fp-ts/lib/pipeable';
-import _ from 'lodash';
+import * as _ from 'lodash';
 import { morphism, StrictSchema } from 'morphism';
 import { IndoorAmenity, Location, LocationSize, LocationType, Omit, OutdoorAmenity, PlumbingAppliance, PlumbingType, SystemMode, Timestamped } from '../api';
 import { translateNumericToStringEnum, translateStringToNumericEnum } from '../api/enumUtils';
@@ -436,7 +436,7 @@ const ModelToRecordSchema: StrictSchema<LocationRecordData, Location> = {
       water_utility: input.waterUtility
     };
   },
-  areas: (input: Partial<Location>) => _.get(input, 'areas.custom', undefined),
+  areas: (input: Partial<Location>) => _.get(input, 'areas.custom', []),
   location_class: 'class.key',
   _merged_into_location_id: '_mergedIntoLocationId',
   geo_positioning: 'geoLocation'
@@ -493,7 +493,7 @@ const PartialModelToPartialRecordSchema: StrictSchema<PartialLocationRecordData,
       water_utility: input.waterUtility
     };
   },
-  areas: (input: Partial<Location>) => _.get(input, 'areas.custom', undefined),
+  areas: (input: Partial<Location>) => _.get(input, 'areas.custom', undefined) || [],
   location_class: 'class.key',
   _merged_into_location_id: '_mergedIntoLocationId',
   geo_positioning: 'geoLocation'

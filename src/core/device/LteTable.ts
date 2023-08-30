@@ -1,4 +1,4 @@
-import _ from 'lodash';
+import * as _ from 'lodash';
 import { inject, injectable, targetName } from 'inversify';
 import squel from 'squel';
 import * as O from 'fp-ts/lib/Option';
@@ -8,6 +8,7 @@ import { LteRecord, LteRecordData } from './LteRecord';
 import { Lte, LteCreate } from '../api';
 import { pipe } from 'fp-ts/lib/pipeable';
 import ConflictError from '../api/error/ConflictError';
+import { AxiosError } from 'axios';
 
 type Option<T> = O.Option<T>;
 const fieldRegex = /.*\((\w+)\)=.*/;
@@ -72,7 +73,7 @@ class LteTable extends PostgresTable<LteRecordData> {
 
     try {
       await this.pgDbClient.execute(text, values);
-    } catch (err) {
+    } catch (err: any) {
       if (err.code === '23505') {
         const field = err.detail.replace(fieldRegex, (m: string, f: string) => f);
         throw new ConflictError(`${field} already exists.`);

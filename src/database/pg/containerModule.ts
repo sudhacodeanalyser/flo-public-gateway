@@ -1,7 +1,6 @@
 import { ContainerModule, interfaces } from 'inversify';
 import postgres from 'pg';
 import config from '../../config/config';
-import { DatabaseReadClient } from '../DatabaseClient';
 import { PostgresDbClient } from './PostgresDbClient';
 
 export default new ContainerModule((bind: interfaces.Bind) => {

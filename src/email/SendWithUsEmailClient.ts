@@ -20,7 +20,7 @@ class SendWithUsEmailClient implements EmailClient {
         if (err) {
           reject(err);
         } else {
-          resolve();
+          resolve(undefined);
         }
       })
     );

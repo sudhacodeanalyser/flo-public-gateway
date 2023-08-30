@@ -4,7 +4,7 @@ import { QrData, PairingData, CompletePairingData, PairingDataFromResponse, QrDa
 import * as Either from 'fp-ts/lib/Either';
 import * as Option from 'fp-ts/lib/Option';
 import { pipe } from 'fp-ts/lib/pipeable';
-import _ from 'lodash';
+import * as _ from 'lodash';
 import { CacheMixin, cached, cacheKey } from '../../cache/CacheMixin';
 
 @injectable()

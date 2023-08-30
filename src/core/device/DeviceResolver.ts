@@ -1,7 +1,7 @@
 import Logger from 'bunyan';
 import { inject, injectable } from 'inversify';
 import { injectHttpContext, interfaces } from 'inversify-express-utils';
-import _ from 'lodash';
+import * as _ from 'lodash';
 import uuid from 'uuid';
 import { fromPartialRecord } from '../../database/Patch';
 import { InternalDeviceService } from "../../internal-device-service/InternalDeviceService";
@@ -399,6 +399,7 @@ class DeviceResolver extends Resolver<Device> {
         const additionalProperties = await this.internalDeviceService.getDevice(device.macAddress);
 
         return (additionalProperties && additionalProperties.fwProperties && additionalProperties.fwProperties.serial_number) || null;
+        
       } catch (err) {
         this.logger.error({ err });
         return null;
@@ -657,7 +658,9 @@ class DeviceResolver extends Resolver<Device> {
 
   public async createDevice(deviceCreate: DeviceCreate & { id?: string }, isPaired: boolean = false): Promise<Device> {
     const device = {
+      // @ts-ignore: 2783
       deviceType: DeviceType.FLO_DEVICE_V2,
+      // @ts-ignore: 2783
       deviceModel: DeviceModelType.FLO_0_75,
       id: uuid.v4(),
       additionalProps: null,
@@ -752,7 +755,7 @@ class DeviceResolver extends Resolver<Device> {
 
 private async toModel(deviceRecordData: DeviceRecordData, expandProps?: PropExpand): Promise<Device> {
     const device = new DeviceRecord(deviceRecordData).toModel();
-    const expandedProps = await this.resolveProps(device, expandProps);
+    const expandedProps = {}; // await this.resolveProps(device, expandProps);
 
     return {
       ...device,

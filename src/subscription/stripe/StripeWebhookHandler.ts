@@ -1,5 +1,5 @@
 import { inject, injectable } from 'inversify';
-import _ from 'lodash';
+import * as _ from 'lodash';
 import Stripe from 'stripe';
 import { Subscription, SubscriptionProviderWebhookHandler, SubscriptionProviderInfo } from '../../core/api';
 import { SubscriptionService } from '../../core/service';

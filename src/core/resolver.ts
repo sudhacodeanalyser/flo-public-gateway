@@ -1,5 +1,5 @@
 import { injectable } from 'inversify';
-import _ from 'lodash';
+import * as _ from 'lodash';
 import { PropExpand } from './api';
 
 export type PropertyResolverFn<T, R> = ((model: T, shouldExpand?: boolean, expandProps?: PropExpand) => Promise<R | null>);

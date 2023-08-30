@@ -3,7 +3,7 @@ import squel from 'squel';
 import { PostgresDbClient } from '../../database/pg/PostgresDbClient';
 import { PostgresTable } from '../../database/pg/PostgresTable';
 import { LocationPgRecordData, LocationPgPage, LocationFacetPgPage } from './LocationPgRecord';
-import _ from 'lodash';
+import * as _ from 'lodash';
 import { LocationFilters, LocationSortProperties } from '../api';
 
 @injectable()

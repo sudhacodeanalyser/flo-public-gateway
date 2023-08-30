@@ -2,7 +2,7 @@ import Logger from 'bunyan';
 import * as O from 'fp-ts/lib/Option';
 import { pipe } from 'fp-ts/lib/pipeable';
 import { inject, injectable } from 'inversify';
-import _ from 'lodash';
+import * as _ from 'lodash';
 import { PairingService, QrData } from '../../api-v1/pairing/PairingService';
 import { InternalDeviceService } from '../../internal-device-service/InternalDeviceService';
 import { DependencyFactoryFactory, Device, DeviceCreate, DeviceType, DeviceUpdate, PropExpand, ValveState, FirmwareInfo, DeviceStats, DeviceAlertStats } from '../api';
@@ -17,10 +17,8 @@ import { MachineLearningService } from '../../machine-learning/MachineLearningSe
 import { injectHttpContext, interfaces } from 'inversify-express-utils';
 import Request from '../api/Request';
 import { NotificationService } from '../notification/NotificationService';
-import ForbiddenError from '../api/error/ForbiddenError';
 import moment from 'moment-timezone';
 import PairInitTable from './PairInitTable';
-import ExtendableError from '../api/error/ExtendableError';
 import { ResourceEventAction, ResourceEventInfo, ResourceEventType } from '../api/model/ResourceEvent';
 import { stripNulls } from '../api/controllerUtils';
 
@@ -119,6 +117,7 @@ class DeviceService {
     @inject('PairInitTTL') private pairInitTTL: number,
     @injectHttpContext private httpContext: interfaces.HttpContext
   ) {
+    // console.log('DeviceService constructor');
     this.locationServiceFactory = depFactoryFactory<LocationService>('LocationService');
     this.sessionServiceFactory = depFactoryFactory<SessionService>('SessionService');
     this.userServiceFactory = depFactoryFactory<UserService>('UserService');

@@ -1,7 +1,7 @@
 import * as t from 'io-ts';
 import { morphism, StrictSchema } from 'morphism';
 import { AlertFeedback } from '../api';
-import _ from 'lodash';
+import * as _ from 'lodash';
 
 export const AlertFeedbackRecordDataCodec = t.intersection([
   t.type({

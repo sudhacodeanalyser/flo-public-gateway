@@ -1,5 +1,16 @@
-import _ from 'lodash';
-import AWS from 'aws-sdk';
+import * as _ from 'lodash';
+import * as AWS from 'aws-sdk';
+import * as AWS_DynamoDBDocumentClient from "@aws-sdk/lib-dynamodb";
+import * as AWS_DynamoDB from "@aws-sdk/client-dynamodb";
+
+const {
+  DynamoDBDocument
+} = AWS_DynamoDBDocumentClient;
+
+const {
+  DynamoDB
+} = AWS_DynamoDB;
+
 import DatabaseClient, { KeyMap } from '../DatabaseClient';
 import ResourceDoesNotExistError from '../../core/api/error/ResourceDoesNotExistError';
 import { Patch, AppendOp, SetOp, RemoveOp } from '../Patch';
@@ -19,12 +30,12 @@ interface ExpressionAttributeValueTuple {
 // Constant for update expression construction
 const EMPTY_LIST_EXPRESION_ATTRIBUTE_VALUE = `:__empty_list`;
 
-export type DynamoDbQuery = Partial<AWS.DynamoDB.DocumentClient.QueryInput>;
+export type DynamoDbQuery = Partial<AWS_DynamoDBDocumentClient.QueryCommandInput>;
 
 @injectable()
 class DynamoDbClient implements DatabaseClient {
   constructor(
-   @inject('DynamoDbDocumentClient') public dynamoDb: AWS.DynamoDB.DocumentClient,
+   @inject('DynamoDbDocumentClient') public dynamoDb: AWS_DynamoDB.DocumentClient,
    @inject('TablePrefix') public tablePrefix: string
   ) {}
 
@@ -37,15 +48,15 @@ class DynamoDbClient implements DatabaseClient {
     return rawItem;
   }
 
-  public _put<T>(tableName: string, item: T): AWS.Request<AWS.DynamoDB.DocumentClient.PutItemOutput, AWS.AWSError> {
+  public _put<T>(tableName: string, item: T): AWS.Request<AWS_DynamoDBDocumentClient.PutItemCommandOutput, AWS.AWSError> {
     return this.dynamoDb.put({
       TableName: this.tablePrefix + tableName,
-      Item: item,
+      Item: item as Record<string, AWS_DynamoDB.AttributeValue>,
       ReturnValues: 'NONE' // PutItem does not recognize any values other than NONE or ALL_OLD
     });
   }
 
-  public _get<T>(tableName: string, key: KeyMap): AWS.Request<AWS.DynamoDB.DocumentClient.GetItemOutput, AWS.AWSError> {
+  public _get<T>(tableName: string, key: KeyMap): AWS.Request<AWS_DynamoDBDocumentClient.GetItemCommandOutput, AWS.AWSError> {
     return this.dynamoDb.get({
       TableName: this.tablePrefix + tableName,
       Key: key
@@ -58,7 +69,7 @@ class DynamoDbClient implements DatabaseClient {
     return _.isEmpty(Item) ? null : this.sanitizeRead(Item  as T) as T;
   }
 
-  public _update<T>(tableName: string, key: KeyMap, patch: Patch, flattenNestedProps: boolean = true): AWS.Request<AWS.DynamoDB.DocumentClient.UpdateItemOutput, AWS.AWSError> {
+  public _update<T>(tableName: string, key: KeyMap, patch: Patch, flattenNestedProps: boolean = true): AWS.Request<AWS_DynamoDBDocumentClient.UpdateItemCommandOutput, AWS.AWSError> {
     const {
       UpdateExpression,
       ExpressionAttributeNames: updateExprNames,
@@ -100,7 +111,7 @@ class DynamoDbClient implements DatabaseClient {
       const { Attributes } = await this._update<T>(tableName, key, patch, flattenNestedProps).promise();
 
       return this.sanitizeRead(Attributes) as T;
-    } catch (err) {
+    } catch (err: any) {
       // There's no type defined for this, so we check the name string
       if (err.name === 'ConditionalCheckFailedException') {
         throw new ResourceDoesNotExistError();
@@ -115,7 +126,7 @@ class DynamoDbClient implements DatabaseClient {
     }
   }
 
-  public _remove(tableName: string, key: KeyMap): AWS.Request<AWS.DynamoDB.DocumentClient.DeleteItemOutput, AWS.AWSError> {
+  public _remove(tableName: string, key: KeyMap): AWS.Request<AWS_DynamoDBDocumentClient.DeleteItemCommandOutput, AWS.AWSError> {
 
     return this.dynamoDb.delete({
       TableName: this.tablePrefix + tableName,
@@ -132,17 +143,26 @@ class DynamoDbClient implements DatabaseClient {
     }
   }
 
-  public _query(tableName: string, queryOptions: DynamoDbQuery): AWS.Request<AWS.DynamoDB.DocumentClient.QueryOutput, AWS.AWSError> {
+  public _query(tableName: string, queryOptions: DynamoDbQuery): AWS.Request<AWS_DynamoDBDocumentClient.QueryCommandOutput, AWS.AWSError> {
+    // return this.dynamoDb.query({
+    //   TableName: this.tablePrefix + tableName,
+    //   ...queryOptions
+    // });
 
-    return this.dynamoDb.query({
-      TableName: this.tablePrefix + tableName,
-      ...queryOptions
+    const ddbclient = DynamoDBDocument.from(new DynamoDB());
+    return ddbclient.query({
+      TableName:'prod_ICD', 
+      IndexName: 'DeviceIdIndex', 
+      KeyConditionExpression: '#device_id = :device_id', 
+      ExpressionAttributeNames: { "#device_id": "device_id" }, 
+      ExpressionAttributeValues: { ":device_id": 'd8a98b8fd9e4' } 
     });
+  
   }
 
   public async query<T>(tableName: string, queryOptions: DynamoDbQuery): Promise<T[]> {
-    const { Items = [] } = await this._query(tableName, queryOptions).promise();
-
+    const response = await this._query(tableName, queryOptions).promise();
+    const { Items = [] } = response;
     return Items.map(item => this.sanitizeRead(item as T)) as T[];
   }
 
@@ -197,7 +217,7 @@ class DynamoDbClient implements DatabaseClient {
     return items;
   }
 
-  public _scan(tableName: string, limit?: number, exclusiveStartKey?: KeyMap): AWS.Request<AWS.DynamoDB.DocumentClient.ScanOutput, AWS.AWSError> {
+  public _scan(tableName: string, limit?: number, exclusiveStartKey?: KeyMap): AWS.Request<AWS_DynamoDBDocumentClient.ScanCommandOutput, AWS.AWSError> {
     return this.dynamoDb.scan({
       TableName: this.tablePrefix + tableName,
       Limit: limit,
@@ -214,7 +234,7 @@ class DynamoDbClient implements DatabaseClient {
     };
   }
 
-  private createCondition(key: KeyMap): Partial<AWS.DynamoDB.DocumentClient.UpdateItemInput> {
+  private createCondition(key: KeyMap): Partial<AWS_DynamoDBDocumentClient.UpdateItemCommandInput> {
     const condTuples = _.map(key, (value, name) => ({
       name,
       exprName: `#${ name }`
@@ -230,7 +250,7 @@ class DynamoDbClient implements DatabaseClient {
     };
   }
 
-  private createUpdate(patch: Patch, flattenNestedProps: boolean = true): Partial<AWS.DynamoDB.DocumentClient.UpdateItemInput> {
+  private createUpdate(patch: Patch, flattenNestedProps: boolean = true): Partial<AWS_DynamoDBDocumentClient.UpdateItemCommandInput> {
     const setUpdate = this.processSetOps(patch, flattenNestedProps);
     const nestedSetUpdate = this.processNestedSetOps(patch, flattenNestedProps);
     const appendUpdate = this.processAppendOps(patch);
@@ -270,21 +290,21 @@ class DynamoDbClient implements DatabaseClient {
     };
   }
 
-  private collectExpressionAttributeNames(exprTuples: ExpressionAttributeNameTuple[]): AWS.DynamoDB.DocumentClient.UpdateItemInput['ExpressionAttributeNames'] {
+  private collectExpressionAttributeNames(exprTuples: ExpressionAttributeNameTuple[]): AWS_DynamoDBDocumentClient.UpdateItemCommandInput['ExpressionAttributeNames'] {
     return exprTuples.reduce((acc, { exprName, name }) => ({
       ...acc,
       [exprName]: name
     }), {});
   }
 
-  private collectExpressionAttributeValues(exprTuples: ExpressionAttributeValueTuple[]): AWS.DynamoDB.DocumentClient.UpdateItemInput['ExpressionAttributeValues'] {
+  private collectExpressionAttributeValues(exprTuples: ExpressionAttributeValueTuple[]): AWS_DynamoDBDocumentClient.UpdateItemCommandInput['ExpressionAttributeValues'] {
     return exprTuples.reduce((acc, { exprValue, value }) => ({
       ...acc,
       [exprValue]: value
     }), {});
   }
 
-  private processSetOps(patch: Patch, flattenNestedProps: boolean = true): { opStrs: string[] } & Partial<AWS.DynamoDB.DocumentClient.UpdateItemInput> {
+  private processSetOps(patch: Patch, flattenNestedProps: boolean = true): { opStrs: string[] } & Partial<AWS_DynamoDBDocumentClient.UpdateItemCommandInput> {
     const setOps: SetOp[] | undefined = patch.setOps && patch.setOps
       .filter(({ value }) => !flattenNestedProps || (_.isArray(value) || !_.isObject(value)));
     const setExprTuples = setOps === undefined ? [] :
@@ -305,7 +325,7 @@ class DynamoDbClient implements DatabaseClient {
   }
 
   // Only handles single level of nesting
-  private processNestedSetOps(patch: Patch, flattenNestedProps: boolean = true): { opStrs: string[] } & Partial<AWS.DynamoDB.DocumentClient.UpdateItemInput> {
+  private processNestedSetOps(patch: Patch, flattenNestedProps: boolean = true): { opStrs: string[] } & Partial<AWS_DynamoDBDocumentClient.UpdateItemCommandInput> {
     const setOps = patch.setOps && patch.setOps
       .filter(({ value }) =>  flattenNestedProps && !_.isArray(value) && _.isObject(value));
     const setExprTuples = setOps === undefined ? [] :
@@ -346,7 +366,7 @@ class DynamoDbClient implements DatabaseClient {
       };
   }
 
-  private processRemoveOps(patch: Patch): { opStrs: string[] } & Partial<AWS.DynamoDB.DocumentClient.UpdateItemInput> {
+  private processRemoveOps(patch: Patch): { opStrs: string[] } & Partial<AWS_DynamoDBDocumentClient.UpdateItemCommandInput> {
     const removeOps: RemoveOp[] | undefined = patch.removeOps;
     const removeExprTuples = removeOps === undefined ? [] :
       removeOps.map(removeOp => ({
@@ -363,7 +383,7 @@ class DynamoDbClient implements DatabaseClient {
     };
   }
 
-  private processAppendOps(patch: Patch): { opStrs: string[] } & Partial<AWS.DynamoDB.DocumentClient.UpdateItemInput> {
+  private processAppendOps(patch: Patch): { opStrs: string[] } & Partial<AWS_DynamoDBDocumentClient.UpdateItemCommandInput> {
     const appendOps: AppendOp[] | undefined = patch.appendOps;
     const appendExprTuples = appendOps === undefined ? [] :
       appendOps.map(appendOp => ({

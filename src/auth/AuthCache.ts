@@ -1,5 +1,5 @@
 import { inject, injectable } from 'inversify';
-import _ from 'lodash';
+import * as _ from 'lodash';
 import Redis from 'ioredis';
 import jwt from 'jsonwebtoken';
 import * as Either from 'fp-ts/lib/Either';
@@ -15,7 +15,7 @@ type Params = { [param: string]: any };
 @injectable()
 class AuthCache {
   constructor(
-    @inject('RedisClient') private redisClient: Redis.Redis
+    @inject('RedisClient') private redisClient: Redis
   ) {}
 
   public async writeToCache(tokenMetadata: TokenMetadata, methodId: string, token: string, params?: Params): Promise<void> {

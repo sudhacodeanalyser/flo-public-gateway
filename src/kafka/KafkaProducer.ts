@@ -1,5 +1,5 @@
 import { injectable, inject } from 'inversify';
-import { Kafka, Producer } from 'kafkajs';
+import { Kafka, Partitioners, Producer } from 'kafkajs';
 
 export interface KafkaProducerConfig {
   host: string,
@@ -19,7 +19,7 @@ class KafkaProducer {
       requestTimeout: kafkaProducerConfig.timeout || 5000
     });
 
-    this.kafkaProducer = kafka.producer();
+    this.kafkaProducer = kafka.producer({createPartitioner: Partitioners.DefaultPartitioner});
   }
 
   public async connect(): Promise<KafkaProducer> {

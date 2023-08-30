@@ -1,4 +1,4 @@
-import _ from 'lodash';
+import * as _ from 'lodash';
 import { LookupItem as LookupItemModel, Lookup as LookupModel } from '../../api';
 
 export interface MultiLookupResponse {

@@ -5,20 +5,20 @@ import { EmailAvailabilityCodec } from './models';
 import { UserRegistrationData, EmailAvailability, UserRegistrationService, EmailVerification, OAuth2Response, OAuth2ResponseCodec, RegistrationTokenResponse, RegistrationTokenResponseCodec, ImpersonationToken } from '../../core/user/UserRegistrationService';
 import { isLeft } from 'fp-ts/lib/Either';
 
-import _ from 'lodash';
-import Redis from 'ioredis';
+import * as _ from 'lodash';
 import { CachePolicy } from '../../cache/CacheMiddleware';
 import jwt from 'jsonwebtoken';
 import { pipe } from 'fp-ts/lib/pipeable';
 import { RegistrationTokenCodec } from '../../auth/Token';
 // tslint:disable-next-line:no-duplicate-imports
 import * as Either from 'fp-ts/lib/Either';
+import Redis from 'ioredis';
 
 @injectable()
 class ApiV1UserRegistrationService extends HttpService implements UserRegistrationService {
   constructor(
     @inject('ApiV1Url') private readonly apiV1Url: string,
-    @inject('RedisClient') protected redisClient: Redis.Redis,
+    @inject('RedisClient') protected redisClient: Redis,
     @inject('CachePolicy') protected cachePolicy: CachePolicy,
   ) {
     super();

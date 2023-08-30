@@ -1,5 +1,5 @@
-import _ from 'lodash';
-import { controller, interfaces, HttpResponseMessage, JsonContent, requestHeaders, queryParam, httpMethod as inversifyHttpMethod } from 'inversify-express-utils';
+import * as _ from 'lodash';
+import { controller, interfaces, HttpResponseMessage, JsonContent, requestHeaders, queryParam, httpMethod as inversifyHttpMethod, HTTP_VERBS_ENUM } from 'inversify-express-utils';
 import ResourceDoesNotExistError from './error/ResourceDoesNotExistError';
 import NotFoundError from './error/NotFoundError';
 import ValidationError from './error/ValidationError';
@@ -262,22 +262,24 @@ export function withQueryParamArray(target: any, propertyName: string | symbol, 
 
 export function queryParamArray(queryParamName: string): ParameterDecorator {
 
-  return (target: any, propertyName: string | symbol, parameterIndex: number): void => {
+  return (target: any, propertyName: string | symbol | undefined, parameterIndex: number): void => {
+    const name = propertyName || '';
     const existingQueryArrayParams = {
-      ...Reflect.getOwnMetadata('queryParamArray', target, propertyName),
+      ...Reflect.getOwnMetadata('queryParamArray', target, name),
       [parameterIndex]: true
     };
 
-    Reflect.defineMetadata('queryParamArray', existingQueryArrayParams, target, propertyName);
+    Reflect.defineMetadata('queryParamArray', existingQueryArrayParams, target, name);
 
-    queryParam(queryParamName)(target, propertyName, parameterIndex);
+    queryParam(queryParamName)(target, name, parameterIndex);
   };
 }
 
 export function httpMethod(method: string, path: string, ...middleware: Array<string | symbol | interfaces.Middleware | express.RequestHandler>): MethodDecorator {
+  const verb = method as keyof typeof HTTP_VERBS_ENUM;
   return (target: any, propertyName: string | symbol, propertyDescriptor: PropertyDescriptor): void => {
     withQueryParamArray(target, propertyName, propertyDescriptor);
-    inversifyHttpMethod(method, path, ...middleware)(target, propertyName.toString(), propertyDescriptor);
+    inversifyHttpMethod(verb, path, ...middleware)(target, propertyName.toString(), propertyDescriptor);
   };
 }
 

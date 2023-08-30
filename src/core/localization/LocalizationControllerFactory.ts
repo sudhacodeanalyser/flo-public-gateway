@@ -1,4 +1,4 @@
-import _ from 'lodash';
+import * as _ from 'lodash';
 import express from 'express';
 import { interfaces, httpGet, queryParam, requestParam, requestBody, BaseHttpController, httpPost, httpDelete, request } from 'inversify-express-utils';
 import { inject, Container } from 'inversify';
@@ -90,7 +90,8 @@ export function LocalizationControllerFactory(container: Container, apiVersion: 
       const { query } = req;
       const args = _.chain(query).pickBy((value, key) => key.startsWith('args.')).mapKeys((value, key) => key.split('.')[1]).value();
 
-      return this.localizationService.getLocalizedValue({name, type, locale, args}, caching);
+      // tslint:disable no-object-literal-type-assertion
+      return this.localizationService.getLocalizedValue({name, type, locale, args} as LocalizedFilter, caching);
     }
 
     @httpPost('/localized', auth)

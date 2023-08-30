@@ -1,6 +1,6 @@
 import { injectable, inject } from 'inversify';
 import { HttpService, HttpRequest } from '../../http/HttpService';
-import _ from 'lodash';
+import * as _ from 'lodash';
 
 export interface WeatherData {
   params: any; 

@@ -1,4 +1,4 @@
-import _ from 'lodash';
+import * as _ from 'lodash';
 import { inject, injectable } from 'inversify';
 import DatabaseClient from '../../database/DatabaseClient';
 import DatabaseTable from '../../database/DatabaseTable';

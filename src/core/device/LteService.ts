@@ -1,5 +1,5 @@
 import { inject, injectable } from 'inversify';
-import _ from 'lodash';
+import * as _ from 'lodash';
 import * as O from 'fp-ts/lib/Option';
 import LteTable from './LteTable';
 import DeviceLteTable from './DeviceLteTable';

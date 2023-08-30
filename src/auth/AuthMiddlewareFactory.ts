@@ -1,7 +1,7 @@
-import { AxiosInstance } from 'axios';
+import { AxiosError, AxiosInstance } from 'axios';
 import express from 'express';
 import { inject, injectable } from 'inversify';
-import _ from 'lodash';
+import * as _ from 'lodash';
 import Request from '../core/api/Request';
 import ForbiddenError from './ForbiddenError';
 import UnauthorizedError from './UnauthorizedError';
@@ -48,7 +48,7 @@ class AuthMiddlewareFactory {
         const methodId = req.method + path;
         const rawParams = getParams && (await getParams(req, this.depFactoryFactory));
         const paramArray = rawParams && (_.isArray(rawParams) ? rawParams : [rawParams]);
-        const noCache = /^(off|0|no|false)$/i.test(req.query.cache);
+        const noCache = /^(off|0|no|false)$/i.test(req.query?.cache?.toString() || '');
         const results = await Promise.all((!paramArray || _.isEmpty(paramArray) ? [{}] : paramArray)
           .map(async params => {
             return pipe(
@@ -108,7 +108,7 @@ class AuthMiddlewareFactory {
         },
         timeout: config.authTimeoutMS
       });
-    } catch (err) {
+    } catch (err: any) {
       if (err?.response) {
         const authResponse = err.response;
         switch (authResponse?.status ?? 0) {
@@ -163,7 +163,7 @@ class AuthMiddlewareFactory {
         } else {
           return Either.left(new Error('Unknown response.'));
         }
-      } catch (err) {
+      } catch (err: any) {
         const authResponse = err.response;
 
         if (authResponse && (authResponse.status === 400 || authResponse.status === 401)) {

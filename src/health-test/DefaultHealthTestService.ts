@@ -1,5 +1,5 @@
 import { injectable } from 'inversify';
-import _ from 'lodash';
+import * as _ from 'lodash';
 import { HealthTest, HealthTestService } from '../core/device/HealthTestService';
 import { HttpService } from '../http/HttpService';
 

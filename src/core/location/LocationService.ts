@@ -1,7 +1,7 @@
 import * as O from 'fp-ts/lib/Option';
-import { inject, injectable, targetName } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { injectHttpContext, interfaces } from 'inversify-express-utils';
-import _ from 'lodash';
+import * as _ from 'lodash';
 import uuid from 'uuid';
 import { AccessControlService } from '../../auth/AccessControlService';
 import { Subscription, LocationFacetPage, LocationFilters, Areas, DependencyFactoryFactory, Location, LocationUpdate, LocationUserRole, PropExpand, SystemMode, Device, DeviceType, PesThresholds, LocationPage, LocationSortProperties } from '../api';

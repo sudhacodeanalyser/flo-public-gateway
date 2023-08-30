@@ -9,7 +9,7 @@ class LocaleMiddleware extends BaseMiddleware {
     const locale = req.query.lang || req.query.locale;
 
     if (locale) {
-      this.bind<string | undefined>('Locale').toConstantValue(locale);
+      this.bind<string | undefined>('Locale').toConstantValue(locale.toString());
     }
 
     next();

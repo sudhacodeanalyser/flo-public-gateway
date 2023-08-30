@@ -11,7 +11,7 @@ import {
   SystemMode
 } from '../api';
 import { NoYesUnsure } from '../api/NoYesUnsure';
-import _ from 'lodash';
+import * as _ from 'lodash';
 import { morphism, StrictSchema } from 'morphism';
 import * as Either from 'fp-ts/lib/Either';
 import { pipe } from 'fp-ts/lib/pipeable';

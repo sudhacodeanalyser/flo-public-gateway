@@ -4,7 +4,7 @@ export type KeyMap = { [key: string]: any }
 
 export interface DatabaseReadClient {
   get<T>(tableName: string, key: KeyMap): Promise<T | null>;
-  query<Q, T>(tableName: string, query: Q): Promise<T[]>;
+  query<Q extends object, T>(tableName: string, query: Q): Promise<T[]>;
   batchGet<T>(tableName: string, keys: KeyMap[], batchSize?: number): Promise<Array<T | null>>;
 }
 

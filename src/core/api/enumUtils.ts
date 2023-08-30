@@ -1,6 +1,6 @@
 import * as t from 'io-ts';
 import { $enum } from 'ts-enum-util';
-import _ from 'lodash';
+import * as _ from 'lodash';
 
 export function convertEnumtoCodec<T extends Record<Extract<keyof T, string>, string>>(enumType: T): t.KeyofC<{ [k in T[keyof T]]: null }> {
   const values = $enum(enumType).getValues();

@@ -1,7 +1,7 @@
 import Logger from 'bunyan';
 import { inject, injectable } from 'inversify';
 import { injectHttpContext, interfaces } from 'inversify-express-utils';
-import _ from 'lodash';
+import * as _ from 'lodash';
 import { fromPartialRecord } from '../../database/Patch';
 import { DependencyFactoryFactory, DeviceAlarmSettings, EntityAlarmSettingsItem, PropExpand, UpdateAlarmSettings, User, UnitSystem, UserCreate, RetrieveAlarmSettingsFilter, EntityAlarmSettings,
 LocationAlarmSettings, AlarmSettings, AccountType, AdminUserCreate } from '../api';

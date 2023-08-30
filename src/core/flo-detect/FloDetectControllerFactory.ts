@@ -184,7 +184,7 @@ export function FloDetectControllerFactory(container: Container, apiVersion: num
 
       await (new Promise((resolve, reject) => authMiddlewareFactory.create(
         () => Promise.resolve({ device_id: event.macAddress })
-      )(req, res, err => err ? reject(err) : resolve())));
+      )(req, res, err => err ? reject(err) : resolve(undefined))));
 
       return event;
     }
@@ -217,7 +217,7 @@ export function FloDetectControllerFactory(container: Container, apiVersion: num
 
       await (new Promise((resolve, reject) => authMiddlewareFactory.create(
         () => Promise.resolve({ device_id: event.macAddress })
-      )(req, res, err => err ? reject(err) : resolve())));
+      )(req, res, err => err ? reject(err) : resolve(undefined))));
 
       const tokenMetadata = req.token;
       const userId = tokenMetadata && tokenMetadata.user_id;

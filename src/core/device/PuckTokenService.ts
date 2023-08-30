@@ -7,7 +7,7 @@ import * as E from 'fp-ts/lib/Either';
 import { pipe } from 'fp-ts/lib/pipeable';
 import * as AsyncEither from 'fp-ts/lib/TaskEither';
 import PuckTokenMetadataTable from './PuckTokenMetadataTable';
-import _ from 'lodash';
+import * as _ from 'lodash';
 import { PuckPairingData } from '../api';
 import { PuckTokenMetadata } from './PuckTokenMetadata';
 
@@ -87,11 +87,11 @@ class PuckTokenService {
           jwtid: tokenId,
           ...(ttl && { expiresIn: ttl }),
         },
-        (err: any, encodedToken: string) => {
+        (err: any, encodedToken: string | undefined) => {
           if (err) {
             reject(err);
           } else {
-            resolve(encodedToken);
+            resolve(encodedToken || '');
           }
       });
     });
@@ -128,7 +128,7 @@ class PuckTokenService {
       }
 
       return E.right(tokenMetadata);
-    } catch (err) {
+    } catch (err: any) {
       return E.left(err);
     }
   }

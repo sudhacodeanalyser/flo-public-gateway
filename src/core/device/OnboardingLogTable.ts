@@ -1,10 +1,10 @@
 import { inject, injectable } from 'inversify';
-import _ from 'lodash';
+import * as _ from 'lodash';
 import DynamoDbClient, { DynamoDbQuery } from '../../database/dynamo/DynamoDbClient';
 import DatabaseTable from '../../database/DatabaseTable';
 import { OnboardingLogRecord } from './OnboardingLogRecord';
 import * as Option from 'fp-ts/lib/Option';
-import AWS from 'aws-sdk';
+import * as AWS from 'aws-sdk';
 
 @injectable()
 class OnboardingLogTable extends DatabaseTable<OnboardingLogRecord> {

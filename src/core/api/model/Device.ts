@@ -1,5 +1,5 @@
 import * as t from 'io-ts';
-import _ from 'lodash';
+import * as _ from 'lodash';
 import { InternalConnectivity, InternalDeviceCodec, InternalTelemetry } from '../../../internal-device-service/models';
 import { Expandable, Location, NotificationStatistics, Omit, SystemModeCodec as DeviceSystemModeCodec, TimestampedModel } from '../../api';
 import { convertEnumtoCodec } from '../../api/enumUtils';

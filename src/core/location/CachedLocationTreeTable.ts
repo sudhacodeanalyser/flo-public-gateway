@@ -2,11 +2,11 @@ import { inject, injectable, targetName } from 'inversify';
 import LocationTreeTable, { LocationTreeRow } from './LocationTreeTable';
 import Redis from 'ioredis';
 import { CachePolicy } from '../../cache/CacheMiddleware';
-import _ from 'lodash';
+import * as _ from 'lodash';
 
 @injectable()
 class CachedLocationTreeTable extends LocationTreeTable {
-    @inject('RedisClient') protected redisClient: Redis.Redis;
+    @inject('RedisClient') protected redisClient: Redis;
     @inject('CachePolicy') protected cachePolicy: CachePolicy;
 ​
     public async getAllChildren(accountId: string, id: string): Promise<LocationTreeRow[]> {
@@ -21,7 +21,7 @@ class CachedLocationTreeTable extends LocationTreeTable {
           .zrange(key, 1, -1, 'WITHSCORES')
           .exists(key)
           .exec();
-        const [children, isCached] = results.map(([err, result]: any[]) => {
+        const [children, isCached] = (results||[]).map(([err, result]: any[]) => {
           if (err) {
             throw err;
           }
@@ -73,7 +73,7 @@ class CachedLocationTreeTable extends LocationTreeTable {
           .zrangebyscore(key, 1, 1)
           .exists(key)
           .exec();
-  ​      const [children, isCached] = results.map(([err, result]: any[]) => {
+  ​      const [children, isCached] = (results || []).map(([err, result]: any[]) => {
           if (err) {
             throw err;
           }
@@ -107,7 +107,7 @@ class CachedLocationTreeTable extends LocationTreeTable {
           .zrange(key, 1, -1, 'WITHSCORES')
           .exists(key)
           .exec();
-        const [parents, isCached] = results.map(([err, result]: any[]) => {
+        const [parents, isCached] = (results || []).map(([err, result]: any[]) => {
           if (err) {
             throw err;
           }
@@ -168,7 +168,7 @@ class CachedLocationTreeTable extends LocationTreeTable {
           .zrem(this.formatChildrenKey(accountId, parent_id), id)
       );
 ​
-      (await multi.exec())
+      ((await multi.exec()) || [])
         .forEach(([err]: any[]) => {
           if (err) {
             throw err;
@@ -203,7 +203,7 @@ class CachedLocationTreeTable extends LocationTreeTable {
       }
 
       // Execute transaction
-      (await multi.exec()).forEach(([err]: any[]) => { 
+      ((await multi.exec()) || []).forEach(([err]: any[]) => { 
         if (err) {
           throw err;
         }

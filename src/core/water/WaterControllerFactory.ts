@@ -15,7 +15,7 @@ import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import Request from '../api/Request';
 import * as ReqValidator from './WaterReqValidator';
 import * as O from 'fp-ts/lib/Option';
-import _ from 'lodash';
+import * as _ from 'lodash';
 import ForbiddenError from '../api/error/ForbiddenError';
 import ValidationError from '../api/error/ValidationError';
 
@@ -31,7 +31,7 @@ export function WaterControllerFactory(container: Container, apiVersion: number)
   const authWithParents = authMiddlewareFactory.create(async ({ query: { locationId, macAddress, userId } }: Request, depFactoryFactory: DependencyFactoryFactory) => {
     if (locationId) {
       const locationService = depFactoryFactory<LocationService>('LocationService')();
-      const locationIds = Array.isArray(locationId) ? locationId : locationId.split(',');
+      const locationIds = Array.isArray(locationId) ? locationId.map(l => l.toString()) : locationId.toString().split(',');
       const allParentIds = _.flatten(await Promise.all(_.map(locationIds, async l => locationService.getAllParentIds(l))));
 
       return {
@@ -41,7 +41,7 @@ export function WaterControllerFactory(container: Container, apiVersion: number)
     } else if (macAddress) {
       const deviceService = depFactoryFactory<DeviceService>('DeviceService')();
       const locationService = depFactoryFactory<LocationService>('LocationService')();
-      const device = O.toNullable(await deviceService.getByMacAddress(macAddress));
+      const device = O.toNullable(await deviceService.getByMacAddress(macAddress.toString()));
 
       if (!device) {
         return {

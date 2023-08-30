@@ -8,7 +8,7 @@ import helmet from 'helmet';
 import { HttpError } from 'http-errors';
 import { Container } from 'inversify';
 import { InversifyExpressServer } from 'inversify-express-utils';
-import _ from 'lodash';
+import * as _ from 'lodash';
 import swaggerUi from 'swagger-ui-express';
 // import enforce from 'express-sslify';
 import uuid from 'uuid';
@@ -32,7 +32,7 @@ function ServerConfigurationFactory(container: Container): (app: express.Applica
     app.use(helmet({
       hsts: {
         maxAge: 31536000000, // one year in milliseconds
-        force: true,
+        preload: true,
         includeSubDomains: true
       }
     }));

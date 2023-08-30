@@ -3,11 +3,11 @@ import * as O from 'fp-ts/lib/Option';
 import { Container, inject } from 'inversify';
 import { BaseHttpController, httpGet, httpPost, interfaces, request, requestBody, requestParam, response, httpDelete, queryParam, httpPut } from 'inversify-express-utils';
 import * as t from 'io-ts';
-import _ from 'lodash';
+import * as _ from 'lodash';
 import { $enum } from 'ts-enum-util';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
-import { DependencyFactoryFactory, AlarmEvent, AlarmSeverityCodec, AlertReportDefinition, AlertReportDefinitionCodec, AlertStatus, AlertStatusCodec, ClearAlertBody, ClearAlertBodyCodec, ClearAlertResponse, IncidentStatusReasonCodec, NotificationStatistics, PaginatedResult, UserFeedback, UserFeedbackCodec, FilterState, FilterStateCodec, NewUserFeedbackRequest, NewUserFeedbackRequestCodec, UnitSystem, PropExpand } from '../api';
+import { DependencyFactoryFactory, AlarmEvent, AlarmSeverityCodec, AlertReportDefinition, AlertReportDefinitionCodec, AlertStatus, AlertStatusCodec, ClearAlertBody, ClearAlertBodyCodec, ClearAlertResponse, IncidentStatusReasonCodec, NotificationStatistics, PaginatedResult, UserFeedback, UserFeedbackCodec, FilterState, FilterStateCodec, NewUserFeedbackRequest, NewUserFeedbackRequestCodec, UnitSystem, PropExpand, AlarmEventFilter } from '../api';
 import { httpController, deleteMethod } from '../api/controllerUtils';
 import Request from '../api/Request';
 import { NotificationService } from '../notification/NotificationService';
@@ -85,12 +85,16 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
           groupId
         } = query;
 
+        if (!deviceId) {
+          return [];
+        }
+
         const locationService = depFactoryFactory<LocationService>('LocationService')();
-        const deviceService = deviceId && depFactoryFactory<DeviceService>('DeviceService')();
+        const deviceService = depFactoryFactory<DeviceService>('DeviceService')();
 
         const devices = !_.isEmpty(deviceId) && (await Promise.all((_.isArray(deviceId) ? deviceId : [deviceId])
-          .map(async did => 
-            O.toNullable((await deviceService.getDeviceById(did, { $select: { location: { $select: { id: true } } } })))
+          .map(async (did) => 
+            O.toNullable((await deviceService.getDeviceById(did?.toString(), { $select: { location: { $select: { id: true } } } })))
           )));
         const deviceParents = devices && !_.isEmpty(devices) && (await Promise.all(
           devices
@@ -103,7 +107,7 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
         const locationsAndParents = !_.isEmpty(locationId) && (await Promise.all((_.isArray(locationId) ? locationId : [locationId])
           .map(async (locId) => [
             locId,
-            ...(await locationService.getAllParentIds(locId))
+            ...(await locationService.getAllParentIds(locId?.toString() || ''))
           ])
         ));
 
@@ -152,7 +156,7 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
 
       const convertUnitSystem = (unitSystem?: UnitSystem) => unitSystem === UnitSystem.METRIC_KPA ? 'metric' : 'imperial';
       
-      const user = userId ? O.toUndefined(await retrieveUser(userId, (req.query.userId || noLocationOrDevice))) : undefined;
+      const user = userId ? O.toUndefined(await retrieveUser(userId, (Boolean(req.query.userId?.toString()) || noLocationOrDevice))) : undefined;
 
       const lang = req.query.lang ? req.query.lang : (user?.locale || defaultLang);
       const unitSystem = req.query.unitSystem ? req.query.unitSystem : convertUnitSystem(user?.unitSystem);
@@ -196,7 +200,7 @@ export function AlertControllerFactory(container: Container, apiVersion: number)
         });
       }
 
-      const alarmEvents = await this.alertService.getAlarmEventsByFilter(filters, {
+      const alarmEvents = await this.alertService.getAlarmEventsByFilter(filters as AlarmEventFilter, {
         $select: {
           id: true,
           nickname: true,

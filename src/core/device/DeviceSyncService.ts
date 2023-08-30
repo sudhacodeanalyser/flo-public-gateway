@@ -1,7 +1,7 @@
 import { inject, injectable } from 'inversify';
 import * as Option from 'fp-ts/lib/Option';
 import { pipe } from 'fp-ts/lib/pipeable';
-import _ from 'lodash';
+import * as _ from 'lodash';
 import OnboardingLogTable from './OnboardingLogTable';
 import { OnboardingService } from './OnboardingService';
 import { InternalDeviceService } from '../../internal-device-service/InternalDeviceService';

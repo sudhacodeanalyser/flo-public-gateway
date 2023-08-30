@@ -1,7 +1,7 @@
 import * as t from 'io-ts';
 import * as Either from 'fp-ts/lib/Either';
 import { pipe } from 'fp-ts/lib/pipeable';
-import _ from 'lodash';
+import * as _ from 'lodash';
 import { PhoneNumberUtil } from 'google-libphonenumber'
 
 const phoneUtil = PhoneNumberUtil.getInstance();

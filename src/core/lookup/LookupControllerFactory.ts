@@ -1,4 +1,4 @@
-import _ from 'lodash';
+import * as _ from 'lodash';
 import {BaseHttpController, interfaces, queryParam, requestParam} from 'inversify-express-utils';
 import {Container, inject} from 'inversify';
 import {LookupService} from '../service';

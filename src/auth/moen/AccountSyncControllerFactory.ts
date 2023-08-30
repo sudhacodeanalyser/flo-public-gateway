@@ -45,7 +45,7 @@ export function AccountSyncControllerFactory(container: Container, apiVersion: n
 
     @httpDelete('/sync/me')
     private async deleteSyncMe(@request() req: Request): Promise<any> {
-      const deleteAccount: string = req.query.account || 'false';
+      const deleteAccount: string = req.query.account?.toString() || 'false';
 
       return this.accountSyncService.deleteSyncMe(req.headers.authorization as string, deleteAccount);
     }

@@ -1,7 +1,7 @@
 import { injectable, inject } from 'inversify';
 import { injectHttpContext, interfaces } from 'inversify-express-utils';
 import { NotificationService } from '../notification/NotificationService';
-import _ from 'lodash';
+import * as _ from 'lodash';
 import { AlarmListResult, Alarm } from '../api';
 
 @injectable()

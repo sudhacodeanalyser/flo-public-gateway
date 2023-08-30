@@ -13,7 +13,7 @@ class DatabaseReadTable<T> {
     return this.dbClient.get<T>(this.tableName, key);
   }
 
-  public async query<Q>(queryOptions: Q): Promise<T[]> {
+  public async query<Q extends object>(queryOptions: Q): Promise<T[]> {
     return this.dbClient.query<Q, T>(this.tableName, queryOptions);
   }
 

@@ -2,7 +2,7 @@ import { injectable, unmanaged } from 'inversify';
 import DatabaseClient, { KeyMap } from './DatabaseClient';
 import { Patch } from './Patch';
 import { DatabaseReadTable } from './DatabaseReadTable';
-import _ from 'lodash';
+import * as _ from 'lodash';
 import ResourceDoesNotExistError from '../core/api/error/ResourceDoesNotExistError';
 
 @injectable()

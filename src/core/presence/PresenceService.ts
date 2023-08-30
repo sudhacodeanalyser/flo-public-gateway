@@ -1,6 +1,6 @@
 import { injectable, inject } from 'inversify';
 import { PresenceRequest, PresenceData } from '../api/model/Presence';
-import _ from 'lodash';
+import * as _ from 'lodash';
 import { ExternalPresenceService } from './ExternalPresenceService';
 import Logger from 'bunyan';
 import { UserService } from '../user/UserService';

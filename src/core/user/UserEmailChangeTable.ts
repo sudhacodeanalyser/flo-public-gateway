@@ -1,4 +1,4 @@
-import _ from 'lodash';
+import * as _ from 'lodash';
 import { inject, injectable, targetName } from 'inversify';
 import * as O from 'fp-ts/lib/Option';
 import { PostgresDbClient } from '../../database/pg/PostgresDbClient';

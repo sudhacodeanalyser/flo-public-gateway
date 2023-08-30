@@ -1,5 +1,5 @@
-import dotenv from 'dotenv';
-import _ from 'lodash';
+import * as dotenv from 'dotenv';
+import * as _ from 'lodash';
 
 dotenv.config();
 

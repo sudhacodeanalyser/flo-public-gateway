@@ -26,7 +26,7 @@ class StripeWebhookAuthMiddleware extends BaseMiddleware {
       // Will throw StripeSignatureVerificationError exception if signature is invalid
       this.stripeClient.webhooks.constructEvent(payload, signature, this.stripeWebhookSecret);
       next();
-    } catch (err) {
+    } catch (err: any) {
       if (err.type === 'StripeSignatureVerificationError') {
         return next(new UnauthorizedError('Invalid signature.'));
       }

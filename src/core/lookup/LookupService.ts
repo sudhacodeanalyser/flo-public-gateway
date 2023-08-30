@@ -1,5 +1,5 @@
 import { inject, injectable } from 'inversify';
-import _ from 'lodash';
+import * as _ from 'lodash';
 import { Lookup } from '../api';
 import { fromRecord, LookupItemRecord } from './LookupItemRecord';
 import { LookupTable } from './LookupTable';

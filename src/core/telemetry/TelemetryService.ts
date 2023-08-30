@@ -1,7 +1,7 @@
 import * as O from 'fp-ts/lib/Option';
 import { pipe } from 'fp-ts/lib/pipeable';
 import { inject, injectable } from 'inversify';
-import _ from 'lodash';
+import * as _ from 'lodash';
 import moment from 'moment';
 import { KafkaProducer } from '../../kafka/KafkaProducer';
 import { Device, DeviceTelemetry, DeviceTelemetryData, DeviceType, PuckTelemetry, Telemetry } from '../api';

@@ -1,5 +1,5 @@
-import _ from 'lodash';
-import { AxiosInstance, AxiosRequestConfig } from 'axios';
+import * as _ from 'lodash';
+import { AxiosError, AxiosInstance, AxiosRequestConfig } from 'axios';
 import { injectable, inject } from 'inversify';
 import HttpError from './HttpError';
 import config from '../config/config';
@@ -42,22 +42,24 @@ class HttpService {
         ...(request.params && { params: request.params }),
         timeout: Number(config.externalServiceHttpTimeoutMs)
       };
-      if (request.method?.toUpperCase() === 'HEAD') { // fix gzip empty HEAD response err with axios & some http servers by forcing no compression
+      if (cfg.headers && request.method?.toUpperCase() === 'HEAD') { // fix gzip empty HEAD response err with axios & some http servers by forcing no compression
         cfg.headers['accept-encoding'] = 'gzip;q=0,deflate,sdch'; // SEE: https://github.com/axios/axios/issues/1658
       }
 
       const response = await this.httpClient.request(cfg);
       return response.data;
-    } catch (err) {
+    } catch (err: any) {
       this.httpLogger.error({ err, request });
       if (!err) {
         throw new HttpError(500, "Unknown Exception.");
       }
 
-      const status = err.response?.status >= 400 ? err.response.status : 500;
-      const message = err.response?.data?.message || _.head(err.response?.data?.errors) || getReasonPhrase(status);
+      let status = (err.response?.status || 500); 
+      status = status >= 400 ? status : 500;
+      const body: any = err.response?.data ?? {};
+      const message = body.message || _.head(body.errors) || getReasonPhrase(status);
       if (request.proxyError) {
-        throw new ExtendableError(message, status, err.response?.data); // proxy error back as is
+        throw new ExtendableError(message, status, body); // proxy error back as is
       }
       if (status < 500) {
         throw new HttpError(status, message);

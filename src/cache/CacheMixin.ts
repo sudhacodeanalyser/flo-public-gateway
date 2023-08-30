@@ -1,7 +1,7 @@
 import { inject, injectable } from 'inversify';
 import Redis from 'ioredis';
 import { CachePolicy } from './CacheMiddleware';
-import _ from 'lodash';
+import * as _ from 'lodash';
 
 function formatCacheKey(entityType: string, target: any, propertyName: string | symbol, args: any[]): string {
     const cacheKeyExtractors = Reflect.getOwnMetadata('cacheKey', target, propertyName);
@@ -22,7 +22,7 @@ export function cached(entityType: string, ttl?: number): MethodDecorator {
 
     propertyDescriptor.value = async function (...args: any[]): Promise<any> {
       const key = formatCacheKey(entityType, target, propertyName, args);
-      const redisClient: Redis.Redis = (this as any).redisClient;
+      const redisClient: Redis = (this as any).redisClient;
       const cachePolicy: CachePolicy = (this as any).cachePolicy;
       const cacheResult = cachePolicy === CachePolicy.WRITE_ONLY || cachePolicy === CachePolicy.OFF ?
         null :
@@ -55,7 +55,7 @@ export function dropCache(entityType: string): MethodDecorator {
     
     propertyDescriptor.value = async function (...args: any[]): Promise<any> {
       const key = formatCacheKey(entityType, target, propertyName, args);
-      const redisClient: Redis.Redis = (this as any).redisClient;
+      const redisClient: Redis = (this as any).redisClient;
 
       await method.apply(this, args);
 
@@ -71,7 +71,7 @@ export function updateCache(entityType: string): MethodDecorator {
     
     propertyDescriptor.value = async function (...args: any[]): Promise<any> {
       const key = formatCacheKey(entityType, target, propertyName, args);
-      const redisClient: Redis.Redis = (this as any).redisClient;
+      const redisClient: Redis = (this as any).redisClient;
       const result = await method.apply(this, args);
 
       if (result) {
@@ -85,13 +85,14 @@ export function updateCache(entityType: string): MethodDecorator {
 }
 
 export function cacheKey(extractKey?: (arg: any) => string): ParameterDecorator {
-  return (target: any, propertyName: string | symbol, parameterIndex: number): void => {
+  return (target: object, propertyName: string | symbol | undefined, parameterIndex: number): void => {
+    const name = propertyName || '';
     const existingCacheKeys = {
-      ...Reflect.getOwnMetadata('cacheKey', target, propertyName),
+      ...Reflect.getOwnMetadata('cacheKey', target, name),
       [parameterIndex]: extractKey || ((arg: any) => _.isString(arg) ? arg : JSON.stringify(arg))
     };
 
-    Reflect.defineMetadata('cacheKey', existingCacheKeys, target, propertyName);
+    Reflect.defineMetadata('cacheKey', existingCacheKeys, target, name);
   };
 }
 
@@ -103,7 +104,7 @@ type Newable<T = {}> = new(...args: any[]) => T;
 export function CacheMixin<C extends Newable>(baseClass: C) {
   @injectable()
   class CachedClass extends baseClass {
-    @inject('RedisClient') protected redisClient: Redis.Redis;
+    @inject('RedisClient') protected redisClient: Redis;
     @inject('CachePolicy') protected cachePolicy: CachePolicy;
 
     protected async cache(data: any, entityType: string, key: string, ttl?: number): Promise<void> {

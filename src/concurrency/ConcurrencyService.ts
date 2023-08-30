@@ -1,4 +1,4 @@
-import _ from 'lodash';
+import * as _ from 'lodash';
 import { inject, injectable } from 'inversify';
 import Redis from 'ioredis';
 
@@ -6,7 +6,7 @@ import Redis from 'ioredis';
 export default class ConcurrencyService {
 
   constructor(
-    @inject('RedisClient') private redisClient: Redis.Redis
+    @inject('RedisClient') private redisClient: Redis
   ) {}
 
   public async acquireLock(key: string, ttlSecs: number): Promise<boolean> {

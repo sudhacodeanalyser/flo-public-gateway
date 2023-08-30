@@ -1,5 +1,5 @@
 import * as t from 'io-ts';
-import _ from 'lodash';
+import * as _ from 'lodash';
 import { EmailAvailability } from '../../core/user/UserRegistrationService';
 import { either } from 'fp-ts/lib/Either';
 

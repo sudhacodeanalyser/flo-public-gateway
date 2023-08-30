@@ -4,7 +4,7 @@ import { DependencyFactoryFactory } from '../api';
 import ForbiddenError from '../api/error/ForbiddenError';
 import { FirestoreAuthService, FirestoreTokenResponse, FirestoreAssests } from './FirestoreAuthService';
 import * as Option from 'fp-ts/lib/Option';
-import _ from 'lodash';
+import * as _ from 'lodash';
 import { AuthCache } from '../../auth/AuthCache';
 import { ApiV1LogoutService } from '../../api-v1/logout/ApiV1LogoutService';
 import ValidationError from '../api/error/ValidationError';

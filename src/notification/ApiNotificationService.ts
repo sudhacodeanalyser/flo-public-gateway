@@ -1,7 +1,7 @@
 import { inject, injectable } from 'inversify';
 import { fold, fromNullable, Option } from 'fp-ts/lib/Option';
 import { pipe } from 'fp-ts/lib/pipeable';
-import _ from 'lodash';
+import * as _ from 'lodash';
 import {
   Alarm,
   AlarmEvent,
@@ -85,7 +85,7 @@ class ApiNotificationService extends HttpService {
         url: `/events/batch`,
         body: filters
       });
-    } catch (err) {
+    } catch (err: any) {
       if (err.statusCode === 404) {
         return {
           items: [],

@@ -2,11 +2,11 @@ import * as O from 'fp-ts/lib/Option';
 import { Container, inject } from 'inversify';
 import { BaseHttpController, httpGet, httpPost, interfaces, request, requestBody, requestParam } from 'inversify-express-utils';
 import * as t from 'io-ts';
-import _ from 'lodash';
+import * as _ from 'lodash';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import ReqValidationError from '../../validation/ReqValidationError';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
-import { AlarmEvent, PaginatedResult } from '../api';
+import { AlarmEvent, AlarmEventFilter, PaginatedResult } from '../api';
 import { httpController } from '../api/controllerUtils';
 import { convertToLocalTimeWithOffset } from '../api/dateUtils';
 import Request from '../api/Request';
@@ -57,8 +57,8 @@ export function IncidentControllerFactory(container: Container, apiVersion: numb
         return this.userService.getUserById(id,  propExpand);
       };
 
-      const user = req.query.userId ? O.toUndefined(await retrieveUser(req.query.userId)) : undefined;
-      const lang = req.query.lang || defaultLang;
+      const user = req.query.userId ? O.toUndefined(await retrieveUser(req.query.userId.toString())) : undefined;
+      const lang = req.query.lang?.toString() || defaultLang;
 
       const queryDeviceIds = req.query.deviceId ?
         _.concat([], req.query.deviceId)
@@ -76,7 +76,7 @@ export function IncidentControllerFactory(container: Container, apiVersion: numb
 
       const filters = {
         ...req.query,
-        ...lang,
+        ...{lang},// TODO:caution: code fix may change behavior
         ...(!_.isEmpty(deviceIds) && { deviceId: deviceIds }),
         ...(!_.isEmpty(locationId) && { locationId }),
         ...(!_.isEmpty(status) && { status }),
@@ -94,7 +94,7 @@ export function IncidentControllerFactory(container: Container, apiVersion: numb
         });
       }
 
-      const alarmEvents = await this.alertService.getAlarmEventsByFilter(filters, {
+      const alarmEvents = await this.alertService.getAlarmEventsByFilter(filters as AlarmEventFilter, {
         $select: {
           id: true,
           timezone: true

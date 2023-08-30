@@ -1,6 +1,6 @@
 import { injectable, inject } from 'inversify';
 import moment from 'moment-timezone';
-import _ from 'lodash';
+import * as _ from 'lodash';
 import { DeviceService, LocationService } from '../service';
 import { Location, DependencyFactoryFactory, WaterConsumptionReport, WaterConsumptionInterval, WaterAveragesReport, WaterMetricsReport } from '../api';
 import * as Option from 'fp-ts/lib/Option';

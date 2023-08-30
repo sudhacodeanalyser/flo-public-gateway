@@ -241,7 +241,7 @@ class AccountResolver extends Resolver<Account> {
 
   public getMaxSecurityLevelByRoles(roles: string[]): number {
     const ans = _(roles)
-      .map((r) => this.securityLevel.get(r) || 0)
+      .map((r: any) => this.securityLevel.get(r) || 0)
       .max() || 0
 
     return ans;

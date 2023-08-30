@@ -1,5 +1,5 @@
 // tslint:disable-next-line:no-var-requires
-require('@instana/collector')();
+// require('@instana/collector')();
 
 import 'reflect-metadata';
 import Config from './config/config';
@@ -7,12 +7,13 @@ import ContainerFactory from './container/ContainerFactory';
 import ServerFactory from './server/ServerFactory';
 import Logger from 'bunyan';
 import ControllerFactory from './core/ControllerFactory';
-import * as cluster from 'cluster';
+import * as Cluster from 'cluster';
+const cluster = Cluster as unknown as Cluster.Cluster; // typings fix
 import * as os from 'os';
 
 const numWorkers = Config.numWorkers || os.cpus().length || 1;
 
-if (cluster.isMaster) {
+if (cluster.isPrimary) {
 
   for (let i = 0; i < numWorkers; i++) {
     forkWorker();
@@ -35,7 +36,7 @@ if (cluster.isMaster) {
 
 }
 
-function forkWorker(): cluster.Worker {
+function forkWorker(): Cluster.Worker {
   const worker = cluster.fork();
 
   worker.on('exit', () => {

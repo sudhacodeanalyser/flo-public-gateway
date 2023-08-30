@@ -2,7 +2,7 @@ import { none, Option, some } from 'fp-ts/lib/Option';
 import { Container, inject, multiInject } from 'inversify';
 import { BaseHttpController, httpDelete, httpGet, httpPost, interfaces, queryParam, requestBody, requestParam, request, response } from 'inversify-express-utils';
 import * as t from 'io-ts';
-import _ from 'lodash';
+import * as _ from 'lodash';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import ReqValidationMiddlewareFactory from '../../validation/ReqValidationMiddlewareFactory';
 import { Subscription, SubscriptionCreate, SubscriptionCreateValidator, SubscriptionProviderWebhookHandler, CreditCardInfo, ProvidersCodec, ProviderPaymentData } from '../api';
@@ -162,7 +162,7 @@ export function SubscriptionControllerFactory(container: Container, apiVersion: 
             location_id: sub.location && sub.location.id
           });
         })(req, res, (err) =>
-          err ? reject(err) : resolve()
+          err ? reject(err) : resolve(undefined)
         )
       ));
 
@@ -214,7 +214,7 @@ export function SubscriptionControllerFactory(container: Container, apiVersion: 
               location_id: sub.location && sub.location.id
             });
           })(req, res, (err) =>
-            err ? reject(err) : resolve()
+            err ? reject(err) : resolve(undefined)
           )
         ));
       }

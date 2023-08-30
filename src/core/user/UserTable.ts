@@ -3,10 +3,10 @@ import DatabaseClient, { KeyMap } from '../../database/DatabaseClient';
 import DatabaseTable from '../../database/DatabaseTable';
 import { UserRecordData } from './UserRecord';
 import { Patch } from '../../database/Patch';
-import _ from 'lodash';
+import * as _ from 'lodash';
 import { DynamoDbQuery } from '../../database/dynamo/DynamoDbClient';
 import ConflictError from '../api/error/ConflictError';
-import bcrypt from 'bcrypt';
+import * as bcrypt from 'bcrypt';
 
 @injectable()
 class UserTable extends DatabaseTable<UserRecordData> {

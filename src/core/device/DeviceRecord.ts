@@ -1,4 +1,4 @@
-import _ from 'lodash';
+import * as _ from 'lodash';
 import { morphism, StrictSchema } from 'morphism';
 // These should likely go into a lookup table
 import { Device, DeviceModelType, DeviceType, SystemMode as DeviceSystemMode, ValveState } from '../api';

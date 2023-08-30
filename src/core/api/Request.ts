@@ -1,6 +1,6 @@
 import express from 'express';
 import Logger from 'bunyan';
-import _ from 'lodash';
+import * as _ from 'lodash';
 
 export interface Token extends Record<string, any> {
   isAdmin(): boolean;

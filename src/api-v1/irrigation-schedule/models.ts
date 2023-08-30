@@ -1,6 +1,6 @@
 import * as t from 'io-ts';
 import { ComputedIrrigationSchedule, ComputedIrrigationScheduleCodec, DeviceIrrigationAllowedState, DeviceIrrigationAllowedStateCodec, ComputationStatusCodec, ComputationStatus } from '../../core/device/IrrigationScheduleService';
-import _ from 'lodash';
+import * as _ from 'lodash';
 import { either } from 'fp-ts/lib/Either';
 
 const ComputedIrrigationScheduleResponseCodec = t.type({
