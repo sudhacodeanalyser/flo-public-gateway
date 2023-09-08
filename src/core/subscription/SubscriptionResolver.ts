@@ -1,5 +1,5 @@
 import { inject, injectable } from 'inversify';
-import uuid from 'uuid';
+import * as uuid from 'uuid';
 import { fromPartialRecord } from '../../database/Patch';
 import { DependencyFactoryFactory, PartialBy, Subscription, PropExpand } from '../api';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';

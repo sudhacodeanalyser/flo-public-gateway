@@ -1,7 +1,8 @@
 import { inject, injectable } from 'inversify';
-import { injectHttpContext, interfaces } from 'inversify-express-utils';
+import { interfaces, TYPE } from 'inversify-express-utils';
+import { injectableHttpContext } from '../../cache/InjectableHttpContextUtils';
 import * as _ from 'lodash';
-import uuid from 'uuid';
+import * as uuid from 'uuid';
 import { fromPartialRecord } from '../../database/Patch';
 import { LocationFacetPage, LocationFilters, DependencyFactoryFactory, Device, Location, LocationUserRole, LookupItem, PropExpand, SystemMode, LocationPage, LocationSortProperties } from '../api';
 import ResourceDoesNotExistError from '../api/error/ResourceDoesNotExistError';
@@ -106,7 +107,7 @@ class LocationResolver extends Resolver<Location> {
       let visibleUserRoles= [...explicitUserRoles, ...parentUserRoles]
       if (!hasAccountPrivilege) {
         const ans = this.accountResolverFactory().getMaxSecurityLevel(visibleUserRoles);
-        visibleUserRoles = visibleUserRoles.filter(({userId }) => ans[userId].maxLevel <= ans[currentUserId].maxLevel);
+        visibleUserRoles = visibleUserRoles.filter(({userId }) => (ans[userId].maxLevel ?? 0) <= ans[currentUserId].maxLevel);
       }
 
       return _.chain(visibleUserRoles)
@@ -362,11 +363,11 @@ class LocationResolver extends Resolver<Location> {
   private lookupServiceFactory: () => LookupService;
 
   constructor(
+    @injectableHttpContext private readonly httpContext: interfaces.HttpContext,
     @inject('LocationTable') private locationTable: LocationTable,
     @inject('UserLocationRoleTable') private userLocationRoleTable: UserLocationRoleTable,
     @inject('DependencyFactoryFactory') depFactoryFactory: DependencyFactoryFactory,
     @inject('NotificationService') private notificationService: NotificationService,
-    @injectHttpContext private readonly httpContext: interfaces.HttpContext,
     @inject('LocationTreeTable') private locationTreeTable: LocationTreeTable,
     @inject('LocationPgTable') private locationPgTable: LocationPgTable,
     @inject('WeatherApi') private weatherApi: WeatherApi

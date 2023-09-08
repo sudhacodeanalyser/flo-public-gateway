@@ -1,5 +1,4 @@
 import { injectable, inject} from 'inversify';
-import { injectHttpContext, interfaces } from 'inversify-express-utils';
 import { HttpService } from '../../http/HttpService';
 
 @injectable()
@@ -13,8 +12,6 @@ class ApiV1LogoutService extends HttpService {
   public async logout(): Promise<void> {   
     const authToken = this.httpContext?.request?.get('Authorization');
 
-
-    
     if (authToken) {
        const request = {
           method: 'POST',

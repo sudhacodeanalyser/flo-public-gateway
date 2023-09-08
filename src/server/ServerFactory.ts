@@ -11,7 +11,7 @@ import { InversifyExpressServer } from 'inversify-express-utils';
 import * as _ from 'lodash';
 import swaggerUi from 'swagger-ui-express';
 // import enforce from 'express-sslify';
-import uuid from 'uuid';
+import * as uuid from 'uuid';
 import { CachePolicy } from '../cache/CacheMiddleware';
 import Config from '../config/config';
 import ExtendableError from '../core/api/error/ExtendableError';
@@ -19,6 +19,7 @@ import Request from '../core/api/Request';
 import { internalSwaggerJsDoc, internalSwaggerOpenApiContents, legacySwaggerJsDoc, swaggerInternalOpts, swaggerLegacyOpts, swaggerPartnerOpts, thirdPartiesSwaggerJsDoc, thirdPartiesSwaggerOpenApiContents } from '../docs/swagger';
 import LoggerFactory from '../logging/LoggerFactory';
 import { Loaders } from '../memoize/MemoizeMixin';
+import { InjectableHttpContextUtils } from '../cache/InjectableHttpContextUtils';
 
 function ServerConfigurationFactory(container: Container): (app: express.Application) => void {
   return (app: express.Application) => {
@@ -28,6 +29,9 @@ function ServerConfigurationFactory(container: Container): (app: express.Applica
     app.set('case sensitive routing', true);
     // Remove "X-Powered-By:Express" header.
     app.set('x-powered-by', false);
+
+    // Attach fix for accessing HttpContext from "injectable" classes
+    InjectableHttpContextUtils.attach(app, container);
 
     app.use(helmet({
       hsts: {

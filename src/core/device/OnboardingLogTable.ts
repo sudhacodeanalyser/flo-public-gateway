@@ -77,7 +77,7 @@ class OnboardingLogTable extends DatabaseTable<OnboardingLogRecord> {
     .promise();
 
     if (LastEvaluatedKey) {
-      return [...Items as OnboardingLogRecord[], ...await this.pageThruFullLog(icdId, LastEvaluatedKey)];
+      return [...Items as OnboardingLogRecord[], ...(await this.pageThruFullLog(icdId, LastEvaluatedKey))];
     }
 
     return Items as OnboardingLogRecord[];

@@ -1,5 +1,5 @@
-import { inject, injectable } from 'inversify';
-import { injectHttpContext, interfaces } from 'inversify-express-utils';
+import { inject, injectable, Container } from 'inversify';
+import { HttpContext, interfaces } from 'inversify-express-utils';
 import { AccountRecordData, AccountRecord } from './AccountRecord';
 import Request from '../api/Request';
 import { AccountMutable, Account, AccountUserRole, DependencyFactoryFactory, PropExpand, AccountType } from '../api';
@@ -10,6 +10,8 @@ import { UserAccountRoleRecord } from '../user/UserAccountRoleRecord';
 import { fromPartialRecord } from '../../database/Patch';
 import _ from 'lodash';
 import { UserInviteService } from '../user/UserRegistrationService';
+import Logger from 'bunyan';
+import { injectableHttpContext } from '../../cache/InjectableHttpContextUtils';
 
 @injectable()
 class AccountResolver extends Resolver<Account> {
@@ -32,6 +34,7 @@ class AccountResolver extends Resolver<Account> {
       }
       const hasPrivilege = await this.hasPrivilege(account.id);
       const req = this.httpContext.request as Request;
+      this.logger.trace({method:'AccountResolver.locations', context: { exists:!!this.httpContext.request, value:this.httpContext.request} });
       const currentUserId = req?.token?.user_id;
       const locations = hasPrivilege ?
         (await this.locationResolverFactory().getAllByAccountId(account.id, expandProps)) :
@@ -43,13 +46,14 @@ class AccountResolver extends Resolver<Account> {
     },
     users: async (account: Account, shouldExpand: boolean = false, expandProps?: PropExpand) => {
       const req = this.httpContext.request as Request;
+      this.logger.trace({method:'AccountResolver.users', context: { exists:!!this.httpContext.request, value:this.httpContext.request} });
       const currentUserId = req?.token?.user_id;
       const hasPrivilege = await this.hasPrivilege(account.id);
       const accountUserRoles = await this.getAllAccountUserRolesByAccountId(account.id);
       let visibleAccountUserRoles = accountUserRoles
       if (!hasPrivilege){
         const ans = this.getMaxSecurityLevel(accountUserRoles)
-        visibleAccountUserRoles = accountUserRoles.filter(({userId }) => ans[userId].maxLevel <= ans[currentUserId].maxLevel);
+        visibleAccountUserRoles = accountUserRoles.filter(({userId }) => (ans[userId].maxLevel ?? 0) <= ans[currentUserId].maxLevel);
       }
 
       if (shouldExpand) {
@@ -101,14 +105,14 @@ class AccountResolver extends Resolver<Account> {
   ]); 
   
   constructor(
+    @injectableHttpContext private httpContext: interfaces.HttpContext,
+    @inject('Logger') private readonly logger: Logger,
     @inject('AccountTable') private accountTable: AccountTable,
     @inject('UserAccountRoleTable') private userAccountRoleTable: UserAccountRoleTable,
     @inject('UserInviteService') private userInviteService: UserInviteService,
-    @inject('DependencyFactoryFactory') depFactoryFactory: DependencyFactoryFactory,
-    @injectHttpContext private readonly httpContext: interfaces.HttpContext
+    @inject('DependencyFactoryFactory') depFactoryFactory: DependencyFactoryFactory
   ) {
     super();
-
     this.locationResolverFactory = depFactoryFactory<LocationResolver>('LocationResolver');
     this.userResolverFactory = depFactoryFactory<UserResolver>('UserResolver');
   }

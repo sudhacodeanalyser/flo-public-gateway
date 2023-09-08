@@ -3,7 +3,7 @@ import { pipe } from 'fp-ts/lib/pipeable';
 import { Container, inject } from 'inversify';
 import { BaseHttpController, httpDelete, httpGet, httpPost, interfaces, queryParam, request, requestBody, requestParam, all } from 'inversify-express-utils';
 import * as t from 'io-ts';
-import uuid from 'uuid';
+import * as uuid from 'uuid';
 import { QrData, QrDataValidator } from '../../api-v1/pairing/PairingService';
 import AuthMiddlewareFactory from '../../auth/AuthMiddlewareFactory';
 import { InternalDeviceService } from '../../internal-device-service/InternalDeviceService';
@@ -34,6 +34,7 @@ import ConflictError from '../api/error/ConflictError';
 import { DeviceSyncService } from './DeviceSyncService';
 import * as _ from 'lodash';
 import { getEventInfo } from '../api/eventInfo';
+import Logger from 'bunyan';
 
 const { isNone, some  } = O;
 type Option<T> = O.Option<T>;
@@ -133,6 +134,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
   @httpController({version: apiVersion}, '/devices')
   class DeviceController extends BaseHttpController {
     constructor(
+      @inject('Logger') private readonly logger: Logger,
       @inject('DeviceService') private deviceService: DeviceService,
       @inject('InternalDeviceService') private internalDeviceService: InternalDeviceService,
       @inject('DeviceSystemModeServiceFactory') private deviceSystemModeServiceFactory: DeviceSystemModeServiceFactory,
@@ -142,7 +144,7 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       @inject('MachineLearningService') private mlService: MachineLearningService,
       @inject('LteService') private lteService: LteService,
       @inject('ConcurrencyService') private concurrencyService: ConcurrencyService,
-      @inject('DeviceSyncService') private deviceSyncService: DeviceSyncService,
+      @inject('DeviceSyncService') private deviceSyncService: DeviceSyncService
     ) {
       super();
     }
@@ -159,8 +161,9 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
     @withResponseType<Device, Responses.Device>(Responses.Device.fromModel)
     private async getDeviceByMacAdress(@queryParam('macAddress') macAddress: string, @queryParam('expand') expand?: string): Promise<Option<Device>> {
       const expandProps = parseExpand(expand);
-
-      return this.deviceService.getByMacAddress(macAddress, expandProps);
+      this.logger.trace({method: 'getDeviceByMacAdress', action: "get", macAddress, expand, user: this.httpContext?.request });
+      const device = await this.deviceService.getByMacAddress(macAddress, expandProps);
+      return device;
     }
 
     // Special endpoint for puck to retrieve its own data
@@ -313,7 +316,6 @@ export function DeviceControllerFactory(container: Container, apiVersion: number
       }))
     )
     private async setDeviceFwProperties(@requestParam('id') id: string, @requestBody() fwProperties: any): Promise<void> {
-
       const deviceId = await this.mapIcdToMacAddress(id);
       return this.internalDeviceService.setDeviceFwProperties(deviceId, fwProperties);
     }

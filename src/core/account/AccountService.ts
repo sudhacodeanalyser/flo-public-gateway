@@ -14,11 +14,13 @@ import { NonEmptyStringFactory } from '../api/validator/NonEmptyString';
 import { EmailFactory } from '../api/validator/Email';
 import * as _ from 'lodash';
 import { NotificationService } from '../notification/NotificationService';
-import uuid from 'uuid';
+import * as uuid from 'uuid';
 import EmailClient from '../../email/EmailClient';
 import config from '../../config/config';
 import { ResourceEventAction, ResourceEventInfo, ResourceEventType } from '../api/model/ResourceEvent';
 import Request from '../api/Request';
+import { interfaces } from 'inversify-express-utils';
+import { injectableHttpContext } from '../../cache/InjectableHttpContextUtils';
 
 const sevenDays = 604800;
 
@@ -36,6 +38,7 @@ class AccountService {
     @inject('EmailClient') private emailClient: EmailClient,
     @inject('LocalizationService') private localizationService: LocalizationService,
     @inject('ResourceEventService') private resourceEventService: ResourceEventService,
+    @injectableHttpContext private readonly httpContext: interfaces.HttpContext,
   ) {
     this.userServiceFactory = depFactoryFactory('UserService');
     this.locationServiceFactory = depFactoryFactory('LocationService');

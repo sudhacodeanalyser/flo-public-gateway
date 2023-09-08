@@ -1,7 +1,7 @@
 import { IFTTTService, UserService, AlertService, DeviceService, LocationService } from '../core/service';
 import { inject, injectable } from 'inversify';
 import * as _ from 'lodash';
-import uuid from 'uuid';
+import * as uuid from 'uuid';
 import { TestSetupResponse, UserInfoResponse, AlertTriggerResponse, ActionResponse } from '../core/ifttt/response/IFTTTResponse';
 import { TriggerData, TriggerId } from '../core/ifttt/model/Trigger';
 import { isNone } from 'fp-ts/lib/Option';

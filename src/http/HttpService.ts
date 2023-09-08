@@ -3,7 +3,8 @@ import { AxiosError, AxiosInstance, AxiosRequestConfig } from 'axios';
 import { injectable, inject } from 'inversify';
 import HttpError from './HttpError';
 import config from '../config/config';
-import { HttpResponseMessage, injectHttpContext, interfaces } from 'inversify-express-utils';
+import { interfaces } from 'inversify-express-utils';
+import { injectableHttpContext } from '../cache/InjectableHttpContextUtils';
 import Logger from 'bunyan';
 import ExtendableError from '../core/api/error/ExtendableError';
 import { getReasonPhrase } from 'http-status-codes';
@@ -22,8 +23,8 @@ export interface HttpRequest {
 class HttpService {
   public baseUrl?: string;
   public authToken?: string;
+  @injectableHttpContext protected readonly httpContext: interfaces.HttpContext;
   @inject('HttpClient') protected readonly httpClient: AxiosInstance;
-  @injectHttpContext protected readonly httpContext: interfaces.HttpContext;
   @inject('Logger') private readonly httpLogger: Logger;
 
   public async sendRequest(request: HttpRequest): Promise<any> {

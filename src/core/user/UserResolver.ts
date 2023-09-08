@@ -1,6 +1,5 @@
 import Logger from 'bunyan';
 import { inject, injectable } from 'inversify';
-import { injectHttpContext, interfaces } from 'inversify-express-utils';
 import * as _ from 'lodash';
 import { fromPartialRecord } from '../../database/Patch';
 import { DependencyFactoryFactory, DeviceAlarmSettings, EntityAlarmSettingsItem, PropExpand, UpdateAlarmSettings, User, UnitSystem, UserCreate, RetrieveAlarmSettingsFilter, EntityAlarmSettings,
@@ -17,7 +16,7 @@ import UserLocationRoleTable from './UserLocationRoleTable';
 import { UserRecord, UserRecordData } from './UserRecord';
 import UserTable from './UserTable';
 import LocationTreeTable, { LocationTreeRow } from '../location/LocationTreeTable';
-import uuid from 'uuid';
+import * as uuid from 'uuid';
 import { AccountRecord, AccountRecordData } from '../account/AccountRecord';
 import AccountTable from '../account/AccountTable';
 import UserSystemRoleTable from './UserSystemRoleTable';
@@ -211,7 +210,6 @@ class UserResolver extends Resolver<User> {
     @inject('DependencyFactoryFactory') depFactoryFactory: DependencyFactoryFactory,
     @inject('DefaultUserLocale') private defaultUserLocale: string,
     @inject('NotificationService') private notificationService: NotificationService,
-    @injectHttpContext private readonly httpContext: interfaces.HttpContext,
     @inject('Logger') private readonly logger: Logger,
     @inject('LocationTreeTable') private locationTreeTable: LocationTreeTable,
     @inject('AccountTable') private accountTable: AccountTable,

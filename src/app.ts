@@ -28,8 +28,8 @@ if (cluster.isPrimary) {
   ControllerFactory(container, config.apiVersion);
 
   const app = server.build();
+  
   const logger = container.get<Logger>('Logger');
-
   app.listen(config.port, () => {
     logger.info('Started', { port: config.port });
   });

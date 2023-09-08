@@ -14,7 +14,7 @@ import * as AWS from 'aws-sdk';
 import { Option } from 'fp-ts/lib/Option';
 import { Device } from './core/api';
 
-const container = ContainerFactory();  
+const container = ContainerFactory();
 
 const mockRequest = mockReq()
 const mockResponse = mockRes()
@@ -79,7 +79,7 @@ const mockedHttpContext: interfaces.HttpContext = {
   // return response;
 
   console.log(`getByMacAddress`);
-  const device: Option<Device> = await deviceService.getByMacAddress('d8a98b8fd9e4');
+  const device: Option<Device> = await deviceService.getByMacAddress('d8a98b8fd9e4', { $select: { location: { $select: { id: true } } } });
   console.log(`device: ${JSON.stringify(device)}`);
   return device;
 

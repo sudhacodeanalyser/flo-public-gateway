@@ -1,7 +1,7 @@
 import { IFTTTService } from '../core/service';
 import { inject, injectable } from 'inversify';
 import * as _ from 'lodash';
-import uuid from 'uuid';
+import * as uuid from 'uuid';
 import { HttpService } from '../http/HttpService';
 import { TestSetupResponse, UserInfoResponse, AlertTriggerResponse, ActionResponse } from '../core/ifttt/response/IFTTTResponse';
 import { UserInfo } from '../core/ifttt/model/UserInfo';

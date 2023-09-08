@@ -1,18 +1,12 @@
 import { ContainerModule, interfaces } from 'inversify';
-import { DynamoDBDocument } from "@aws-sdk/lib-dynamodb";
-import * as AWS_DynamoDB from "@aws-sdk/client-dynamodb";
-
-const {
-  DynamoDB
-} = AWS_DynamoDB;
-
+import AWS from 'aws-sdk';
 import DatabaseClient from '../DatabaseClient';
 import DynamoDbClient from './DynamoDbClient';
 import config from '../../config/config';
 import { HttpsAgent } from 'agentkeepalive';
 
 export default new ContainerModule((bind: interfaces.Bind) => {
-  let dynamoDbDocClient: AWS_DynamoDB.DocumentClient | null = null;
+  let dynamoDbDocClient: AWS.DynamoDB.DocumentClient | null = null;
 
   bind<string>('TablePrefix').toConstantValue(config.dynamoTablePrefix);
   bind<AWS.DynamoDB.DocumentClient>('DynamoDbDocumentClient').toDynamicValue((context: interfaces.Context) => {
@@ -36,13 +30,13 @@ export default new ContainerModule((bind: interfaces.Bind) => {
     // });
     
     const httpsAgent = context.container.get<HttpsAgent>('HttpsAgent');
-    dynamoDbDocClient = DynamoDBDocument.from(new DynamoDB({
+    dynamoDbDocClient = new AWS.DynamoDB.DocumentClient({
       region: 'us-west-2',
       httpOptions: {
         agent: httpsAgent,
         timeout: config.dynamoDBTimeoutMS
       }
-    }));
+    });
 
     return dynamoDbDocClient;
   })

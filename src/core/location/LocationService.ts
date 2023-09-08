@@ -1,8 +1,9 @@
 import * as O from 'fp-ts/lib/Option';
 import { inject, injectable } from 'inversify';
-import { injectHttpContext, interfaces } from 'inversify-express-utils';
+import { interfaces } from 'inversify-express-utils';
+import { injectableHttpContext } from '../../cache/InjectableHttpContextUtils';
 import * as _ from 'lodash';
-import uuid from 'uuid';
+import * as uuid from 'uuid';
 import { AccessControlService } from '../../auth/AccessControlService';
 import { Subscription, LocationFacetPage, LocationFilters, Areas, DependencyFactoryFactory, Location, LocationUpdate, LocationUserRole, PropExpand, SystemMode, Device, DeviceType, PesThresholds, LocationPage, LocationSortProperties } from '../api';
 import ConflictError from '../api/error/ConflictError';
@@ -31,16 +32,16 @@ class LocationService {
   private subscriptionServiceFactory: () => SubscriptionService;
 
   constructor(
+    @injectableHttpContext private readonly httpContext: interfaces.HttpContext,
     @inject('LocationResolver') private locationResolver: LocationResolver,
     @inject('DependencyFactoryFactory') depFactoryFactory: DependencyFactoryFactory,
-    @injectHttpContext private readonly httpContext: interfaces.HttpContext,
     @inject('AccessControlService') private accessControlService: AccessControlService,
     @inject('LocationTreeTable') private locationTreeTable: LocationTreeTable,
     @inject('IrrigationScheduleService') private irrigationScheduleService: IrrigationScheduleService,
     @inject('EntityActivityService') private entityActivityService: EntityActivityService,
     @inject('ResourceEventService') private resourceEventService: ResourceEventService,
     @inject('MachineLearningService') private mlService: MachineLearningService,
-    @inject('GeoLocationService') private geoLocationService: GeoLocationService,
+    @inject('GeoLocationService') private geoLocationService: GeoLocationService
   ) {
     this.deviceServiceFactory = depFactoryFactory<DeviceService>('DeviceService');
     this.accountServiceFactory = depFactoryFactory<AccountService>('AccountService');

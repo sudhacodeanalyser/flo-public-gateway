@@ -1,6 +1,6 @@
 import Dataloader from 'dataloader';
 import { inject, injectable } from 'inversify';
-import uuid from 'uuid';
+import * as uuid from 'uuid';
 import 'reflect-metadata';
 
 export type Loaders = Map<any, Dataloader<any, any>>;

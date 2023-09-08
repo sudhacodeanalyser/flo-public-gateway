@@ -6,7 +6,6 @@ import * as Option from 'fp-ts/lib/Option';
 import * as Either from 'fp-ts/lib/Either';
 import { pipe } from 'fp-ts/lib/pipeable';
 import { NotificationService } from '../notification/NotificationService';
-import { injectHttpContext, interfaces } from 'inversify-express-utils';
 import * as t from 'io-ts';
 import * as _ from 'lodash';
 import { LocationService } from '../location/LocationService';
@@ -17,8 +16,7 @@ class AlertService {
   constructor(
     @inject('AlertFeedbackTable') private alertFeedbackTable: AlertFeedbackTable,
     @inject('NotificationService') private notificationService: NotificationService,
-    @inject('LocationService') private readonly locationService: LocationService,
-    @injectHttpContext private readonly httpContext: interfaces.HttpContext
+    @inject('LocationService') private readonly locationService: LocationService
   ) {}
 
   public async submitFeedback(alarmEvent: AlarmEvent, userFeedback: UserFeedback, userId?: string): Promise<UserFeedback> {

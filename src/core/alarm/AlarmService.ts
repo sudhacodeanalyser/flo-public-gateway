@@ -1,5 +1,4 @@
 import { injectable, inject } from 'inversify';
-import { injectHttpContext, interfaces } from 'inversify-express-utils';
 import { NotificationService } from '../notification/NotificationService';
 import * as _ from 'lodash';
 import { AlarmListResult, Alarm } from '../api';
@@ -8,8 +7,7 @@ import { AlarmListResult, Alarm } from '../api';
 class AlarmService {
 
   constructor(
-    @inject('NotificationService') private notificationService: NotificationService,
-    @injectHttpContext private readonly httpContext: interfaces.HttpContext
+    @inject('NotificationService') private notificationService: NotificationService
   ) {}
 
   public async getAlarms(queryParams: any): Promise<AlarmListResult> {

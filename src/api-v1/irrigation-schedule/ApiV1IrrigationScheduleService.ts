@@ -1,5 +1,4 @@
 import { injectable, inject} from 'inversify';
-import { injectHttpContext, interfaces } from 'inversify-express-utils';
 import { HttpService } from '../../http/HttpService';
 import { IrrigationScheduleService, ComputedIrrigationSchedule, DeviceIrrigationAllowedState } from '../../core/device/IrrigationScheduleService';
 import { ResponseToComputedIrrigationSchedule, ResponseToDeviceIrrigationAllowedState } from './models';

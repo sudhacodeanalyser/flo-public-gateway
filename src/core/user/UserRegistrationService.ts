@@ -2,7 +2,7 @@ import { injectable, inject } from 'inversify';
 import * as t from 'io-ts';
 import UserRegistrationTokenMetadataTable from './UserRegistrationTokenMetadataTable';
 import { UserAccountRole, UserInviteMetadata, UserLocationRole, UserRegistrationPendingTokenMetadata, UserRegistrationTokenMetadata } from '../api';
-import uuid from 'uuid';
+import * as uuid from 'uuid';
 import jwt from 'jsonwebtoken';
 import moment from 'moment';
 import UnauthorizedError from '../api/error/UnauthorizedError';

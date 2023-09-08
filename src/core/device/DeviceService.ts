@@ -14,7 +14,8 @@ import { SessionService } from '../session/SessionService';
 import { DirectiveService } from './DirectiveService';
 import { PairingResponse } from './PairingService';
 import { MachineLearningService } from '../../machine-learning/MachineLearningService';
-import { injectHttpContext, interfaces } from 'inversify-express-utils';
+import { interfaces } from 'inversify-express-utils';
+import { injectableHttpContext } from '../../cache/InjectableHttpContextUtils';
 import Request from '../api/Request';
 import { NotificationService } from '../notification/NotificationService';
 import moment from 'moment-timezone';
@@ -104,6 +105,7 @@ class DeviceService {
   private userServiceFactory: () => UserService;
 
   constructor(
+    @injectableHttpContext private httpContext: interfaces.HttpContext,
     @inject('DeviceResolver') private deviceResolver: DeviceResolver,
     @inject('PairingService') private apiV1PairingService: PairingService,
     @inject('Logger') private readonly logger: Logger,
@@ -114,8 +116,7 @@ class DeviceService {
     @inject('MachineLearningService') private mlService: MachineLearningService,
     @inject('NotificationService') private notificationService: NotificationService,
     @inject('PairInitTable') private pairInitTable: PairInitTable,
-    @inject('PairInitTTL') private pairInitTTL: number,
-    @injectHttpContext private httpContext: interfaces.HttpContext
+    @inject('PairInitTTL') private pairInitTTL: number
   ) {
     // console.log('DeviceService constructor');
     this.locationServiceFactory = depFactoryFactory<LocationService>('LocationService');
@@ -129,7 +130,9 @@ class DeviceService {
   }
 
   public async getByMacAddress(macAddress: string, expand?: PropExpand): Promise<Option<Device>> {
+    this.logger.trace({method: 'getByMacAddress', action: "get", macAddress, expand, user: this.httpContext?.request });
     const device = await this.deviceResolver.getByMacAddress(macAddress, expand);
+    this.logger.trace({method: 'getByMacAddress', action: "get-result", device });
 
     return fromNullable(device);
   }

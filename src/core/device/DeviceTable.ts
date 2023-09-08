@@ -4,10 +4,14 @@ import DatabaseClient from '../../database/DatabaseClient';
 import DatabaseTable from '../../database/DatabaseTable';
 import { DynamoDbQuery } from '../../database/dynamo/DynamoDbClient';
 import { DeviceRecordData } from './DeviceRecord';
+import Logger from 'bunyan';
 
 @injectable()
 class DeviceTable extends DatabaseTable<DeviceRecordData> {
-  constructor(@inject('DatabaseClient') dbClient: DatabaseClient) {
+  constructor(
+    @inject('DatabaseClient') dbClient: DatabaseClient, 
+    @inject('Logger') private readonly logger: Logger
+  ) {
     super(dbClient, 'ICD');
   }
 
@@ -25,6 +29,7 @@ class DeviceTable extends DatabaseTable<DeviceRecordData> {
   }
 
   public async getByMacAddress(macAddress: string): Promise<DeviceRecordData | null> {
+    this.logger.trace({method: 'DeviceTable.getByMacAddress', action: "query", macAddress });
     const devices = await this.query<DynamoDbQuery>({
       IndexName: 'DeviceIdIndex',
       KeyConditionExpression: '#device_id = :device_id',
@@ -35,7 +40,7 @@ class DeviceTable extends DatabaseTable<DeviceRecordData> {
         ':device_id': macAddress
       }
     });
-
+    this.logger.trace({method: 'DeviceTable.getByMacAddress', action: "query-result", devices });
     return _.isEmpty(devices) ? null : devices[0];
   }
 }

@@ -1,7 +1,8 @@
 import { injectable, inject } from 'inversify';
 import { KafkaProducer } from '../../kafka/KafkaProducer';
 import { Expandable, Device as DeviceModel, Location as LocationModel, Account as AccountModel, User as UserModel } from '../api';
-import { injectHttpContext, interfaces } from 'inversify-express-utils';
+import { interfaces } from 'inversify-express-utils';
+import { injectableHttpContext } from '../../cache/InjectableHttpContextUtils';
 import Logger from 'bunyan';
 import { Device, Account, Location, User } from '../api/response';
 import { mergeObjects } from '../api/controllerUtils';
@@ -34,9 +35,9 @@ interface EntityActivityMessage<T> {
 class EntityActivityService {
 
   constructor(
+    @injectableHttpContext private readonly httpContext: interfaces.HttpContext,
     @inject('EntityActivityKafkaTopic') private readonly entityActivityKafkaTopic: string,
     @inject('KafkaProducer') private readonly kafkaProducer: KafkaProducer,
-    @injectHttpContext private readonly httpContext: interfaces.HttpContext,
     @inject('Logger') private readonly logger: Logger
   ) {}
 

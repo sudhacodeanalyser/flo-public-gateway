@@ -36,6 +36,7 @@ class MemoizedDeviceTable extends MemoizeMixin(DeviceTable) {
     const result = await super.getByMacAddress(macAddress);
 
     if (result) {
+      this.primeMethodLoader('getByMacAddress', result.device_id, result);
       this.primeMethodLoader('get', { id: result.id }, result);
     }
 

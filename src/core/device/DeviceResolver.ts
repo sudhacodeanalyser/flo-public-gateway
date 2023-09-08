@@ -1,8 +1,9 @@
 import Logger from 'bunyan';
 import { inject, injectable } from 'inversify';
-import { injectHttpContext, interfaces } from 'inversify-express-utils';
+import { interfaces } from 'inversify-express-utils';
+import { injectableHttpContext } from '../../cache/InjectableHttpContextUtils';
 import * as _ from 'lodash';
-import uuid from 'uuid';
+import * as uuid from 'uuid';
 import { fromPartialRecord } from '../../database/Patch';
 import { InternalDeviceService } from "../../internal-device-service/InternalDeviceService";
 import { DependencyFactoryFactory, Device, DeviceCreate, DeviceModelType, DevicePairingDataCodec, DeviceSystemModeNumeric, DeviceType, DeviceUpdate, PropExpand, SystemMode, ValveState, ValveStateNumeric, AdditionalDevicePropsCodec, PuckPairingDataCodec, PairingData } from '../api';
@@ -102,6 +103,7 @@ const defaultHwThresholds = (deviceModel: string) => {
 
 @injectable()
 class DeviceResolver extends Resolver<Device> {
+
   protected propertyResolverMap: PropertyResolverMap<Device> = {
     location: async (device: Device, shouldExpand = false, expandProps?: PropExpand) => {
       if (!shouldExpand) {
@@ -573,10 +575,12 @@ class DeviceResolver extends Resolver<Device> {
         null;
     }
   };
+
   private locationResolverFactory: () => LocationResolver;
   private healthTestService: HealthTestService;
 
   constructor(
+   @injectableHttpContext private readonly httpContext: interfaces.HttpContext,
    @inject('DeviceTable') private deviceTable: DeviceTable,
    @inject('DependencyFactoryFactory') depFactoryFactory: DependencyFactoryFactory,
    @inject('InternalDeviceService') private internalDeviceService: InternalDeviceService,
@@ -590,9 +594,8 @@ class DeviceResolver extends Resolver<Device> {
    @inject('MachineLearningService') private mlService: MachineLearningService,
    @inject('PuckTokenService') private puckTokenService: PuckTokenService,
    @inject('LteTable') private lteTable: LteTable,
-   @injectHttpContext private readonly httpContext: interfaces.HttpContext,
    @inject('IrrigationScheduleService') private irrigationScheduleService: IrrigationScheduleService,
-   @inject('ResourceEventService') private resourceEventService: ResourceEventService
+   @inject('ResourceEventService') private resourceEventService: ResourceEventService,
   ) {
     super();
 
@@ -614,12 +617,15 @@ class DeviceResolver extends Resolver<Device> {
   }
 
   public async getByMacAddress(macAddress: string, expandProps?: PropExpand): Promise<Device | null> {
+    this.logger.trace({method: 'DeviceResolver.getByMacAddress', action:'get', macAddress, expandProps });
     const deviceRecordData = await this.deviceTable.getByMacAddress(macAddress);
-
+    this.logger.trace({method: 'DeviceResolver.getByMacAddress', action:'get-result', deviceRecordData });
+    
     if (deviceRecordData === null) {
       return null;
     }
-
+    
+    this.logger.trace({method: 'DeviceResolver.toModel', action:'begin' });
     return this.toModel(deviceRecordData, expandProps);
   }
 
@@ -755,7 +761,7 @@ class DeviceResolver extends Resolver<Device> {
 
 private async toModel(deviceRecordData: DeviceRecordData, expandProps?: PropExpand): Promise<Device> {
     const device = new DeviceRecord(deviceRecordData).toModel();
-    const expandedProps = {}; // await this.resolveProps(device, expandProps);
+    const expandedProps = await this.resolveProps(device, expandProps);
 
     return {
       ...device,

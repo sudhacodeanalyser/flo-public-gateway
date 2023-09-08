@@ -1,4 +1,4 @@
-import { AxiosError, AxiosInstance } from 'axios';
+import { AxiosInstance } from 'axios';
 import express from 'express';
 import { inject, injectable } from 'inversify';
 import * as _ from 'lodash';
@@ -19,7 +19,6 @@ import ConflictError from '../core/api/error/ConflictError';
 
 type Params = { [param: string]: any };
 type GetParams = (req: Request, depFactoryFactory: DependencyFactoryFactory) => Promise<Params | Params[]>;
-
 
 @injectable()
 class AuthMiddlewareFactory {

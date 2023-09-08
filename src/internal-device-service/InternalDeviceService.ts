@@ -80,7 +80,7 @@ class InternalDeviceService extends MemoizeMixin(HttpService) implements Firesto
       const result = InternalDeviceCodec.decode(response);
 
       if (isLeft(result)) {
-        this.logger.debug({ validationError: PathReporter.report(result) });
+        this.logger.trace({ validationError: PathReporter.report(result) });
         
         throw new Error('Invalid response.');
       }

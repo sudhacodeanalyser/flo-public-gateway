@@ -1,9 +1,8 @@
 import { inject, injectable } from 'inversify';
-import { injectHttpContext, interfaces } from 'inversify-express-utils';
 import { ComputedIrrigationSchedule, ComputationStatus } from '../core/device/IrrigationScheduleService';
 import { ApiV1IrrigationScheduleService } from '../api-v1/irrigation-schedule/ApiV1IrrigationScheduleService';
 import { FloDetectApi } from '../core/flo-detect/FloDetectApi';
-import { MemoizeMixin, memoized } from '../memoize/MemoizeMixin';
+import { memoized } from '../memoize/MemoizeMixin';
 import Logger from 'bunyan';
 import { DeviceService } from '../core/service';
 import { DependencyFactoryFactory } from '../core/api';

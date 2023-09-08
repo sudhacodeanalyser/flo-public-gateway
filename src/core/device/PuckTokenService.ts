@@ -1,7 +1,7 @@
 import { inject, injectable } from 'inversify';
 import moment from 'moment';
 import jwt from 'jsonwebtoken';
-import uuid from 'uuid';
+import * as uuid from 'uuid';
 import * as Option from 'fp-ts/lib/Option';
 import * as E from 'fp-ts/lib/Either';
 import { pipe } from 'fp-ts/lib/pipeable';

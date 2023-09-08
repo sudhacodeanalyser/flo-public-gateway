@@ -32,6 +32,7 @@ import enterpriseServiceContainerModule from '../enterprise-service/containerMod
 export default function ContainerFactory(container: Container = new Container()): Container {
 
   container.bind<typeof config>('Config').toConstantValue(config);
+  container.bind<Container>('Container').toConstantValue(container);
 
   container.load(
     httpContainerModule,

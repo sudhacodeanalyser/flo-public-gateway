@@ -73,7 +73,7 @@ class DeviceSyncService {
       Option.fold(() => false, () => true)
     );
     if (isInstalled) {
-      this.logger.debug(`DeviceSyncService.syncInstallEvent:device ${device.macAddress} is already installed.`);
+      this.logger.trace(`DeviceSyncService.syncInstallEvent:device ${device.macAddress} is already installed.`);
       return;
     }
     const additionProperties = await this.internalDeviceService.getDevice(device.macAddress);
@@ -83,7 +83,7 @@ class DeviceSyncService {
     }
     const deviceInstalled = _.get(additionProperties, 'lastKnownFwProperties.device_installed', false);
     if (deviceInstalled) {
-      this.logger.debug(`DeviceSyncService.syncInstallEvent: device ${device.macAddress} is installed in fwProperties. Marking as installed in the cloud.`);
+      this.logger.trace(`DeviceSyncService.syncInstallEvent: device ${device.macAddress} is installed in fwProperties. Marking as installed in the cloud.`);
       await this.onboardingService.markDeviceInstalled(device.macAddress);
     }
   }
