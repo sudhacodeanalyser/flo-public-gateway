@@ -1,4 +1,4 @@
-FROM node:10-alpine
+FROM node:18-alpine
 
 ARG COMMIT_SHA_ARG=blank
 ENV COMMIT_SHA=$COMMIT_SHA_ARG

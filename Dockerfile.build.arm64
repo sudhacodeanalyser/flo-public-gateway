@@ -1,4 +1,4 @@
-FROM arm64v8/node:10.24-alpine
+FROM arm64v8/node:18-alpine
 
 ARG NODE_ENV=development
 ARG COMMIT_SHA_ARG=blank
