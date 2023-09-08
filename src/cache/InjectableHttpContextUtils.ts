@@ -6,7 +6,8 @@ export const SymbolFor = {
   InjectableHttpContext: Symbol.for("InjectableHttpContext"),
 };
 
-/** Decorator to inject the inversify-express-utils HttpContext because the 
+/** 
+ * Decorator to inject the inversify-express-utils HttpContext because the 
  * injectHttpContext one only works with Controllers.
  */
 export const injectableHttpContext = inject(SymbolFor.InjectableHttpContext)
