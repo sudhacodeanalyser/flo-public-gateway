@@ -8,10 +8,11 @@
   },
   "main": "app.js",
   "scripts": {
+    "clean": "rm -rf ./dist",
     "copy-docs": "shx rm -rf dist/docs/*.yaml dist/docs/*/ && copyfiles docs/{,**/}*.yaml dist",
-    "build": "rm -rf ./dist && npm run build-ts && npm run tslint && npm run copy-docs",
+    "build": "npm run clean && npm run build-ts && npm run tslint && npm run copy-docs",
     "build-ts": "tsc",
-    "debug": "npm run build && node --inspect=0.0.0.0 dist/app.js",
+    "debug": "node --inspect=0.0.0.0 dist/app.js",
     "serve": "npm run build && node dist/app.js",
     "start": "node dist/app.js",
     "test": "jest --colors --coverage --verbose",
@@ -19,10 +20,7 @@
     "watch": "npm run copy-docs && tsc-watch --onSuccess 'node ./dist/app.js' --onFailure 'echo Compilation Failed'",
     "watch-debug": "npm run copy-docs && tsc-watch --onSuccess 'node --inspect=0.0.0.0 ./dist/app.js' --onFailure 'echo Compilation Failed'",
     "watch-test": "npm run test -- --watchAll",
-    "watch-ts": "tsc -w",
-    "dev:debug": "ts-node-dev --transpile-only --respawn --inspect=4321 --project tsconfig.json src/get-device.ts",
-    "dev": "ts-node-dev --transpile-only --respawn --project tsconfig.json src/get-device.ts",
-    "floenv": "zsh -i -c \"floenv prod\""
+    "watch-ts": "tsc -w"
   },
   "author": "Flo Technologies",
   "dependencies": {
