@@ -34,7 +34,6 @@ services:
         COMMIT_SHA_ARG: "${COMMIT_SHA:-00000000}"
     <<: *build
 
-
   gradle:
     image: gradle:5.4.0-alpine
     entrypoint: gradle --warn

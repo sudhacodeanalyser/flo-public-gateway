@@ -15,4 +15,6 @@ RUN rm -rf /var/cache/apk/* && \
       python \
       git
 
+RUN npm install -g npm@latest 
+
 WORKDIR /app
