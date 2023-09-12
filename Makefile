@@ -56,6 +56,7 @@ audit: docker ## Install npm packages using docker-based npm
 	$(NPM) $(@) fix
 
 test: docker ## Run test task using docker-based npm
+	$(NPM) run explain
 	$(NPM) run $(@)
 
 run: serve
