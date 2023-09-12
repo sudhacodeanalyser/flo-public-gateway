@@ -80,8 +80,8 @@ down: docker ## Stop application if running in the background
 	$(COMPOSE) $(@)
 
 pull: docker
-	$(COMPOSE) $(@) || true
-	$(COMPOSE) -f build-tools.yml $(@) || true
+	$(COMPOSE) $(@) --quiet || true
+	$(COMPOSE) -f build-tools.yml $(@) --quiet || true
 
 push: docker
 	$(COMPOSE) $(@)
