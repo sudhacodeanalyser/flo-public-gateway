@@ -16,7 +16,7 @@ RUN rm -rf /var/cache/apk/* && \
       gcc \
       g++ \
       make \
-      python \
+      python3 \
       git
 
 RUN npm install -g npm@latest 
