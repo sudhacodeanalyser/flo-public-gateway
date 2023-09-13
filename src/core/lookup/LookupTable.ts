@@ -1,5 +1,5 @@
 import { inject, injectable } from 'inversify';
-import squel from 'squel';
+import squel from 'safe-squel';
 import { DatabaseReadClient } from '../../database/DatabaseClient';
 import { PostgresTable } from '../../database/pg/PostgresTable';
 import { LookupItemRecord, LookupItemState } from './LookupItemRecord';

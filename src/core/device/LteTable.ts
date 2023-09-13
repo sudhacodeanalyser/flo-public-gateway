@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 import { inject, injectable, targetName } from 'inversify';
-import squel from 'squel';
+import squel from 'safe-squel';
 import * as O from 'fp-ts/lib/Option';
 import { PostgresDbClient } from '../../database/pg/PostgresDbClient';
 import { PostgresTable } from '../../database/pg/PostgresTable';

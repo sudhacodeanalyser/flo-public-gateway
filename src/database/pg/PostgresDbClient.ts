@@ -1,7 +1,7 @@
 import { inject, injectable } from 'inversify';
 import * as _ from 'lodash';
 import * as postgres from 'pg';
-import squel from 'squel';
+import squel from 'safe-squel';
 import { DatabaseReadClient, KeyMap } from '../DatabaseClient';
 
 export type PostgresQuery = { query?: squel.PostgresSelect }
