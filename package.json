@@ -75,6 +75,7 @@
     "validator": "^13.11.0"
   },
   "devDependencies": {
+    "@babel/types": "^7.22.19",
     "@types/bcrypt": "^5.0.0",
     "@types/body-parser": "^1.19.2",
     "@types/bunyan": "^1.8.8",
