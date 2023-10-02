@@ -50,7 +50,7 @@ build: install write-env
 	$(COMPOSE) $(@) --pull app-tag
 
 install: docker ## Install npm packages using docker-based npm
-	$(NPM) $(@)
+	$(NPM) ci --omit=optional
 
 audit: docker ## Install npm packages using docker-based npm
 	$(NPM) $(@) fix
